@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: ready-crew-proposal-ai-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: "gpt-4.1-mini"
+      - key: USE_MOCK_AI
+        value: "false"
+      - key: CORS_ORIGINS
+        value: "https://your-vercel-app.vercel.app,http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001"
+      - key: CORS_ORIGIN_REGEX
+        value: '^https://.*\.vercel\.app$'
+      - key: REQUEST_TIMEOUT_SECONDS
+        value: "60"
+      - key: TMPDIR
+        value: "/tmp"
+      - key: TEMP
+        value: "/tmp"
+      - key: TMP
+        value: "/tmp"
