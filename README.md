@@ -154,7 +154,9 @@ https://your-render-backend.onrender.com/health
 2. GitHubアカウントを連携します。
 3. `Add New Project` を押します。
 4. GitHubリポジトリを選択します。
-5. Root Directory に `frontend` を指定します。
+5. Root Directory を Frontend のディレクトリに指定します。
+   - この `ready-crew-proposal-ai/` フォルダだけをGitHubへpushしている場合: `frontend`
+   - この作業フォルダ全体をGitHubへpushしている場合: `ready-crew-proposal-ai/frontend`
 6. Framework Preset は `Next.js` を選択します。
 7. Environment Variables に以下を追加します。
 
@@ -169,6 +171,22 @@ NEXT_PUBLIC_API_URL=https://your-render-backend.onrender.com
 ```text
 https://your-vercel-app.vercel.app
 ```
+
+### `vercel.json required to deploy projects with multiple services` が出る場合
+
+このリポジトリには `frontend` と `backend` があるため、Vercel が複数サービス構成として判定することがあります。  
+Backend は Render にデプロイするため、Vercel では Frontend だけをデプロイします。
+
+対策として、以下の設定ファイルを入れています。
+
+- リポジトリルートの `vercel.json`
+- `ready-crew-proposal-ai/vercel.json`
+- `ready-crew-proposal-ai/frontend/vercel.json`
+- `.vercelignore`
+- `ready-crew-proposal-ai/.vercelignore`
+
+Vercelの画面では、必ず Root Directory を Frontend に設定してください。  
+Backend の `backend/` は Render 用なので、Vercel のデプロイ対象にはしません。
 
 ## CORS設定
 
