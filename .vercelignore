@@ -1,4 +1,5 @@
 backend/
+render.yaml
 tmp/
 .pip-wheel-check-*/
 .venv-*/

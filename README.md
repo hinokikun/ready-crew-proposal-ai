@@ -174,19 +174,18 @@ https://your-vercel-app.vercel.app
 
 ### `vercel.json required to deploy projects with multiple services` が出る場合
 
-このリポジトリには `frontend` と `backend` があるため、Vercel が複数サービス構成として判定することがあります。  
-Backend は Render にデプロイするため、Vercel では Frontend だけをデプロイします。
+このリポジトリには `frontend` と `backend` がありますが、Backend は Render にデプロイします。  
+Vercelでは複数サービス構成を使わず、Frontend の Next.js だけをデプロイします。
 
-対策として、以下の設定ファイルを入れています。
+対応方針は以下です。
 
-- リポジトリルートの `vercel.json`
-- `ready-crew-proposal-ai/vercel.json`
-- `ready-crew-proposal-ai/frontend/vercel.json`
-- `.vercelignore`
-- `ready-crew-proposal-ai/.vercelignore`
+- リポジトリルートの `vercel.json` は置きません
+- `frontend/vercel.json` も置きません
+- Vercel の Root Directory を必ず `frontend` にします
+- `backend/` と `render.yaml` は `.vercelignore` でVercel対象外にします
 
-Vercelの画面では、必ず Root Directory を Frontend に設定してください。  
-Backend の `backend/` は Render 用なので、Vercel のデプロイ対象にはしません。
+Vercel の設定画面で Root Directory が空、またはリポジトリルートになっていると、Backend まで検出されることがあります。  
+必ず Root Directory を `frontend` に変更してから Deploy してください。
 
 ## CORS設定
 
