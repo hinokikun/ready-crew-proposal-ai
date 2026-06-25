@@ -126,7 +126,7 @@ def _build_pptx_bytes(payload: PptxDownloadRequest, *, summary_mode: bool) -> by
             if index > 0 and not summary_mode:
                 add_chapter_title_slide(prs, slide_data, index + 1, display_slide_no, context)
                 display_slide_no += 1
-            numbered_slide = slide_data.model_copy(update={"slide_no": display_slide_no})
+            numbered_slide = slide_data.copy(update={"slide_no": display_slide_no})
             add_designed_slide(prs, numbered_slide, data, index, context)
             display_slide_no += 1
 
@@ -465,7 +465,7 @@ def build_summary_slides(slides: list[PowerPointSlide], context: PptxContext) ->
         ),
     ]
 
-    return [slide.model_copy(update={"slide_no": index}) for index, slide in enumerate(selected, start=1)]
+    return [slide.copy(update={"slide_no": index}) for index, slide in enumerate(selected, start=1)]
 
 
 def find_slide_by_keywords(slides: list[PowerPointSlide], *keywords: str) -> PowerPointSlide | None:

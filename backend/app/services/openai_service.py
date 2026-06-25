@@ -77,7 +77,7 @@ def _generate_with_openai(payload: ProposalRequest) -> ProposalAnalysis:
 
     try:
         data = json.loads(raw_text)
-        return ProposalAnalysis.model_validate(data)
+        return ProposalAnalysis.parse_obj(data)
     except json.JSONDecodeError as exc:
         raise OpenAIServiceError("AIの出力をJSONとして解析できませんでした。再実行してください。") from exc
     except ValidationError as exc:
@@ -789,7 +789,7 @@ def _build_mock_analysis(payload: ProposalRequest) -> ProposalAnalysis:
         },
     }
 
-    return ProposalAnalysis.model_validate(data)
+    return ProposalAnalysis.parse_obj(data)
 
 
 def _guess_client_name(client_company_info: str) -> str:

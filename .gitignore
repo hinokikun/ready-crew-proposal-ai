@@ -10,6 +10,7 @@ frontend/.env.local
 
 .venv/
 backend/.venv/
+.venv-*/
 node_modules/
 frontend/node_modules/
 .next/
@@ -23,5 +24,6 @@ coverage/
 
 tmp/
 outputs/
+.pip-wheel-check-*/
 
 

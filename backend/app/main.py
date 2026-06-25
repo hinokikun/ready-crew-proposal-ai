@@ -87,7 +87,7 @@ async def download_pptx(payload: PptxDownloadRequest) -> StreamingResponse:
 
 @app.post("/api/download-summary-pptx")
 async def download_summary_pptx(payload: PptxDownloadRequest) -> StreamingResponse:
-    summary_payload = payload.model_copy(update={"summary": True})
+    summary_payload = payload.copy(update={"summary": True})
     return await download_pptx(summary_payload)
 
 
