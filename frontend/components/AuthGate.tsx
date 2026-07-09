@@ -23,6 +23,11 @@ export function AuthGate({ children }: AuthGateProps) {
         if (!mounted) return;
         setIsAuthenticated(authenticated);
       })
+      .catch(() => {
+        if (!mounted) return;
+        setIsAuthenticated(false);
+        setError("Backendへ接続できません。Backend起動後に再読み込みしてください。");
+      })
       .finally(() => {
         if (mounted) setIsChecking(false);
       });

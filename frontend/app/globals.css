@@ -235,6 +235,7 @@ button {
 .dark-mode .url-analysis-box,
 .dark-mode .extractor-result-card,
 .dark-mode .sales-chat-hero,
+.dark-mode .minimal-input-panel,
 .dark-mode .chat-thread,
 .dark-mode .chat-message p,
 .dark-mode .live-brief-card,
@@ -275,6 +276,7 @@ button {
 .dark-mode .health-grid article,
 .dark-mode .settings-grid article,
 .dark-mode .usage-log-list article,
+.dark-mode .role-prep-grid article,
 .dark-mode .work-mode-tabs button,
 .dark-mode .recent-feature-row,
 .dark-mode .realtime-card textarea,
@@ -539,6 +541,44 @@ button {
   line-height: 1.5;
 }
 
+.role-prep-panel {
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.role-prep-panel > strong {
+  color: var(--primary);
+  font-size: 13px;
+}
+
+.role-prep-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.role-prep-grid article {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.role-prep-grid span {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.role-prep-grid p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .business-mode-heading {
   display: flex;
   align-items: flex-start;
@@ -701,6 +741,56 @@ button {
   margin: 6px 0 0;
   color: var(--muted);
   font-size: 12px;
+}
+
+.minimal-input-panel {
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+}
+
+.minimal-input-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.minimal-input-heading h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.minimal-input-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.minimal-input-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.error-action-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.mock-mode-hint {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .digital-coworker-panel {
@@ -4032,7 +4122,9 @@ button {
   .research-result-grid,
   .mcp-card-grid,
   .health-grid,
-  .settings-grid {
+  .settings-grid,
+  .minimal-input-grid,
+  .role-prep-grid {
     grid-template-columns: 1fr;
   }
 
@@ -4126,6 +4218,7 @@ button {
   .digital-coworker-hero,
   .card-title-row,
   .health-heading,
+  .minimal-input-heading,
   .roleplay-controls,
   .roleplay-compose {
     flex-direction: column;

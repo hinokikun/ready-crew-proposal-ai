@@ -28,6 +28,14 @@ export function SettingsPanel({ health, isAuthenticated, usageLogs = [] }: Setti
         <strong>注意事項</strong>
         <p>APIキー、APP_ACCESS_PASSWORD、個人情報、顧客の機密情報はこの画面に表示しません。環境変数はVercel/Renderの管理画面で確認してください。</p>
       </div>
+      <div className="role-prep-panel">
+        <strong>ユーザー権限（準備中）</strong>
+        <div className="role-prep-grid">
+          <article><span>管理者</span><p>環境設定、ログ確認、全機能利用を想定</p></article>
+          <article><span>一般社員</span><p>提案書生成、PPTX/PDF出力、業務AI利用を想定</p></article>
+          <article><span>閲覧のみ</span><p>履歴閲覧、資料確認のみを想定</p></article>
+        </div>
+      </div>
       <div className="usage-log-panel">
         <strong>直近の利用ログ</strong>
         {usageLogs.length ? (

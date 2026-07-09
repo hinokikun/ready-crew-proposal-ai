@@ -14,16 +14,16 @@ import {
   History,
   Loader2,
   Mic,
-  Moon,
   MessageCircle,
   RotateCcw,
   Send,
   Sparkles,
-  Sun,
   UploadCloud,
   X
 } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
+import { Dashboard } from "@/components/Dashboard";
+import { Header } from "@/components/Header";
 import { HealthStatus, type HealthSnapshot } from "@/components/HealthStatus";
 import { SecurityNotice } from "@/components/SecurityNotice";
 import { SettingsPanel } from "@/components/SettingsPanel";
@@ -67,7 +67,7 @@ const sampleBrief = `Ready Crew案件概要：
 
 type Rank = "A" | "B" | "C" | "D";
 type InputMode = "easy" | "detail";
-type SampleKind = "renewal" | "recruit" | "lp";
+type SampleKind = "renewal" | "recruit" | "lp" | "seo";
 type ChatRole = "assistant" | "user";
 type ChatAnswerKey = "project" | "company" | "trouble" | "budget" | "deadline" | "competitor";
 
@@ -81,6 +81,12 @@ type EasyInput = {
   cms: string;
   decisionMakers: string;
   purposes: string[];
+};
+
+type MinimalInput = {
+  companyName: string;
+  goal: string;
+  trouble: string;
 };
 
 type ChatMessage = {
@@ -360,6 +366,12 @@ const initialEasyInput: EasyInput = {
   purposes: []
 };
 
+const initialMinimalInput: MinimalInput = {
+  companyName: "",
+  goal: "",
+  trouble: ""
+};
+
 const purposeOptions = [
   "問い合わせを増やしたい",
   "採用を強化したい",
@@ -405,6 +417,17 @@ const easySamples: Record<SampleKind, EasyInput> = {
     cms: "不要",
     decisionMakers: "マーケティング責任者、事業責任者",
     purposes: ["問い合わせを増やしたい", "会社の信頼感を上げたい"]
+  },
+  seo: {
+    projectType: "SEO改善・コンテンツ改善",
+    trouble: "自然検索からの流入が伸びておらず、問い合わせにつながる検索キーワードやコンテンツ設計を見直したい。",
+    budget: "100〜300万円",
+    deadline: "2〜3か月",
+    competitorSiteUrl: "https://seo-rival.example.jp",
+    currentSiteUrl: "https://sample-seo.example.jp",
+    cms: "WordPress",
+    decisionMakers: "マーケティング責任者、営業責任者",
+    purposes: ["SEOを強化したい", "問い合わせを増やしたい", "更新しやすくしたい"]
   }
 };
 
@@ -695,6 +718,36 @@ function patchFormFromEasyInput(current: ProposalRequest, easyInput: EasyInput):
   };
 }
 
+function patchFormFromMinimalInput(current: ProposalRequest, minimalInput: MinimalInput): ProposalRequest {
+  const companyName = minimalInput.companyName.trim() || "提案先企業";
+  const goal = minimalInput.goal.trim() || "Webサイト制作・改善";
+  const trouble = minimalInput.trouble.trim() || "現状課題は要確認";
+  return fillMissingProposalForm({
+    ...current,
+    project_brief: `Ready Crew案件概要：
+会社名：${companyName}
+やりたいこと：${goal}
+困りごと：${trouble}
+予算：未定
+納期：要確認
+CMS：要確認
+競合：未確認
+決裁者：要確認
+ターゲット：要確認
+初回提案では、課題整理、提案方針、概算見積、スケジュール、提案書初稿を作成したい。`,
+    client_company_info: `${companyName}
+担当者・決裁者：要確認
+ターゲット：要確認`,
+    budget_range: "未定",
+    desired_launch_timing: "要確認",
+    cms_required: "要確認",
+    competitor_company_name: "競合未確認",
+    hearing_result: `やりたいこと：${goal}
+困りごと：${trouble}
+次回確認事項：予算、納期、CMS、競合、決裁者、ターゲット`
+  });
+}
+
 function extractFirstUrl(value: string | undefined) {
   if (!value) return "";
   return value.match(/https?:\/\/[^\s、。)）]+/)?.[0] ?? "";
@@ -909,12 +962,21 @@ function fillMissingExtractedInfo(info: ExtractedInfo, homepageUrl: string): Ext
 
 function fillMissingProposalForm(form: ProposalRequest): ProposalRequest {
   const hasCompetitor = Boolean(form.competitor_site_url.trim() || form.competitor_company_name.trim());
+  const hasDecisionMaker = /決裁者|確認者|担当者/.test(form.client_company_info) || /決裁者|確認者|担当者/.test(form.project_brief);
+  const hasTarget = /ターゲット|対象|顧客|求職者|ユーザー/.test(allInputText(form));
+  const clientCompanyInfo = form.client_company_info.trim() || "提案先企業";
   return {
     ...form,
     project_brief:
       form.project_brief.trim() ||
       "Webサイト制作・改善提案。詳細条件は要確認として、提案書初稿を作成します。",
-    client_company_info: form.client_company_info.trim() || "提案先企業\n担当者・決裁者：要確認",
+    client_company_info: [
+      clientCompanyInfo,
+      hasDecisionMaker ? "" : "担当者・決裁者：要確認",
+      hasTarget ? "" : "ターゲット：要確認"
+    ]
+      .filter(Boolean)
+      .join("\n"),
     budget_range: form.budget_range.trim() || "未定",
     desired_launch_timing: form.desired_launch_timing.trim() || "要確認",
     cms_required: form.cms_required.trim() || "要確認",
@@ -2516,6 +2578,7 @@ export default function Home() {
   const [form, setForm] = useState<ProposalRequest>(initialForm);
   const [inputMode, setInputMode] = useState<InputMode>("easy");
   const [easyInput, setEasyInput] = useState<EasyInput>(initialEasyInput);
+  const [minimalInput, setMinimalInput] = useState<MinimalInput>(initialMinimalInput);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(initialChatMessages);
   const [chatAnswers, setChatAnswers] = useState<ChatAnswers>({});
   const [chatQuestionIndex, setChatQuestionIndex] = useState(0);
@@ -2560,6 +2623,7 @@ export default function Home() {
   const [isDownloadingSummaryPowerPoint, setIsDownloadingSummaryPowerPoint] = useState(false);
   const [isDownloadingEstimatePdf, setIsDownloadingEstimatePdf] = useState(false);
   const [error, setError] = useState("");
+  const [lastDownloadRetry, setLastDownloadRetry] = useState<"pptx" | "summary-pptx" | "estimate-pdf" | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
   const [healthSnapshot, setHealthSnapshot] = useState<HealthSnapshot | null>(null);
   const [usageLogs, setUsageLogs] = useState<UsageLogEntry[]>([]);
@@ -2760,6 +2824,10 @@ export default function Home() {
     setEasyInput((current) => ({ ...current, [field]: value }));
   }
 
+  function updateMinimalField(field: keyof MinimalInput, value: string) {
+    setMinimalInput((current) => ({ ...current, [field]: value }));
+  }
+
   function toggleEasyPurpose(purpose: string) {
     setEasyInput((current) => ({
       ...current,
@@ -2775,6 +2843,20 @@ export default function Home() {
     }
     setForm((current) => patchFormFromEasyInput(current, easyInput));
     setError("");
+  }
+
+  function organizeMinimalInput(openConfirm = false) {
+    if (!minimalInput.companyName.trim() && !minimalInput.goal.trim() && !minimalInput.trouble.trim()) {
+      setError("会社名、やりたいこと、困りごとのうち、分かる範囲で1つ以上入力してください。");
+      return false;
+    }
+    const nextForm = patchFormFromMinimalInput(form, minimalInput);
+    setForm(nextForm);
+    setError("");
+    if (openConfirm) {
+      setIsConfirmOpen(true);
+    }
+    return true;
   }
 
   function applySourceExtraction(openConfirm = false) {
@@ -2839,6 +2921,36 @@ export default function Home() {
     const nextForm = fillMissingProposalForm(Object.keys(chatAnswers).length > 0 ? applyChatAnswersToForm(form, chatAnswers) : form);
     if (nextForm.project_brief.trim().length < 20) {
       setError("ここに案件メールを貼るだけで始められます。URLだけでもOKです。分からない項目は空欄でOKです。");
+      return;
+    }
+
+    setForm(nextForm);
+    setError("");
+    setIsConfirmOpen(true);
+  }
+
+  function autoPrepareProposal() {
+    if (rawSourceText.trim() || companyHomeUrl.trim()) {
+      applySourceExtraction(true);
+      return;
+    }
+
+    if (minimalInput.companyName.trim() || minimalInput.goal.trim() || minimalInput.trouble.trim()) {
+      organizeMinimalInput(true);
+      return;
+    }
+
+    if (easyInput.projectType.trim() || easyInput.trouble.trim() || easyInput.purposes.length > 0) {
+      const nextForm = fillMissingProposalForm(patchFormFromEasyInput(form, easyInput));
+      setForm(nextForm);
+      setError("");
+      setIsConfirmOpen(true);
+      return;
+    }
+
+    const nextForm = fillMissingProposalForm(Object.keys(chatAnswers).length > 0 ? applyChatAnswersToForm(form, chatAnswers) : form);
+    if (nextForm.project_brief.trim().length < 20) {
+      setError("案件メール、会社URL、最小入力、かんたん入力のいずれかを入れると、AIに全部おまかせできます。");
       return;
     }
 
@@ -3169,9 +3281,11 @@ export default function Home() {
         targetForm.case_studies
       );
       recordUsage(summary ? "要約PowerPoint" : "PowerPoint", allInputText(targetForm).length, summary ? "summary-pptx" : "pptx", "success");
+      setLastDownloadRetry(null);
     } catch (caught) {
       const friendly = toFriendlyError(caught);
       recordUsage(summary ? "要約PowerPoint" : "PowerPoint", allInputText(targetForm).length, summary ? "summary-pptx" : "pptx", "failure", friendly.category);
+      setLastDownloadRetry(summary ? "summary-pptx" : "pptx");
       setError(`${friendly.title}。${friendly.action}`);
     } finally {
       if (summary) {
@@ -3203,9 +3317,11 @@ export default function Home() {
         targetResult.analysis.win_probability
       );
       recordUsage("見積書PDF", allInputText(targetForm).length, "estimate-pdf", "success");
+      setLastDownloadRetry(null);
     } catch (caught) {
       const friendly = toFriendlyError(caught);
       recordUsage("見積書PDF", allInputText(targetForm).length, "estimate-pdf", "failure", friendly.category);
+      setLastDownloadRetry("estimate-pdf");
       setError(`${friendly.title}。${friendly.action}`);
     } finally {
       setIsDownloadingEstimatePdf(false);
@@ -3214,6 +3330,19 @@ export default function Home() {
 
   async function downloadEstimatePdfCurrent() {
     if (!result) return;
+    await downloadEstimatePdfFor(result, form);
+  }
+
+  async function retryLastDownload() {
+    if (!result || !lastDownloadRetry) return;
+    if (lastDownloadRetry === "pptx") {
+      await downloadPowerPointFor(result, form, false);
+      return;
+    }
+    if (lastDownloadRetry === "summary-pptx") {
+      await downloadPowerPointFor(result, form, true);
+      return;
+    }
     await downloadEstimatePdfFor(result, form);
   }
 
@@ -3249,7 +3378,9 @@ export default function Home() {
         ? "株式会社東都リビング。首都圏で賃貸・売買仲介、物件管理を展開する不動産会社です。"
         : kind === "recruit"
           ? "株式会社サンプル製作所。BtoB向け製造・保守サービスを展開する会社です。"
-          : "株式会社サンプルマーケティング。新規Webサービスの広告配信とリード獲得を強化している会社です。";
+          : kind === "lp"
+            ? "株式会社サンプルマーケティング。新規Webサービスの広告配信とリード獲得を強化している会社です。"
+            : "株式会社サンプルSEO。BtoBサービスの検索流入と問い合わせ獲得を強化したい会社です。";
     const nextAnswers: ChatAnswers = {
       project: sample.projectType,
       company,
@@ -3281,19 +3412,30 @@ export default function Home() {
         ? "株式会社東都リビング\n首都圏で賃貸・売買仲介、物件管理を展開\n既存サイトURL：https://sample-realty.example.jp\n決裁者：代表取締役、窓口：営業企画部"
         : kind === "recruit"
           ? "株式会社サンプル製作所\n首都圏でBtoB向け製造・保守サービスを展開\n既存サイトURL：https://sample-company.example.jp\n決裁者：代表取締役、窓口：人事責任者"
-          : "株式会社サンプルマーケティング\n新規Webサービスの広告配信とリード獲得を強化中\n既存サイトURL：https://sample-service.example.jp\n決裁者：事業責任者、窓口：マーケティング責任者";
+          : kind === "lp"
+            ? "株式会社サンプルマーケティング\n新規Webサービスの広告配信とリード獲得を強化中\n既存サイトURL：https://sample-service.example.jp\n決裁者：事業責任者、窓口：マーケティング責任者"
+            : "株式会社サンプルSEO\nBtoBサービスの検索流入と問い合わせ獲得を強化中\n既存サイトURL：https://sample-seo.example.jp\n決裁者：営業責任者、窓口：マーケティング責任者";
     setEasyInput(sample);
     setForm((current) => ({
       ...patchFormFromEasyInput(current, sample),
-      project_brief: kind === "renewal" ? sampleBrief : buildProjectBriefFromEasyInput(sample),
+      project_brief:
+        kind === "renewal"
+          ? sampleBrief
+          : kind === "seo"
+            ? `${buildProjectBriefFromEasyInput(sample)}
+SEO改善の重点：検索流入が伸び悩んでおり、サービスページ、FAQ、導入事例、比較検討キーワードのコンテンツ設計を見直したい。
+初回提案では、SEO課題、サイト構造、コンテンツ優先順位、KPI、概算費用を知りたい。`
+            : buildProjectBriefFromEasyInput(sample),
       client_company_info: sampleClientInfo,
       competitor_company_name:
         kind === "renewal"
           ? "エリア大手不動産グループ"
           : kind === "recruit"
             ? "採用競合企業"
-            : "競合LPサービス",
-      estimated_page_count: kind === "renewal" ? "18ページ" : kind === "recruit" ? "10ページ" : "1ページ",
+            : kind === "lp"
+              ? "競合LPサービス"
+              : "検索上位の同業サービス",
+      estimated_page_count: kind === "renewal" ? "18ページ" : kind === "recruit" ? "10ページ" : kind === "lp" ? "1ページ" : "12ページ",
       special_function_required: kind === "renewal" ? "物件検索あり" : "",
       content_creation_required: kind === "lp" ? "原稿作成あり" : "原稿作成一部あり",
       hearing_result:
@@ -3301,7 +3443,9 @@ export default function Home() {
           ? "問い合わせ数の増加を最優先にしたい。CMSはWordPressで進める方針。予算は350万〜500万円。公開希望は2026年10月末。物件登録データの連携方法は未確認。年間問い合わせ目標は現状比150%。"
           : kind === "recruit"
             ? "応募数と応募者の質を改善したい。社員インタビューと職種紹介を入れたい。公開時期は3か月以上で検討。採用責任者と代表が確認する。"
-            : "広告配信用LPとして早めに公開したい。問い合わせフォームとCTAを重視。予算は100〜300万円。訴求整理と原稿作成も相談したい。",
+            : kind === "lp"
+              ? "広告配信用LPとして早めに公開したい。問い合わせフォームとCTAを重視。予算は100〜300万円。訴求整理と原稿作成も相談したい。"
+              : "自然検索流入と問い合わせ数を改善したい。既存記事はあるが成果につながっていない。優先キーワード、FAQ、導入事例、サービスページ改善を提案してほしい。予算は100〜300万円。",
       own_service_info: "Webサイト制作、情報設計、CMS構築、SEO初期設計、公開後の改善運用、月次レポートを支援",
       past_proposal_template: "表紙、提案サマリー、現状理解、競合比較、ターゲット分析、Web戦略、サイトマップ、KPI、制作方針、スケジュール、体制、費用概算、今後の進め方",
       case_studies:
@@ -3309,7 +3453,9 @@ export default function Home() {
           ? "採用サイトA：応募数160%増加\n製造業B：説明会予約数1.7倍"
           : kind === "lp"
             ? "SaaS企業A：資料請求CV率1.9倍\n新サービスLP：広告CPA25%改善"
-            : "不動産会社A：問い合わせ件数150%増加\n不動産会社B：CV率1.8倍\n住宅販売会社C：自然検索流入2.1倍"
+            : kind === "seo"
+              ? "BtoBサービスA：自然検索流入2.4倍\n専門サービスB：問い合わせ件数170%増加"
+              : "不動産会社A：問い合わせ件数150%増加\n不動産会社B：CV率1.8倍\n住宅販売会社C：自然検索流入2.1倍"
     }));
     setError("");
   }
@@ -3317,52 +3463,12 @@ export default function Home() {
   return (
     <AuthGate>
     <main className={`app-shell ${isDarkMode ? "dark-mode" : ""}`}>
-      <section className="workspace-header" aria-label="アプリ概要">
-        <div>
-          <p className="eyebrow">Ready Crew Proposal AI Version 4.0</p>
-          <h1>AI Digital Coworker（AI社員）</h1>
-        </div>
-        <div className="header-actions">
-          <button className="status-pill mode-toggle" type="button" onClick={() => setIsDarkMode((current) => !current)}>
-            {isDarkMode ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
-            {isDarkMode ? "Light" : "Dark"}
-          </button>
-          <div className="status-pill">
-            <CheckCircle2 size={16} aria-hidden="true" />
-            Version 4.0
-          </div>
-        </div>
-      </section>
-
-      <section className="dashboard-grid" aria-label="営業ダッシュボード">
-        {dashboardMetrics.map((metric) => (
-          <article className="dashboard-card" key={metric.label}>
-            <span>{metric.label}</span>
-            <strong>{metric.value}</strong>
-            <small>{metric.note}</small>
-          </article>
-        ))}
-      </section>
-
-      <section className="dashboard-grid monthly-dashboard" aria-label="今月の営業ダッシュボード">
-        {monthlyDashboardMetrics.map((metric) => (
-          <article className="dashboard-card coach-metric" key={metric.label}>
-            <span>{metric.label}</span>
-            <strong>{metric.value}</strong>
-            <small>{metric.note}</small>
-          </article>
-        ))}
-      </section>
-
-      <section className="dashboard-grid operations-dashboard" aria-label="社内業務AIダッシュボード">
-        {operationDashboardMetrics.map((metric) => (
-          <article className="dashboard-card" key={metric.label}>
-            <span>{metric.label}</span>
-            <strong>{metric.value}</strong>
-            <small>{metric.note}</small>
-          </article>
-        ))}
-      </section>
+      <Header isDarkMode={isDarkMode} onToggleDarkMode={() => setIsDarkMode((current) => !current)} />
+      <Dashboard
+        dashboardMetrics={dashboardMetrics}
+        monthlyDashboardMetrics={monthlyDashboardMetrics}
+        operationDashboardMetrics={operationDashboardMetrics}
+      />
 
       <section className="work-mode-panel" aria-label="業務モード切り替え">
         <div className="section-heading">
@@ -3644,6 +3750,10 @@ export default function Home() {
           <button className="primary-button auto-generate-button" type="button" onClick={oneClickAutoGenerate}>
             <Sparkles size={18} aria-hidden="true" />
             まずはAIにおまかせ生成
+          </button>
+          <button className="secondary-button auto-generate-button" type="button" onClick={autoPrepareProposal}>
+            <Bot size={18} aria-hidden="true" />
+            AIに全部おまかせ
           </button>
         </div>
 
@@ -4242,6 +4352,34 @@ CMSはWordPress希望。競合：https://example.co.jp"
             </div>
           </div>
 
+          <section className="minimal-input-panel" aria-label="最小入力モード">
+            <div className="minimal-input-heading">
+              <div>
+                <p className="eyebrow">Minimum Input</p>
+                <h3>会社名・やりたいこと・困りごとだけで開始</h3>
+              </div>
+              <button className="primary-button" type="button" onClick={() => organizeMinimalInput(true)}>
+                <Sparkles size={18} aria-hidden="true" />
+                この内容で生成準備
+              </button>
+            </div>
+            <div className="minimal-input-grid">
+              <label className="field">
+                <span>会社名</span>
+                <input value={minimalInput.companyName} onChange={(event) => updateMinimalField("companyName", event.target.value)} placeholder="例：株式会社サンプル不動産" />
+              </label>
+              <label className="field">
+                <span>やりたいこと</span>
+                <input value={minimalInput.goal} onChange={(event) => updateMinimalField("goal", event.target.value)} placeholder="例：Webサイトをリニューアルしたい" />
+              </label>
+              <label className="field">
+                <span>困りごと</span>
+                <input value={minimalInput.trouble} onChange={(event) => updateMinimalField("trouble", event.target.value)} placeholder="例：問い合わせが増えない" />
+              </label>
+            </div>
+            <p className="minimal-input-note">未入力項目は「予算：未定」「納期：要確認」「CMS：要確認」「競合：未確認」「決裁者：要確認」「ターゲット：要確認」で仮補完します。</p>
+          </section>
+
           <section className="sales-chat-panel" aria-label="AI営業アシスタント">
             <div className="sales-chat-hero">
               <div className="assistant-avatar">
@@ -4262,6 +4400,9 @@ CMSはWordPress希望。競合：https://example.co.jp"
               </button>
               <button className="sample-button" type="button" onClick={() => loadChatSample("lp")}>
                 LP制作
+              </button>
+              <button className="sample-button" type="button" onClick={() => loadChatSample("seo")}>
+                SEO改善
               </button>
             </div>
 
@@ -4352,6 +4493,9 @@ CMSはWordPress希望。競合：https://example.co.jp"
                   </button>
                   <button className="sample-button" type="button" onClick={() => fillSample("lp")}>
                     LP制作案件
+                  </button>
+                  <button className="sample-button" type="button" onClick={() => fillSample("seo")}>
+                    SEO改善案件
                   </button>
                 </div>
               </div>
@@ -5030,6 +5174,21 @@ CMSはWordPress希望。競合：https://example.co.jp"
                 <p><b>原因:</b> {errorAdvice.cause}</p>
                 <p><b>対処:</b> {errorAdvice.action}</p>
                 <small>{errorAdvice.detail}</small>
+                <div className="error-action-row">
+                  {lastDownloadRetry && result && (
+                    <button className="secondary-button" type="button" onClick={() => void retryLastDownload()}>
+                      再試行
+                    </button>
+                  )}
+                  {/認証|ログイン/.test(errorAdvice.title + errorAdvice.cause) && (
+                    <button className="secondary-button" type="button" onClick={() => window.location.reload()}>
+                      再ログイン
+                    </button>
+                  )}
+                  {/OpenAI|API制限|制限/.test(errorAdvice.title + errorAdvice.cause) && (
+                    <span className="mock-mode-hint">モックモードで試す場合はBackendの USE_MOCK_AI=true にしてください。</span>
+                  )}
+                </div>
               </div>
             </div>
           )}

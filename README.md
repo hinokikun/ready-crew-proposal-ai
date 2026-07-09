@@ -187,6 +187,95 @@ NEXT_PUBLIC_API_URL=https://your-render-backend.onrender.com
 - Vercel公開環境で通信エラーになる  
   Renderの `CORS_ORIGINS` にVercel URLを追加するか、`CORS_ORIGIN_REGEX=^https://.*\.vercel\.app$` を設定してください。
 
+## 現在の完成形
+
+Ready Crew Proposal AI / AI Digital Coworker は、社内試験導入向けに以下を備えています。
+
+- 簡易ログイン認証
+- AI案件受付、情報抽出、営業アシスタント
+- AI商談コーチ
+- 社内業務AIタブ
+- AI Digital Coworker
+- Markdown、通常版PPTX、要約PPTX、見積書PDF
+- 接続状態、設定画面、利用ログ
+- Vercel Frontend / Render Backend 構成
+
+## 入力を減らす使い方
+
+### 1. ワンクリックサンプル生成
+
+営業提案AIの画面で以下のサンプルを選ぶと、案件情報・見積条件・成功事例が自動で入ります。
+
+- Webリニューアル案件
+- 採用サイト案件
+- LP制作案件
+- SEO改善案件
+
+### 2. 最小入力モード
+
+以下の3項目だけで生成準備へ進めます。
+
+- 会社名
+- やりたいこと
+- 困りごと
+
+未入力項目は次のように仮補完します。
+
+- 予算：未定
+- 納期：要確認
+- CMS：要確認
+- 競合：未確認
+- 決裁者：要確認
+- ターゲット：要確認
+
+### 3. AIに全部おまかせ
+
+「AIに全部おまかせ」ボタンを押すと、貼り付け情報・会社URL・最小入力・かんたん入力の内容から、入力整理、不足情報の仮補完、提案方針作成、生成前確認画面表示まで進めます。
+
+## 管理者が設定する環境変数
+
+Render:
+
+```env
+APP_ACCESS_PASSWORD=社内共有パスワード
+APP_AUTH_SECRET=長いランダム文字列
+OPENAI_API_KEY=sk-...
+USE_MOCK_AI=false
+CORS_ORIGINS=https://your-vercel-app.vercel.app
+CORS_ORIGIN_REGEX=^https://.*\.vercel\.app$
+```
+
+Vercel:
+
+```env
+NEXT_PUBLIC_API_URL=https://your-render-backend.onrender.com
+```
+
+## Vercel / Render 再デプロイ手順
+
+1. 変更をGitHubへpushします。
+2. Vercelは `frontend` をRoot Directoryとして再デプロイします。
+3. Renderは `backend` の変更を検知して再デプロイします。
+4. デプロイ後、Frontendの設定画面でBackend URLと接続状態を確認します。
+5. ログイン後、提案書生成、PPTX、要約PPTX、見積書PDFを確認します。
+
+## API制限時の対応
+
+OpenAI API制限が出た場合は、以下を確認してください。
+
+- 時間を置いて再実行
+- OpenAIの利用上限・請求設定を確認
+- Renderの `OPENAI_API_KEY` を確認
+- デモ確認だけなら `USE_MOCK_AI=true` にしてモックモードで試す
+
+## 今後の実装予定
+
+- ユーザー管理
+- DB保存
+- Gmail / Google Drive / Slack 連携
+- 監査ログ
+- 権限管理
+
 ## GitHubへアップロードする方法
 
 1. GitHubで新しいリポジトリを作成します。
