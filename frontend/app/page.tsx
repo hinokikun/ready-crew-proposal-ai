@@ -86,6 +86,38 @@ type ChatQuestion = {
 
 type ChatAnswers = Partial<Record<ChatAnswerKey, string>>;
 
+type ExtractedInfo = {
+  companyName: string;
+  contactPerson: string;
+  projectContent: string;
+  purposes: string[];
+  trouble: string;
+  budget: string;
+  deadline: string;
+  competitor: string;
+  currentSiteUrl: string;
+  cms: string;
+  inquiryDetails: string;
+};
+
+type UrlInsight = {
+  url: string;
+  companyOverview: string;
+  business: string;
+  strengths: string;
+  services: string;
+  recruitment: string;
+  seoStatus: string;
+  improvementPoints: string[];
+};
+
+type SalesOpportunityScore = {
+  score: number;
+  stars: string;
+  label: string;
+  reasons: string[];
+};
+
 const initialEasyInput: EasyInput = {
   projectType: "",
   trouble: "",
@@ -388,6 +420,11 @@ function extractFirstUrl(value: string | undefined) {
   return value.match(/https?:\/\/[^\s、。)）]+/)?.[0] ?? "";
 }
 
+function extractUrls(value: string | undefined) {
+  if (!value) return [];
+  return Array.from(new Set(value.match(/https?:\/\/[^\s、。)）]+/g) ?? []));
+}
+
 function withoutUrl(value: string | undefined) {
   if (!value) return "";
   return value.replace(/https?:\/\/[^\s、。)）]+/g, "").replace(/[、。,\s]+$/g, "").trim();
@@ -413,6 +450,197 @@ function buildProjectBriefFromChatAnswers(answers: ChatAnswers) {
 公開希望時期・納期：${deadline}
 競合情報：${competitor}
 提案書では、現状理解、課題整理、Web戦略、競合比較、概算見積、スケジュール、体制、今後の進め方を整理する。`;
+}
+
+function compactText(value: string) {
+  return value.replace(/\r/g, "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function findLabeledValue(text: string, labels: string[]) {
+  const lines = compactText(text).split("\n").map((line) => line.trim()).filter(Boolean);
+  for (const label of labels) {
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const direct = lines.find((line) => new RegExp(`^${escaped}\\s*[:：]\\s*`, "i").test(line));
+    if (direct) {
+      return direct.replace(new RegExp(`^${escaped}\\s*[:：]\\s*`, "i"), "").trim();
+    }
+    const included = lines.find((line) => line.includes(label) && /[:：]/.test(line));
+    if (included) {
+      return included.split(/[:：]/).slice(1).join("：").trim();
+    }
+  }
+  return "";
+}
+
+function findSentence(text: string, patterns: (RegExp | string)[]) {
+  const sentences = compactText(text)
+    .split(/[\n。！？!?]/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return sentences.find((sentence) => hasAny(sentence, patterns)) ?? "";
+}
+
+function extractCompanyName(text: string, fallbackUrl = "") {
+  const labeled = findLabeledValue(text, ["会社名", "企業名", "顧客名", "社名", "提案先", "お客様"]);
+  if (labeled) return labeled;
+  const match = text.match(/(?:株式会社|有限会社|合同会社|医療法人|学校法人|社会福祉法人)[^\s　、。:：\n]{1,30}/);
+  if (match) return match[0];
+  if (fallbackUrl) {
+    try {
+      return new URL(fallbackUrl).hostname.replace(/^www\./, "");
+    } catch {
+      return "";
+    }
+  }
+  return "";
+}
+
+function extractPurposeList(text: string) {
+  const candidates = [
+    { keyword: /問い合わせ|問合せ|資料請求|来店予約|CV|コンバージョン/i, label: "問い合わせを増やしたい" },
+    { keyword: /採用|応募|求人|人材/i, label: "採用を強化したい" },
+    { keyword: /信頼|ブランド|ブランディング|認知|実績/i, label: "会社の信頼感を上げたい" },
+    { keyword: /更新|CMS|お知らせ|ブログ|運用/i, label: "更新しやすくしたい" },
+    { keyword: /SEO|検索|自然流入|流入|順位/i, label: "SEOを強化したい" }
+  ];
+  return candidates.filter((item) => item.keyword.test(text)).map((item) => item.label);
+}
+
+function extractProposalInfo(rawText: string, homepageUrl: string): ExtractedInfo {
+  const text = compactText(rawText);
+  const urls = extractUrls(`${text}\n${homepageUrl}`);
+  const competitorLine = findSentence(text, ["競合", "比較", "他社"]);
+  const currentSiteLine = findSentence(text, ["既存サイト", "現行サイト", "会社HP", "ホームページURL", "URL"]);
+  const budget =
+    findLabeledValue(text, ["予算", "予算感", "費用", "金額"]) ||
+    text.match(/\d{2,4}\s*万\s*(?:円)?\s*[〜~～-]\s*\d{2,4}\s*万\s*円?/)?.[0] ||
+    text.match(/\d{2,4}\s*万円(?:以内|程度|前後)?/)?.[0] ||
+    "";
+  const deadline =
+    findLabeledValue(text, ["納期", "公開希望", "公開時期", "希望時期", "リリース"]) ||
+    text.match(/\d{4}年\d{1,2}月(?:末|中|上旬|下旬)?/)?.[0] ||
+    text.match(/\d{1,2}月(?:末|中|上旬|下旬)?/)?.[0] ||
+    "";
+  const projectContent =
+    findLabeledValue(text, ["案件内容", "依頼内容", "相談内容", "制作内容", "概要"]) ||
+    findSentence(text, ["リニューアル", "制作", "LP", "採用サイト", "Webサイト", "ホームページ", "コーポレートサイト"]);
+  const trouble =
+    findLabeledValue(text, ["課題", "困りごと", "悩み", "現状", "背景"]) ||
+    findSentence(text, [/困|課題|古い|弱い|不足|できていない|伸びない|少ない|改善/]);
+  const cms =
+    findLabeledValue(text, ["CMS", "CMS希望", "更新"]) ||
+    text.match(/WordPress|Movable Type|独自CMS|CMS不要|CMSあり/i)?.[0] ||
+    "";
+  const inquiryDetails =
+    findLabeledValue(text, ["問い合わせ内容", "相談内容", "要望", "希望"]) ||
+    findSentence(text, ["知りたい", "相談", "依頼", "提案", "見積", "スケジュール"]);
+  const competitorUrl = extractFirstUrl(competitorLine);
+  const currentSiteUrl = homepageUrl.trim() || extractFirstUrl(currentSiteLine) || urls.find((url) => url !== competitorUrl) || "";
+
+  return {
+    companyName: extractCompanyName(text, currentSiteUrl),
+    contactPerson: findLabeledValue(text, ["担当者", "窓口", "ご担当", "決裁者", "確認者"]),
+    projectContent,
+    purposes: extractPurposeList(text),
+    trouble,
+    budget,
+    deadline,
+    competitor: competitorLine || competitorUrl || findLabeledValue(text, ["競合", "競合サイト", "競合企業"]),
+    currentSiteUrl,
+    cms,
+    inquiryDetails
+  };
+}
+
+function buildUrlInsight(url: string, rawText: string, extracted: ExtractedInfo): UrlInsight | null {
+  const targetUrl = url.trim() || extracted.currentSiteUrl.trim();
+  if (!targetUrl) return null;
+  let hostname = targetUrl;
+  try {
+    hostname = new URL(targetUrl).hostname.replace(/^www\./, "");
+  } catch {
+    hostname = targetUrl.replace(/^https?:\/\//, "").split("/")[0];
+  }
+  const text = `${rawText}\n${extracted.projectContent}\n${extracted.trouble}`;
+  const isRecruit = /採用|求人|応募|人材/.test(text);
+  const isRealEstate = /不動産|物件|賃貸|売買|住宅/.test(text);
+  const isLp = /LP|ランディング|広告|CPA|資料請求/.test(text);
+
+  return {
+    url: targetUrl,
+    companyOverview: `${extracted.companyName || hostname}の公開サイトとして、事業理解・信頼形成・問い合わせ導線の確認対象にします。`,
+    business: isRealEstate
+      ? "不動産・住宅領域のサービス訴求、物件情報、来店・問い合わせ獲得が中心と想定します。"
+      : isRecruit
+        ? "採用広報、職種理解、応募導線、社員紹介を中心に整理します。"
+        : "サービス紹介、実績訴求、問い合わせ獲得を中心に整理します。",
+    strengths: "既存の事業実績、専門性、地域性、顧客対応力を強みとして提案に転換します。",
+    services: isLp ? "新サービスの価値訴求、CTA、フォーム導線を重点確認します。" : "主要サービス、料金・事例・FAQ・問い合わせ導線を確認対象にします。",
+    recruitment: isRecruit ? "採用情報、社員インタビュー、働く環境、応募導線を重点的に改善します。" : "採用情報がある場合は、信頼感と企業理解を補強する要素として扱います。",
+    seoStatus: /SEO|検索|自然流入|流入/.test(text)
+      ? "検索流入強化が論点に含まれるため、カテゴリ設計・見出し・FAQ・事例コンテンツを強化します。"
+      : "現時点ではSEO要件が未確定のため、基本的なサイト構造・タイトル・導線改善を初期提案に含めます。",
+    improvementPoints: [
+      "ファーストビューで提供価値とCTAを明確化",
+      "サービス・実績・FAQから問い合わせまでの導線を短縮",
+      "CMS更新しやすい情報設計とSEOに強いコンテンツ構造を提案"
+    ]
+  };
+}
+
+function buildChatAnswersFromExtracted(info: ExtractedInfo): ChatAnswers {
+  return {
+    ...(info.projectContent ? { project: info.projectContent } : {}),
+    ...(info.companyName || info.contactPerson || info.currentSiteUrl
+      ? { company: [info.companyName, info.contactPerson ? `担当者：${info.contactPerson}` : "", info.currentSiteUrl ? `URL：${info.currentSiteUrl}` : ""].filter(Boolean).join("。") }
+      : {}),
+    ...(info.trouble || info.purposes.length ? { trouble: [info.trouble, info.purposes.length ? `目的：${info.purposes.join("、")}` : ""].filter(Boolean).join("。") } : {}),
+    ...(info.budget ? { budget: info.budget } : {}),
+    ...(info.deadline ? { deadline: info.deadline } : {}),
+    ...(info.competitor ? { competitor: info.competitor } : {})
+  };
+}
+
+function buildFormFromExtracted(current: ProposalRequest, info: ExtractedInfo, insight: UrlInsight | null): ProposalRequest {
+  const answers = buildChatAnswersFromExtracted(info);
+  const next = applyChatAnswersToForm(current, answers);
+  const urlInsightText = insight
+    ? `URL解析メモ：
+会社概要：${insight.companyOverview}
+事業内容：${insight.business}
+強み：${insight.strengths}
+サービス：${insight.services}
+採用情報：${insight.recruitment}
+SEO状況：${insight.seoStatus}
+改善ポイント：${insight.improvementPoints.join("、")}`
+    : "";
+
+  return {
+    ...next,
+    project_brief: `${next.project_brief}
+抽出元情報：
+目的：${info.purposes.join("、") || "未抽出"}
+問い合わせ内容：${info.inquiryDetails || "未抽出"}
+CMS：${info.cms || "未抽出"}
+${urlInsightText}`.trim(),
+    client_company_info: [
+      info.companyName,
+      info.contactPerson ? `担当者・確認者：${info.contactPerson}` : "",
+      info.currentSiteUrl ? `会社ホームページURL：${info.currentSiteUrl}` : "",
+      insight?.companyOverview,
+      insight?.business,
+      insight?.strengths
+    ].filter(Boolean).join("\n"),
+    cms_required: info.cms || next.cms_required,
+    competitor_site_url: extractFirstUrl(info.competitor) || next.competitor_site_url,
+    budget_range: info.budget || next.budget_range,
+    desired_launch_timing: info.deadline || next.desired_launch_timing,
+    hearing_result: [current.hearing_result, info.inquiryDetails, urlInsightText].filter(Boolean).join("\n\n")
+  };
+}
+
+function findNextMissingQuestionIndex(answers: ChatAnswers) {
+  return chatQuestionFlow.findIndex((question) => !answers[question.key]?.trim());
 }
 
 function applyChatAnswersToForm(current: ProposalRequest, answers: ChatAnswers): ProposalRequest {
@@ -479,6 +707,77 @@ function buildLiveProjectSummary(form: ProposalRequest, missingItems: InfoCheck[
         : ["提案書を生成できます。内容確認後、PPTX・PDF出力へ進めます。"]
     }
   ];
+}
+
+function buildSalesOpportunityScore(form: ProposalRequest, checks: InfoCheck[]): SalesOpportunityScore {
+  const text = allInputText(form);
+  let score = 2;
+  const reasons: string[] = [];
+
+  if (form.project_brief.trim().length >= 40) {
+    score += 1;
+    reasons.push("案件内容が整理されています");
+  }
+  if (checks.find((item) => item.key === "budget")?.found) {
+    score += 1;
+    reasons.push("予算感が確認できています");
+  }
+  if (checks.find((item) => item.key === "deadline")?.found) {
+    score += 1;
+    reasons.push("納期・公開希望が確認できています");
+  }
+  if (checks.find((item) => item.key === "decision-maker")?.found) {
+    score += 1;
+    reasons.push("決裁者・確認者の情報があります");
+  }
+  if (/問い合わせ|採用|SEO|リニューアル|CMS|資料請求|CV/.test(text)) {
+    score += 1;
+    reasons.push("提案テーマが具体的です");
+  }
+  if (/未定|未確認|不明/.test(text)) {
+    score -= 1;
+    reasons.push("未確認情報が残っています");
+  }
+
+  const normalizedScore = Math.max(1, Math.min(5, score));
+  return {
+    score: normalizedScore,
+    stars: "★★★★★".slice(0, normalizedScore) + "☆☆☆☆☆".slice(0, 5 - normalizedScore),
+    label: normalizedScore >= 4 ? "案件化しやすい" : normalizedScore >= 3 ? "追加確認で案件化しやすい" : "要ヒアリング",
+    reasons: reasons.length ? reasons.slice(0, 4) : ["案件内容、予算、納期、決裁者を確認すると判断しやすくなります"]
+  };
+}
+
+function buildAiRecommendations(form: ProposalRequest, insight: UrlInsight | null) {
+  const text = allInputText(form);
+  const recommendations: string[] = [];
+
+  if (/問い合わせ|資料請求|CV|コンバージョン|来店予約/.test(text)) {
+    recommendations.push("問い合わせ最大化提案：ファーストビュー、CTA、フォーム導線、FAQを改善してCVまでの迷いを減らします。");
+  }
+  if (/採用|求人|応募|人材/.test(text)) {
+    recommendations.push("採用強化提案：職種理解、社員紹介、働く環境、応募導線を整えて応募前の不安を減らします。");
+  }
+  if (/SEO|検索|自然流入|流入|地域名/.test(text)) {
+    recommendations.push("SEO強化提案：サービス別・課題別・FAQ・実績コンテンツを増やし、検索流入から問い合わせへつなげます。");
+  }
+  if (/CMS|更新|お知らせ|ブログ|運用/.test(text)) {
+    recommendations.push("CMS運用提案：更新しやすい管理画面と投稿ルールを設計し、公開後の改善運用を回せる状態にします。");
+  }
+  if (/競合|比較|他社/.test(text) || form.competitor_site_url.trim()) {
+    recommendations.push("競合差別化提案：競合より分かりやすい導線、実績訴求、CTA配置で選ばれる理由を明確にします。");
+  }
+  if (insight) {
+    recommendations.push(`URL改善提案：${insight.improvementPoints[0]}し、既存サイトの強みを提案ストーリーへ反映します。`);
+  }
+
+  return uniqueTextItems(recommendations).slice(0, 3).length
+    ? uniqueTextItems(recommendations).slice(0, 3)
+    : [
+        "現状理解提案：事業内容と顧客課題を整理し、提案サマリーで意思決定しやすくします。",
+        "導線改善提案：主要CTAと問い合わせフォームまでの流れを短くし、成果につながる構成にします。",
+        "運用改善提案：CMSと改善レポートを前提に、公開後も成果を伸ばす提案にします。"
+      ];
 }
 
 function hasAny(text: string, patterns: (RegExp | string)[]) {
@@ -1353,6 +1652,10 @@ export default function Home() {
   const [chatAnswers, setChatAnswers] = useState<ChatAnswers>({});
   const [chatQuestionIndex, setChatQuestionIndex] = useState(0);
   const [chatDraft, setChatDraft] = useState("");
+  const [rawSourceText, setRawSourceText] = useState("");
+  const [companyHomeUrl, setCompanyHomeUrl] = useState("");
+  const [extractedInfo, setExtractedInfo] = useState<ExtractedInfo | null>(null);
+  const [urlInsight, setUrlInsight] = useState<UrlInsight | null>(null);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -1377,6 +1680,7 @@ export default function Home() {
   const infoChecks = useMemo(() => buildInfoChecks(form), [form]);
   const missingItems = useMemo(() => infoChecks.filter((item) => !item.found), [infoChecks]);
   const liveProjectSummary = useMemo(() => buildLiveProjectSummary(form, missingItems), [form, missingItems]);
+  const salesOpportunityScore = useMemo(() => buildSalesOpportunityScore(form, infoChecks), [form, infoChecks]);
   const hearingSheet = useMemo(() => buildHearingSheet(form), [form]);
   const hearingQuestionCount = useMemo(
     () => hearingSheet.reduce((count, item) => count + item.questions.length, 0),
@@ -1395,6 +1699,7 @@ export default function Home() {
   const browserUsePlan = useMemo(() => buildBrowserUsePlan(form, competitorPoints), [form, competitorPoints]);
   const automationConcept = useMemo(() => buildAutomationConcept(form, dealEvaluation), [form, dealEvaluation]);
   const mcpConcept = useMemo(() => buildMcpConcept(form), [form]);
+  const aiRecommendations = useMemo(() => buildAiRecommendations(form, urlInsight), [form, urlInsight]);
   const inputSummary = useMemo(() => buildInputSummary(form), [form]);
   const displayedWin = useMemo(
     () => buildDisplayedWinProbability(result?.analysis.win_probability, dealEvaluation),
@@ -1437,6 +1742,49 @@ export default function Home() {
     setError("");
   }
 
+  function organizeSourceText() {
+    if (!rawSourceText.trim() && !companyHomeUrl.trim()) {
+      setError("案件メール、議事録、チャット、Ready Crew案件情報、または会社ホームページURLを入力してください。");
+      return;
+    }
+
+    const nextExtracted = extractProposalInfo(rawSourceText, companyHomeUrl);
+    const nextInsight = buildUrlInsight(companyHomeUrl, rawSourceText, nextExtracted);
+    const nextAnswers = buildChatAnswersFromExtracted(nextExtracted);
+    const nextMissingIndex = findNextMissingQuestionIndex(nextAnswers);
+    const missingQuestion =
+      nextMissingIndex >= 0
+        ? `${chatQuestionFlow[nextMissingIndex].label}だけ教えてください。\n${chatQuestionFlow[nextMissingIndex].question}`
+        : "必要な情報が揃いました。提案書を生成できます。";
+
+    setExtractedInfo(nextExtracted);
+    setUrlInsight(nextInsight);
+    setChatAnswers(nextAnswers);
+    setChatQuestionIndex(nextMissingIndex >= 0 ? nextMissingIndex : chatQuestionFlow.length);
+    setChatDraft("");
+    setForm((current) => buildFormFromExtracted(current, nextExtracted, nextInsight));
+    setChatMessages([
+      ...initialChatMessages,
+      {
+        id: `assistant-extract-${Date.now()}`,
+        role: "assistant",
+        text: `貼り付け情報を整理しました。
+会社名：${nextExtracted.companyName || "未抽出"}
+案件内容：${nextExtracted.projectContent || "未抽出"}
+困りごと：${nextExtracted.trouble || "未抽出"}
+予算：${nextExtracted.budget || "未抽出"}
+納期：${nextExtracted.deadline || "未抽出"}
+競合：${nextExtracted.competitor || "未抽出"}`
+      },
+      {
+        id: `assistant-missing-${Date.now()}`,
+        role: "assistant",
+        text: nextMissingIndex >= 0 ? missingQuestion : "このまま「今の内容で生成する」から提案書を作成できます。"
+      }
+    ]);
+    setError("");
+  }
+
   function submitChatAnswer(event?: React.FormEvent<HTMLFormElement>) {
     event?.preventDefault();
     const answer = chatDraft.trim();
@@ -1465,11 +1813,11 @@ export default function Home() {
 
     const question = chatQuestionFlow[chatQuestionIndex];
     const nextAnswers = { ...chatAnswers, [question.key]: answer };
-    const nextIndex = chatQuestionIndex + 1;
+    const nextIndex = findNextMissingQuestionIndex(nextAnswers);
     const nextReadiness = buildChatReadiness(nextAnswers);
     const nextAssistantText =
-      nextIndex < chatQuestionFlow.length
-        ? `${nextReadiness.ready ? "提案書を生成できます。精度を上げるため、続けて確認します。\n" : ""}${chatQuestionFlow[nextIndex].question}`
+      nextIndex >= 0
+        ? `${nextReadiness.ready ? "提案書を生成できます。精度を上げるため、未確認の項目だけ確認します。\n" : ""}${chatQuestionFlow[nextIndex].label}だけ教えてください。\n${chatQuestionFlow[nextIndex].question}`
         : "必要な情報が揃いました。提案書を生成できます。まだ未確認の項目があっても「今の内容で生成する」から進められます。";
 
     setChatMessages((current) => [
@@ -1478,7 +1826,7 @@ export default function Home() {
       { id: `assistant-${Date.now()}-next`, role: "assistant", text: nextAssistantText }
     ]);
     setChatAnswers(nextAnswers);
-    setChatQuestionIndex(nextIndex);
+    setChatQuestionIndex(nextIndex >= 0 ? nextIndex : chatQuestionFlow.length);
     setChatDraft("");
     setForm((current) => applyChatAnswersToForm(current, nextAnswers));
     setError("");
@@ -1500,6 +1848,10 @@ export default function Home() {
     setChatAnswers({});
     setChatQuestionIndex(0);
     setChatDraft("");
+    setRawSourceText("");
+    setCompanyHomeUrl("");
+    setExtractedInfo(null);
+    setUrlInsight(null);
     setForm(initialForm);
     setResult(null);
     setError("");
@@ -1792,28 +2144,138 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="usage-steps" aria-label="使い方3ステップ">
+      <section className="usage-steps" aria-label="使い方4ステップ">
         <article>
           <span>1</span>
           <div>
-            <strong>案件概要を入力</strong>
-            <p>Ready Crewの案件概要、企業情報、競合情報を貼り付けます。</p>
+            <strong>情報を貼り付ける</strong>
+            <p>案件メール、議事録、チャット、Ready Crew案件情報をそのまま貼り付けます。</p>
           </div>
         </article>
         <article>
           <span>2</span>
           <div>
-            <strong>不足情報・提案前プランを確認</strong>
-            <p>追記すべき項目と、AI・人間の担当範囲を確認します。</p>
+            <strong>AIが整理する</strong>
+            <p>会社名、案件内容、目的、予算、納期、競合、CMSを自動抽出します。</p>
           </div>
         </article>
         <article>
           <span>3</span>
           <div>
-            <strong>提案書・要約版・見積書をダウンロード</strong>
+            <strong>不足情報だけ回答</strong>
+            <p>抽出できなかった項目だけ、AI営業アシスタントが追加で質問します。</p>
+          </div>
+        </article>
+        <article>
+          <span>4</span>
+          <div>
+            <strong>提案書生成</strong>
             <p>Markdown、PPTX、要約PPTX、見積書PDFを保存できます。</p>
           </div>
         </article>
+      </section>
+
+      <section className="extractor-panel" aria-label="AI情報抽出モード">
+        <div className="extractor-heading">
+          <div>
+            <p className="eyebrow">AI Extract Mode</p>
+            <h2>案件メール・議事録・チャット・Ready Crew案件情報を<br />そのまま貼り付けてください</h2>
+          </div>
+          <div className="extractor-score">
+            <span>案件化しやすさ</span>
+            <strong>{salesOpportunityScore.stars}</strong>
+            <small>{salesOpportunityScore.label}</small>
+          </div>
+        </div>
+
+        <div className="extractor-flow" aria-label="4ステップ">
+          <div><span>1</span><strong>情報を貼り付ける</strong></div>
+          <div><span>2</span><strong>AIが整理する</strong></div>
+          <div><span>3</span><strong>不足情報だけ回答</strong></div>
+          <div><span>4</span><strong>提案書生成</strong></div>
+        </div>
+
+        <div className="extractor-grid">
+          <label className="field extractor-main-input">
+            <div className="field-title-row">
+              <span>貼り付け情報</span>
+              <small>Ready Crew案件メール、Zoom議事録、Slack、Teams、Chatwork、メールをそのまま貼り付け</small>
+            </div>
+            <textarea
+              value={rawSourceText}
+              onChange={(event) => setRawSourceText(event.target.value)}
+              placeholder="例：
+Ready Crew案件情報
+株式会社サンプル不動産様。Webサイトリニューアル希望。
+現行サイトが古く、問い合わせ数を増やしたい。
+予算は300万〜500万円。10月末公開希望。
+CMSはWordPress希望。競合：https://example.co.jp"
+              rows={9}
+            />
+          </label>
+
+          <div className="url-analysis-box">
+            <label className="field">
+              <div className="field-title-row">
+                <span>会社ホームページURL</span>
+                <small>URLだけでも解析メモを作成</small>
+              </div>
+              <input
+                value={companyHomeUrl}
+                onChange={(event) => setCompanyHomeUrl(event.target.value)}
+                placeholder="https://example.co.jp"
+              />
+            </label>
+            <button className="primary-button" type="button" onClick={organizeSourceText}>
+              <Sparkles size={18} aria-hidden="true" />
+              AIが整理する
+            </button>
+            <div className="score-reason-box">
+              <strong>スコア理由</strong>
+              <ul>
+                {salesOpportunityScore.reasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {(extractedInfo || urlInsight) && (
+          <div className="extractor-result-grid">
+            {extractedInfo && (
+              <article className="extractor-result-card">
+                <strong>AI抽出結果</strong>
+                <dl>
+                  <div><dt>会社名</dt><dd>{extractedInfo.companyName || "未抽出"}</dd></div>
+                  <div><dt>担当者</dt><dd>{extractedInfo.contactPerson || "未抽出"}</dd></div>
+                  <div><dt>案件内容</dt><dd>{extractedInfo.projectContent || "未抽出"}</dd></div>
+                  <div><dt>目的</dt><dd>{extractedInfo.purposes.join("、") || "未抽出"}</dd></div>
+                  <div><dt>困りごと</dt><dd>{extractedInfo.trouble || "未抽出"}</dd></div>
+                  <div><dt>予算</dt><dd>{extractedInfo.budget || "未抽出"}</dd></div>
+                  <div><dt>納期</dt><dd>{extractedInfo.deadline || "未抽出"}</dd></div>
+                  <div><dt>競合</dt><dd>{extractedInfo.competitor || "未抽出"}</dd></div>
+                  <div><dt>CMS</dt><dd>{extractedInfo.cms || "未抽出"}</dd></div>
+                  <div><dt>問い合わせ内容</dt><dd>{extractedInfo.inquiryDetails || "未抽出"}</dd></div>
+                </dl>
+              </article>
+            )}
+
+            {urlInsight && (
+              <article className="extractor-result-card">
+                <strong>URL解析メモ</strong>
+                <dl>
+                  <div><dt>会社概要</dt><dd>{urlInsight.companyOverview}</dd></div>
+                  <div><dt>事業内容</dt><dd>{urlInsight.business}</dd></div>
+                  <div><dt>強み</dt><dd>{urlInsight.strengths}</dd></div>
+                  <div><dt>サービス</dt><dd>{urlInsight.services}</dd></div>
+                  <div><dt>採用情報</dt><dd>{urlInsight.recruitment}</dd></div>
+                  <div><dt>SEO状況</dt><dd>{urlInsight.seoStatus}</dd></div>
+                </dl>
+              </article>
+            )}
+          </div>
+        )}
       </section>
 
       <section className="workspace-grid">
@@ -2653,6 +3115,21 @@ export default function Home() {
               <div>
                 <span>競合分析</span>
                 <strong>{form.competitor_site_url.trim() || form.competitor_company_name.trim() ? "反映済み" : "未確認"}</strong>
+              </div>
+            </div>
+            <div className="recommendation-panel">
+              <div className="opportunity-card">
+                <span>案件化しやすさ</span>
+                <strong>{salesOpportunityScore.stars}</strong>
+                <p>{salesOpportunityScore.reasons.slice(0, 2).join(" / ")}</p>
+              </div>
+              <div className="recommendation-list">
+                <strong>この案件ならこんな提案が刺さります</strong>
+                <ol>
+                  {aiRecommendations.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ol>
               </div>
             </div>
           </section>
