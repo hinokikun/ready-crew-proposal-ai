@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
+  Bot,
   CheckCircle2,
   Clipboard,
   Download,
@@ -10,7 +11,9 @@ import {
   FileText,
   History,
   Loader2,
+  MessageCircle,
   RotateCcw,
+  Send,
   Sparkles,
   X
 } from "lucide-react";
@@ -51,6 +54,144 @@ const sampleBrief = `Ready Crew案件概要：
 決裁者は代表取締役、窓口は営業企画部。初回提案では概算費用とスケジュールも知りたい。`;
 
 type Rank = "A" | "B" | "C" | "D";
+type InputMode = "easy" | "detail";
+type SampleKind = "renewal" | "recruit" | "lp";
+type ChatRole = "assistant" | "user";
+type ChatAnswerKey = "project" | "company" | "trouble" | "budget" | "deadline" | "competitor";
+
+type EasyInput = {
+  projectType: string;
+  trouble: string;
+  budget: string;
+  deadline: string;
+  competitorSiteUrl: string;
+  currentSiteUrl: string;
+  cms: string;
+  decisionMakers: string;
+  purposes: string[];
+};
+
+type ChatMessage = {
+  id: string;
+  role: ChatRole;
+  text: string;
+};
+
+type ChatQuestion = {
+  key: ChatAnswerKey;
+  label: string;
+  question: string;
+  placeholder: string;
+};
+
+type ChatAnswers = Partial<Record<ChatAnswerKey, string>>;
+
+const initialEasyInput: EasyInput = {
+  projectType: "",
+  trouble: "",
+  budget: "未定",
+  deadline: "未定",
+  competitorSiteUrl: "",
+  currentSiteUrl: "",
+  cms: "未定",
+  decisionMakers: "",
+  purposes: []
+};
+
+const purposeOptions = [
+  "問い合わせを増やしたい",
+  "採用を強化したい",
+  "会社の信頼感を上げたい",
+  "更新しやすくしたい",
+  "SEOを強化したい"
+];
+
+const budgetOptions = ["未定", "100万円未満", "100〜300万円", "300〜500万円", "500万円以上"];
+const deadlineOptions = ["未定", "1か月以内", "2〜3か月", "3か月以上"];
+const cmsOptions = ["未定", "WordPress", "Movable Type", "独自CMS", "不要"];
+
+const easySamples: Record<SampleKind, EasyInput> = {
+  renewal: {
+    projectType: "コーポレートサイトのリニューアル",
+    trouble: "現行サイトの情報が古く、スマホで物件情報を探しにくい。問い合わせ導線も弱く、地域名検索からの流入を増やしたい。",
+    budget: "300〜500万円",
+    deadline: "2〜3か月",
+    competitorSiteUrl: "https://area-rival-realty.example.jp",
+    currentSiteUrl: "https://sample-realty.example.jp",
+    cms: "WordPress",
+    decisionMakers: "代表取締役、営業企画部",
+    purposes: ["問い合わせを増やしたい", "会社の信頼感を上げたい", "更新しやすくしたい", "SEOを強化したい"]
+  },
+  recruit: {
+    projectType: "採用サイト制作",
+    trouble: "求人媒体に依存しており、自社の雰囲気や働く魅力が伝わっていない。応募数と応募者の質を改善したい。",
+    budget: "100〜300万円",
+    deadline: "3か月以上",
+    competitorSiteUrl: "https://recruit-rival.example.jp",
+    currentSiteUrl: "https://sample-company.example.jp",
+    cms: "WordPress",
+    decisionMakers: "人事責任者、代表取締役",
+    purposes: ["採用を強化したい", "会社の信頼感を上げたい", "更新しやすくしたい"]
+  },
+  lp: {
+    projectType: "新サービスのLP制作",
+    trouble: "新サービスの特徴がまだ整理されておらず、広告流入後の問い合わせ率を高めるLPが必要。",
+    budget: "100〜300万円",
+    deadline: "1か月以内",
+    competitorSiteUrl: "https://lp-rival.example.jp",
+    currentSiteUrl: "https://sample-service.example.jp",
+    cms: "不要",
+    decisionMakers: "マーケティング責任者、事業責任者",
+    purposes: ["問い合わせを増やしたい", "会社の信頼感を上げたい"]
+  }
+};
+
+const chatQuestionFlow: ChatQuestion[] = [
+  {
+    key: "project",
+    label: "案件内容",
+    question: "どんな案件ですか？例：コーポレートサイトのリニューアル、採用サイト制作、LP制作など",
+    placeholder: "例：不動産会社のWebサイトリニューアルです"
+  },
+  {
+    key: "company",
+    label: "お客様",
+    question: "お客様はどんな会社ですか？会社名、業種、事業内容が分かる範囲で大丈夫です。",
+    placeholder: "例：株式会社サンプル不動産。賃貸・売買仲介を行う会社です"
+  },
+  {
+    key: "trouble",
+    label: "困りごと",
+    question: "お客様は何に困っていますか？問い合わせ、採用、SEO、更新性など、営業で聞いた内容をそのまま書いてください。",
+    placeholder: "例：サイトが古く、問い合わせにつながっていません"
+  },
+  {
+    key: "budget",
+    label: "予算",
+    question: "予算感は分かりますか？未定でも大丈夫です。",
+    placeholder: "例：300万〜500万円、または未定"
+  },
+  {
+    key: "deadline",
+    label: "納期",
+    question: "公開希望時期や納期はありますか？",
+    placeholder: "例：10月末公開希望、または未定"
+  },
+  {
+    key: "competitor",
+    label: "競合",
+    question: "競合サイトや比較されそうな会社はありますか？URLがあれば貼ってください。",
+    placeholder: "例：https://example.co.jp、または競合未確認"
+  }
+];
+
+const initialChatMessages: ChatMessage[] = [
+  {
+    id: "assistant-initial",
+    role: "assistant",
+    text: "こんにちは。AI営業アシスタントです。会話だけで提案書の材料を整理します。まず、どんな案件ですか？"
+  }
+];
 
 type SalesIndicator = {
   title: string;
@@ -184,6 +325,160 @@ function allInputText(form: ProposalRequest) {
     form.past_proposal_template,
     form.case_studies
   ].join("\n");
+}
+
+function buildEasyMissingItems(easyInput: EasyInput) {
+  const missing: string[] = [];
+  if (!easyInput.projectType.trim()) {
+    missing.push("何を作りたいか");
+  }
+  if (!easyInput.trouble.trim() && easyInput.purposes.length === 0) {
+    missing.push("お客様の困りごと、または目的を1つ以上");
+  }
+  return missing;
+}
+
+function optionalLabel(value: string) {
+  return value.trim() || "任意・未入力";
+}
+
+function buildProjectBriefFromEasyInput(easyInput: EasyInput) {
+  const purposes = easyInput.purposes.length ? easyInput.purposes.join("、") : "未選択";
+  return `Ready Crew案件概要：
+制作したいものは「${optionalLabel(easyInput.projectType)}」。
+目的は、${purposes}。
+お客様の困りごとは、${optionalLabel(easyInput.trouble)}。
+予算感は「${easyInput.budget}」、納期は「${easyInput.deadline}」。
+既存サイトURL：${optionalLabel(easyInput.currentSiteUrl)}
+競合サイトURL：${optionalLabel(easyInput.competitorSiteUrl)}
+CMS希望：${easyInput.cms}
+決裁者・確認者：${optionalLabel(easyInput.decisionMakers)}
+初回提案では、課題整理、提案方針、概算見積、スケジュール、PowerPoint提案書の初稿を作成したい。`;
+}
+
+function patchFormFromEasyInput(current: ProposalRequest, easyInput: EasyInput): ProposalRequest {
+  const nextBrief = buildProjectBriefFromEasyInput(easyInput);
+  const currentSiteLine = easyInput.currentSiteUrl.trim() ? `既存サイトURL：${easyInput.currentSiteUrl.trim()}` : "";
+  const decisionLine = easyInput.decisionMakers.trim() ? `決裁者・確認者：${easyInput.decisionMakers.trim()}` : "";
+  const existingClientInfo = current.client_company_info
+    .split("\n")
+    .filter((line) => !line.startsWith("既存サイトURL：") && !line.startsWith("決裁者・確認者："))
+    .join("\n")
+    .trim();
+  const clientInfo = [existingClientInfo, currentSiteLine, decisionLine]
+    .filter(Boolean)
+    .join("\n")
+    .trim();
+
+  return {
+    ...current,
+    project_brief: nextBrief,
+    client_company_info: clientInfo,
+    competitor_site_url: easyInput.competitorSiteUrl.trim(),
+    budget_range: easyInput.budget === "未定" ? "" : easyInput.budget,
+    desired_launch_timing: easyInput.deadline === "未定" ? "" : easyInput.deadline,
+    cms_required: easyInput.cms,
+    seo_required: easyInput.purposes.includes("SEOを強化したい") ? "あり" : current.seo_required,
+    contact_form_required: easyInput.purposes.includes("問い合わせを増やしたい") ? "あり" : current.contact_form_required
+  };
+}
+
+function extractFirstUrl(value: string | undefined) {
+  if (!value) return "";
+  return value.match(/https?:\/\/[^\s、。)）]+/)?.[0] ?? "";
+}
+
+function withoutUrl(value: string | undefined) {
+  if (!value) return "";
+  return value.replace(/https?:\/\/[^\s、。)）]+/g, "").replace(/[、。,\s]+$/g, "").trim();
+}
+
+function isUnknownAnswer(value: string | undefined) {
+  return !value?.trim() || /未定|不明|未確認|なし|まだ/.test(value);
+}
+
+function buildProjectBriefFromChatAnswers(answers: ChatAnswers) {
+  const project = answers.project?.trim() || "未確認";
+  const company = answers.company?.trim() || "未確認";
+  const trouble = answers.trouble?.trim() || "未確認";
+  const budget = answers.budget?.trim() || "未確認";
+  const deadline = answers.deadline?.trim() || "未確認";
+  const competitor = answers.competitor?.trim() || "未確認";
+
+  return `AI営業アシスタント整理内容：
+案件内容：${project}
+お客様情報：${company}
+お客様の困りごと：${trouble}
+予算感：${budget}
+公開希望時期・納期：${deadline}
+競合情報：${competitor}
+提案書では、現状理解、課題整理、Web戦略、競合比較、概算見積、スケジュール、体制、今後の進め方を整理する。`;
+}
+
+function applyChatAnswersToForm(current: ProposalRequest, answers: ChatAnswers): ProposalRequest {
+  const allText = Object.values(answers).filter(Boolean).join("\n");
+  const competitorUrl = extractFirstUrl(answers.competitor);
+  const competitorName = withoutUrl(answers.competitor);
+
+  return {
+    ...current,
+    project_brief: buildProjectBriefFromChatAnswers(answers),
+    client_company_info: answers.company?.trim() || current.client_company_info,
+    competitor_site_url: competitorUrl || current.competitor_site_url,
+    competitor_company_name: competitorName || current.competitor_company_name,
+    budget_range: isUnknownAnswer(answers.budget) ? current.budget_range : answers.budget?.trim() || current.budget_range,
+    desired_launch_timing: isUnknownAnswer(answers.deadline) ? current.desired_launch_timing : answers.deadline?.trim() || current.desired_launch_timing,
+    cms_required: /cms|wordpress|movable type|更新|お知らせ|ブログ/i.test(allText) ? "あり" : current.cms_required,
+    contact_form_required: /問い合わせ|問合せ|フォーム|cta|資料請求|来店予約/i.test(allText) ? "あり" : current.contact_form_required,
+    seo_required: /seo|検索|自然流入|流入|順位/i.test(allText) ? "あり" : current.seo_required,
+    special_function_required: /物件検索|予約|会員|検索機能|絞り込み|シミュレーション/i.test(allText)
+      ? "特殊機能あり"
+      : current.special_function_required
+  };
+}
+
+function buildChatReadiness(answers: ChatAnswers) {
+  const required: Array<{ key: ChatAnswerKey; label: string }> = [
+    { key: "project", label: "案件内容" },
+    { key: "company", label: "お客様情報" },
+    { key: "trouble", label: "困りごと" }
+  ];
+  const missing = required.filter((item) => !answers[item.key]?.trim()).map((item) => item.label);
+  const answeredCount = chatQuestionFlow.filter((item) => answers[item.key]?.trim()).length;
+
+  return {
+    ready: missing.length === 0,
+    missing,
+    answeredCount,
+    totalCount: chatQuestionFlow.length
+  };
+}
+
+function buildLiveProjectSummary(form: ProposalRequest, missingItems: InfoCheck[]): OutputDigestSection[] {
+  const brief = form.project_brief.trim().replace(/\s+/g, " ");
+  return [
+    {
+      title: "現在の案件概要",
+      items: [
+        brief ? `${brief.slice(0, 150)}${brief.length > 150 ? "..." : ""}` : "チャットで回答すると、ここに案件概要が自動整理されます。"
+      ]
+    },
+    {
+      title: "整理済み情報",
+      items: [
+        `提案先: ${extractClientName(form)}`,
+        `予算: ${form.budget_range.trim() || "未確認"}`,
+        `納期: ${form.desired_launch_timing.trim() || "未確認"}`,
+        `競合: ${form.competitor_site_url.trim() || form.competitor_company_name.trim() || "未確認"}`
+      ]
+    },
+    {
+      title: "次回確認事項",
+      items: missingItems.length
+        ? missingItems.slice(0, 4).map((item) => `${item.label}: ${item.nextQuestion}`)
+        : ["提案書を生成できます。内容確認後、PPTX・PDF出力へ進めます。"]
+    }
+  ];
 }
 
 function hasAny(text: string, patterns: (RegExp | string)[]) {
@@ -1052,6 +1347,12 @@ function sanitizeFileName(value: string) {
 
 export default function Home() {
   const [form, setForm] = useState<ProposalRequest>(initialForm);
+  const [inputMode, setInputMode] = useState<InputMode>("easy");
+  const [easyInput, setEasyInput] = useState<EasyInput>(initialEasyInput);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(initialChatMessages);
+  const [chatAnswers, setChatAnswers] = useState<ChatAnswers>({});
+  const [chatQuestionIndex, setChatQuestionIndex] = useState(0);
+  const [chatDraft, setChatDraft] = useState("");
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -1070,8 +1371,12 @@ export default function Home() {
     return form.project_brief.trim().length >= 20 && !isLoading;
   }, [form.project_brief, isLoading]);
 
+  const easyMissingItems = useMemo(() => buildEasyMissingItems(easyInput), [easyInput]);
+  const canOrganizeEasyInput = easyMissingItems.length === 0;
+  const chatReadiness = useMemo(() => buildChatReadiness(chatAnswers), [chatAnswers]);
   const infoChecks = useMemo(() => buildInfoChecks(form), [form]);
   const missingItems = useMemo(() => infoChecks.filter((item) => !item.found), [infoChecks]);
+  const liveProjectSummary = useMemo(() => buildLiveProjectSummary(form, missingItems), [form, missingItems]);
   const hearingSheet = useMemo(() => buildHearingSheet(form), [form]);
   const hearingQuestionCount = useMemo(
     () => hearingSheet.reduce((count, item) => count + item.questions.length, 0),
@@ -1105,9 +1410,99 @@ export default function Home() {
     [result?.markdown, form]
   );
   const errorAdvice = useMemo(() => (error ? buildErrorAdvice(error) : null), [error]);
+  const currentChatQuestion = chatQuestionFlow[Math.min(chatQuestionIndex, chatQuestionFlow.length - 1)];
 
   function updateField(field: keyof ProposalRequest, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateEasyField(field: keyof EasyInput, value: string) {
+    setEasyInput((current) => ({ ...current, [field]: value }));
+  }
+
+  function toggleEasyPurpose(purpose: string) {
+    setEasyInput((current) => ({
+      ...current,
+      purposes: current.purposes.includes(purpose)
+        ? current.purposes.filter((item) => item !== purpose)
+        : [...current.purposes, purpose]
+    }));
+  }
+
+  function organizeEasyInput() {
+    if (!canOrganizeEasyInput) {
+      return;
+    }
+    setForm((current) => patchFormFromEasyInput(current, easyInput));
+    setError("");
+  }
+
+  function submitChatAnswer(event?: React.FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    const answer = chatDraft.trim();
+    if (!answer) {
+      return;
+    }
+
+    if (chatQuestionIndex >= chatQuestionFlow.length) {
+      setChatMessages((current) => [
+        ...current,
+        { id: `user-${Date.now()}`, role: "user", text: answer },
+        {
+          id: `assistant-${Date.now()}-extra`,
+          role: "assistant",
+          text: "追加情報として反映しました。必要であれば、この内容で提案書を生成できます。"
+        }
+      ]);
+      setForm((current) => ({
+        ...current,
+        hearing_result: [current.hearing_result, answer].filter(Boolean).join("\n")
+      }));
+      setChatDraft("");
+      setError("");
+      return;
+    }
+
+    const question = chatQuestionFlow[chatQuestionIndex];
+    const nextAnswers = { ...chatAnswers, [question.key]: answer };
+    const nextIndex = chatQuestionIndex + 1;
+    const nextReadiness = buildChatReadiness(nextAnswers);
+    const nextAssistantText =
+      nextIndex < chatQuestionFlow.length
+        ? `${nextReadiness.ready ? "提案書を生成できます。精度を上げるため、続けて確認します。\n" : ""}${chatQuestionFlow[nextIndex].question}`
+        : "必要な情報が揃いました。提案書を生成できます。まだ未確認の項目があっても「今の内容で生成する」から進められます。";
+
+    setChatMessages((current) => [
+      ...current,
+      { id: `user-${Date.now()}`, role: "user", text: answer },
+      { id: `assistant-${Date.now()}-next`, role: "assistant", text: nextAssistantText }
+    ]);
+    setChatAnswers(nextAnswers);
+    setChatQuestionIndex(nextIndex);
+    setChatDraft("");
+    setForm((current) => applyChatAnswersToForm(current, nextAnswers));
+    setError("");
+  }
+
+  function generateFromChatNow() {
+    const nextForm = Object.keys(chatAnswers).length > 0 ? applyChatAnswersToForm(form, chatAnswers) : form;
+    if (nextForm.project_brief.trim().length < 20) {
+      setError("まずはチャットで案件内容を1つ入力してください。途中でも生成できます。");
+      return;
+    }
+    setForm(nextForm);
+    setError("");
+    setIsConfirmOpen(true);
+  }
+
+  function resetChat() {
+    setChatMessages(initialChatMessages);
+    setChatAnswers({});
+    setChatQuestionIndex(0);
+    setChatDraft("");
+    setForm(initialForm);
+    setResult(null);
+    setError("");
   }
 
   function persistHistory(nextHistory: HistoryEntry[]) {
@@ -1257,6 +1652,18 @@ export default function Home() {
 
   function restoreHistory(entry: HistoryEntry) {
     setForm(normalizeForm(entry.form));
+    setInputMode("detail");
+    setChatMessages([
+      ...initialChatMessages,
+      {
+        id: `assistant-history-${Date.now()}`,
+        role: "assistant",
+        text: "生成履歴を読み込みました。右側の整理済み概要を確認し、必要に応じて提案書を再ダウンロードできます。"
+      }
+    ]);
+    setChatAnswers({});
+    setChatQuestionIndex(0);
+    setChatDraft("");
     setResult(entry.result);
     setError("");
     setCopyState("idle");
@@ -1267,26 +1674,75 @@ export default function Home() {
     persistHistory([]);
   }
 
-  function fillSample() {
+  function loadChatSample(kind: SampleKind) {
+    const sample = easySamples[kind];
+    const company =
+      kind === "renewal"
+        ? "株式会社東都リビング。首都圏で賃貸・売買仲介、物件管理を展開する不動産会社です。"
+        : kind === "recruit"
+          ? "株式会社サンプル製作所。BtoB向け製造・保守サービスを展開する会社です。"
+          : "株式会社サンプルマーケティング。新規Webサービスの広告配信とリード獲得を強化している会社です。";
+    const nextAnswers: ChatAnswers = {
+      project: sample.projectType,
+      company,
+      trouble: sample.trouble,
+      budget: sample.budget,
+      deadline: sample.deadline,
+      competitor: sample.competitorSiteUrl
+    };
+
+    fillSample(kind);
+    setChatAnswers(nextAnswers);
+    setChatQuestionIndex(chatQuestionFlow.length);
+    setChatDraft("");
+    setChatMessages([
+      ...initialChatMessages,
+      {
+        id: `assistant-sample-${Date.now()}`,
+        role: "assistant",
+        text: "サンプル案件を読み込みました。右側の整理済み概要を確認し、そのまま提案書を生成できます。"
+      }
+    ]);
+  }
+
+  function fillSample(kind: SampleKind = "renewal") {
+    const sample = easySamples[kind];
+    const sampleClientInfo =
+      kind === "renewal"
+        ? "株式会社東都リビング\n首都圏で賃貸・売買仲介、物件管理を展開\n既存サイトURL：https://sample-realty.example.jp\n決裁者：代表取締役、窓口：営業企画部"
+        : kind === "recruit"
+          ? "株式会社サンプル製作所\n首都圏でBtoB向け製造・保守サービスを展開\n既存サイトURL：https://sample-company.example.jp\n決裁者：代表取締役、窓口：人事責任者"
+          : "株式会社サンプルマーケティング\n新規Webサービスの広告配信とリード獲得を強化中\n既存サイトURL：https://sample-service.example.jp\n決裁者：事業責任者、窓口：マーケティング責任者";
+    setEasyInput(sample);
     setForm((current) => ({
-      ...current,
-      project_brief: sampleBrief,
-      client_company_info: "株式会社東都リビング\n首都圏で賃貸・売買仲介、物件管理を展開\n既存サイトURL：https://sample-realty.example.jp\n決裁者：代表取締役、窓口：営業企画部",
-      competitor_site_url: "https://area-rival-realty.example.jp",
-      competitor_company_name: "エリア大手不動産グループ",
-      estimated_page_count: "18ページ",
-      cms_required: "あり",
-      contact_form_required: "あり",
-      special_function_required: "物件検索あり",
-      seo_required: "あり",
-      content_creation_required: "原稿作成一部あり",
-      desired_launch_timing: "2026年10月末公開希望",
-      budget_range: "350万〜500万円",
-      hearing_result: "問い合わせ数の増加を最優先にしたい。CMSはWordPressで進める方針。予算は350万〜500万円。公開希望は2026年10月末。物件登録データの連携方法は未確認。年間問い合わせ目標は現状比150%。",
-      own_service_info: "Webサイト制作、情報設計、CMS構築、物件検索UI設計、SEO初期設計、公開後の改善運用、月次レポートを支援",
+      ...patchFormFromEasyInput(current, sample),
+      project_brief: kind === "renewal" ? sampleBrief : buildProjectBriefFromEasyInput(sample),
+      client_company_info: sampleClientInfo,
+      competitor_company_name:
+        kind === "renewal"
+          ? "エリア大手不動産グループ"
+          : kind === "recruit"
+            ? "採用競合企業"
+            : "競合LPサービス",
+      estimated_page_count: kind === "renewal" ? "18ページ" : kind === "recruit" ? "10ページ" : "1ページ",
+      special_function_required: kind === "renewal" ? "物件検索あり" : "",
+      content_creation_required: kind === "lp" ? "原稿作成あり" : "原稿作成一部あり",
+      hearing_result:
+        kind === "renewal"
+          ? "問い合わせ数の増加を最優先にしたい。CMSはWordPressで進める方針。予算は350万〜500万円。公開希望は2026年10月末。物件登録データの連携方法は未確認。年間問い合わせ目標は現状比150%。"
+          : kind === "recruit"
+            ? "応募数と応募者の質を改善したい。社員インタビューと職種紹介を入れたい。公開時期は3か月以上で検討。採用責任者と代表が確認する。"
+            : "広告配信用LPとして早めに公開したい。問い合わせフォームとCTAを重視。予算は100〜300万円。訴求整理と原稿作成も相談したい。",
+      own_service_info: "Webサイト制作、情報設計、CMS構築、SEO初期設計、公開後の改善運用、月次レポートを支援",
       past_proposal_template: "表紙、提案サマリー、現状理解、競合比較、ターゲット分析、Web戦略、サイトマップ、KPI、制作方針、スケジュール、体制、費用概算、今後の進め方",
-      case_studies: "不動産会社A：問い合わせ件数150%増加\n不動産会社B：CV率1.8倍\n住宅販売会社C：自然検索流入2.1倍"
+      case_studies:
+        kind === "recruit"
+          ? "採用サイトA：応募数160%増加\n製造業B：説明会予約数1.7倍"
+          : kind === "lp"
+            ? "SaaS企業A：資料請求CV率1.9倍\n新サービスLP：広告CPA25%改善"
+            : "不動産会社A：問い合わせ件数150%増加\n不動産会社B：CV率1.8倍\n住宅販売会社C：自然検索流入2.1倍"
     }));
+    setError("");
   }
 
   return (
@@ -1361,17 +1817,266 @@ export default function Home() {
       </section>
 
       <section className="workspace-grid">
-        <form className="input-panel" onSubmit={handleSubmit}>
+        <form className="input-panel chat-input-panel" onSubmit={handleSubmit}>
           <div className="panel-heading">
             <div>
-              <p className="eyebrow">Input</p>
-              <h2>案件情報</h2>
+              <p className="eyebrow">AI Sales Assistant</p>
+              <h2>会話で案件を整理</h2>
             </div>
-            <button className="sample-button" type="button" onClick={fillSample}>
-              <FileText size={18} aria-hidden="true" />
-              サンプル入力
+          </div>
+
+          <section className="sales-chat-panel" aria-label="AI営業アシスタント">
+            <div className="sales-chat-hero">
+              <div className="assistant-avatar">
+                <Bot size={22} aria-hidden="true" />
+              </div>
+              <div>
+                <strong>AI営業アシスタント</strong>
+                <p>質問に答えるだけで、案件概要・競合情報・見積条件を整理します。</p>
+              </div>
+            </div>
+
+            <div className="chat-sample-row" aria-label="サンプル案件">
+              <button className="sample-button" type="button" onClick={() => loadChatSample("renewal")}>
+                Webリニューアル
+              </button>
+              <button className="sample-button" type="button" onClick={() => loadChatSample("recruit")}>
+                採用サイト
+              </button>
+              <button className="sample-button" type="button" onClick={() => loadChatSample("lp")}>
+                LP制作
+              </button>
+            </div>
+
+            <div className={`chat-ready-card ${chatReadiness.ready ? "is-ready" : ""}`}>
+              <MessageCircle size={18} aria-hidden="true" />
+              <div>
+                <strong>{chatReadiness.ready ? "提案書を生成できます" : "会話で必要情報を整理中"}</strong>
+                <p>
+                  {chatReadiness.ready
+                    ? "不足項目は次回確認事項として扱い、このまま生成へ進めます。"
+                    : `最低限必要: ${chatReadiness.missing.join("、") || "入力中"} / 回答 ${chatReadiness.answeredCount}件`}
+                </p>
+              </div>
+            </div>
+
+            <div className="chat-thread" aria-live="polite">
+              {chatMessages.map((message) => (
+                <div className={`chat-message ${message.role}`} key={message.id}>
+                  <span>{message.role === "assistant" ? "AI" : "あなた"}</span>
+                  <p>{message.text}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="chat-compose" aria-label="チャット入力">
+              <input
+                value={chatDraft}
+                onChange={(event) => setChatDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    submitChatAnswer();
+                  }
+                }}
+                placeholder={chatQuestionIndex < chatQuestionFlow.length ? currentChatQuestion.placeholder : "追加情報やヒアリングメモを入力"}
+              />
+              <button className="icon-button send-button" type="button" onClick={() => submitChatAnswer()} title="送信">
+                <Send size={17} aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="chat-action-row">
+              <button className="secondary-button" type="button" onClick={resetChat}>
+                最初から
+              </button>
+              <button className="primary-button" type="button" onClick={generateFromChatNow} disabled={isLoading}>
+                {isLoading ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Sparkles size={18} aria-hidden="true" />}
+                {isLoading ? "生成中" : "今の内容で生成する"}
+              </button>
+            </div>
+          </section>
+
+          <div className="input-mode-tabs" aria-label="入力方式">
+            <button
+              className={inputMode === "easy" ? "is-active" : ""}
+              type="button"
+              onClick={() => setInputMode("easy")}
+            >
+              かんたん入力
+            </button>
+            <button
+              className={inputMode === "detail" ? "is-active" : ""}
+              type="button"
+              onClick={() => setInputMode("detail")}
+            >
+              詳細入力
             </button>
           </div>
+
+          {inputMode === "easy" && (
+            <section className="easy-input-panel" aria-label="かんたん入力">
+              <div className="easy-panel-heading">
+                <div>
+                  <p className="eyebrow">Easy Input</p>
+                  <h3>長文を書かずに、まずは最低限だけ入力</h3>
+                </div>
+                <span>初期表示</span>
+              </div>
+
+              <div className="sample-scenario-panel">
+                <strong>まずはサンプルで試す</strong>
+                <div className="sample-scenario-buttons">
+                  <button className="sample-button" type="button" onClick={() => fillSample("renewal")}>
+                    Webサイトリニューアル案件
+                  </button>
+                  <button className="sample-button" type="button" onClick={() => fillSample("recruit")}>
+                    採用サイト制作案件
+                  </button>
+                  <button className="sample-button" type="button" onClick={() => fillSample("lp")}>
+                    LP制作案件
+                  </button>
+                </div>
+              </div>
+
+              <div className="minimum-input-box">
+                <strong>最低限これだけ入れれば生成できます</strong>
+                <p>「何を作りたいか」と「お客様の困りごと」または「目的」を1つ選べば、AI用の案件概要を作れます。</p>
+                {easyMissingItems.length > 0 ? (
+                  <ul>
+                    {easyMissingItems.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span>最低限の入力は完了しています。</span>
+                )}
+              </div>
+
+              <div className="easy-field-grid">
+                <label className={`field ${!easyInput.projectType.trim() ? "needs-input" : ""}`}>
+                  <div className="field-title-row">
+                    <span>何を作りたいか</span>
+                    <small>必須</small>
+                  </div>
+                  <input
+                    value={easyInput.projectType}
+                    onChange={(event) => updateEasyField("projectType", event.target.value)}
+                    placeholder="例：コーポレートサイトのリニューアル"
+                  />
+                </label>
+
+                <label className={`field ${!easyInput.trouble.trim() && easyInput.purposes.length === 0 ? "needs-input" : ""}`}>
+                  <div className="field-title-row">
+                    <span>お客様の困りごと</span>
+                    <small>目的を選べば任意</small>
+                  </div>
+                  <textarea
+                    value={easyInput.trouble}
+                    onChange={(event) => updateEasyField("trouble", event.target.value)}
+                    placeholder="例：現行サイトが古く、問い合わせにつながっていない"
+                    rows={4}
+                  />
+                </label>
+              </div>
+
+              <div className="purpose-check-panel">
+                <div className="field-title-row">
+                  <span>目的</span>
+                  <small>チェックボックスで選択</small>
+                </div>
+                <div className="purpose-check-grid">
+                  {purposeOptions.map((purpose) => (
+                    <label className="purpose-check" key={purpose}>
+                      <input
+                        type="checkbox"
+                        checked={easyInput.purposes.includes(purpose)}
+                        onChange={() => toggleEasyPurpose(purpose)}
+                      />
+                      <span>{purpose}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="easy-select-grid">
+                <label className="field">
+                  <div className="field-title-row">
+                    <span>予算</span>
+                    <small>任意</small>
+                  </div>
+                  <select value={easyInput.budget} onChange={(event) => updateEasyField("budget", event.target.value)}>
+                    {budgetOptions.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field">
+                  <div className="field-title-row">
+                    <span>納期</span>
+                    <small>任意</small>
+                  </div>
+                  <select value={easyInput.deadline} onChange={(event) => updateEasyField("deadline", event.target.value)}>
+                    {deadlineOptions.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field">
+                  <div className="field-title-row">
+                    <span>CMS希望</span>
+                    <small>任意</small>
+                  </div>
+                  <select value={easyInput.cms} onChange={(event) => updateEasyField("cms", event.target.value)}>
+                    {cmsOptions.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="easy-field-grid">
+                <label className="field">
+                  <div className="field-title-row">
+                    <span>競合サイトURL</span>
+                    <small>任意</small>
+                  </div>
+                  <input
+                    value={easyInput.competitorSiteUrl}
+                    onChange={(event) => updateEasyField("competitorSiteUrl", event.target.value)}
+                    placeholder="https://example.com"
+                  />
+                </label>
+                <label className="field">
+                  <div className="field-title-row">
+                    <span>既存サイトURL</span>
+                    <small>任意</small>
+                  </div>
+                  <input
+                    value={easyInput.currentSiteUrl}
+                    onChange={(event) => updateEasyField("currentSiteUrl", event.target.value)}
+                    placeholder="https://example.co.jp"
+                  />
+                </label>
+                <label className="field easy-field-wide">
+                  <div className="field-title-row">
+                    <span>決裁者・確認者</span>
+                    <small>任意</small>
+                  </div>
+                  <input
+                    value={easyInput.decisionMakers}
+                    onChange={(event) => updateEasyField("decisionMakers", event.target.value)}
+                    placeholder="例：代表取締役、営業部長、人事責任者"
+                  />
+                </label>
+              </div>
+
+              <div className="organized-preview">
+                <strong>AI用に整理された案件概要</strong>
+                <p>{form.project_brief.trim() ? "整理済みです。必要なら詳細入力で編集できます。" : "まだ整理されていません。「入力内容を整理」を押すと案件概要欄へ文章化します。"}</p>
+              </div>
+            </section>
+          )}
 
           <section className="check-panel" aria-label="入力内容チェック">
             <div className="check-panel-header">
@@ -1455,6 +2160,8 @@ export default function Home() {
             </div>
           </section>
 
+          {inputMode === "detail" && (
+            <>
           <section className="hearing-panel" aria-label="ヒアリングシート">
             <div className="check-panel-header">
               <div>
@@ -1866,14 +2573,36 @@ export default function Home() {
               この表示は業務改善コースの活用想定です。外部サービス連携、自動巡回、機密情報参照はまだ実行しません。
             </p>
           </section>
+            </>
+          )}
 
-          <button className="primary-button" type="submit" disabled={!canSubmit}>
-            {isLoading ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Sparkles size={18} aria-hidden="true" />}
-            {isLoading ? "生成中" : "提案書初稿を生成"}
-          </button>
+          <section className="generate-flow-panel" aria-label="生成までの流れ">
+            <div>
+              <span>1</span>
+              <strong>まずはサンプルで試す</strong>
+              <p>3種類のサンプルから近い案件を選べます。</p>
+            </div>
+            <div>
+              <span>2</span>
+              <strong>入力内容を整理</strong>
+              <p>かんたん入力をAI用の案件概要に変換します。</p>
+              <button className="secondary-button" type="button" onClick={organizeEasyInput} disabled={!canOrganizeEasyInput}>
+                入力内容をAI用に整理
+              </button>
+            </div>
+            <div>
+              <span>3</span>
+              <strong>提案書を生成</strong>
+              <p>整理済みの内容からMarkdown・PPTX・PDFを作成します。</p>
+              <button className="primary-button" type="submit" disabled={!canSubmit}>
+                {isLoading ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Sparkles size={18} aria-hidden="true" />}
+                {isLoading ? "生成中" : "提案書を生成"}
+              </button>
+            </div>
+          </section>
 
           {!canSubmit && !isLoading && (
-            <p className="submit-help">案件概要を20文字以上入力すると生成できます。サンプル入力から試すこともできます。</p>
+            <p className="submit-help">かんたん入力では「入力内容をAI用に整理」を押すと生成できます。詳細入力では案件概要を20文字以上入力してください。</p>
           )}
 
           {errorAdvice && (
@@ -1890,6 +2619,44 @@ export default function Home() {
         </form>
 
         <section className="result-panel" aria-label="生成結果">
+          <section className="live-brief-panel" aria-label="現在整理された案件概要">
+            <div className="live-brief-header">
+              <div>
+                <p className="eyebrow">Live Brief</p>
+                <h2>現在整理された案件概要</h2>
+              </div>
+              <span className={`decision-pill ${chatReadiness.ready ? "rank-a" : "rank-c"}`}>
+                {chatReadiness.ready ? "生成可能" : "整理中"}
+              </span>
+            </div>
+            <div className="live-brief-grid">
+              {liveProjectSummary.map((section) => (
+                <article className="live-brief-card" key={section.title}>
+                  <strong>{section.title}</strong>
+                  <ul>
+                    {section.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+            <div className="live-status-row">
+              <div>
+                <span>受注確率</span>
+                <strong>{dealEvaluation.probability}%</strong>
+              </div>
+              <div>
+                <span>予算適合</span>
+                <strong>{estimateSummary.budgetFit}</strong>
+              </div>
+              <div>
+                <span>競合分析</span>
+                <strong>{form.competitor_site_url.trim() || form.competitor_company_name.trim() ? "反映済み" : "未確認"}</strong>
+              </div>
+            </div>
+          </section>
+
           <div className="panel-heading">
             <div>
               <p className="eyebrow">Output</p>
