@@ -898,6 +898,75 @@ button {
   color: var(--muted);
 }
 
+.proposal-feedback-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(239, 246, 255, 0.55);
+}
+
+.proposal-feedback-panel strong {
+  display: block;
+  color: var(--primary);
+  font-size: 15px;
+}
+
+.proposal-feedback-panel p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.feedback-rating-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.feedback-rating-row label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.feedback-rating-row label.is-selected {
+  border-color: rgba(37, 99, 235, 0.55);
+  background: rgba(219, 234, 254, 0.82);
+  color: #1d4ed8;
+}
+
+.feedback-rating-row input {
+  accent-color: #2563eb;
+}
+
+.feedback-comment-field textarea {
+  min-height: 86px;
+}
+
+.feedback-error {
+  color: var(--danger) !important;
+  font-weight: 900;
+}
+
+.feedback-thanks {
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(220, 252, 231, 0.9);
+  color: #166534 !important;
+  font-weight: 900;
+}
+
 .wizard-effect-foldout {
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -1096,6 +1165,8 @@ button {
 .dark-mode .wizard-check-panel,
 .dark-mode .wizard-next-action-panel,
 .dark-mode .wizard-sample-experience,
+.dark-mode .proposal-feedback-panel,
+.dark-mode .feedback-rating-row label,
 .dark-mode .wizard-effect-foldout,
 .dark-mode .wizard-effect-grid article {
   background: linear-gradient(180deg, #1d1a17 0%, #171513 100%);
@@ -1150,6 +1221,7 @@ button {
 .dark-mode .crm-panel,
 .dark-mode .permission-notice,
 .dark-mode .trial-check-panel,
+.dark-mode .admin-feedback-panel,
 .dark-mode .input-panel,
 .dark-mode .result-panel,
 .dark-mode .live-brief-panel,
@@ -1202,6 +1274,8 @@ button {
 .dark-mode .usage-log-list article,
 .dark-mode .role-prep-grid article,
 .dark-mode .trial-check-grid article,
+.dark-mode .feedback-summary-grid article,
+.dark-mode .admin-feedback-list article,
 .dark-mode .admin-user-list article,
 .dark-mode .crm-grid > article,
 .dark-mode .crm-list div,
@@ -1564,7 +1638,8 @@ button {
 .admin-users-panel,
 .crm-panel,
 .permission-notice,
-.trial-check-panel {
+.trial-check-panel,
+.admin-feedback-panel {
   margin-bottom: 14px;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -1645,6 +1720,69 @@ button {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.5;
+}
+
+.feedback-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.feedback-summary-grid article {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.feedback-summary-grid span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.feedback-summary-grid strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--primary);
+  font-size: 18px;
+}
+
+.admin-feedback-list {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-feedback-list article {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.admin-feedback-list article > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-feedback-list strong {
+  color: var(--primary);
+}
+
+.admin-feedback-list span,
+.admin-feedback-empty {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.admin-feedback-list p {
+  margin: 7px 0 0;
+  color: var(--text);
+  line-height: 1.6;
 }
 
 .admin-user-form {
@@ -5387,7 +5525,8 @@ button {
   }
 
   .wizard-effect-grid,
-  .trial-check-grid {
+  .trial-check-grid,
+  .feedback-summary-grid {
     grid-template-columns: 1fr;
   }
 
@@ -5541,6 +5680,10 @@ button {
   .wizard-sample-experience .secondary-button {
     width: 100%;
     justify-content: center;
+  }
+
+  .feedback-rating-row {
+    grid-template-columns: 1fr;
   }
 
   .wizard-main-action {

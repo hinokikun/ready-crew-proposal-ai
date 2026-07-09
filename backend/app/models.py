@@ -40,6 +40,12 @@ class UsageLogCreateRequest(BaseModel):
     error_type: str = ""
 
 
+class FeedbackCreateRequest(BaseModel):
+    rating: Literal["usable", "needs_revision", "hard_to_use"]
+    comment: str = Field("", max_length=1000)
+    feature_name: str = Field("提案書作成", max_length=100)
+
+
 class ProposalRequest(BaseModel):
     project_brief: str = Field(..., min_length=20, description="Ready Crew の案件概要テキスト")
     client_company_info: str = Field("", description="提案先企業情報")

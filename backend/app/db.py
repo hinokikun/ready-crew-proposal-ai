@@ -132,6 +132,17 @@ def init_db() -> None:
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(user_id) REFERENCES users(id)
             );
+
+            CREATE TABLE IF NOT EXISTS feedback_entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                user_role TEXT NOT NULL DEFAULT '',
+                rating TEXT NOT NULL CHECK(rating IN ('usable', 'needs_revision', 'hard_to_use')),
+                comment TEXT NOT NULL DEFAULT '',
+                feature_name TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            );
             """
         )
 

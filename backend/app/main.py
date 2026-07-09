@@ -18,6 +18,7 @@ from app.models import (
 )
 from app.repositories import create_history_log, ensure_initial_admin, get_or_create_customer, get_or_create_project
 from app.routers import auth as auth_router
+from app.routers import feedback as feedback_router
 from app.routers import logs as logs_router
 from app.routers import projects as projects_router
 from app.routers import users as users_router
@@ -61,6 +62,7 @@ app.include_router(auth_router.router)
 app.include_router(users_router.router)
 app.include_router(projects_router.router)
 app.include_router(logs_router.router)
+app.include_router(feedback_router.router)
 
 
 @app.on_event("startup")

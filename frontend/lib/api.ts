@@ -1,9 +1,9 @@
 import type { AnalysisResponse, ProposalRequest } from "@/types/proposal";
-import type { AuditLog, CrmCustomer, CrmProject, ManagedUser, UserRole } from "@/types/app";
+import type { AuditLog, CrmCustomer, CrmProject, FeedbackEntry, FeedbackRating, FeedbackSummary, ManagedUser, UserRole } from "@/types/app";
 import { getAuthHeaders } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/config";
 
-export type { AuditLog, CrmCustomer, CrmProject, ManagedUser } from "@/types/app";
+export type { AuditLog, CrmCustomer, CrmProject, FeedbackEntry, FeedbackRating, FeedbackSummary, ManagedUser } from "@/types/app";
 
 export type CompanyResearchApiResponse = {
   source_url: string;
@@ -104,6 +104,21 @@ export async function getDbLogs(): Promise<{ logs: Array<Record<string, string |
 
 export async function getAuditLogs(): Promise<{ logs: AuditLog[] }> {
   return fetchJson("/api/logs/audit");
+}
+
+export async function getFeedback(): Promise<{ feedback: FeedbackEntry[]; summary: FeedbackSummary }> {
+  return fetchJson("/api/feedback");
+}
+
+export async function submitFeedback(payload: {
+  rating: FeedbackRating;
+  comment: string;
+  feature_name: string;
+}): Promise<{ feedback: FeedbackEntry; summary: FeedbackSummary }> {
+  return fetchJson("/api/feedback", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
 }
 
 export async function saveUsageLogToBackend(payload: {

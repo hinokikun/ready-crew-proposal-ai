@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { AdminAuditLogPanel } from "@/components/AdminAuditLogPanel";
+import { AdminFeedbackPanel } from "@/components/AdminFeedbackPanel";
 import { AdminUsersPanel } from "@/components/AdminUsersPanel";
 import { CrmPanel } from "@/components/CrmPanel";
 import { Dashboard } from "@/components/Dashboard";
@@ -38,12 +39,17 @@ import {
   getAuditLogs,
   getCrm,
   getDbLogs,
+  getFeedback,
   listUsers,
   researchCompanyUrl,
   saveUsageLogToBackend,
+  submitFeedback,
   updateUserActive,
   type CrmCustomer,
   type CrmProject,
+  type FeedbackEntry,
+  type FeedbackRating,
+  type FeedbackSummary,
   type ManagedUser,
   type AuditLog
 } from "@/lib/api";
@@ -57,6 +63,19 @@ import type { AnalysisResponse, ProposalRequest, WinProbability } from "@/types/
 const HISTORY_KEY = "ready-crew-proposal-history-v1";
 const GUIDE_TUTORIAL_KEY = "ready-crew-guide-tutorial-seen-v1";
 const MAX_HISTORY_COUNT = 10;
+
+const emptyFeedbackSummary: FeedbackSummary = {
+  usable: 0,
+  needs_revision: 0,
+  hard_to_use: 0,
+  comments: 0
+};
+
+const feedbackRatingLabels: Record<FeedbackRating, string> = {
+  usable: "使えそう",
+  needs_revision: "修正すれば使えそう",
+  hard_to_use: "使いにくい"
+};
 
 const initialForm: ProposalRequest = {
   project_brief: "",
@@ -2720,6 +2739,12 @@ export default function Home() {
   const [crmProjects, setCrmProjects] = useState<CrmProject[]>([]);
   const [dbLogCount, setDbLogCount] = useState(0);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [feedbackEntries, setFeedbackEntries] = useState<FeedbackEntry[]>([]);
+  const [feedbackSummary, setFeedbackSummary] = useState<FeedbackSummary>(emptyFeedbackSummary);
+  const [feedbackRating, setFeedbackRating] = useState<FeedbackRating | "">("");
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [feedbackError, setFeedbackError] = useState("");
   const [isGuideEnabled, setIsGuideEnabled] = useState(true);
   const [showGuideTutorial, setShowGuideTutorial] = useState(false);
   const [hasViewedOrganizedResult, setHasViewedOrganizedResult] = useState(false);
@@ -2757,6 +2782,8 @@ export default function Home() {
       setDbLogCount(0);
       setManagedUsers([]);
       setAuditLogs([]);
+      setFeedbackEntries([]);
+      setFeedbackSummary(emptyFeedbackSummary);
       return;
     }
     try {
@@ -2776,6 +2803,13 @@ export default function Home() {
       setAuditLogs(audit.logs);
     } catch {
       setAuditLogs([]);
+    }
+    try {
+      const feedback = await getFeedback();
+      setFeedbackEntries(feedback.feedback);
+      setFeedbackSummary(feedback.summary);
+    } catch {
+      setFeedbackEntries([]);
     }
   }
 
@@ -2920,9 +2954,13 @@ export default function Home() {
       { label: "議事録作成数", value: `${modeUsageCounts.minutes}件`, note: "会議メモから整理" },
       { label: "メール作成数", value: `${modeUsageCounts.mail}件`, note: "件名・本文・返信案" },
       { label: "タスク整理数", value: `${modeUsageCounts.tasks}件`, note: "依頼や議事録から分解" },
-      { label: "AI削減時間", value: `${savedMinutes}分`, note: "1件45分削減として概算" }
+      { label: "AI削減時間", value: `${savedMinutes}分`, note: "1件45分削減として概算" },
+      { label: "使えそう", value: `${feedbackSummary.usable}件`, note: "提案書フィードバック" },
+      { label: "修正すれば使えそう", value: `${feedbackSummary.needs_revision}件`, note: "提案書フィードバック" },
+      { label: "使いにくい", value: `${feedbackSummary.hard_to_use}件`, note: "提案書フィードバック" },
+      { label: "コメント", value: `${feedbackSummary.comments}件`, note: "フィードバックコメント" }
     ];
-  }, [modeUsageCounts]);
+  }, [feedbackSummary, modeUsageCounts]);
   const preMeetingChecklist = useMemo(() => buildPreMeetingChecklist(infoChecks), [infoChecks]);
   const coachQuestions = useMemo(() => buildCoachQuestions(form, missingItems), [form, missingItems]);
   const realtimeQuestion = useMemo(() => buildRealtimeQuestion(liveMeetingMemo, coachQuestions), [liveMeetingMemo, coachQuestions]);
@@ -3465,6 +3503,10 @@ export default function Home() {
       const response = await analyzeProposal(nextForm);
       setResult(response);
       setHasDownloadedSummary(false);
+      setFeedbackRating("");
+      setFeedbackComment("");
+      setFeedbackStatus("idle");
+      setFeedbackError("");
       setAutoFlowStatus("complete");
       saveHistory(response, nextForm);
       recordModeUsage("sales");
@@ -3607,6 +3649,28 @@ export default function Home() {
     await downloadEstimatePdfFor(result, form);
   }
 
+  async function sendProposalFeedback() {
+    if (!feedbackRating) {
+      setFeedbackError("評価を1つ選んでください。");
+      return;
+    }
+    setFeedbackStatus("sending");
+    setFeedbackError("");
+    try {
+      const response = await submitFeedback({
+        rating: feedbackRating,
+        comment: feedbackComment,
+        feature_name: "提案書作成"
+      });
+      setFeedbackSummary(response.summary);
+      setFeedbackEntries((current) => [response.feedback, ...current.filter((item) => item.id !== response.feedback.id)]);
+      setFeedbackStatus("sent");
+    } catch {
+      setFeedbackStatus("idle");
+      setFeedbackError("フィードバック送信に失敗しました。時間を置いて再度お試しください。");
+    }
+  }
+
   function restoreHistory(entry: HistoryEntry) {
     setForm(normalizeForm(entry.form));
     setInputMode("detail");
@@ -3625,6 +3689,10 @@ export default function Home() {
     setResult(entry.result);
     setError("");
     setCopyState("idle");
+    setFeedbackRating("");
+    setFeedbackComment("");
+    setFeedbackStatus("idle");
+    setFeedbackError("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -4062,6 +4130,47 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
             </div>
           )}
 
+          {result && (
+            <section className="proposal-feedback-panel" aria-label="提案書フィードバック">
+              <div>
+                <strong>この提案書は使えそうですか？</strong>
+                <p>案件本文や顧客情報は保存しません。評価とコメントだけを社内改善に使います。</p>
+              </div>
+              <div className="feedback-rating-row">
+                {(Object.keys(feedbackRatingLabels) as FeedbackRating[]).map((rating) => (
+                  <label className={feedbackRating === rating ? "is-selected" : ""} key={rating}>
+                    <input
+                      checked={feedbackRating === rating}
+                      disabled={feedbackStatus === "sent" || feedbackStatus === "sending"}
+                      name="proposal-feedback-rating"
+                      onChange={() => setFeedbackRating(rating)}
+                      type="radio"
+                    />
+                    <span>{feedbackRatingLabels[rating]}</span>
+                  </label>
+                ))}
+              </div>
+              <label className="field feedback-comment-field">
+                <span>コメント</span>
+                <textarea
+                  disabled={feedbackStatus === "sent" || feedbackStatus === "sending"}
+                  onChange={(event) => setFeedbackComment(event.target.value)}
+                  placeholder="どこが良かったですか？ どこが分かりにくかったですか？"
+                  rows={3}
+                  value={feedbackComment}
+                />
+              </label>
+              {feedbackError && <p className="feedback-error">{feedbackError}</p>}
+              {feedbackStatus === "sent" ? (
+                <p className="feedback-thanks">フィードバックを送信しました。ありがとうございます。</p>
+              ) : (
+                <button className="secondary-button" disabled={feedbackStatus === "sending"} onClick={() => void sendProposalFeedback()} type="button">
+                  {feedbackStatus === "sending" ? "送信中" : "フィードバックを送信"}
+                </button>
+              )}
+            </section>
+          )}
+
           {result && hasDownloadedSummary && (
             <div className="wizard-next-action-panel">
               <strong>次にやること</strong>
@@ -4350,6 +4459,10 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
           <details className="advanced-foldout">
             <summary>監査ログを開く</summary>
             <AdminAuditLogPanel logs={auditLogs} />
+          </details>
+          <details className="advanced-foldout">
+            <summary>フィードバック一覧を開く</summary>
+            <AdminFeedbackPanel feedback={feedbackEntries} summary={feedbackSummary} />
           </details>
         </>
       </details>

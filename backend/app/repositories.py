@@ -206,3 +206,48 @@ def list_audit_logs(db: Connection, limit: int = 100) -> list[dict[str, Any]]:
             (limit,),
         ).fetchall()
     ]
+
+
+def create_feedback_entry(db: Connection, user_id: int | None, user_role: str, rating: str, comment: str, feature_name: str) -> dict[str, Any]:
+    cursor = db.execute(
+        """
+        INSERT INTO feedback_entries (user_id, user_role, rating, comment, feature_name)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (user_id, user_role[:30], rating, comment.strip()[:1000], feature_name.strip()[:100]),
+    )
+    feedback = dict(db.execute("SELECT * FROM feedback_entries WHERE id = ?", (cursor.lastrowid,)).fetchone())
+    create_audit_log(db, user_id, "save", "feedback", str(cursor.lastrowid), "success", f"rating={rating};feature={feature_name[:80]}")
+    return feedback
+
+
+def list_feedback_entries(db: Connection, limit: int = 200) -> list[dict[str, Any]]:
+    return [
+        dict(row)
+        for row in db.execute(
+            """
+            SELECT f.*, u.email AS user_email
+            FROM feedback_entries f
+            LEFT JOIN users u ON u.id = f.user_id
+            ORDER BY f.created_at DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+    ]
+
+
+def summarize_feedback_entries(db: Connection) -> dict[str, int]:
+    rows = db.execute(
+        """
+        SELECT rating, COUNT(*) AS count
+        FROM feedback_entries
+        GROUP BY rating
+        """
+    ).fetchall()
+    summary = {"usable": 0, "needs_revision": 0, "hard_to_use": 0, "comments": 0}
+    for row in rows:
+        summary[str(row["rating"])] = int(row["count"])
+    comment_row = db.execute("SELECT COUNT(*) AS count FROM feedback_entries WHERE TRIM(comment) != ''").fetchone()
+    summary["comments"] = int(comment_row["count"]) if comment_row else 0
+    return summary

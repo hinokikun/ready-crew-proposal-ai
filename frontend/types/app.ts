@@ -54,3 +54,23 @@ export type AuditLog = {
   metadata: string;
   created_at: string;
 };
+
+export type FeedbackRating = "usable" | "needs_revision" | "hard_to_use";
+
+export type FeedbackEntry = {
+  id: number;
+  user_id: number | null;
+  user_email?: string | null;
+  user_role: UserRole | string;
+  rating: FeedbackRating;
+  comment: string;
+  feature_name: string;
+  created_at: string;
+};
+
+export type FeedbackSummary = {
+  usable: number;
+  needs_revision: number;
+  hard_to_use: number;
+  comments: number;
+};
