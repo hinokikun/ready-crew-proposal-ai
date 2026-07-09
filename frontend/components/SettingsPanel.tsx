@@ -39,8 +39,8 @@ export function SettingsPanel({ health, isAuthenticated, usageLogs = [], current
         <strong>ユーザー権限</strong>
         <div className="role-prep-grid">
           <article><span>admin</span><p>全機能利用、ユーザー管理、ログ確認ができます。</p></article>
-          <article><span>member</span><p>提案書生成、PPTX/PDF出力、業務AI利用ができます。</p></article>
-          <article><span>viewer</span><p>Dashboardと履歴閲覧のみ。生成・出力はできません。</p></article>
+          <article><span>member</span><p>提案書作成、PPTX/PDF出力、業務AI利用ができます。</p></article>
+          <article><span>viewer</span><p>ダッシュボードと履歴閲覧のみ。作成・出力はできません。</p></article>
         </div>
       </div>
       <div className="usage-log-panel">

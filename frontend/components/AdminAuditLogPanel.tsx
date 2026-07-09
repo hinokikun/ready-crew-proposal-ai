@@ -9,7 +9,7 @@ type AdminAuditLogPanelProps = {
 export function AdminAuditLogPanel({ logs }: AdminAuditLogPanelProps) {
   return (
     <details className="settings-panel admin-audit-panel">
-      <summary>Audit Log</summary>
+      <summary>監査ログ</summary>
       {logs.length ? (
         <div className="usage-log-list">
           {logs.slice(0, 12).map((log) => (
@@ -19,7 +19,7 @@ export function AdminAuditLogPanel({ logs }: AdminAuditLogPanelProps) {
                 {labelEvent(log.event_type)} / {log.status === "success" ? "成功" : "失敗"}
               </strong>
               <small>
-                操作者: {log.user_email || "system"} / 対象: {log.target_type || "-"} {log.target_id || ""}
+                操作者: {log.user_email || "システム"} / 対象: {log.target_type || "-"} {log.target_id || ""}
               </small>
             </article>
           ))}
@@ -34,7 +34,7 @@ export function AdminAuditLogPanel({ logs }: AdminAuditLogPanelProps) {
 function labelEvent(eventType: string) {
   const labels: Record<string, string> = {
     login: "ログイン",
-    generate: "生成",
+    generate: "作成",
     save: "保存",
     delete: "削除",
     settings_change: "設定変更"

@@ -75,7 +75,7 @@ export function HealthStatus({ onChange }: HealthStatusProps) {
     <section className="health-panel" aria-label="接続状態">
       <div className="health-heading">
         <div>
-          <p className="eyebrow">Health</p>
+          <p className="eyebrow">状態</p>
           <h2>接続状態</h2>
         </div>
         <button className="secondary-button" type="button" onClick={() => void checkHealth()}>
@@ -86,8 +86,8 @@ export function HealthStatus({ onChange }: HealthStatusProps) {
       <div className="health-grid">
         <StatusItem label="Backend接続" ok={health.backendOk} value={health.backendOk ? "正常" : "異常"} />
         <StatusItem label="AI API" ok={health.aiStatus === "利用可能"} value={health.aiStatus} />
-        <StatusItem label="PPTX生成" ok={health.backendOk} value={health.backendOk ? "利用可能" : "要確認"} />
-        <StatusItem label="PDF生成" ok={health.backendOk} value={health.backendOk ? "利用可能" : "要確認"} />
+        <StatusItem label="PPTX作成" ok={health.backendOk} value={health.backendOk ? "利用可能" : "要確認"} />
+        <StatusItem label="PDF作成" ok={health.backendOk} value={health.backendOk ? "利用可能" : "要確認"} />
         <StatusItem label="DB接続" ok={health.dbStatus === "接続済み"} value={health.dbStatus} />
       </div>
     </section>

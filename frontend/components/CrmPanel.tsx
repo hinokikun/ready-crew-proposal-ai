@@ -13,7 +13,7 @@ export function CrmPanel({ customers, projects }: CrmPanelProps) {
       <div className="section-heading">
         <p className="eyebrow">CRM</p>
         <h2>顧客・案件管理</h2>
-        <p>DBに保存された顧客、案件、生成履歴の概要を確認します。本文全文や機密情報は保存しません。</p>
+        <p>DBに保存された顧客、案件、作成履歴の概要を確認します。本文全文や機密情報は保存しません。</p>
       </div>
       <div className="crm-grid">
         <article>

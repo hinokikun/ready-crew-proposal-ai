@@ -5,7 +5,7 @@ export function PermissionNotice({ role }: { role?: string }) {
   return (
     <section className="permission-notice" role="note">
       <strong>閲覧のみ権限です</strong>
-      <p>viewerはDashboardと履歴の閲覧のみ利用できます。提案書生成、PPTX/PDF出力はadminまたはmemberでログインしてください。</p>
+      <p>viewerはダッシュボードと履歴の閲覧のみ利用できます。提案書作成、PPTX/PDF出力はadminまたはmemberでログインしてください。</p>
     </section>
   );
 }

@@ -679,8 +679,26 @@ button {
   line-height: 1.7;
 }
 
+.wizard-input-lead {
+  display: grid;
+  gap: 5px;
+}
+
+.wizard-input-lead strong {
+  color: var(--primary);
+  font-size: 24px;
+  line-height: 1.3;
+}
+
+.wizard-input-lead p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
 .wizard-paste-only textarea {
-  min-height: 300px;
+  min-height: 280px;
   border-radius: 16px;
   font-size: 16px;
 }
@@ -698,9 +716,11 @@ button {
 
 .wizard-sample-experience .primary-button {
   min-height: 42px;
+  padding-inline: 18px;
 }
 
 .wizard-sample-experience span {
+  flex: 1 1 220px;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.6;
@@ -710,6 +730,7 @@ button {
   display: inline-flex;
   align-items: center;
   width: fit-content;
+  max-width: 100%;
   gap: 8px;
   border: 1px solid rgba(37, 99, 235, 0.16);
   border-radius: 999px;
@@ -718,6 +739,24 @@ button {
   color: #1d4ed8;
   font-size: 13px;
   font-weight: 900;
+}
+
+.wizard-auto-status strong {
+  color: #1e3a8a;
+  font-size: 12px;
+}
+
+.wizard-auto-status span {
+  overflow-wrap: anywhere;
+}
+
+.wizard-short-notice {
+  margin: 0;
+  border-left: 3px solid rgba(37, 99, 235, 0.5);
+  padding-left: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .wizard-recovery-card {
@@ -5477,12 +5516,31 @@ button {
     padding: 16px;
   }
 
+  .wizard-input-lead strong {
+    font-size: 21px;
+  }
+
   .wizard-card-head h2 {
     font-size: 24px;
   }
 
   .wizard-main-input textarea {
     min-height: 150px;
+  }
+
+  .wizard-paste-only textarea {
+    min-height: 220px;
+  }
+
+  .wizard-sample-experience {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .wizard-sample-experience .primary-button,
+  .wizard-sample-experience .secondary-button {
+    width: 100%;
+    justify-content: center;
   }
 
   .wizard-main-action {
