@@ -685,6 +685,27 @@ button {
   font-size: 16px;
 }
 
+.wizard-sample-experience {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(239, 246, 255, 0.64);
+}
+
+.wizard-sample-experience .primary-button {
+  min-height: 42px;
+}
+
+.wizard-sample-experience span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 .wizard-auto-status {
   display: inline-flex;
   align-items: center;
@@ -836,6 +857,47 @@ button {
   margin: 8px 0 0;
   padding-left: 18px;
   color: var(--muted);
+}
+
+.wizard-effect-foldout {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.wizard-effect-foldout summary {
+  cursor: pointer;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.wizard-effect-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.wizard-effect-grid article {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(248, 250, 252, 0.86);
+}
+
+.wizard-effect-grid strong {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.wizard-effect-grid p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 @keyframes assistantFloat {
@@ -993,7 +1055,10 @@ button {
 .dark-mode .wizard-review-card,
 .dark-mode .wizard-review-card dl div,
 .dark-mode .wizard-check-panel,
-.dark-mode .wizard-next-action-panel {
+.dark-mode .wizard-next-action-panel,
+.dark-mode .wizard-sample-experience,
+.dark-mode .wizard-effect-foldout,
+.dark-mode .wizard-effect-grid article {
   background: linear-gradient(180deg, #1d1a17 0%, #171513 100%);
 }
 
@@ -1045,6 +1110,7 @@ button {
 .dark-mode .admin-users-panel,
 .dark-mode .crm-panel,
 .dark-mode .permission-notice,
+.dark-mode .trial-check-panel,
 .dark-mode .input-panel,
 .dark-mode .result-panel,
 .dark-mode .live-brief-panel,
@@ -1096,6 +1162,7 @@ button {
 .dark-mode .settings-grid article,
 .dark-mode .usage-log-list article,
 .dark-mode .role-prep-grid article,
+.dark-mode .trial-check-grid article,
 .dark-mode .admin-user-list article,
 .dark-mode .crm-grid > article,
 .dark-mode .crm-list div,
@@ -1457,7 +1524,8 @@ button {
 
 .admin-users-panel,
 .crm-panel,
-.permission-notice {
+.permission-notice,
+.trial-check-panel {
   margin-bottom: 14px;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -1481,6 +1549,63 @@ button {
   margin: 6px 0 0;
   color: var(--muted);
   line-height: 1.7;
+}
+
+.trial-check-panel .section-heading {
+  margin-bottom: 12px;
+}
+
+.trial-check-panel .section-heading h2 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 18px;
+}
+
+.trial-check-panel .section-heading > span {
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.trial-check-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.trial-check-grid article {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 6px 8px;
+  align-items: start;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.trial-check-grid article.is-ok svg {
+  color: #15803d;
+}
+
+.trial-check-grid article.is-alert svg {
+  color: var(--danger);
+}
+
+.trial-check-grid strong {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.trial-check-grid p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .admin-user-form {
@@ -5219,6 +5344,11 @@ button {
   }
 
   .wizard-review-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .wizard-effect-grid,
+  .trial-check-grid {
     grid-template-columns: 1fr;
   }
 
