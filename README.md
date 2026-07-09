@@ -1,4 +1,4 @@
-# Ready Crew Proposal AI
+# AI営業秘書
 
 Ready Crew の案件概要から、Web制作会社向けの営業提案書を自動生成するWebサービスです。
 
@@ -189,7 +189,7 @@ NEXT_PUBLIC_API_URL=https://your-render-backend.onrender.com
 
 ## 現在の完成形
 
-Ready Crew Proposal AI / AI Digital Coworker は、社内試験導入向けに以下を備えています。
+AI営業秘書 / AI Digital Coworker は、社内試験導入向けに以下を備えています。
 
 - 簡易ログイン認証
 - AI案件受付、情報抽出、営業アシスタント

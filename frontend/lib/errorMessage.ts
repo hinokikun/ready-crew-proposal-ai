@@ -23,7 +23,7 @@ export function toFriendlyError(error: unknown): FriendlyError {
       category: "OpenAI API制限",
       title: "AI APIの利用制限に達した可能性があります",
       cause: "短時間の利用回数、API利用上限、または請求設定が原因の可能性があります。",
-      action: "時間を置いて再実行するか、RenderのOPENAI_API_KEYと利用上限を確認してください。"
+      action: "少し時間を置いて再読み込みしてください。社内デモ中はBackendのUSE_MOCK_AI=trueで動作確認できます。"
     };
   }
 
@@ -32,7 +32,7 @@ export function toFriendlyError(error: unknown): FriendlyError {
       category: "通信エラー",
       title: "Backendへ接続できません",
       cause: "Backend未起動、Renderのスリープ、CORS設定、またはNEXT_PUBLIC_API_URLの不一致が考えられます。",
-      action: "Backendを起動し、FrontendのAPI URLとRender/Vercelの環境変数を確認してください。"
+      action: "Backendを起動するか、Renderが起きるまで待って再読み込みしてください。VercelのAPI URL設定も確認してください。"
     };
   }
 
@@ -41,7 +41,7 @@ export function toFriendlyError(error: unknown): FriendlyError {
       category: "入力不足",
       title: "入力内容を確認してください",
       cause: "案件概要が短い、必須情報が不足している、または送信形式が想定と異なる可能性があります。",
-      action: "案件概要、会社情報、予算、納期などを確認し、不足していても生成する場合は確認画面から進めてください。"
+      action: "案件メール、会社名、困りごと、予算、納期のいずれかを追記してください。不明な項目は未定でも大丈夫です。"
     };
   }
 
@@ -50,7 +50,7 @@ export function toFriendlyError(error: unknown): FriendlyError {
       category: "PPTX生成失敗",
       title: "PowerPoint生成に失敗しました",
       cause: "スライド生成処理、入力データ、またはBackend側の一時的な問題の可能性があります。",
-      action: "Backendログを確認し、入力文字量を減らして再実行してください。"
+      action: "「その他」から再度ダウンロードしてください。繰り返す場合は入力文字量を減らし、Backendログを確認してください。"
     };
   }
 

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Ready Crew Proposal AI",
-  description: "Ready Crewの案件概要からWeb制作提案書の初稿を生成するMVP"
+  title: "AI営業秘書",
+  description: "案件メールからWeb制作提案書の初稿を生成するAI営業アシスタント"
 };
 
 export default function RootLayout({
