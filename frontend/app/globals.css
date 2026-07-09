@@ -204,6 +204,65 @@ button {
   margin-bottom: 16px;
 }
 
+.compact-dashboard .dashboard-grid:first-child {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboard-details,
+.advanced-foldout,
+.analysis-foldout {
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.dashboard-details summary,
+.advanced-foldout summary,
+.analysis-foldout summary {
+  cursor: pointer;
+  padding: 12px 14px;
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.dashboard-details[open],
+.advanced-foldout[open],
+.analysis-foldout[open] {
+  padding-bottom: 12px;
+}
+
+.dashboard-detail-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 0 12px;
+}
+
+.compact-intro-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 14px;
+  padding: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(239, 246, 255, 0.92));
+  box-shadow: var(--shadow);
+}
+
+.compact-intro-panel h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.45;
+}
+
+.quick-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .dashboard-card {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -213,6 +272,11 @@ button {
 }
 
 .dark-mode .dashboard-card,
+.dark-mode .compact-intro-panel,
+.dark-mode .dashboard-details,
+.dark-mode .advanced-foldout,
+.dark-mode .analysis-foldout,
+.dark-mode .work-mode-group,
 .dark-mode .capability-panel,
 .dark-mode .usage-steps article,
 .dark-mode .extractor-panel,
@@ -343,14 +407,34 @@ button {
 
 .work-mode-tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
 }
 
+.work-mode-group {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.work-mode-group > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.work-mode-group > div {
+  display: grid;
+  gap: 8px;
+}
+
 .work-mode-tabs button {
   cursor: pointer;
-  min-height: 74px;
+  min-height: 62px;
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px;
@@ -367,8 +451,18 @@ button {
   transform: translateY(-1px);
 }
 
+.work-mode-tabs button.shortcut-mode-button {
+  background: rgba(239, 246, 255, 0.72);
+}
+
+.work-mode-tabs button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
 .work-mode-tabs strong,
-.work-mode-tabs span {
+.work-mode-tabs small {
   display: block;
 }
 
@@ -376,7 +470,7 @@ button {
   font-size: 14px;
 }
 
-.work-mode-tabs span {
+.work-mode-tabs small {
   margin-top: 5px;
   color: var(--muted);
   font-size: 11px;
@@ -398,6 +492,30 @@ button {
 .recent-feature-row strong {
   color: var(--primary);
   font-size: 13px;
+}
+
+.digital-advanced-foldout,
+.output-analysis-foldout {
+  margin-top: 14px;
+}
+
+.advanced-foldout > .admin-users-panel,
+.advanced-foldout > .crm-panel,
+.advanced-foldout > .settings-panel,
+.advanced-foldout > .admin-audit-panel {
+  margin: 0 12px 12px;
+}
+
+.analysis-foldout .win-prediction-card,
+.analysis-foldout .live-status-row,
+.analysis-foldout .recommendation-panel,
+.analysis-foldout .strategy-grid,
+.analysis-foldout .preview-panel {
+  margin: 0 12px 12px;
+}
+
+.compact-next-action {
+  margin-top: 12px;
 }
 
 .recent-feature-row span {
@@ -4275,6 +4393,8 @@ button {
 @media (max-width: 1080px) {
   .capability-grid,
   .dashboard-grid,
+  .compact-dashboard .dashboard-grid:first-child,
+  .dashboard-detail-grid,
   .before-after-panel,
   .usage-steps,
   .extractor-grid,
@@ -4308,6 +4428,15 @@ button {
 
   .work-mode-tabs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .compact-intro-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .quick-action-row {
+    justify-content: flex-start;
   }
 
   .extractor-flow {
@@ -4515,6 +4644,11 @@ button {
 
   .work-mode-tabs {
     grid-template-columns: 1fr;
+  }
+
+  .quick-action-row,
+  .quick-action-row button {
+    width: 100%;
   }
 
   .recent-feature-row span {
