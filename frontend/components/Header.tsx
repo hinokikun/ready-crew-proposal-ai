@@ -12,8 +12,8 @@ function HeaderBase({ isDarkMode, onToggleDarkMode }: HeaderProps) {
   return (
     <section className="workspace-header" aria-label="アプリ概要">
       <div>
-        <p className="eyebrow">Ready Crew Proposal AI Version 4.0</p>
-        <h1>AI Digital Coworker（AI社員）</h1>
+        <p className="eyebrow">AI Digital Coworker</p>
+        <h1>Ready Crew Proposal AI</h1>
       </div>
       <div className="header-actions">
         <button className="status-pill mode-toggle" type="button" onClick={onToggleDarkMode}>
