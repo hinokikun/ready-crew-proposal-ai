@@ -11,6 +11,7 @@ type HealthResponse = {
   ai_api?: string;
   pptx?: string;
   pdf?: string;
+  db?: string;
 };
 
 export type HealthSnapshot = {
@@ -18,6 +19,7 @@ export type HealthSnapshot = {
   aiStatus: string;
   mockMode: boolean | null;
   authConfigured: boolean | null;
+  dbStatus: string;
   checkedAt: string;
 };
 
@@ -31,6 +33,7 @@ export function HealthStatus({ onChange }: HealthStatusProps) {
     aiStatus: "確認中",
     mockMode: null,
     authConfigured: null,
+    dbStatus: "未確認",
     checkedAt: ""
   });
 
@@ -45,6 +48,7 @@ export function HealthStatus({ onChange }: HealthStatusProps) {
         aiStatus: body.ai_api === "missing" ? "要確認" : "利用可能",
         mockMode: Boolean(body.mock_ai),
         authConfigured: Boolean(body.auth_configured),
+        dbStatus: body.db === "connected" ? "接続済み" : "要確認",
         checkedAt
       };
       setHealth(snapshot);
@@ -55,6 +59,7 @@ export function HealthStatus({ onChange }: HealthStatusProps) {
         aiStatus: "要確認",
         mockMode: null,
         authConfigured: null,
+        dbStatus: "要確認",
         checkedAt
       };
       setHealth(snapshot);
@@ -83,6 +88,7 @@ export function HealthStatus({ onChange }: HealthStatusProps) {
         <StatusItem label="AI API" ok={health.aiStatus === "利用可能"} value={health.aiStatus} />
         <StatusItem label="PPTX生成" ok={health.backendOk} value={health.backendOk ? "利用可能" : "要確認"} />
         <StatusItem label="PDF生成" ok={health.backendOk} value={health.backendOk ? "利用可能" : "要確認"} />
+        <StatusItem label="DB接続" ok={health.dbStatus === "接続済み"} value={health.dbStatus} />
       </div>
     </section>
   );

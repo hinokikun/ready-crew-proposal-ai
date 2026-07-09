@@ -1,5 +1,7 @@
 "use client";
 
+import { memo } from "react";
+
 type DashboardMetric = {
   label: string;
   value: string;
@@ -12,7 +14,7 @@ type DashboardProps = {
   operationDashboardMetrics: DashboardMetric[];
 };
 
-export function Dashboard({ dashboardMetrics, monthlyDashboardMetrics, operationDashboardMetrics }: DashboardProps) {
+function DashboardBase({ dashboardMetrics, monthlyDashboardMetrics, operationDashboardMetrics }: DashboardProps) {
   return (
     <>
       <MetricGrid metrics={dashboardMetrics} label="営業ダッシュボード" />
@@ -21,6 +23,8 @@ export function Dashboard({ dashboardMetrics, monthlyDashboardMetrics, operation
     </>
   );
 }
+
+export const Dashboard = memo(DashboardBase);
 
 function MetricGrid({ metrics, label, className = "" }: { metrics: DashboardMetric[]; label: string; className?: string }) {
   return (

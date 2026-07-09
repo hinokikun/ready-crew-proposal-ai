@@ -226,6 +226,9 @@ button {
 .dark-mode .health-panel,
 .dark-mode .settings-panel,
 .dark-mode .auth-card,
+.dark-mode .admin-users-panel,
+.dark-mode .crm-panel,
+.dark-mode .permission-notice,
 .dark-mode .input-panel,
 .dark-mode .result-panel,
 .dark-mode .live-brief-panel,
@@ -277,6 +280,9 @@ button {
 .dark-mode .settings-grid article,
 .dark-mode .usage-log-list article,
 .dark-mode .role-prep-grid article,
+.dark-mode .admin-user-list article,
+.dark-mode .crm-grid > article,
+.dark-mode .crm-list div,
 .dark-mode .work-mode-tabs button,
 .dark-mode .recent-feature-row,
 .dark-mode .realtime-card textarea,
@@ -573,6 +579,124 @@ button {
 }
 
 .role-prep-grid p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.admin-users-panel,
+.crm-panel,
+.permission-notice {
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+}
+
+.permission-notice {
+  border-color: rgba(180, 35, 24, 0.22);
+  background: #fff7ed;
+}
+
+.permission-notice strong,
+.admin-users-panel > strong,
+.crm-panel .section-heading h2 {
+  color: var(--primary);
+}
+
+.permission-notice p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.admin-user-form {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 150px auto;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.admin-user-form input,
+.admin-user-form select {
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: #fff;
+  color: var(--text);
+}
+
+.admin-user-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.admin-user-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.admin-user-list strong,
+.admin-user-list span {
+  display: block;
+}
+
+.admin-user-list span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.crm-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.crm-grid > article {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.crm-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.crm-list div {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.crm-list span,
+.crm-list small {
+  display: block;
+}
+
+.crm-list span {
+  color: var(--text);
+  font-weight: 900;
+}
+
+.crm-list small,
+.crm-list p {
   margin: 5px 0 0;
   color: var(--muted);
   font-size: 12px;
@@ -2670,6 +2794,58 @@ button {
   line-height: 1.6;
 }
 
+.status-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: var(--panel);
+  box-shadow: var(--shadow-soft);
+  line-height: 1.65;
+}
+
+.status-message strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.status-message p,
+.status-message small {
+  margin: 0;
+}
+
+.status-message-error {
+  border: 1px solid rgba(180, 35, 24, 0.24);
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.status-message-error p {
+  color: #68412f;
+  font-size: 13px;
+}
+
+.status-message-error small {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.status-message-success {
+  border: 1px solid rgba(22, 163, 74, 0.22);
+  background: rgba(240, 253, 244, 0.96);
+  color: #14532d;
+}
+
+.status-message-info {
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: rgba(239, 246, 255, 0.96);
+  color: #1e3a8a;
+}
+
 .detailed-error-box strong {
   display: block;
   margin-bottom: 4px;
@@ -4124,7 +4300,9 @@ button {
   .health-grid,
   .settings-grid,
   .minimal-input-grid,
-  .role-prep-grid {
+  .role-prep-grid,
+  .admin-user-form,
+  .crm-grid {
     grid-template-columns: 1fr;
   }
 
@@ -4219,6 +4397,7 @@ button {
   .card-title-row,
   .health-heading,
   .minimal-input-heading,
+  .admin-user-list article,
   .roleplay-controls,
   .roleplay-compose {
     flex-direction: column;

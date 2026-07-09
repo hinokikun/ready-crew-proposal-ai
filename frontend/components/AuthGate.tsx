@@ -12,6 +12,7 @@ type AuthGateProps = {
 export function AuthGate({ children }: AuthGateProps) {
   const [isChecking, setIsChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState("");
@@ -41,7 +42,9 @@ export function AuthGate({ children }: AuthGateProps) {
     setIsLoggingIn(true);
     setError("");
     try {
-      await loginWithPassword(password);
+      await loginWithPassword(password, email);
+      window.dispatchEvent(new Event("ready-crew-auth-changed"));
+      setEmail("");
       setPassword("");
       setIsAuthenticated(true);
     } catch (caught) {
@@ -74,6 +77,16 @@ export function AuthGate({ children }: AuthGateProps) {
           <p className="eyebrow">Internal Trial Access</p>
           <h1>Ready Crew Proposal AI</h1>
           <p>社内試験導入用の簡易ログインです。管理者から共有されたパスワードを入力してください。</p>
+          <label className="field">
+            <span>メールアドレス</span>
+            <input
+              autoComplete="username"
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="admin@example.com（簡易ログイン時は空欄可）"
+              type="email"
+              value={email}
+            />
+          </label>
           <label className="field">
             <span>アクセスパスワード</span>
             <input

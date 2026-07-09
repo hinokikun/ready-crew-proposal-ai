@@ -48,6 +48,10 @@ class Settings:
     app_access_password: str = os.getenv("APP_ACCESS_PASSWORD", "")
     app_auth_secret: str = os.getenv("APP_AUTH_SECRET", "") or os.getenv("APP_ACCESS_PASSWORD", "")
     app_auth_token_ttl_seconds: int = _as_int(os.getenv("APP_AUTH_TOKEN_TTL_SECONDS"), 60 * 60 * 12)
+    initial_admin_email: str = os.getenv("INITIAL_ADMIN_EMAIL", "").strip().lower()
+    initial_admin_password: str = os.getenv("INITIAL_ADMIN_PASSWORD", "")
+    database_url: str = os.getenv("DATABASE_URL", "sqlite:///app.db")
+    log_level: str = os.getenv("LOG_LEVEL", "INFO").upper()
 
 
 settings = Settings()

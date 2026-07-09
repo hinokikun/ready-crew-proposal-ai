@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { CheckCircle2, Moon, Sun } from "lucide-react";
 
 type HeaderProps = {
@@ -7,7 +8,7 @@ type HeaderProps = {
   onToggleDarkMode: () => void;
 };
 
-export function Header({ isDarkMode, onToggleDarkMode }: HeaderProps) {
+function HeaderBase({ isDarkMode, onToggleDarkMode }: HeaderProps) {
   return (
     <section className="workspace-header" aria-label="アプリ概要">
       <div>
@@ -27,3 +28,5 @@ export function Header({ isDarkMode, onToggleDarkMode }: HeaderProps) {
     </section>
   );
 }
+
+export const Header = memo(HeaderBase);

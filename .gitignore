@@ -21,6 +21,11 @@ dist/
 build/
 coverage/
 *.log
+*.db
+*.sqlite
+*.sqlite3
+backend/app.db
+frontend/.vercel/
 
 tmp/
 outputs/

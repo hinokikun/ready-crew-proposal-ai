@@ -270,11 +270,108 @@ OpenAI API制限が出た場合は、以下を確認してください。
 
 ## 今後の実装予定
 
-- ユーザー管理
-- DB保存
+- ユーザー管理の本格化
+- PostgreSQL保存
 - Gmail / Google Drive / Slack 連携
 - 監査ログ
-- 権限管理
+- 詳細な権限管理
+
+## DB保存・ユーザー管理
+
+社内試験導入から複数社員利用へ進めるため、BackendにSQLite保存を追加しています。
+
+### DB保存の概要
+
+DBファイル名は `app.db` です。Renderでは `DATABASE_URL=sqlite:///app.db` を設定します。  
+現時点ではSQLiteですが、接続処理・リポジトリ層を分けているため、将来PostgreSQLへ移行しやすい構成にしています。
+
+保存するもの:
+
+- ユーザー
+- 顧客
+- 案件
+- 提案書生成履歴
+- 商談メモ
+- 利用ログ
+
+保存しないもの:
+
+- OpenAI APIキー
+- パスワードそのもの
+- 入力本文全文
+- 生成本文全文
+- 顧客の機密情報
+
+### 追加DBテーブル
+
+- `users`
+- `customers`
+- `projects`
+- `proposal_histories`
+- `meeting_memos`
+- `usage_logs`
+
+### 初期管理者の作成方法
+
+RenderまたはローカルのBackend環境変数に以下を設定します。
+
+```env
+INITIAL_ADMIN_EMAIL=admin@example.com
+INITIAL_ADMIN_PASSWORD=安全なパスワード
+APP_AUTH_SECRET=長いランダム文字列
+DATABASE_URL=sqlite:///app.db
+```
+
+Backend起動時に、同じメールアドレスのユーザーが存在しなければ `admin` ロールで作成されます。
+
+### ユーザーロール
+
+- `admin`  
+  全機能利用、ユーザー管理、ログ確認ができます。
+
+- `member`  
+  提案書生成、通常版PPTX、要約PPTX、見積書PDF、業務AIを利用できます。
+
+- `viewer`  
+  Dashboardと履歴閲覧のみです。提案書生成、PPTX/PDF生成はできません。
+
+### Render環境変数
+
+```env
+INITIAL_ADMIN_EMAIL=admin@example.com
+INITIAL_ADMIN_PASSWORD=安全な初期パスワード
+APP_AUTH_SECRET=長いランダム文字列
+APP_AUTH_TOKEN_TTL_SECONDS=43200
+DATABASE_URL=sqlite:///app.db
+OPENAI_API_KEY=sk-...
+USE_MOCK_AI=false
+CORS_ORIGINS=https://your-vercel-app.vercel.app
+CORS_ORIGIN_REGEX=^https://.*\.vercel\.app$
+```
+
+### SQLite利用時の注意
+
+SQLiteは社内試験導入には手軽ですが、Renderの無料/一時ファイル環境では永続性に制限があります。  
+本格運用ではPostgreSQLへ移行してください。
+
+### PostgreSQL移行予定
+
+将来的には以下を行います。
+
+- `DATABASE_URL` をPostgreSQL接続文字列へ変更
+- `app/db.py` の接続処理をPostgreSQL対応に変更
+- リポジトリ層のSQLをPostgreSQL互換へ調整
+- 監査ログとバックアップ運用を追加
+
+### 社内試験導入時の確認手順
+
+1. Backendを起動し、`/health` の `db` が `connected` になることを確認
+2. 初期管理者メールアドレスとパスワードでログイン
+3. adminでユーザーを追加
+4. memberで提案書生成、PPTX、要約PPTX、見積書PDFを確認
+5. viewerで生成ボタンが使えないことを確認
+6. 設定画面でDBログ件数とユーザー権限を確認
+7. CRM画面で顧客・案件が表示されることを確認
 
 ## GitHubへアップロードする方法
 
@@ -470,3 +567,123 @@ npm.cmd run dev
 - `.env` と `.env.local` はGit管理対象外です。
 - 誰でも使える公開URLにする場合、OpenAI API の利用料金が発生します。
 - 実運用では、ログイン、利用回数制限、IP制限、レート制限の追加を推奨します。
+
+## Version 1.0 RC1 運用ガイド
+
+### 構成図
+
+```mermaid
+flowchart LR
+  User["社内ユーザー"] --> Vercel["Vercel / Next.js Frontend"]
+  Vercel --> Render["Render / FastAPI Backend"]
+  Render --> SQLite["SQLite app.db"]
+  Render --> OpenAI["OpenAI API"]
+  Render --> Files["PPTX / PDF生成"]
+```
+
+### 画面一覧
+
+- Dashboard: 今日・今月の生成数、削減時間、平均品質を確認
+- 営業提案AI: 案件情報貼り付け、提案書生成、PPTX/PDF出力
+- 商談コーチAI: 商談前質問、商談評価、日報、上司報告
+- 社内業務AI: 議事録、メール、タスク、FAQ、資料要約、日報/週報
+- CRM: 顧客、案件、提案履歴、商談メモの一覧
+- 設定: 接続状態、ログイン状態、DB状態、利用ログ
+- 管理者: ユーザー管理、Audit Log
+
+### API一覧
+
+| API | 用途 | 権限 |
+| --- | --- | --- |
+| `GET /health` | Backend / AI / DB状態確認 | 公開 |
+| `POST /api/auth/login` | ログイン | 公開 |
+| `GET /api/auth/status` | ログイン状態確認 | login |
+| `GET /api/users` | ユーザー一覧 | admin |
+| `POST /api/users` | ユーザー追加 | admin |
+| `PATCH /api/users/{user_id}` | ユーザー有効/無効 | admin |
+| `POST /api/analyze` | 提案書生成 | admin/member |
+| `POST /api/company-research` | 会社URL調査 | admin/member |
+| `POST /api/download-pptx` | 通常/要約PPTX生成 | admin/member |
+| `POST /api/download-estimate-pdf` | 見積書PDF生成 | admin/member |
+| `GET /api/projects/crm` | CRM一覧 | admin/member/viewer |
+| `GET /api/projects/crm/{project_id}` | 案件詳細 | admin/member/viewer |
+| `GET /api/logs` | 利用ログ | admin/member/viewer |
+| `POST /api/logs` | 利用ログ保存 | admin/member/viewer |
+| `GET /api/logs/audit` | 監査ログ | admin |
+
+### DB構成
+
+| テーブル | 内容 |
+| --- | --- |
+| `users` | ユーザー、ロール、有効状態 |
+| `customers` | 顧客の最小メタ情報 |
+| `projects` | 案件名、ステータス、受注確率、要約 |
+| `proposal_histories` | 提案書生成履歴 |
+| `meeting_memos` | 商談メモ要約 |
+| `usage_logs` | 機能別の利用ログ |
+| `audit_logs` | ログイン、生成、保存、設定変更の監査ログ |
+
+本文全文、生成本文全文、APIキー、パスワードは保存しません。
+
+### 環境変数
+
+Frontend / Vercel:
+
+```env
+NEXT_PUBLIC_API_URL=https://your-render-backend.onrender.com
+```
+
+Backend / Render:
+
+```env
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4.1-mini
+USE_MOCK_AI=false
+CORS_ORIGINS=https://your-vercel-app.vercel.app
+CORS_ORIGIN_REGEX=^https://.*\.vercel\.app$
+INITIAL_ADMIN_EMAIL=admin@example.com
+INITIAL_ADMIN_PASSWORD=change-me
+APP_AUTH_SECRET=long-random-secret
+APP_AUTH_TOKEN_TTL_SECONDS=43200
+DATABASE_URL=sqlite:///app.db
+LOG_LEVEL=INFO
+```
+
+### デプロイ
+
+1. GitHubへpushします。
+2. RenderでBackendを再デプロイします。
+3. VercelでRoot Directoryを `frontend` にして再デプロイします。
+4. Vercelの `NEXT_PUBLIC_API_URL` がRender URLになっていることを確認します。
+5. Renderの `CORS_ORIGINS` にVercel URLを設定します。
+
+### トラブル対応
+
+- ログインできない: `INITIAL_ADMIN_EMAIL`、`INITIAL_ADMIN_PASSWORD`、`APP_AUTH_SECRET` を確認
+- Viewerで生成できない: 正常です。memberまたはadminでログインしてください
+- Backend未接続: `NEXT_PUBLIC_API_URL`、Render起動状態、CORSを確認
+- AI API制限: 時間を置くか、社内デモでは `USE_MOCK_AI=true` で確認
+- PPTX/PDF失敗: Backendログと入力文字数を確認
+- DBエラー: Renderのディスク、`DATABASE_URL`、`app.db` の書き込み権限を確認
+
+### 運用方法
+
+- 管理者が初期ユーザーでログインし、member/viewerを追加します。
+- 通常利用者はmemberで利用します。
+- 閲覧のみの人はviewerにします。
+- 管理者は定期的にAudit Logと利用ログを確認します。
+- 提案書・見積書は社外提出前に必ず人が確認します。
+
+### バックアップ
+
+SQLite利用時は、Renderの永続ディスク上にある `app.db` を定期的にバックアップしてください。  
+将来の複数名運用ではPostgreSQLへ移行することを推奨します。
+
+### 将来構想
+
+- PostgreSQL移行
+- 監査ログの長期保存
+- 会社単位の権限管理
+- Gmail / Google Drive / Slack / Teams連携
+- 提案書テンプレートのRAG参照
+- 利用回数制限、IP制限、レート制限

@@ -1,13 +1,10 @@
 import { API_BASE_URL } from "@/lib/config";
+import type { AuthUser, LoginResult } from "@/types/app";
+
+export type { AuthUser, LoginResult } from "@/types/app";
 
 const AUTH_TOKEN_KEY = "ready-crew-auth-token-v1";
-
-export type LoginResult = {
-  authenticated: boolean;
-  token: string;
-  expires_in_seconds: number;
-  message: string;
-};
+const AUTH_USER_KEY = "ready-crew-auth-user-v1";
 
 export function getAuthToken() {
   if (typeof window === "undefined") return "";
@@ -23,17 +20,32 @@ export function saveAuthToken(token: string) {
   window.localStorage.setItem(AUTH_TOKEN_KEY, token);
 }
 
-export function clearAuthToken() {
-  window.localStorage.removeItem(AUTH_TOKEN_KEY);
+export function saveAuthUser(user: AuthUser | undefined) {
+  if (!user) return;
+  window.localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
 }
 
-export async function loginWithPassword(password: string): Promise<LoginResult> {
+export function getStoredUser(): AuthUser | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return JSON.parse(window.localStorage.getItem(AUTH_USER_KEY) ?? "null") as AuthUser | null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearAuthToken() {
+  window.localStorage.removeItem(AUTH_TOKEN_KEY);
+  window.localStorage.removeItem(AUTH_USER_KEY);
+}
+
+export async function loginWithPassword(password: string, email = ""): Promise<LoginResult> {
   const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ password })
+    body: JSON.stringify({ email, password })
   });
 
   if (!response.ok) {
@@ -43,6 +55,7 @@ export async function loginWithPassword(password: string): Promise<LoginResult> 
 
   const result = (await response.json()) as LoginResult;
   saveAuthToken(result.token);
+  saveAuthUser(result.user);
   return result;
 }
 
@@ -59,6 +72,8 @@ export async function verifyAuthToken(): Promise<boolean> {
     return false;
   }
 
+  const status = (await response.json()) as { user?: AuthUser };
+  saveAuthUser(status.user);
   return true;
 }
 

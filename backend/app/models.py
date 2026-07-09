@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class AuthLoginRequest(BaseModel):
+    email: str = Field("", description="ログインメールアドレス")
     password: str = Field(..., min_length=1, description="社内試験導入用の管理者パスワード")
 
 
@@ -12,11 +13,31 @@ class AuthResponse(BaseModel):
     token: str = ""
     expires_in_seconds: int = 0
     message: str = ""
+    user: dict | None = None
 
 
 class AuthStatusResponse(BaseModel):
     authenticated: bool
     auth_configured: bool
+    user: dict | None = None
+
+
+class UserCreateRequest(BaseModel):
+    email: str
+    password: str = Field(..., min_length=8)
+    role: Literal["admin", "member", "viewer"]
+
+
+class UserUpdateRequest(BaseModel):
+    is_active: bool
+
+
+class UsageLogCreateRequest(BaseModel):
+    feature_name: str
+    input_length: int = 0
+    output_type: str = ""
+    status: Literal["success", "failure"] = "success"
+    error_type: str = ""
 
 
 class ProposalRequest(BaseModel):
