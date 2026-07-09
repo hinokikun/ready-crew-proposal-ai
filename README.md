@@ -104,6 +104,89 @@ TMP=/tmp
 
 `OPENAI_API_KEY` はコードやGitHubに保存しません。Render の Secret として登録します。
 
+## 社内試験導入向けの安全設定
+
+Version 4.0 では、社内で試験利用しやすいように簡易ログイン、接続状態表示、利用ログ、設定画面を追加しています。
+
+### 目的
+
+- 営業担当者が提案書生成AIを安全に試せる状態にする
+- APIキーや管理者パスワードをFrontendへ露出させない
+- 利用状況を本文なしで確認できるようにする
+- 提出前に人が確認する運用を前提にする
+
+### Backend / Render に追加する環境変数
+
+```env
+APP_ACCESS_PASSWORD=社内で共有するログインパスワード
+APP_AUTH_SECRET=長いランダム文字列
+APP_AUTH_TOKEN_TTL_SECONDS=43200
+```
+
+`APP_ACCESS_PASSWORD` は必須です。未設定の場合、ログインできず、提案書生成・PowerPoint・PDF出力APIは利用できません。  
+`APP_AUTH_SECRET` はトークン署名用です。未設定の場合は `APP_ACCESS_PASSWORD` を使いますが、Renderでは別の長い値を設定することを推奨します。
+
+### Frontend / Vercel の環境変数
+
+```env
+NEXT_PUBLIC_API_URL=https://your-render-backend.onrender.com
+```
+
+管理者パスワードや OpenAI API キーは Vercel のFrontend環境変数に設定しません。
+
+### セキュリティ注意点
+
+- 顧客の機密情報、個人情報、パスワードは入力しない
+- 提案書・見積書はAI生成のため、提出前に必ず人が確認する
+- 外部送信、削除、公開作業はAIに任せない
+- 社外共有前に上長または担当者が確認する
+- `.env` / `.env.local` はGit管理対象外にする
+
+### 利用ログ
+
+ブラウザの `localStorage` に以下のみ保存します。
+
+- 生成日時
+- 機能名
+- 入力文字数
+- 出力種別
+- 成功 / 失敗
+- エラー種別
+
+以下は保存しません。
+
+- 顧客名
+- 個人名
+- APIキー
+- 入力本文全文
+- 生成本文全文
+
+### 試験導入時の確認項目
+
+- ログイン前はアプリ本体が表示されない
+- ログイン後に提案書生成ができる
+- 通常版PPTX、要約PPTX、見積書PDFを出力できる
+- 画面上の「接続状態」でBackend、AI API、PPTX、PDFの状態が確認できる
+- 設定画面にBackend URL、ログイン状態、モックモード状態、最終接続確認日時が表示される
+- 利用ログに本文が保存されていない
+
+### トラブルシューティング
+
+- ログインできない  
+  Render の `APP_ACCESS_PASSWORD` が設定されているか確認してください。
+
+- Backend接続が異常  
+  RenderのサービスURL、Vercelの `NEXT_PUBLIC_API_URL`、CORS設定を確認してください。
+
+- AI API が要確認  
+  `USE_MOCK_AI`、`OPENAI_API_KEY`、OpenAIの利用上限を確認してください。
+
+- PowerPoint / PDF が出力できない  
+  Backendログを確認し、入力文字量を減らして再実行してください。
+
+- Vercel公開環境で通信エラーになる  
+  Renderの `CORS_ORIGINS` にVercel URLを追加するか、`CORS_ORIGIN_REGEX=^https://.*\.vercel\.app$` を設定してください。
+
 ## GitHubへアップロードする方法
 
 1. GitHubで新しいリポジトリを作成します。

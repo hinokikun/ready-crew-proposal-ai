@@ -1,4 +1,5 @@
 import type { PowerPointData, ProposalRequest, WinProbability } from "@/types/proposal";
+import { getAuthHeaders } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/config";
 
 type DownloadEstimatePdfPayload = {
@@ -26,7 +27,8 @@ export async function downloadEstimatePdf(data: PowerPointData, form: ProposalRe
   const response = await fetch(`${API_BASE_URL}/api/download-estimate-pdf`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      ...getAuthHeaders()
     },
     body: JSON.stringify({
       powerpoint_generation_data: data,

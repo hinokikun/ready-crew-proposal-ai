@@ -71,7 +71,7 @@ def _generate_with_openai(payload: ProposalRequest) -> ProposalAnalysis:
     except APIConnectionError as exc:
         raise OpenAIServiceError("OpenAI API への接続に失敗しました。ネットワーク設定を確認してください。", 502) from exc
     except APIStatusError as exc:
-        raise OpenAIServiceError(f"OpenAI API エラー: {exc.status_code} {exc.message}", exc.status_code) from exc
+        raise OpenAIServiceError(f"OpenAI API でエラーが発生しました。status={exc.status_code}", exc.status_code) from exc
 
     raw_text = _extract_output_text(response)
 
@@ -81,7 +81,7 @@ def _generate_with_openai(payload: ProposalRequest) -> ProposalAnalysis:
     except json.JSONDecodeError as exc:
         raise OpenAIServiceError("AIの出力をJSONとして解析できませんでした。再実行してください。") from exc
     except ValidationError as exc:
-        raise OpenAIServiceError(f"AIの出力形式が想定と異なります: {exc}") from exc
+        raise OpenAIServiceError("AIの出力形式が想定と異なります。再実行してください。") from exc
 
 
 def _extract_output_text(response: Any) -> str:

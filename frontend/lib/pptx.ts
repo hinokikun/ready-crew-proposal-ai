@@ -1,4 +1,5 @@
 import type { PowerPointData, WinProbability } from "@/types/proposal";
+import { getAuthHeaders } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/config";
 
 type DownloadPptxPayload = {
@@ -127,7 +128,8 @@ async function downloadPowerPoint(
   const response = await fetch(`${API_BASE_URL}/api/download-pptx`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      ...getAuthHeaders()
     },
     body: JSON.stringify({
       powerpoint_generation_data: data,

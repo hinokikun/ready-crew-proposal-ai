@@ -7,19 +7,31 @@ import {
   CheckCircle2,
   Clipboard,
   Download,
+  Mail,
   FileDown,
+  FileCheck2,
   FileText,
   History,
   Loader2,
+  Mic,
+  Moon,
   MessageCircle,
   RotateCcw,
   Send,
   Sparkles,
+  Sun,
+  UploadCloud,
   X
 } from "lucide-react";
-import { analyzeProposal } from "@/lib/api";
+import { AuthGate } from "@/components/AuthGate";
+import { HealthStatus, type HealthSnapshot } from "@/components/HealthStatus";
+import { SecurityNotice } from "@/components/SecurityNotice";
+import { SettingsPanel } from "@/components/SettingsPanel";
+import { analyzeProposal, researchCompanyUrl } from "@/lib/api";
+import { toFriendlyError } from "@/lib/errorMessage";
 import { downloadEstimatePdf } from "@/lib/pdf";
 import { downloadProposalPowerPoint, downloadSummaryProposalPowerPoint } from "@/lib/pptx";
+import { appendUsageLog, readUsageLogs, type UsageLogEntry } from "@/lib/storage";
 import type { AnalysisResponse, ProposalRequest, WinProbability } from "@/types/proposal";
 
 const HISTORY_KEY = "ready-crew-proposal-history-v1";
@@ -85,6 +97,7 @@ type ChatQuestion = {
 };
 
 type ChatAnswers = Partial<Record<ChatAnswerKey, string>>;
+type SourceTemplateKind = "readyCrew" | "hearing" | "slack";
 
 type ExtractedInfo = {
   companyName: string;
@@ -97,6 +110,8 @@ type ExtractedInfo = {
   competitor: string;
   currentSiteUrl: string;
   cms: string;
+  target: string;
+  seoIssue: string;
   inquiryDetails: string;
 };
 
@@ -105,6 +120,8 @@ type UrlInsight = {
   companyOverview: string;
   business: string;
   strengths: string;
+  weaknesses: string;
+  competitors: string;
   services: string;
   recruitment: string;
   seoStatus: string;
@@ -116,6 +133,219 @@ type SalesOpportunityScore = {
   stars: string;
   label: string;
   reasons: string[];
+};
+
+type StrategyCard = {
+  title: string;
+  reason: string;
+};
+
+type PreviewSlide = {
+  title: string;
+  body: string;
+};
+
+type QualityScore = {
+  total: number;
+  proposal: number;
+  persuasion: number;
+  roi: number;
+  differentiation: number;
+  readability: number;
+  improvements: string[];
+};
+
+type DraftEmail = {
+  subject: string;
+  body: string;
+  signature: string;
+};
+
+type AiMinutes = {
+  minutes: string[];
+  todos: string[];
+  nextActions: string[];
+};
+
+type CoachQuestion = {
+  priority: number;
+  question: string;
+  reason: string;
+};
+
+type MeetingEvaluation = {
+  total: number;
+  hearing: number;
+  proposal: number;
+  closing: number;
+  questions: number;
+  information: number;
+  comment: string;
+  goodPoints: string[];
+  improvements: string[];
+  nextFocus: string[];
+};
+
+type NextMeetingPrep = {
+  confirmations: string[];
+  homework: string[];
+  deliverables: string[];
+};
+
+type DailyReport = {
+  activities: string[];
+  meeting: string[];
+  results: string[];
+  issues: string[];
+  tomorrow: string[];
+};
+
+type KnowledgeGroups = {
+  similar: HistoryEntry[];
+  success: HistoryEntry[];
+  lost: HistoryEntry[];
+};
+
+type RoleplayScenario = "renewal" | "recruit" | "lp" | "branding";
+type RoleplayMessage = {
+  role: "customer" | "sales";
+  text: string;
+};
+
+type WorkMode = "sales" | "coach" | "minutes" | "mail" | "tasks" | "faq" | "summary" | "reports";
+type AiEmployeeRole = "secretary" | "sales" | "director" | "writer" | "designer" | "pm";
+type AgentStepStatus = "waiting" | "running" | "done";
+
+type GeneratedCounts = Record<WorkMode, number>;
+
+type CompanyResearch = {
+  overview: string;
+  competitors: string[];
+  recruitment: string;
+  news: string[];
+  services: string[];
+  sns: string[];
+};
+
+type DigitalAgentStep = {
+  label: string;
+  detail: string;
+  status: AgentStepStatus;
+};
+
+type AutomationSettings = {
+  morning: boolean;
+  weekly: boolean;
+  deadline: boolean;
+};
+
+type MinutesAiResult = {
+  minutes: string[];
+  decisions: string[];
+  unresolved: string[];
+  todos: Array<{ task: string; owner: string; deadline: string }>;
+  nextConfirmations: string[];
+};
+
+type MailAiResult = {
+  subject: string;
+  body: string;
+  reply: string;
+  polite: string;
+  short: string;
+};
+
+type TaskAiResult = {
+  tasks: Array<{ task: string; priority: string; owner: string; deadline: string; risk: string }>;
+  nextAction: string;
+};
+
+type FaqAiResult = {
+  answer: string;
+  department: string;
+  references: string[];
+  notes: string[];
+};
+
+type SummaryAiResult = {
+  threeLines: string[];
+  points: string[];
+  actions: string[];
+  risks: string[];
+  bossSummary: string;
+};
+
+type ReportAiResult = {
+  daily: string[];
+  weekly: string[];
+  results: string[];
+  issues: string[];
+  tomorrow: string[];
+  bossMessage: string;
+};
+
+type SpeechRecognitionLike = {
+  lang: string;
+  interimResults: boolean;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onerror: (() => void) | null;
+  start: () => void;
+};
+
+const MAX_ASSISTANT_QUESTIONS = 3;
+
+const workModeTabs: Array<{ key: WorkMode; label: string; note: string }> = [
+  { key: "sales", label: "営業提案AI", note: "提案書・見積・資料出力" },
+  { key: "coach", label: "商談コーチAI", note: "商談前後の支援" },
+  { key: "minutes", label: "議事録AI", note: "決定事項とToDo整理" },
+  { key: "mail", label: "メール作成AI", note: "件名・本文・返信案" },
+  { key: "tasks", label: "タスク整理AI", note: "優先度と期限整理" },
+  { key: "faq", label: "社内FAQ AI", note: "回答案と確認先" },
+  { key: "summary", label: "資料要約AI", note: "要点とリスク抽出" },
+  { key: "reports", label: "日報/週報AI", note: "報告文を作成" }
+];
+
+const aiEmployeeRoles: Array<{ key: AiEmployeeRole; label: string; mission: string }> = [
+  { key: "secretary", label: "AI秘書", mission: "予定、確認事項、送付メールを整える" },
+  { key: "sales", label: "AI営業", mission: "受注確率と提案ストーリーを強化する" },
+  { key: "director", label: "AIディレクター", mission: "要件、体制、進行リスクを整理する" },
+  { key: "writer", label: "AIライター", mission: "訴求、原稿、メール文を磨く" },
+  { key: "designer", label: "AIデザイナー", mission: "見せ方、導線、資料品質を改善する" },
+  { key: "pm", label: "AI PM", mission: "見積、スケジュール、タスクを管理する" }
+];
+
+const mcpConnectorCards = [
+  "Google Drive",
+  "GitHub",
+  "Notion",
+  "Slack",
+  "Teams",
+  "Google Calendar",
+  "Gmail",
+  "Outlook",
+  "OneDrive",
+  "Salesforce",
+  "HubSpot",
+  "kintone"
+];
+
+const initialAgentSteps: DigitalAgentStep[] = [
+  { label: "会社調査", detail: "会社URLと案件情報から概要・採用・ニュース・SNS確認観点を整理", status: "waiting" },
+  { label: "競合調査", detail: "競合、導線、SEO、CTA、コンテンツ量を比較する観点を作成", status: "waiting" },
+  { label: "提案書作成", detail: "提案コンセプト、構成、初稿生成に進む準備", status: "waiting" },
+  { label: "見積", detail: "ページ数、CMS、特殊機能、予算感から概算レンジを確認", status: "waiting" },
+  { label: "メール", detail: "提案書送付や次回確認依頼のメール文を準備", status: "waiting" }
+];
+
+const initialModeCounts: GeneratedCounts = {
+  sales: 0,
+  coach: 0,
+  minutes: 0,
+  mail: 0,
+  tasks: 0,
+  faq: 0,
+  summary: 0,
+  reports: 0
 };
 
 const initialEasyInput: EasyInput = {
@@ -224,6 +454,56 @@ const initialChatMessages: ChatMessage[] = [
     text: "こんにちは。AI営業アシスタントです。会話だけで提案書の材料を整理します。まず、どんな案件ですか？"
   }
 ];
+
+const sourceTemplates: Record<SourceTemplateKind, string> = {
+  readyCrew: `Ready Crew案件メールを貼る例：
+株式会社サンプル不動産様よりWebサイトリニューアルの相談。
+現行サイトが古く、スマホで物件情報を探しにくい。問い合わせ件数を増やしたい。
+予算感は300万〜500万円。公開希望は10月末。
+CMSはWordPress希望。お知らせ、実績、FAQを更新したい。
+競合サイト：https://area-rival-realty.example.jp
+既存サイト：https://sample-realty.example.jp
+決裁者は代表取締役、窓口は営業企画部。初回提案では概算費用とスケジュールを知りたい。`,
+  hearing: `ヒアリングメモを貼る例：
+商談メモ
+お客様：株式会社サンプル製作所、人事責任者様
+相談内容：採用サイトを新しく作りたい。
+課題：求人媒体に依存しており、自社の雰囲気や働く魅力が伝わっていない。応募数と応募者の質を改善したい。
+目的：採用強化、会社の信頼感向上、更新しやすい採用情報の発信。
+予算：100万〜300万円
+納期：3か月以上で検討
+CMS：WordPress希望
+競合：採用競合企業のサイトを参考にしたい。`,
+  slack: `Slack相談文を貼る例：
+営業相談です。新サービスLP制作の引き合いがありました。
+広告流入後の問い合わせ率を上げたいそうです。予算はまだざっくり100〜300万円くらい。
+公開はできれば1か月以内。CMSは不要で、問い合わせフォームとCTAを重視。
+競合LP：https://lp-rival.example.jp
+  原稿作成も相談したいとのこと。`
+};
+
+const roleplayScenarios: Record<RoleplayScenario, { label: string; customer: string; firstMessage: string }> = {
+  renewal: {
+    label: "Webリニューアル案件",
+    customer: "不動産会社の営業企画部長",
+    firstMessage: "現行サイトが古いのは分かっていますが、どこから直すべきか判断できていません。費用対効果も気になります。"
+  },
+  recruit: {
+    label: "採用サイト案件",
+    customer: "採用責任者",
+    firstMessage: "応募数も応募者の質も課題です。ただ、採用サイトにどこまで投資すべきか社内で迷っています。"
+  },
+  lp: {
+    label: "LP制作案件",
+    customer: "マーケティング責任者",
+    firstMessage: "広告流入はありますが、問い合わせにつながりません。短期間で改善したいです。"
+  },
+  branding: {
+    label: "ブランディング案件",
+    customer: "代表取締役",
+    firstMessage: "会社の強みが伝わっていない気がします。競合と比べて選ばれる理由を明確にしたいです。"
+  }
+};
 
 type SalesIndicator = {
   title: string;
@@ -531,6 +811,12 @@ function extractProposalInfo(rawText: string, homepageUrl: string): ExtractedInf
     findLabeledValue(text, ["CMS", "CMS希望", "更新"]) ||
     text.match(/WordPress|Movable Type|独自CMS|CMS不要|CMSあり/i)?.[0] ||
     "";
+  const target =
+    findLabeledValue(text, ["ターゲット", "対象", "ユーザー", "顧客", "求職者"]) ||
+    findSentence(text, ["ターゲット", "ユーザー", "顧客", "求職者", "学生", "法人", "個人"]);
+  const seoIssue =
+    findLabeledValue(text, ["SEO課題", "SEO", "検索課題"]) ||
+    findSentence(text, ["SEO", "検索", "自然流入", "順位", "流入"]);
   const inquiryDetails =
     findLabeledValue(text, ["問い合わせ内容", "相談内容", "要望", "希望"]) ||
     findSentence(text, ["知りたい", "相談", "依頼", "提案", "見積", "スケジュール"]);
@@ -548,6 +834,8 @@ function extractProposalInfo(rawText: string, homepageUrl: string): ExtractedInf
     competitor: competitorLine || competitorUrl || findLabeledValue(text, ["競合", "競合サイト", "競合企業"]),
     currentSiteUrl,
     cms,
+    target,
+    seoIssue,
     inquiryDetails
   };
 }
@@ -575,6 +863,8 @@ function buildUrlInsight(url: string, rawText: string, extracted: ExtractedInfo)
         ? "採用広報、職種理解、応募導線、社員紹介を中心に整理します。"
         : "サービス紹介、実績訴求、問い合わせ獲得を中心に整理します。",
     strengths: "既存の事業実績、専門性、地域性、顧客対応力を強みとして提案に転換します。",
+    weaknesses: "サイト上で強み・実績・問い合わせ導線が分散している前提で、訴求整理と導線短縮を改善ポイントにします。",
+    competitors: extracted.competitor || "競合未確認。次回ヒアリングで比較対象サイトを確認します。",
     services: isLp ? "新サービスの価値訴求、CTA、フォーム導線を重点確認します。" : "主要サービス、料金・事例・FAQ・問い合わせ導線を確認対象にします。",
     recruitment: isRecruit ? "採用情報、社員インタビュー、働く環境、応募導線を重点的に改善します。" : "採用情報がある場合は、信頼感と企業理解を補強する要素として扱います。",
     seoStatus: /SEO|検索|自然流入|流入/.test(text)
@@ -585,6 +875,53 @@ function buildUrlInsight(url: string, rawText: string, extracted: ExtractedInfo)
       "サービス・実績・FAQから問い合わせまでの導線を短縮",
       "CMS更新しやすい情報設計とSEOに強いコンテンツ構造を提案"
     ]
+  };
+}
+
+function hostnameFromUrl(value: string) {
+  if (!value.trim()) return "";
+  try {
+    return new URL(value.trim()).hostname.replace(/^www\./, "");
+  } catch {
+    return value.replace(/^https?:\/\//, "").split("/")[0];
+  }
+}
+
+function fillMissingExtractedInfo(info: ExtractedInfo, homepageUrl: string): ExtractedInfo {
+  const fallbackHost = hostnameFromUrl(homepageUrl || info.currentSiteUrl);
+  return {
+    ...info,
+    companyName: info.companyName || fallbackHost || "提案先企業",
+    contactPerson: info.contactPerson || "要確認",
+    projectContent: info.projectContent || "Webサイト制作・改善提案",
+    purposes: info.purposes.length ? info.purposes : ["問い合わせを増やしたい"],
+    trouble: info.trouble || "現状課題は要確認。初回提案ではWebサイトの改善余地を整理します。",
+    budget: info.budget || "未定",
+    deadline: info.deadline || "要確認",
+    competitor: info.competitor || "競合未確認",
+    currentSiteUrl: info.currentSiteUrl || homepageUrl.trim(),
+    cms: info.cms || "要確認",
+    target: info.target || "要確認",
+    seoIssue: info.seoIssue || "要確認",
+    inquiryDetails: info.inquiryDetails || "提案内容、概算費用、スケジュールを確認したい"
+  };
+}
+
+function fillMissingProposalForm(form: ProposalRequest): ProposalRequest {
+  const hasCompetitor = Boolean(form.competitor_site_url.trim() || form.competitor_company_name.trim());
+  return {
+    ...form,
+    project_brief:
+      form.project_brief.trim() ||
+      "Webサイト制作・改善提案。詳細条件は要確認として、提案書初稿を作成します。",
+    client_company_info: form.client_company_info.trim() || "提案先企業\n担当者・決裁者：要確認",
+    budget_range: form.budget_range.trim() || "未定",
+    desired_launch_timing: form.desired_launch_timing.trim() || "要確認",
+    cms_required: form.cms_required.trim() || "要確認",
+    competitor_company_name: hasCompetitor ? form.competitor_company_name : "競合未確認",
+    hearing_result:
+      form.hearing_result.trim() ||
+      "未入力項目は次回確認事項として扱い、初回提案では仮説ベースで整理します。"
   };
 }
 
@@ -612,6 +949,8 @@ function buildFormFromExtracted(current: ProposalRequest, info: ExtractedInfo, i
 サービス：${insight.services}
 採用情報：${insight.recruitment}
 SEO状況：${insight.seoStatus}
+弱み：${insight.weaknesses}
+競合：${insight.competitors}
 改善ポイント：${insight.improvementPoints.join("、")}`
     : "";
 
@@ -620,6 +959,8 @@ SEO状況：${insight.seoStatus}
     project_brief: `${next.project_brief}
 抽出元情報：
 目的：${info.purposes.join("、") || "未抽出"}
+ターゲット：${info.target || "未抽出"}
+SEO課題：${info.seoIssue || "未抽出"}
 問い合わせ内容：${info.inquiryDetails || "未抽出"}
 CMS：${info.cms || "未抽出"}
 ${urlInsightText}`.trim(),
@@ -778,6 +1119,325 @@ function buildAiRecommendations(form: ProposalRequest, insight: UrlInsight | nul
         "導線改善提案：主要CTAと問い合わせフォームまでの流れを短くし、成果につながる構成にします。",
         "運用改善提案：CMSと改善レポートを前提に、公開後も成果を伸ばす提案にします。"
       ];
+}
+
+function buildStrategyCards(form: ProposalRequest, recommendations: string[]): StrategyCard[] {
+  const text = allInputText(form);
+  const cards: StrategyCard[] = [];
+
+  if (/デザイン|古い|信頼|ブランド|ブランディング|見た目/.test(text)) {
+    cards.push({ title: "デザイン重視", reason: "信頼感や第一印象の改善が成果に直結するため、ファーストビューと実績訴求を強化します。" });
+  }
+  if (/SEO|検索|自然流入|流入|地域名/.test(text)) {
+    cards.push({ title: "SEO重視", reason: "検索流入が課題に含まれるため、サービス別・FAQ・事例コンテンツで入口を増やします。" });
+  }
+  if (/採用|求人|応募|人材/.test(text)) {
+    cards.push({ title: "採用強化", reason: "応募前の不安を減らすため、社員紹介・職種紹介・働く環境を分かりやすくします。" });
+  }
+  if (/問い合わせ|資料請求|CV|CTA|来店予約/.test(text)) {
+    cards.push({ title: "問い合わせ最大化", reason: "問い合わせ導線が成果に直結するため、CTA配置とフォーム到達までの流れを短縮します。" });
+  }
+  if (/競合|比較|他社/.test(text)) {
+    cards.push({ title: "差別化重視", reason: "競合比較が想定されるため、選ばれる理由と実績訴求を明確にします。" });
+  }
+
+  recommendations.forEach((item) => {
+    if (cards.length < 3) {
+      const [title, reason] = item.split("：");
+      cards.push({ title: title || "提案強化", reason: reason || item });
+    }
+  });
+
+  return cards.slice(0, 3);
+}
+
+function buildPreviewSlides(form: ProposalRequest, strategies: StrategyCard[], estimate: EstimateSummary): PreviewSlide[] {
+  const client = extractClientName(form);
+  return [
+    { title: `${client} Webサイト制作ご提案`, body: "現状理解から課題、戦略、制作方針、費用、進め方までを整理します。" },
+    { title: "提案サマリー", body: form.project_brief.trim().slice(0, 180) || "案件メールの内容をもとに提案サマリーを整理します。" },
+    { title: "現状理解・課題", body: form.hearing_result.trim().slice(0, 180) || "不足情報は次回確認事項として扱い、仮説ベースで課題を整理します。" },
+    { title: "AI提案戦略", body: strategies.map((item) => `${item.title}: ${item.reason}`).join("\n") },
+    { title: "競合・SEO方針", body: `競合: ${form.competitor_site_url || form.competitor_company_name || "競合未確認"}\nSEO: ${form.seo_required || "要確認"}` },
+    { title: "概算見積・スケジュール", body: `概算見積: ${estimate.totalLabel}\n予算適合: ${estimate.budgetFit}\n納期: ${form.desired_launch_timing || "要確認"}` },
+    { title: "今後の進め方", body: "不足情報確認、要件定義、構成案作成、デザイン制作、実装、検証、公開の順で進行します。" }
+  ];
+}
+
+function buildQualityScore(
+  result: AnalysisResponse | null,
+  form: ProposalRequest,
+  deal: DealEvaluation,
+  estimate: EstimateSummary,
+  strategies: StrategyCard[]
+): QualityScore {
+  const hasResult = Boolean(result);
+  const proposal = Math.min(100, 62 + strategies.length * 8 + (form.project_brief.length > 120 ? 12 : 0));
+  const persuasion = Math.min(100, 58 + deal.positives.length * 7 + (form.case_studies.trim() ? 12 : 0));
+  const roi = Math.min(100, 55 + (estimate.budgetFit === "予算内" ? 18 : estimate.budgetFit === "やや調整必要" ? 10 : 4));
+  const differentiation = Math.min(100, 56 + (form.competitor_site_url || form.competitor_company_name ? 18 : 6) + strategies.length * 4);
+  const readability = Math.min(100, hasResult ? 82 : 72);
+  const total = Math.round((proposal + persuasion + roi + differentiation + readability) / 5);
+  const improvements = [
+    form.case_studies.trim() ? "成功事例の成果数値を表紙直後の提案サマリーにも反映します。" : "類似実績を1〜2件追加すると説得力が上がります。",
+    form.budget_range.trim() && form.budget_range !== "未定" ? "予算内・オプションの切り分けを明確にします。" : "予算確認後、必須範囲とオプション範囲を再整理します。",
+    form.competitor_site_url.trim() ? "競合サイトのCTA・SEO・実績訴求を実画面で確認します。" : "競合サイトURLを確認すると差別化提案が強くなります。"
+  ];
+
+  return { total, proposal, persuasion, roi, differentiation, readability, improvements };
+}
+
+function buildDraftEmail(form: ProposalRequest): DraftEmail {
+  const client = extractClientName(form);
+  return {
+    subject: `【ご提案資料送付】${client} Webサイト制作のご提案`,
+    body: `${client}
+ご担当者様
+
+お世話になっております。
+Webサイト制作のご相談について、初回提案資料をお送りします。
+
+本資料では、現状理解、想定課題、提案方針、概算費用、スケジュールを整理しております。
+未確認事項については、次回のお打ち合わせで確認させてください。
+
+ご確認のほど、よろしくお願いいたします。`,
+    signature: "Ready Crew Proposal AI\n営業担当"
+  };
+}
+
+function buildAiMinutes(form: ProposalRequest, extracted: ExtractedInfo | null): AiMinutes {
+  const source = form.hearing_result.trim() || form.project_brief.trim();
+  const minutes = [
+    `${extractClientName(form)}の相談内容を確認`,
+    extracted?.projectContent || "Webサイト制作・改善提案について協議",
+    extracted?.trouble || "現状課題と改善方針を整理"
+  ];
+  const todos = [
+    form.budget_range && form.budget_range !== "未定" ? "予算範囲に合わせた提案範囲を調整" : "予算感を確認",
+    form.desired_launch_timing && form.desired_launch_timing !== "要確認" ? "公開希望時期から逆算してスケジュール作成" : "公開希望時期を確認",
+    form.competitor_site_url || form.competitor_company_name ? "競合比較観点を提案書に反映" : "競合サイトを確認"
+  ];
+  const nextActions = [
+    "提案書初稿を確認",
+    "不足情報を次回ヒアリングで確認",
+    source ? "提案範囲・費用・スケジュールを合意形成" : "案件メールまたは商談メモを追加"
+  ];
+
+  return { minutes, todos, nextActions };
+}
+
+function buildWinRateImprovements(deal: DealEvaluation, quality: QualityScore) {
+  return [
+    `決裁者・予算・納期の確認で受注確率を${deal.probability}%から${deal.projectedProbability}%へ引き上げます。`,
+    quality.roi < 75 ? "費用対効果の説明を追加し、必須範囲とオプション範囲を分けます。" : "ROI説明は十分です。成果指標を提案サマリーに強調します。",
+    quality.differentiation < 80 ? "競合比較を1枚追加し、勝ち筋を明確にします。" : "競合差別化の軸を維持し、実績訴求を強めます。"
+  ];
+}
+
+function buildSimilarCases(history: HistoryEntry[], form: ProposalRequest) {
+  const text = allInputText(form);
+  const keywords = ["不動産", "採用", "LP", "SEO", "CMS", "問い合わせ", "リニューアル", "物件", "資料請求"];
+  return history
+    .map((entry) => {
+      const entryText = allInputText(entry.form);
+      const score = keywords.reduce((sum, keyword) => sum + (text.includes(keyword) && entryText.includes(keyword) ? 1 : 0), 0);
+      return { entry, score };
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+}
+
+function buildDashboardMetrics(history: HistoryEntry[], result: AnalysisResponse | null) {
+  const today = new Date().toDateString();
+  const todayCount = history.filter((entry) => new Date(entry.createdAt).toDateString() === today).length + (result ? 1 : 0);
+  const proposalCount = history.length + (result ? 1 : 0);
+  const savedHours = Math.max(0, Math.round(proposalCount * 2.2 * 10) / 10);
+
+  return [
+    { label: "本日の案件数", value: `${todayCount}件`, note: "今日整理した案件" },
+    { label: "提案書作成数", value: `${proposalCount}件`, note: "Markdown / PPTX生成" },
+    { label: "生成履歴", value: `${history.length}件`, note: "ローカル保存" },
+    { label: "平均作成時間", value: "20分", note: "従来2〜3時間から短縮" },
+    { label: "AI削減時間", value: `${savedHours}h`, note: "累計目安" }
+  ];
+}
+
+function buildMonthlyDashboardMetrics(history: HistoryEntry[], result: AnalysisResponse | null, quality: QualityScore, deal: DealEvaluation) {
+  const now = new Date();
+  const monthEntries = history.filter((entry) => {
+    const date = new Date(entry.createdAt);
+    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+  });
+  const proposalCount = monthEntries.length + (result ? 1 : 0);
+  const winCount = monthEntries.filter((entry) => (entry.result.analysis.win_probability.probability ?? 0) >= 70).length + (deal.probability >= 70 ? 1 : 0);
+  const avgProbability = proposalCount
+    ? Math.round(
+        (monthEntries.reduce((sum, entry) => sum + (entry.result.analysis.win_probability.probability ?? 0), 0) + deal.probability) /
+          proposalCount
+      )
+    : deal.probability;
+  return [
+    { label: "今月提案数", value: `${proposalCount}件`, note: "今月の提案準備" },
+    { label: "今月受注数", value: `${winCount}件`, note: "70%以上を受注見込みで計上" },
+    { label: "AI削減時間", value: `${Math.round(proposalCount * 2.2 * 10) / 10}h`, note: "今月の削減目安" },
+    { label: "平均品質スコア", value: `${quality.total}点`, note: "現在案件を基準表示" },
+    { label: "平均受注確率", value: `${avgProbability}%`, note: "履歴と現在案件の平均" }
+  ];
+}
+
+function buildPreMeetingChecklist(checks: InfoCheck[]) {
+  const found = new Map(checks.map((item) => [item.key, item.found]));
+  return [
+    { label: "この会社の事業内容を理解していますか", done: Boolean(found.get("current-site")) },
+    { label: "競合を確認しましたか", done: Boolean(found.get("competitor")) },
+    { label: "予算を確認しましたか", done: Boolean(found.get("budget")) },
+    { label: "納期を確認しましたか", done: Boolean(found.get("deadline")) },
+    { label: "決裁者を確認しましたか", done: Boolean(found.get("decision-maker")) },
+    { label: "CMS希望を確認しましたか", done: Boolean(found.get("cms")) }
+  ];
+}
+
+function buildCoachQuestions(form: ProposalRequest, missingItems: InfoCheck[]): CoachQuestion[] {
+  const text = allInputText(form);
+  const base: CoachQuestion[] = [
+    { priority: 5, question: "最終決裁者はどなたですか？", reason: "提案後の意思決定ルートを確認するため" },
+    { priority: 5, question: "今回のWeb制作で最も達成したい成果は何ですか？", reason: "提案軸とKPIを合わせるため" },
+    { priority: 4, question: "予算の上限と、段階提案の可否を教えてください。", reason: "必須範囲とオプションを分けるため" },
+    { priority: 4, question: "公開希望日は必達ですか、それとも目安ですか？", reason: "スケジュールリスクを判断するため" },
+    { priority: 4, question: "公開後の更新担当者はいますか？", reason: "CMSと運用体制を設計するため" },
+    { priority: 4, question: "競合サイトで良いと思う点・避けたい点はありますか？", reason: "差別化と好みを把握するため" },
+    { priority: 3, question: "現在のサイトで一番困っているページはどこですか？", reason: "改善優先度を決めるため" },
+    { priority: 3, question: "問い合わせや応募の現在数と目標数はありますか？", reason: "成果指標とROIを提示するため" },
+    { priority: 3, question: "写真撮影・原稿作成は社内対応できますか？", reason: "制作範囲と見積精度を上げるため" },
+    { priority: 3, question: "社内確認に必要な人数と確認期間を教えてください。", reason: "手戻りと納期遅延を防ぐため" }
+  ];
+
+  const missingBoost = missingItems.map((item) => ({
+    priority: 5,
+    question: `${item.label}について確認してください。${item.nextQuestion}は分かりますか？`,
+    reason: "不足情報を埋めると提案精度が上がるため"
+  }));
+  const industryQuestion = /採用|求人|応募/.test(text)
+    ? [{ priority: 5, question: "採用したい職種と応募者像を教えてください。", reason: "採用サイトの訴求軸を決めるため" }]
+    : /不動産|物件/.test(text)
+      ? [{ priority: 5, question: "物件情報の登録・検索・更新はどのように運用していますか？", reason: "物件検索やCMS要件を決めるため" }]
+      : [];
+
+  return uniqueTextItems([...industryQuestion, ...missingBoost, ...base].map((item) => `${item.priority}|${item.question}|${item.reason}`))
+    .map((item) => {
+      const [priority, question, reason] = item.split("|");
+      return { priority: Number(priority), question, reason };
+    })
+    .sort((a, b) => b.priority - a.priority)
+    .slice(0, 10);
+}
+
+function starsFromPriority(priority: number) {
+  const normalized = Math.max(1, Math.min(5, priority));
+  return `${"★".repeat(normalized)}${"☆".repeat(5 - normalized)}`;
+}
+
+function buildRealtimeQuestion(liveMemo: string, questions: CoachQuestion[]) {
+  const text = liveMemo || "";
+  if (!text.trim()) return questions[0]?.question ?? "まず現状課題を確認しましょう。";
+  if (!/予算|費用|金額/.test(text)) return "予算感と上限、段階提案の可否を確認しましょう。";
+  if (!/納期|公開|いつ|時期/.test(text)) return "公開希望時期と必達期限を確認しましょう。";
+  if (!/決裁|承認|社長|代表|役員/.test(text)) return "決裁者と承認フローを確認しましょう。";
+  if (!/競合|比較|他社/.test(text)) return "比較している競合サイトや参考サイトを確認しましょう。";
+  if (!/KPI|目標|問い合わせ|応募|CV/.test(text)) return "成果目標やKPIを数字で確認しましょう。";
+  return "最後に、次回までの提出物と確認スケジュールを合意しましょう。";
+}
+
+function buildMeetingEvaluation(memo: string, form: ProposalRequest): MeetingEvaluation {
+  const text = `${memo}\n${allInputText(form)}`;
+  const hearing = Math.min(100, 50 + ["予算", "納期", "決裁", "競合", "CMS", "KPI"].filter((word) => text.includes(word)).length * 8);
+  const proposal = Math.min(100, 55 + ["提案", "改善", "SEO", "CTA", "CMS", "運用"].filter((word) => text.includes(word)).length * 7);
+  const closing = Math.min(100, 48 + ["次回", "提出", "確認", "合意", "スケジュール"].filter((word) => text.includes(word)).length * 9);
+  const questions = Math.min(100, 52 + (memo.match(/？|\?/g)?.length ?? 0) * 8 + ["誰", "いつ", "いくら", "どの"].filter((word) => text.includes(word)).length * 6);
+  const information = Math.min(100, 50 + ["会社", "担当", "目的", "課題", "予算", "納期", "競合", "運用"].filter((word) => text.includes(word)).length * 6);
+  const total = Math.round((hearing + proposal + closing + questions + information) / 5);
+
+  return {
+    total,
+    hearing,
+    proposal,
+    closing,
+    questions,
+    information,
+    comment: total >= 80 ? "商談情報が十分に整理されています。提案書の説得力を高められます。" : total >= 65 ? "基本情報は取れています。不足条件を追加確認すると受注確度が上がります。" : "商談情報がまだ薄い状態です。次回は予算・納期・決裁者を優先確認しましょう。",
+    goodPoints: [
+      text.includes("課題") || text.includes("困") ? "課題を確認できています" : "提案に必要な会話の土台を作れています",
+      text.includes("予算") ? "予算に触れられています" : "提案範囲の相談に進めています",
+      text.includes("次回") ? "次回アクションを意識できています" : "提案準備へ進める情報があります"
+    ],
+    improvements: [
+      text.includes("決裁") ? "決裁者情報を提案書にも反映しましょう" : "決裁者と承認フローを確認しましょう",
+      text.includes("KPI") || text.includes("目標") ? "KPIを提案サマリーで強調しましょう" : "問い合わせ数・応募数などの目標値を確認しましょう",
+      text.includes("競合") ? "競合比較を具体化しましょう" : "競合サイトや比較対象を確認しましょう"
+    ],
+    nextFocus: ["最終決裁者", "予算上限", "公開希望時期", "競合比較", "公開後の運用体制"].filter((item) => !text.includes(item.slice(0, 2))).slice(0, 3)
+  };
+}
+
+function buildNextMeetingPrep(form: ProposalRequest, missingItems: InfoCheck[]): NextMeetingPrep {
+  return {
+    confirmations: missingItems.slice(0, 5).map((item) => `${item.label}: ${item.nextQuestion}`),
+    homework: [
+      "競合サイトの導線・CTA・SEO観点を確認",
+      "必須範囲とオプション範囲の見積を整理",
+      "提案サマリーとKPI案を1枚で説明できるよう準備"
+    ],
+    deliverables: [
+      "要約PowerPoint",
+      "詳細PowerPoint",
+      "概算見積書PDF",
+      "次回確認事項リスト"
+    ]
+  };
+}
+
+function buildWinRateCoachAdvice(form: ProposalRequest, strategyCards: StrategyCard[]) {
+  const text = allInputText(form);
+  return {
+    additions: [
+      text.includes("KPI") ? "KPI達成までの改善サイクルを追加" : "問い合わせ数・応募数などのKPI目標を追加",
+      "費用対効果と優先順位を1枚で説明",
+      "次回確認事項を商談最後に合意"
+    ],
+    differentiation: [
+      form.competitor_site_url || form.competitor_company_name ? "競合のCTA・コンテンツ量・SEOとの差を表で提示" : "競合サイトを確認して比較表を追加",
+      strategyCards[0] ? `${strategyCards[0].title}を中心軸にする` : "実績訴求と運用支援を差別化軸にする",
+      "公開後の改善運用まで含めて提案"
+    ],
+    delight: [
+      "初回から要約版PPTと見積書PDFをセットで提示",
+      "お客様側の社内説明に使いやすい1枚サマリーを追加",
+      "CMS更新マニュアルや公開後30日改善プランを提案"
+    ]
+  };
+}
+
+function buildSalesDailyReport(form: ProposalRequest, evaluation: MeetingEvaluation): DailyReport {
+  return {
+    activities: ["Ready Crew案件の整理", "AIによる提案書初稿作成", "商談準備チェックと質問設計"],
+    meeting: [`${extractClientName(form)}のWeb制作相談`, form.project_brief.trim().slice(0, 90) || "案件概要は要確認"],
+    results: [`商談評価 ${evaluation.total}点`, `受注確率 ${deriveDealEvaluation(form, buildInfoChecks(form), deriveEstimateSummary(form)).probability}%`],
+    issues: evaluation.improvements,
+    tomorrow: ["不足情報の確認", "提案資料の最終調整", "次回商談日程の確認"]
+  };
+}
+
+function buildBossReport(form: ProposalRequest, deal: DealEvaluation, missingItems: InfoCheck[]) {
+  const report = `${extractClientName(form)}のWeb制作案件です。${form.project_brief.trim().slice(0, 90)}。受注確率は${deal.probability}%、判断は「${deal.decision}」。現在の課題は${missingItems.map((item) => item.label).slice(0, 3).join("、") || "大きな不足なし"}です。今後は不足情報確認、競合比較、概算見積の調整を行い、次回商談で提案内容を固めます。`;
+  return report.slice(0, 300);
+}
+
+function classifyKnowledge(history: HistoryEntry[], form: ProposalRequest): KnowledgeGroups {
+  const similar = buildSimilarCases(history, form).map((item) => item.entry);
+  const success = history.filter((entry) => (entry.result.analysis.win_probability.probability ?? 0) >= 70).slice(0, 3);
+  const lost = history.filter((entry) => (entry.result.analysis.win_probability.probability ?? 0) < 40).slice(0, 3);
+  return { similar, success, lost };
 }
 
 function hasAny(text: string, patterns: (RegExp | string)[]) {
@@ -1526,11 +2186,38 @@ function buildOutputDigest(
 function buildErrorAdvice(message: string): ErrorAdvice {
   const normalized = message.toLowerCase();
 
+  if (/401|403|ログイン|認証|password|unauthorized/.test(normalized)) {
+    return {
+      title: "認証エラー",
+      cause: "ログイン期限切れ、パスワード誤り、またはBackend側のAPP_ACCESS_PASSWORD未設定の可能性があります。",
+      action: "次の行動: 再ログイン / RenderのAPP_ACCESS_PASSWORDを確認 / Frontendを再読み込みする。",
+      detail: message
+    };
+  }
+
+  if (/ppt|powerpoint|pptx/.test(normalized)) {
+    return {
+      title: "PPTX生成失敗",
+      cause: "PowerPoint生成処理、入力データ、またはBackend側の一時的な問題の可能性があります。",
+      action: "次の行動: Backendログ確認 / 入力文字量を減らす / 再実行する。",
+      detail: message
+    };
+  }
+
+  if (/pdf|見積書/.test(normalized)) {
+    return {
+      title: "PDF生成失敗",
+      cause: "PDF生成処理、見積データ、またはBackend側の一時的な問題の可能性があります。",
+      action: "次の行動: Backendログ確認 / 提案書生成後に再度PDFを出力する。",
+      detail: message
+    };
+  }
+
   if (/429|rate|レート|制限|quota|insufficient_quota/.test(normalized) || /API.*制限|上限/.test(message)) {
     return {
       title: "OpenAI API制限の可能性があります",
       cause: "短時間の利用回数、API利用上限、または請求設定により生成が止まった可能性があります。",
-      action: "少し時間を置いて再実行するか、OpenAIの利用上限・請求設定・APIキーを確認してください。",
+      action: "次の行動: 時間を置く / モックモードで試す / OpenAIの利用上限・請求設定・APIキーを確認する。",
       detail: message
     };
   }
@@ -1539,7 +2226,7 @@ function buildErrorAdvice(message: string): ErrorAdvice {
     return {
       title: "入力内容を確認してください",
       cause: "案件概要が短い、必須項目が不足している、または送信形式が想定と異なる可能性があります。",
-      action: "案件概要に目的、予算、納期、既存サイトURL、競合情報を追記してから再生成してください。",
+      action: "次の行動: 不足項目を確認 / 案件メールを貼り直す / 確認画面からこのまま生成する。",
       detail: message
     };
   }
@@ -1548,7 +2235,7 @@ function buildErrorAdvice(message: string): ErrorAdvice {
     return {
       title: "通信エラーの可能性があります",
       cause: "FrontendからBackendへ接続できていない、Backendが停止している、またはCORS設定が合っていない可能性があります。",
-      action: "RenderのBackendが起動しているか、VercelのNEXT_PUBLIC_API_URLとBackendのCORS設定を確認してください。",
+      action: "次の行動: 再読み込み / Backend確認 / NEXT_PUBLIC_API_URLとCORS設定を確認する。",
       detail: message
     };
   }
@@ -1556,7 +2243,7 @@ function buildErrorAdvice(message: string): ErrorAdvice {
   return {
     title: "生成中にエラーが発生しました",
     cause: "一時的なAPIエラー、入力内容、またはBackendログで確認できる問題の可能性があります。",
-    action: "入力内容を保存したうえで再実行し、解消しない場合はBackendログを確認してください。",
+    action: "次の行動: 再実行 / 入力内容を確認 / 解消しない場合はBackendログを確認する。",
     detail: message
   };
 }
@@ -1644,7 +2331,188 @@ function sanitizeFileName(value: string) {
   return value.replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, " ").trim().slice(0, 80);
 }
 
+function splitBusinessLines(value: string, fallback: string[] = []) {
+  const lines = value
+    .split(/\r?\n|。|;|；/)
+    .map((line) => line.replace(/^[-・\s]+/, "").trim())
+    .filter((line) => line.length >= 3);
+  return uniqueTextItems(lines.length ? lines : fallback);
+}
+
+function pickBusinessItems(value: string, keywords: string[], fallback: string[], limit = 4) {
+  const lines = splitBusinessLines(value);
+  const matched = lines.filter((line) => keywords.some((keyword) => line.includes(keyword)));
+  return uniqueTextItems([...(matched.length ? matched : lines), ...fallback]).slice(0, limit);
+}
+
+function buildInternalMinutes(input: string): MinutesAiResult {
+  const text = input.trim();
+  const lines = splitBusinessLines(text, ["会議内容を確認し、目的・課題・決定事項・次回アクションを整理します。"]);
+  const decisions = pickBusinessItems(text, ["決定", "合意", "進め", "対応", "採用"], ["提案方針と次回確認事項を整理して進行します。"], 3);
+  const unresolved = pickBusinessItems(text, ["未定", "確認", "課題", "懸念", "不足"], ["予算、納期、決裁者、運用体制の未確定項目を確認します。"], 4);
+  const todoSources = pickBusinessItems(text, ["対応", "作成", "確認", "送付", "共有", "準備"], lines, 5);
+  return {
+    minutes: lines.slice(0, 5),
+    decisions,
+    unresolved,
+    todos: todoSources.slice(0, 5).map((task, index) => ({
+      task,
+      owner: index === 0 ? "営業担当" : "担当者確認",
+      deadline: task.includes("至急") || task.includes("今週") ? "今週中" : "次回商談前"
+    })),
+    nextConfirmations: unresolved.slice(0, 4)
+  };
+}
+
+function buildInternalMail(purpose: string, recipient: string, content: string, tone: string): MailAiResult {
+  const target = recipient.trim() || "ご担当者様";
+  const mailPurpose = purpose.trim() || "提案内容のご案内";
+  const bodyItems = splitBusinessLines(content, ["ご相談内容を踏まえ、提案資料の初稿を準備しました。"]);
+  const selectedTone = tone.trim() || "丁寧";
+  const body = `${target}\n\nいつもお世話になっております。\n${mailPurpose}についてご連絡いたします。\n\n${bodyItems
+    .slice(0, 4)
+    .map((item) => `・${item}`)
+    .join("\n")}\n\nご確認いただき、ご不明点や追加で確認したい点がありましたらお知らせください。\n引き続きよろしくお願いいたします。\n\n署名`;
+  return {
+    subject: `【ご確認】${mailPurpose}`,
+    body,
+    reply: `${target}\n\nご返信ありがとうございます。いただいた内容を踏まえて、提案内容と見積条件を更新いたします。\n次回までに確認事項を整理してお送りします。`,
+    polite: `${target}\n\n平素より大変お世話になっております。\n${mailPurpose}につきまして、下記の通りご案内申し上げます。\n\n${bodyItems.slice(0, 3).join("\n")}\n\nお忙しいところ恐れ入りますが、ご確認のほどよろしくお願いいたします。`,
+    short: `${target}\n\n${mailPurpose}の件、要点を共有いたします。\n${bodyItems.slice(0, 3).map((item) => `・${item}`).join("\n")}\n\nご確認をお願いいたします。${selectedTone ? `\n\nトーン: ${selectedTone}` : ""}`
+  };
+}
+
+function buildInternalTasks(input: string): TaskAiResult {
+  const items = splitBusinessLines(input, ["案件内容を確認し、次にやることを整理します。"]).slice(0, 6);
+  const priorities = ["高", "高", "中", "中", "低", "低"];
+  return {
+    tasks: items.map((item, index) => ({
+      task: item,
+      priority: priorities[index] ?? "中",
+      owner: item.includes("顧客") || item.includes("お客様") ? "営業担当" : "担当者確認",
+      deadline: item.includes("納期") || item.includes("公開") ? "日程確認後" : "次回確認まで",
+      risk: item.includes("未定") || item.includes("確認") ? "未確定のまま進むと手戻りが発生" : "対応漏れに注意"
+    })),
+    nextAction: "優先度が高い項目から、担当者と期限を確定します。"
+  };
+}
+
+function buildInternalFaq(question: string): FaqAiResult {
+  const q = question.trim() || "社内ルールや過去資料の確認事項";
+  const department = q.includes("見積") || q.includes("請求") ? "経理・営業管理" : q.includes("契約") ? "法務・管理部" : "担当部署";
+  return {
+    answer: `${q}については、現時点の入力情報をもとに一次回答を作成します。正式回答は担当部署の確認後に共有します。`,
+    department,
+    references: ["過去提案書テンプレート", "社内制作フロー", "見積ルール", "案件管理シート"],
+    notes: [
+      "現時点では外部DBへ接続せず、入力文から回答案を作成します。",
+      "Google Driveや社内FAQ/RAGは今後MCPで連携予定です。",
+      "顧客名、金額、契約条件は社外共有前に人が確認します。"
+    ]
+  };
+}
+
+function buildInternalSummary(input: string): SummaryAiResult {
+  const lines = splitBusinessLines(input, ["資料内容を確認し、要点・アクション・リスクを整理します。"]);
+  return {
+    threeLines: uniqueTextItems(lines).slice(0, 3),
+    points: pickBusinessItems(input, ["目的", "課題", "提案", "重要", "方針"], lines, 5),
+    actions: pickBusinessItems(input, ["対応", "作成", "確認", "送付", "実施"], ["次回までに不足情報を確認します。"], 4),
+    risks: pickBusinessItems(input, ["懸念", "リスク", "未定", "不足", "遅延"], ["予算、納期、担当者が未確定の場合は進行リスクになります。"], 4),
+    bossSummary: `${lines.slice(0, 3).join("。")}。次回までに重要事項を確認し、提案内容へ反映します。`
+  };
+}
+
+function buildInternalReport(input: string): ReportAiResult {
+  const lines = splitBusinessLines(input, ["本日の活動内容を整理します。"]);
+  const actions = pickBusinessItems(input, ["商談", "提案", "確認", "作成", "連絡"], lines, 4);
+  const issues = pickBusinessItems(input, ["課題", "未定", "不足", "懸念"], ["未確定項目を次回確認します。"], 3);
+  return {
+    daily: actions,
+    weekly: uniqueTextItems([...actions, "提案準備と顧客確認事項の整理を進めました。"]).slice(0, 5),
+    results: pickBusinessItems(input, ["完了", "成果", "作成", "送付"], ["提案準備の初稿を作成しました。"], 3),
+    issues,
+    tomorrow: ["不足情報の確認", "提案資料の更新", "次回商談に向けた質問準備"],
+    bossMessage: `本日は${actions[0] ?? "案件対応"}を進めました。課題は${issues[0] ?? "未確定項目の確認"}です。明日は不足情報の確認と提案資料の更新を進めます。`
+  };
+}
+
+function extractDomainLabel(url: string) {
+  try {
+    const parsed = new URL(url.startsWith("http") ? url : `https://${url}`);
+    return parsed.hostname.replace(/^www\./, "");
+  } catch {
+    return url.trim() || "会社URL未入力";
+  }
+}
+
+function buildCompanyResearch(url: string, form: ProposalRequest, extractedInfo: ExtractedInfo | null): CompanyResearch {
+  const domain = extractDomainLabel(url);
+  const allText = allInputText(form);
+  const clientName = extractClientName(form);
+  const competitor = form.competitor_company_name.trim() || extractedInfo?.competitor || "同業・地域競合";
+  const hasRecruit = /採用|求人|人材|応募|社員/i.test(allText);
+  const hasSeo = /SEO|検索|自然流入|流入|地域名/i.test(allText);
+  const hasCms = /CMS|WordPress|更新|お知らせ/i.test(allText);
+
+  return {
+    overview: `${clientName === "提案先企業" ? domain : clientName}の公開情報、案件概要、既存サイトURLをもとに、事業内容・顧客接点・改善余地を確認します。`,
+    competitors: uniqueTextItems([competitor, form.competitor_site_url.trim(), "検索結果上位の同業サイト", "採用・サービス訴求で比較される企業"]).slice(0, 4),
+    recruitment: hasRecruit ? "採用情報の訴求、社員紹介、応募導線を重点確認します。" : "採用情報は未入力です。会社理解と信頼形成の補助情報として確認します。",
+    news: uniqueTextItems([
+      "直近のお知らせ更新頻度",
+      "新サービス・店舗・採用に関する発信",
+      hasCms ? "CMSで継続更新できるニュース設計" : "更新停止がないか確認"
+    ]).slice(0, 4),
+    services: uniqueTextItems([
+      form.project_brief.includes("物件") ? "物件検索・問い合わせ導線" : "主力サービスの見せ方",
+      form.project_brief.includes("採用") ? "採用コンテンツ" : "サービス紹介",
+      hasSeo ? "SEO記事・FAQ・地域ページ" : "FAQ・実績・導入事例"
+    ]),
+    sns: ["X / Instagram / Facebook / LinkedInの有無", "更新頻度", "サイト導線との接続", "採用・実績訴求への活用"]
+  };
+}
+
+function buildRoleGuidance(role: AiEmployeeRole, form: ProposalRequest, estimate: EstimateSummary) {
+  const roleLabel = aiEmployeeRoles.find((item) => item.key === role)?.label ?? "AI社員";
+  const base = {
+    secretary: ["次回確認事項、日程、送付メールを先に整えます。", "未入力項目を確認リスト化し、営業担当の抜け漏れを減らします。"],
+    sales: ["受注確率、競合差別化、提案ストーリーを強化します。", "顧客が社内説明しやすい要約PowerPointを優先します。"],
+    director: ["要件、サイトマップ、制作範囲、体制を具体化します。", "CMS、SEO、運用保守の前提条件を提案に反映します。"],
+    writer: ["提案サマリー、メール、顧客課題の言葉を磨きます。", "AIっぽい曖昧表現を減らし、営業が話しやすい表現に整えます。"],
+    designer: ["PowerPointの見せ方、導線図、KPI、比較表の視認性を確認します。", "顧客の信頼感が伝わる清潔な資料構成に寄せます。"],
+    pm: ["見積、スケジュール、リスク、担当者を整理します。", `概算見積は${estimate.totalLabel}を前提に、必須・推奨・オプションを分けます。`]
+  } satisfies Record<AiEmployeeRole, string[]>;
+
+  return {
+    title: `${roleLabel}として提案を支援`,
+    items: uniqueTextItems([...base[role], form.budget_range ? `予算感「${form.budget_range}」との整合性を確認します。` : "予算未入力の場合は次回確認事項に入れます。"]).slice(0, 4)
+  };
+}
+
+function buildAiCoworkerReviews(role: AiEmployeeRole, form: ProposalRequest, estimate: EstimateSummary) {
+  const roleGuidance = buildRoleGuidance(role, form, estimate);
+  return [
+    { reviewer: "営業AI", comment: "顧客課題、受注確率、競合差別化を先に伝える構成にします。", improvement: roleGuidance.items[0] },
+    { reviewer: "PM AI", comment: "予算、納期、体制、リスクを見積条件と合わせて明確化します。", improvement: `概算見積 ${estimate.totalLabel} の前提条件を資料内に残します。` },
+    { reviewer: "デザイナーAI", comment: "情報量の多いスライドはカード、表、ステップ図に分けて読みやすくします。", improvement: "顧客が30秒で理解できるサマリーとKPIを強調します。" },
+    { reviewer: "社長AI", comment: "提案が売上・採用・問い合わせ改善にどう効くかを経営目線で補強します。", improvement: "投資対効果と次回アクションを最後に明確化します。" }
+  ];
+}
+
 export default function Home() {
+  const [activeMode, setActiveMode] = useState<WorkMode>("sales");
+  const [modeUsageCounts, setModeUsageCounts] = useState<GeneratedCounts>(initialModeCounts);
+  const [recentFeatures, setRecentFeatures] = useState<string[]>([]);
+  const [selectedAiEmployee, setSelectedAiEmployee] = useState<AiEmployeeRole>("sales");
+  const [companyResearch, setCompanyResearch] = useState<CompanyResearch | null>(null);
+  const [agentSteps, setAgentSteps] = useState<DigitalAgentStep[]>(initialAgentSteps);
+  const [isAgentRunning, setIsAgentRunning] = useState(false);
+  const [automationSettings, setAutomationSettings] = useState<AutomationSettings>({
+    morning: false,
+    weekly: false,
+    deadline: false
+  });
   const [form, setForm] = useState<ProposalRequest>(initialForm);
   const [inputMode, setInputMode] = useState<InputMode>("easy");
   const [easyInput, setEasyInput] = useState<EasyInput>(initialEasyInput);
@@ -1656,6 +2524,34 @@ export default function Home() {
   const [companyHomeUrl, setCompanyHomeUrl] = useState("");
   const [extractedInfo, setExtractedInfo] = useState<ExtractedInfo | null>(null);
   const [urlInsight, setUrlInsight] = useState<UrlInsight | null>(null);
+  const [assistantQuestionCount, setAssistantQuestionCount] = useState(0);
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [editablePreviewSlides, setEditablePreviewSlides] = useState<PreviewSlide[]>([]);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showEmailDraft, setShowEmailDraft] = useState(false);
+  const [showMinutes, setShowMinutes] = useState(false);
+  const [liveMeetingMemo, setLiveMeetingMemo] = useState("");
+  const [dailyReport, setDailyReport] = useState<DailyReport | null>(null);
+  const [bossReport, setBossReport] = useState("");
+  const [roleplayScenario, setRoleplayScenario] = useState<RoleplayScenario>("recruit");
+  const [roleplayMessages, setRoleplayMessages] = useState<RoleplayMessage[]>([]);
+  const [roleplayDraft, setRoleplayDraft] = useState("");
+  const [roleplayFinished, setRoleplayFinished] = useState(false);
+  const [minutesInput, setMinutesInput] = useState("");
+  const [minutesResult, setMinutesResult] = useState<MinutesAiResult | null>(null);
+  const [mailPurpose, setMailPurpose] = useState("");
+  const [mailRecipient, setMailRecipient] = useState("");
+  const [mailContent, setMailContent] = useState("");
+  const [mailTone, setMailTone] = useState("丁寧");
+  const [mailResult, setMailResult] = useState<MailAiResult | null>(null);
+  const [taskInput, setTaskInput] = useState("");
+  const [taskResult, setTaskResult] = useState<TaskAiResult | null>(null);
+  const [faqQuestion, setFaqQuestion] = useState("");
+  const [faqResult, setFaqResult] = useState<FaqAiResult | null>(null);
+  const [summaryInput, setSummaryInput] = useState("");
+  const [summaryResult, setSummaryResult] = useState<SummaryAiResult | null>(null);
+  const [reportInput, setReportInput] = useState("");
+  const [reportResult, setReportResult] = useState<ReportAiResult | null>(null);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -1665,9 +2561,12 @@ export default function Home() {
   const [isDownloadingEstimatePdf, setIsDownloadingEstimatePdf] = useState(false);
   const [error, setError] = useState("");
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
+  const [healthSnapshot, setHealthSnapshot] = useState<HealthSnapshot | null>(null);
+  const [usageLogs, setUsageLogs] = useState<UsageLogEntry[]>([]);
 
   useEffect(() => {
     setHistory(safeHistoryParse(window.localStorage.getItem(HISTORY_KEY)));
+    setUsageLogs(readUsageLogs());
   }, []);
 
   const canSubmit = useMemo(() => {
@@ -1690,6 +2589,14 @@ export default function Home() {
   const salesIndicators = useMemo(() => deriveSalesIndicators(form), [form]);
   const estimateSummary = useMemo(() => deriveEstimateSummary(form), [form]);
   const dealEvaluation = useMemo(() => deriveDealEvaluation(form, infoChecks, estimateSummary), [form, infoChecks, estimateSummary]);
+  const aiEmployeeGuidance = useMemo(
+    () => buildRoleGuidance(selectedAiEmployee, form, estimateSummary),
+    [selectedAiEmployee, form, estimateSummary]
+  );
+  const aiCoworkerReviews = useMemo(
+    () => buildAiCoworkerReviews(selectedAiEmployee, form, estimateSummary),
+    [selectedAiEmployee, form, estimateSummary]
+  );
   const competitorPoints = useMemo(() => deriveCompetitorPoints(form), [form]);
   const winningStrategy = useMemo(() => deriveWinningStrategy(form), [form]);
   const proposalPlan = useMemo(
@@ -1700,7 +2607,27 @@ export default function Home() {
   const automationConcept = useMemo(() => buildAutomationConcept(form, dealEvaluation), [form, dealEvaluation]);
   const mcpConcept = useMemo(() => buildMcpConcept(form), [form]);
   const aiRecommendations = useMemo(() => buildAiRecommendations(form, urlInsight), [form, urlInsight]);
-  const inputSummary = useMemo(() => buildInputSummary(form), [form]);
+  const strategyCards = useMemo(() => buildStrategyCards(form, aiRecommendations), [form, aiRecommendations]);
+  const defaultPreviewSlides = useMemo(
+    () => buildPreviewSlides(form, strategyCards, estimateSummary),
+    [form, strategyCards, estimateSummary]
+  );
+  useEffect(() => {
+    setEditablePreviewSlides(defaultPreviewSlides);
+  }, [defaultPreviewSlides]);
+  const preGenerateCards = useMemo(() => {
+    const brief = form.project_brief.trim().replace(/\s+/g, " ");
+    const purposes = extractedInfo?.purposes.length ? extractedInfo.purposes.join("、") : extractPurposeList(allInputText(form)).join("、");
+    return [
+      { label: "会社名", value: extractClientName(form) },
+      { label: "案件内容", value: extractedInfo?.projectContent || (brief ? `${brief.slice(0, 110)}${brief.length > 110 ? "..." : ""}` : "Webサイト制作・改善提案") },
+      { label: "目的", value: purposes || "問い合わせ獲得・信頼感向上を仮説として整理" },
+      { label: "予算", value: form.budget_range.trim() || "未定" },
+      { label: "納期", value: form.desired_launch_timing.trim() || "要確認" },
+      { label: "競合", value: form.competitor_site_url.trim() || form.competitor_company_name.trim() || "競合未確認" },
+      { label: "不足情報", value: missingItems.length ? missingItems.map((item) => item.label).join("、") : "大きな不足なし" }
+    ];
+  }, [extractedInfo, form, missingItems]);
   const displayedWin = useMemo(
     () => buildDisplayedWinProbability(result?.analysis.win_probability, dealEvaluation),
     [result?.analysis.win_probability, dealEvaluation]
@@ -1714,8 +2641,116 @@ export default function Home() {
     () => (result?.markdown ? buildExportMarkdown(result.markdown, form) : ""),
     [result?.markdown, form]
   );
+  const qualityScore = useMemo(
+    () => buildQualityScore(result, form, dealEvaluation, estimateSummary, strategyCards),
+    [result, form, dealEvaluation, estimateSummary, strategyCards]
+  );
+  const draftEmail = useMemo(() => buildDraftEmail(form), [form]);
+  const aiMinutes = useMemo(() => buildAiMinutes(form, extractedInfo), [form, extractedInfo]);
+  const winRateImprovements = useMemo(() => buildWinRateImprovements(dealEvaluation, qualityScore), [dealEvaluation, qualityScore]);
+  const similarCases = useMemo(() => buildSimilarCases(history, form), [history, form]);
+  const dashboardMetrics = useMemo(() => buildDashboardMetrics(history, result), [history, result]);
+  const monthlyDashboardMetrics = useMemo(
+    () => buildMonthlyDashboardMetrics(history, result, qualityScore, dealEvaluation),
+    [history, result, qualityScore, dealEvaluation]
+  );
+  const operationDashboardMetrics = useMemo(() => {
+    const total = Object.values(modeUsageCounts).reduce((sum, count) => sum + count, 0);
+    const savedMinutes = total * 45;
+    return [
+      { label: "今日の生成数", value: `${total}件`, note: "この画面で作成したAI出力" },
+      { label: "営業提案数", value: `${modeUsageCounts.sales}件`, note: "提案書・PPT・見積につながる出力" },
+      { label: "議事録生成数", value: `${modeUsageCounts.minutes}件`, note: "会議メモから整理" },
+      { label: "メール作成数", value: `${modeUsageCounts.mail}件`, note: "件名・本文・返信案" },
+      { label: "タスク整理数", value: `${modeUsageCounts.tasks}件`, note: "依頼や議事録から分解" },
+      { label: "AI削減時間", value: `${savedMinutes}分`, note: "1件45分削減として概算" }
+    ];
+  }, [modeUsageCounts]);
+  const preMeetingChecklist = useMemo(() => buildPreMeetingChecklist(infoChecks), [infoChecks]);
+  const coachQuestions = useMemo(() => buildCoachQuestions(form, missingItems), [form, missingItems]);
+  const realtimeQuestion = useMemo(() => buildRealtimeQuestion(liveMeetingMemo, coachQuestions), [liveMeetingMemo, coachQuestions]);
+  const meetingEvaluation = useMemo(() => buildMeetingEvaluation(liveMeetingMemo || form.hearing_result, form), [liveMeetingMemo, form]);
+  const nextMeetingPrep = useMemo(() => buildNextMeetingPrep(form, missingItems), [form, missingItems]);
+  const winRateCoachAdvice = useMemo(() => buildWinRateCoachAdvice(form, strategyCards), [form, strategyCards]);
+  const knowledgeGroups = useMemo(() => classifyKnowledge(history, form), [history, form]);
   const errorAdvice = useMemo(() => (error ? buildErrorAdvice(error) : null), [error]);
   const currentChatQuestion = chatQuestionFlow[Math.min(chatQuestionIndex, chatQuestionFlow.length - 1)];
+
+  function recordModeUsage(mode: WorkMode) {
+    const label = workModeTabs.find((item) => item.key === mode)?.label ?? mode;
+    setModeUsageCounts((current) => ({ ...current, [mode]: current[mode] + 1 }));
+    setRecentFeatures((current) => [label, ...current.filter((item) => item !== label)].slice(0, 5));
+  }
+
+  function recordUsage(featureName: string, inputLength: number, outputType: string, status: "success" | "failure", errorType = "") {
+    appendUsageLog({
+      featureName,
+      inputLength,
+      outputType,
+      status,
+      errorType
+    });
+    setUsageLogs(readUsageLogs());
+  }
+
+  async function runCompanyResearch() {
+    if (!companyHomeUrl.trim() && !form.client_company_info.trim() && !rawSourceText.trim()) {
+      setError("会社URL、案件メール、または提案先企業情報を入力すると会社調査を開始できます。");
+      return;
+    }
+    if (companyHomeUrl.trim()) {
+      try {
+        const research = await researchCompanyUrl({
+          url: companyHomeUrl,
+          project_brief: form.project_brief,
+          client_company_info: form.client_company_info
+        });
+        setCompanyResearch(research);
+        setError("");
+        recordUsage("会社URL調査", companyHomeUrl.length + form.project_brief.length, "company-research", "success");
+        return;
+      } catch {
+        setCompanyResearch(buildCompanyResearch(companyHomeUrl, form, extractedInfo));
+        setError("会社URLの公開ページ取得に失敗したため、入力情報から調査観点を整理しました。");
+        recordUsage("会社URL調査", companyHomeUrl.length + form.project_brief.length, "company-research", "failure", "通信エラー");
+        return;
+      }
+    }
+    setCompanyResearch(buildCompanyResearch(companyHomeUrl, form, extractedInfo));
+    setError("");
+    recordUsage("会社URL調査", form.project_brief.length + form.client_company_info.length, "company-research", "success");
+  }
+
+  function toggleAutomation(key: keyof AutomationSettings) {
+    setAutomationSettings((current) => ({ ...current, [key]: !current[key] }));
+  }
+
+  async function runDigitalCoworkerAgent() {
+    if (isAgentRunning) return;
+    setIsAgentRunning(true);
+    setError("");
+    setAgentSteps(initialAgentSteps);
+    if (!companyResearch) {
+      await runCompanyResearch();
+    }
+
+    for (let index = 0; index < initialAgentSteps.length; index += 1) {
+      setAgentSteps((current) =>
+        current.map((step, stepIndex) => ({
+          ...step,
+          status: stepIndex < index ? "done" : stepIndex === index ? "running" : "waiting"
+        }))
+      );
+      await new Promise((resolve) => window.setTimeout(resolve, 450));
+    }
+
+    setAgentSteps((current) => current.map((step) => ({ ...step, status: "done" })));
+    setMailResult(buildInternalMail("提案書送付と次回確認事項の共有", extractClientName(form), form.project_brief, "丁寧"));
+    recordModeUsage("sales");
+    recordUsage("AI Digital Coworker", allInputText(form).length + rawSourceText.length, "agent-workflow", "success");
+    setRecentFeatures((current) => ["AI Digital Coworker", ...current.filter((item) => item !== "AI Digital Coworker")].slice(0, 5));
+    setIsAgentRunning(false);
+  }
 
   function updateField(field: keyof ProposalRequest, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -1742,15 +2777,16 @@ export default function Home() {
     setError("");
   }
 
-  function organizeSourceText() {
+  function applySourceExtraction(openConfirm = false) {
     if (!rawSourceText.trim() && !companyHomeUrl.trim()) {
       setError("案件メール、議事録、チャット、Ready Crew案件情報、または会社ホームページURLを入力してください。");
-      return;
+      return false;
     }
 
-    const nextExtracted = extractProposalInfo(rawSourceText, companyHomeUrl);
+    const baseExtracted = extractProposalInfo(rawSourceText, companyHomeUrl);
+    const nextExtracted = fillMissingExtractedInfo(baseExtracted, companyHomeUrl);
     const nextInsight = buildUrlInsight(companyHomeUrl, rawSourceText, nextExtracted);
-    const nextAnswers = buildChatAnswersFromExtracted(nextExtracted);
+    const nextAnswers = buildChatAnswersFromExtracted(baseExtracted);
     const nextMissingIndex = findNextMissingQuestionIndex(nextAnswers);
     const missingQuestion =
       nextMissingIndex >= 0
@@ -1761,8 +2797,9 @@ export default function Home() {
     setUrlInsight(nextInsight);
     setChatAnswers(nextAnswers);
     setChatQuestionIndex(nextMissingIndex >= 0 ? nextMissingIndex : chatQuestionFlow.length);
+    setAssistantQuestionCount(nextMissingIndex >= 0 ? 1 : 0);
     setChatDraft("");
-    setForm((current) => buildFormFromExtracted(current, nextExtracted, nextInsight));
+    setForm((current) => fillMissingProposalForm(buildFormFromExtracted(current, nextExtracted, nextInsight)));
     setChatMessages([
       ...initialChatMessages,
       {
@@ -1783,6 +2820,176 @@ export default function Home() {
       }
     ]);
     setError("");
+    if (openConfirm) {
+      setIsConfirmOpen(true);
+    }
+    return true;
+  }
+
+  function organizeSourceText() {
+    applySourceExtraction(false);
+  }
+
+  function oneClickAutoGenerate() {
+    if (rawSourceText.trim() || companyHomeUrl.trim()) {
+      applySourceExtraction(true);
+      return;
+    }
+
+    const nextForm = fillMissingProposalForm(Object.keys(chatAnswers).length > 0 ? applyChatAnswersToForm(form, chatAnswers) : form);
+    if (nextForm.project_brief.trim().length < 20) {
+      setError("ここに案件メールを貼るだけで始められます。URLだけでもOKです。分からない項目は空欄でOKです。");
+      return;
+    }
+
+    setForm(nextForm);
+    setError("");
+    setIsConfirmOpen(true);
+  }
+
+  function insertSourceTemplate(kind: SourceTemplateKind) {
+    setRawSourceText(sourceTemplates[kind]);
+    setError("");
+  }
+
+  async function handleDroppedFiles(files: FileList | null) {
+    if (!files?.length) return;
+    const fileArray = Array.from(files);
+    setUploadedFiles(fileArray.map((file) => file.name));
+
+    const readableParts = await Promise.all(
+      fileArray.map(async (file) => {
+        const canReadAsText =
+          file.type.startsWith("text/") ||
+          /\.(txt|md|csv|tsv|eml)$/i.test(file.name);
+        if (!canReadAsText) {
+          return `添付ファイル：${file.name}（${file.type || "形式不明"}）。内容はファイル名を解析メモとして反映。`;
+        }
+        try {
+          return `添付ファイル：${file.name}\n${await file.text()}`;
+        } catch {
+          return `添付ファイル：${file.name}。内容の読み取りに失敗しました。`;
+        }
+      })
+    );
+
+    setRawSourceText((current) => [current, ...readableParts].filter(Boolean).join("\n\n"));
+  }
+
+  function handleDrop(event: React.DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    void handleDroppedFiles(event.dataTransfer.files);
+  }
+
+  function startVoiceInput() {
+    const SpeechRecognition =
+      (window as unknown as { SpeechRecognition?: new () => SpeechRecognitionLike; webkitSpeechRecognition?: new () => SpeechRecognitionLike }).SpeechRecognition ||
+      (window as unknown as { SpeechRecognition?: new () => SpeechRecognitionLike; webkitSpeechRecognition?: new () => SpeechRecognitionLike }).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setError("このブラウザでは音声入力に対応していません。Chromeなど対応ブラウザで試してください。");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "ja-JP";
+    recognition.interimResults = false;
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0]?.transcript ?? "")
+        .join("");
+      setRawSourceText((current) => [current, `音声入力：${transcript}`].filter(Boolean).join("\n"));
+    };
+    recognition.onerror = () => setError("音声入力に失敗しました。マイク許可を確認してください。");
+    recognition.start();
+  }
+
+  function updatePreviewSlide(index: number, field: keyof PreviewSlide, value: string) {
+    setEditablePreviewSlides((current) =>
+      current.map((slide, slideIndex) => (slideIndex === index ? { ...slide, [field]: value } : slide))
+    );
+  }
+
+  function createDailyReport() {
+    setDailyReport(buildSalesDailyReport(form, meetingEvaluation));
+    recordModeUsage("coach");
+  }
+
+  function createBossReport() {
+    setBossReport(buildBossReport(form, dealEvaluation, missingItems));
+    recordModeUsage("coach");
+  }
+
+  function generateMinutesMode() {
+    const source = minutesInput.trim() || form.hearing_result || rawSourceText || form.project_brief;
+    setMinutesResult(buildInternalMinutes(source));
+    setError("");
+    recordModeUsage("minutes");
+    recordUsage("議事録AI", source.length, "minutes", "success");
+  }
+
+  function generateMailMode() {
+    setMailResult(buildInternalMail(mailPurpose, mailRecipient, mailContent || form.project_brief, mailTone));
+    setError("");
+    recordModeUsage("mail");
+    recordUsage("メール作成AI", (mailPurpose + mailRecipient + mailContent).length, "mail", "success");
+  }
+
+  function generateTaskMode() {
+    const source = taskInput.trim() || form.hearing_result || rawSourceText || form.project_brief;
+    setTaskResult(buildInternalTasks(source));
+    setError("");
+    recordModeUsage("tasks");
+    recordUsage("タスク整理AI", source.length, "tasks", "success");
+  }
+
+  function generateFaqMode() {
+    setFaqResult(buildInternalFaq(faqQuestion));
+    setError("");
+    recordModeUsage("faq");
+    recordUsage("社内FAQ AI", faqQuestion.length, "faq", "success");
+  }
+
+  function generateSummaryMode() {
+    const source = summaryInput.trim() || displayedMarkdown || rawSourceText || form.project_brief;
+    setSummaryResult(buildInternalSummary(source));
+    setError("");
+    recordModeUsage("summary");
+    recordUsage("資料要約AI", source.length, "summary", "success");
+  }
+
+  function generateReportMode() {
+    const source = reportInput.trim() || liveMeetingMemo || form.hearing_result || form.project_brief;
+    setReportResult(buildInternalReport(source));
+    setError("");
+    recordModeUsage("reports");
+    recordUsage("日報/週報AI", source.length, "report", "success");
+  }
+
+  function startRoleplay() {
+    const scenario = roleplayScenarios[roleplayScenario];
+    setRoleplayMessages([{ role: "customer", text: `${scenario.customer}です。${scenario.firstMessage}` }]);
+    setRoleplayFinished(false);
+    setRoleplayDraft("");
+  }
+
+  function sendRoleplayMessage() {
+    const message = roleplayDraft.trim();
+    if (!message) return;
+    const replies = [
+      "ありがとうございます。費用感と進め方をもう少し具体的に知りたいです。",
+      "社内説明に使える資料があると助かります。競合との差も見たいです。",
+      "公開後に成果が出るかが不安です。運用面も提案に含められますか？"
+    ];
+    setRoleplayMessages((current) => [
+      ...current,
+      { role: "sales", text: message },
+      { role: "customer", text: replies[Math.min(current.length, replies.length - 1)] }
+    ]);
+    setRoleplayDraft("");
+    if (roleplayMessages.filter((item) => item.role === "sales").length >= 2) {
+      setRoleplayFinished(true);
+    }
   }
 
   function submitChatAnswer(event?: React.FormEvent<HTMLFormElement>) {
@@ -1815,8 +3022,9 @@ export default function Home() {
     const nextAnswers = { ...chatAnswers, [question.key]: answer };
     const nextIndex = findNextMissingQuestionIndex(nextAnswers);
     const nextReadiness = buildChatReadiness(nextAnswers);
+    const canAskMore = nextIndex >= 0 && assistantQuestionCount < MAX_ASSISTANT_QUESTIONS;
     const nextAssistantText =
-      nextIndex >= 0
+      canAskMore
         ? `${nextReadiness.ready ? "提案書を生成できます。精度を上げるため、未確認の項目だけ確認します。\n" : ""}${chatQuestionFlow[nextIndex].label}だけ教えてください。\n${chatQuestionFlow[nextIndex].question}`
         : "必要な情報が揃いました。提案書を生成できます。まだ未確認の項目があっても「今の内容で生成する」から進められます。";
 
@@ -1826,14 +3034,15 @@ export default function Home() {
       { id: `assistant-${Date.now()}-next`, role: "assistant", text: nextAssistantText }
     ]);
     setChatAnswers(nextAnswers);
-    setChatQuestionIndex(nextIndex >= 0 ? nextIndex : chatQuestionFlow.length);
+    setChatQuestionIndex(canAskMore ? nextIndex : chatQuestionFlow.length);
+    setAssistantQuestionCount((current) => (canAskMore ? Math.min(MAX_ASSISTANT_QUESTIONS, current + 1) : current));
     setChatDraft("");
     setForm((current) => applyChatAnswersToForm(current, nextAnswers));
     setError("");
   }
 
   function generateFromChatNow() {
-    const nextForm = Object.keys(chatAnswers).length > 0 ? applyChatAnswersToForm(form, chatAnswers) : form;
+    const nextForm = fillMissingProposalForm(Object.keys(chatAnswers).length > 0 ? applyChatAnswersToForm(form, chatAnswers) : form);
     if (nextForm.project_brief.trim().length < 20) {
       setError("まずはチャットで案件内容を1つ入力してください。途中でも生成できます。");
       return;
@@ -1847,6 +3056,7 @@ export default function Home() {
     setChatMessages(initialChatMessages);
     setChatAnswers({});
     setChatQuestionIndex(0);
+    setAssistantQuestionCount(0);
     setChatDraft("");
     setRawSourceText("");
     setCompanyHomeUrl("");
@@ -1884,6 +3094,7 @@ export default function Home() {
     if (!canSubmit) {
       return;
     }
+    setForm((current) => fillMissingProposalForm(current));
     setError("");
     setIsConfirmOpen(true);
   }
@@ -1898,8 +3109,12 @@ export default function Home() {
       const response = await analyzeProposal(form);
       setResult(response);
       saveHistory(response);
+      recordModeUsage("sales");
+      recordUsage("提案書生成", allInputText(form).length, "markdown", "success");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "予期しないエラーが発生しました。");
+      const friendly = toFriendlyError(caught);
+      recordUsage("提案書生成", allInputText(form).length, "markdown", "failure", friendly.category);
+      setError(`${friendly.title}。${friendly.action}`);
     } finally {
       setIsLoading(false);
     }
@@ -1953,14 +3168,11 @@ export default function Home() {
         targetForm.past_proposal_template,
         targetForm.case_studies
       );
+      recordUsage(summary ? "要約PowerPoint" : "PowerPoint", allInputText(targetForm).length, summary ? "summary-pptx" : "pptx", "success");
     } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : summary
-            ? "要約PowerPointの生成に失敗しました。Backendログを確認してください。"
-            : "PowerPointの生成に失敗しました。"
-      );
+      const friendly = toFriendlyError(caught);
+      recordUsage(summary ? "要約PowerPoint" : "PowerPoint", allInputText(targetForm).length, summary ? "summary-pptx" : "pptx", "failure", friendly.category);
+      setError(`${friendly.title}。${friendly.action}`);
     } finally {
       if (summary) {
         setIsDownloadingSummaryPowerPoint(false);
@@ -1990,8 +3202,11 @@ export default function Home() {
         targetForm,
         targetResult.analysis.win_probability
       );
+      recordUsage("見積書PDF", allInputText(targetForm).length, "estimate-pdf", "success");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "見積書PDFの生成に失敗しました。Backendログを確認してください。");
+      const friendly = toFriendlyError(caught);
+      recordUsage("見積書PDF", allInputText(targetForm).length, "estimate-pdf", "failure", friendly.category);
+      setError(`${friendly.title}。${friendly.action}`);
     } finally {
       setIsDownloadingEstimatePdf(false);
     }
@@ -2015,6 +3230,7 @@ export default function Home() {
     ]);
     setChatAnswers({});
     setChatQuestionIndex(0);
+    setAssistantQuestionCount(0);
     setChatDraft("");
     setResult(entry.result);
     setError("");
@@ -2046,6 +3262,7 @@ export default function Home() {
     fillSample(kind);
     setChatAnswers(nextAnswers);
     setChatQuestionIndex(chatQuestionFlow.length);
+    setAssistantQuestionCount(0);
     setChatDraft("");
     setChatMessages([
       ...initialChatMessages,
@@ -2098,18 +3315,249 @@ export default function Home() {
   }
 
   return (
-    <main className="app-shell">
+    <AuthGate>
+    <main className={`app-shell ${isDarkMode ? "dark-mode" : ""}`}>
       <section className="workspace-header" aria-label="アプリ概要">
         <div>
-          <p className="eyebrow">Ready Crew Proposal AI</p>
-          <h1>案件概要から提案書初稿を生成</h1>
+          <p className="eyebrow">Ready Crew Proposal AI Version 4.0</p>
+          <h1>AI Digital Coworker（AI社員）</h1>
         </div>
-        <div className="status-pill">
-          <CheckCircle2 size={16} aria-hidden="true" />
-          MVP
+        <div className="header-actions">
+          <button className="status-pill mode-toggle" type="button" onClick={() => setIsDarkMode((current) => !current)}>
+            {isDarkMode ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+            {isDarkMode ? "Light" : "Dark"}
+          </button>
+          <div className="status-pill">
+            <CheckCircle2 size={16} aria-hidden="true" />
+            Version 4.0
+          </div>
         </div>
       </section>
 
+      <section className="dashboard-grid" aria-label="営業ダッシュボード">
+        {dashboardMetrics.map((metric) => (
+          <article className="dashboard-card" key={metric.label}>
+            <span>{metric.label}</span>
+            <strong>{metric.value}</strong>
+            <small>{metric.note}</small>
+          </article>
+        ))}
+      </section>
+
+      <section className="dashboard-grid monthly-dashboard" aria-label="今月の営業ダッシュボード">
+        {monthlyDashboardMetrics.map((metric) => (
+          <article className="dashboard-card coach-metric" key={metric.label}>
+            <span>{metric.label}</span>
+            <strong>{metric.value}</strong>
+            <small>{metric.note}</small>
+          </article>
+        ))}
+      </section>
+
+      <section className="dashboard-grid operations-dashboard" aria-label="社内業務AIダッシュボード">
+        {operationDashboardMetrics.map((metric) => (
+          <article className="dashboard-card" key={metric.label}>
+            <span>{metric.label}</span>
+            <strong>{metric.value}</strong>
+            <small>{metric.note}</small>
+          </article>
+        ))}
+      </section>
+
+      <section className="work-mode-panel" aria-label="業務モード切り替え">
+        <div className="section-heading">
+          <p className="eyebrow">Version 4.0</p>
+          <h2>AI社員が営業業務を一緒に進めるワークスペース</h2>
+          <p>営業提案から議事録、メール、タスク整理、日報まで、1つの画面で切り替えて使えます。</p>
+        </div>
+        <div className="work-mode-tabs" role="tablist" aria-label="業務モード">
+          {workModeTabs.map((mode) => (
+            <button
+              aria-selected={activeMode === mode.key}
+              className={activeMode === mode.key ? "is-active" : ""}
+              key={mode.key}
+              onClick={() => setActiveMode(mode.key)}
+              role="tab"
+              type="button"
+            >
+              <strong>{mode.label}</strong>
+              <span>{mode.note}</span>
+            </button>
+          ))}
+        </div>
+        <div className="recent-feature-row">
+          <strong>最近使った機能</strong>
+          <span>{recentFeatures.length ? recentFeatures.join(" / ") : "まだ生成履歴はありません"}</span>
+        </div>
+      </section>
+
+      <SecurityNotice />
+      <HealthStatus onChange={setHealthSnapshot} />
+      <SettingsPanel health={healthSnapshot} isAuthenticated usageLogs={usageLogs} />
+
+      <section className="digital-coworker-panel" aria-label="AI Digital Coworker">
+        <div className="digital-coworker-hero">
+          <div>
+            <p className="eyebrow">AI Digital Coworker</p>
+            <h2>案件を受けたら、AI社員が順番に進めます</h2>
+            <p>会社調査、競合調査、提案書作成、見積、メール準備までを、進行状況つきで整理します。</p>
+          </div>
+          <button className="primary-button" type="button" onClick={runDigitalCoworkerAgent} disabled={isAgentRunning}>
+            {isAgentRunning ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Sparkles size={18} aria-hidden="true" />}
+            {isAgentRunning ? "AI社員が実行中" : "AI社員に一括実行"}
+          </button>
+        </div>
+
+        <div className="digital-grid">
+          <article className="digital-card browser-use-card">
+            <div className="card-title-row">
+              <div>
+                <span>Browser Use連携</span>
+                <strong>会社URLから調査観点を作成</strong>
+              </div>
+              <button className="secondary-button" type="button" onClick={runCompanyResearch}>
+                会社調査を実行
+              </button>
+            </div>
+            <label className="field">
+              <span>会社URL</span>
+              <input
+                value={companyHomeUrl}
+                onChange={(event) => setCompanyHomeUrl(event.target.value)}
+                placeholder="https://example.co.jp"
+              />
+            </label>
+            {companyResearch ? (
+              <div className="research-result-grid">
+                <div><span>会社概要</span><p>{companyResearch.overview}</p></div>
+                <div><span>競合</span><ul>{companyResearch.competitors.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                <div><span>採用</span><p>{companyResearch.recruitment}</p></div>
+                <div><span>ニュース</span><ul>{companyResearch.news.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                <div><span>サービス</span><ul>{companyResearch.services.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                <div><span>SNS</span><ul>{companyResearch.sns.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              </div>
+            ) : (
+              <p className="helper-text">現時点では自動送信やログイン操作は行いません。公開情報を確認する観点をAIが整理します。</p>
+            )}
+          </article>
+
+          <article className="digital-card">
+            <div className="card-title-row">
+              <div>
+                <span>AIエージェント進行状況</span>
+                <strong>順番に業務を実行</strong>
+              </div>
+            </div>
+            <div className="agent-step-list">
+              {agentSteps.map((step, index) => (
+                <div className={`agent-step is-${step.status}`} key={step.label}>
+                  <span>{index + 1}</span>
+                  <div>
+                    <strong>{step.label}</strong>
+                    <p>{step.detail}</p>
+                  </div>
+                  <small>{step.status === "done" ? "完了" : step.status === "running" ? "実行中" : "待機"}</small>
+                </div>
+              ))}
+            </div>
+          </article>
+        </div>
+
+        <div className="digital-grid digital-grid-wide">
+          <article className="digital-card ai-employee-card">
+            <div className="card-title-row">
+              <div>
+                <span>AI社員</span>
+                <strong>役割を選ぶと提案の見方が変わります</strong>
+              </div>
+            </div>
+            <div className="ai-employee-grid">
+              {aiEmployeeRoles.map((role) => (
+                <button
+                  className={selectedAiEmployee === role.key ? "is-active" : ""}
+                  key={role.key}
+                  onClick={() => setSelectedAiEmployee(role.key)}
+                  type="button"
+                >
+                  <strong>{role.label}</strong>
+                  <span>{role.mission}</span>
+                </button>
+              ))}
+            </div>
+            <div className="role-guidance-box">
+              <strong>{aiEmployeeGuidance.title}</strong>
+              <ul>{aiEmployeeGuidance.items.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+          </article>
+
+          <article className="digital-card automation-card">
+            <div className="card-title-row">
+              <div>
+                <span>Automations</span>
+                <strong>定期確認の設定UI</strong>
+              </div>
+            </div>
+            <div className="automation-list">
+              {[
+                { key: "morning" as const, label: "毎朝確認", note: "Ready Crew案件と優先度を毎朝整理" },
+                { key: "weekly" as const, label: "毎週確認", note: "提案中案件、未対応タスク、失注リスクを確認" },
+                { key: "deadline" as const, label: "締切前通知", note: "公開希望日・提案期限前に確認事項を通知" }
+              ].map((item) => (
+                <button className={automationSettings[item.key] ? "is-active" : ""} key={item.key} onClick={() => toggleAutomation(item.key)} type="button">
+                  <span>{automationSettings[item.key] ? "ON" : "OFF"}</span>
+                  <div>
+                    <strong>{item.label}</strong>
+                    <p>{item.note}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </article>
+        </div>
+
+        <div className="digital-grid digital-grid-wide">
+          <article className="digital-card mcp-settings-card">
+            <div className="card-title-row">
+              <div>
+                <span>MCP対応UI</span>
+                <strong>将来接続する社内・営業ツール</strong>
+              </div>
+            </div>
+            <div className="mcp-card-grid">
+              {mcpConnectorCards.map((connector, index) => (
+                <article key={connector}>
+                  <strong>{connector}</strong>
+                  <span>{index < 3 ? "未接続" : "接続予定"}</span>
+                </article>
+              ))}
+            </div>
+          </article>
+
+          <article className="digital-card review-chain-card">
+            <div className="card-title-row">
+              <div>
+                <span>AIレビュー</span>
+                <strong>AI社員同士で生成物を改善</strong>
+              </div>
+            </div>
+            <div className="review-chain">
+              {aiCoworkerReviews.map((review, index) => (
+                <div key={review.reviewer}>
+                  <span>{index + 1}</span>
+                  <div>
+                    <strong>{review.reviewer}</strong>
+                    <p>{review.comment}</p>
+                    <small>{review.improvement}</small>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+        </div>
+      </section>
+
+      {activeMode === "sales" && (
+        <>
       <section className="capability-panel" aria-label="このAIでできること">
         <div className="section-heading">
           <p className="eyebrow">Value</p>
@@ -2188,6 +3636,51 @@ export default function Home() {
           </div>
         </div>
 
+        <div className="auto-generate-bar">
+          <div>
+            <strong>まずはAIにおまかせ生成</strong>
+            <p>貼り付け情報やURLから自動整理し、生成前確認まで進めます。</p>
+          </div>
+          <button className="primary-button auto-generate-button" type="button" onClick={oneClickAutoGenerate}>
+            <Sparkles size={18} aria-hidden="true" />
+            まずはAIにおまかせ生成
+          </button>
+        </div>
+
+        <div className="simple-guide-row" aria-label="入力ガイド">
+          <span>ここに案件メールを貼るだけ</span>
+          <span>URLだけでもOK</span>
+          <span>分からない項目は空欄でOK</span>
+        </div>
+
+        <div
+          className="drop-voice-panel"
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={handleDrop}
+          aria-label="ファイルドラッグアンドドロップ"
+        >
+          <div>
+            <UploadCloud size={20} aria-hidden="true" />
+            <strong>PDF / Word / PowerPoint / Excel / メール(.eml)をドラッグ</strong>
+            <p>{uploadedFiles.length ? `読み込み: ${uploadedFiles.join("、")}` : "ファイル名と読めるテキストを案件情報に追加します。"}</p>
+          </div>
+          <div className="drop-actions">
+            <label className="secondary-button file-pick-button">
+              ファイルを選択
+              <input
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.eml,.txt,.md,.csv"
+                onChange={(event) => void handleDroppedFiles(event.target.files)}
+              />
+            </label>
+            <button className="secondary-button" type="button" onClick={startVoiceInput}>
+              <Mic size={16} aria-hidden="true" />
+              音声入力
+            </button>
+          </div>
+        </div>
+
         <div className="extractor-flow" aria-label="4ステップ">
           <div><span>1</span><strong>情報を貼り付ける</strong></div>
           <div><span>2</span><strong>AIが整理する</strong></div>
@@ -2200,6 +3693,17 @@ export default function Home() {
             <div className="field-title-row">
               <span>貼り付け情報</span>
               <small>Ready Crew案件メール、Zoom議事録、Slack、Teams、Chatwork、メールをそのまま貼り付け</small>
+            </div>
+            <div className="template-button-row" aria-label="コピー用テンプレート">
+              <button className="secondary-button" type="button" onClick={() => insertSourceTemplate("readyCrew")}>
+                Ready Crew案件メールを貼る例
+              </button>
+              <button className="secondary-button" type="button" onClick={() => insertSourceTemplate("hearing")}>
+                ヒアリングメモを貼る例
+              </button>
+              <button className="secondary-button" type="button" onClick={() => insertSourceTemplate("slack")}>
+                Slack相談文を貼る例
+              </button>
             </div>
             <textarea
               value={rawSourceText}
@@ -2256,6 +3760,8 @@ CMSはWordPress希望。競合：https://example.co.jp"
                   <div><dt>納期</dt><dd>{extractedInfo.deadline || "未抽出"}</dd></div>
                   <div><dt>競合</dt><dd>{extractedInfo.competitor || "未抽出"}</dd></div>
                   <div><dt>CMS</dt><dd>{extractedInfo.cms || "未抽出"}</dd></div>
+                  <div><dt>ターゲット</dt><dd>{extractedInfo.target || "未抽出"}</dd></div>
+                  <div><dt>SEO課題</dt><dd>{extractedInfo.seoIssue || "未抽出"}</dd></div>
                   <div><dt>問い合わせ内容</dt><dd>{extractedInfo.inquiryDetails || "未抽出"}</dd></div>
                 </dl>
               </article>
@@ -2268,6 +3774,8 @@ CMSはWordPress希望。競合：https://example.co.jp"
                   <div><dt>会社概要</dt><dd>{urlInsight.companyOverview}</dd></div>
                   <div><dt>事業内容</dt><dd>{urlInsight.business}</dd></div>
                   <div><dt>強み</dt><dd>{urlInsight.strengths}</dd></div>
+                  <div><dt>弱み</dt><dd>{urlInsight.weaknesses}</dd></div>
+                  <div><dt>競合</dt><dd>{urlInsight.competitors}</dd></div>
                   <div><dt>サービス</dt><dd>{urlInsight.services}</dd></div>
                   <div><dt>採用情報</dt><dd>{urlInsight.recruitment}</dd></div>
                   <div><dt>SEO状況</dt><dd>{urlInsight.seoStatus}</dd></div>
@@ -2278,6 +3786,453 @@ CMSはWordPress希望。競合：https://example.co.jp"
         )}
       </section>
 
+        </>
+      )}
+
+      {activeMode === "coach" && (
+      <section className="meeting-coach-panel" aria-label="AI商談コーチ">
+        <div className="coach-heading">
+          <div>
+            <p className="eyebrow">AI Meeting Coach</p>
+            <h2>商談前・商談中・商談後をAIがサポート</h2>
+          </div>
+          <div className="coach-score">
+            <span>AI受注予測</span>
+            <strong>{dealEvaluation.riskLabel}</strong>
+            <small>受注確率 {dealEvaluation.probability}%</small>
+          </div>
+        </div>
+
+        <div className="coach-grid">
+          <article className="coach-card checklist-card">
+            <strong>商談前チェックリスト</strong>
+            <ul>
+              {preMeetingChecklist.map((item) => (
+                <li className={item.done ? "is-done" : ""} key={item.label}>
+                  <span>{item.done ? "✓" : "□"}</span>
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+          </article>
+
+          <article className="coach-card question-coach-card">
+            <strong>この案件で聞いた方がいい質問 TOP10</strong>
+            <div className="coach-question-list">
+              {coachQuestions.map((item) => (
+                <div key={item.question}>
+                  <span>{starsFromPriority(item.priority)}</span>
+                  <p>{item.question}</p>
+                  <small>{item.reason}</small>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="coach-card realtime-card">
+            <strong>商談リアルタイム支援</strong>
+            <textarea
+              value={liveMeetingMemo}
+              onChange={(event) => setLiveMeetingMemo(event.target.value)}
+              placeholder="商談中のメモを入力すると、次に聞くべき質問を表示します。"
+              rows={7}
+            />
+            <div className="next-question-box">
+              <span>おすすめ質問</span>
+              <p>{realtimeQuestion}</p>
+            </div>
+          </article>
+        </div>
+
+        <div className="coach-after-grid">
+          <article className="coach-card meeting-evaluation-card">
+            <strong>AI商談評価</strong>
+            <div className="meeting-score-row">
+              <span>{meetingEvaluation.total}点</span>
+              <p>{meetingEvaluation.comment}</p>
+            </div>
+            <div className="quality-grid">
+              <div><span>ヒアリング力</span><strong>{meetingEvaluation.hearing}</strong></div>
+              <div><span>提案力</span><strong>{meetingEvaluation.proposal}</strong></div>
+              <div><span>クロージング</span><strong>{meetingEvaluation.closing}</strong></div>
+              <div><span>質問内容</span><strong>{meetingEvaluation.questions}</strong></div>
+              <div><span>情報収集</span><strong>{meetingEvaluation.information}</strong></div>
+            </div>
+          </article>
+
+          <article className="coach-card feedback-card">
+            <strong>AIフィードバック</strong>
+            <div className="feedback-columns">
+              <div>
+                <span>良かった点</span>
+                <ul>{meetingEvaluation.goodPoints.map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
+              <div>
+                <span>改善点</span>
+                <ul>{meetingEvaluation.improvements.map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
+              <div>
+                <span>次回意識すること</span>
+                <ul>{meetingEvaluation.nextFocus.map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
+            </div>
+          </article>
+
+          <article className="coach-card next-prep-card">
+            <strong>AI次回商談準備</strong>
+            <div className="feedback-columns">
+              <div>
+                <span>確認すべき内容</span>
+                <ul>{(nextMeetingPrep.confirmations.length ? nextMeetingPrep.confirmations : ["不足情報は大きくありません"]).map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
+              <div>
+                <span>宿題</span>
+                <ul>{nextMeetingPrep.homework.map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
+              <div>
+                <span>提出物</span>
+                <ul>{nextMeetingPrep.deliverables.map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div className="coach-output-grid">
+          <article className="coach-card win-advice-card">
+            <strong>AI受注率向上アドバイス</strong>
+            <div className="feedback-columns">
+              <div>
+                <span>提案書で追加</span>
+                <ul>{winRateCoachAdvice.additions.map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
+              <div>
+                <span>競合との差別化</span>
+                <ul>{winRateCoachAdvice.differentiation.map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
+              <div>
+                <span>お客様が喜ぶ提案</span>
+                <ul>{winRateCoachAdvice.delight.map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
+            </div>
+          </article>
+
+          <article className="coach-card report-card">
+            <strong>AI営業レポート</strong>
+            <div className="report-actions">
+              <button className="secondary-button" type="button" onClick={createDailyReport}>営業日報を作成</button>
+              <button className="secondary-button" type="button" onClick={createBossReport}>上司へ報告</button>
+            </div>
+            {dailyReport && (
+              <div className="draft-box">
+                <strong>本日の活動</strong>
+                <ul>{dailyReport.activities.map((item) => <li key={item}>{item}</li>)}</ul>
+                <strong>商談内容</strong>
+                <ul>{dailyReport.meeting.map((item) => <li key={item}>{item}</li>)}</ul>
+                <strong>成果</strong>
+                <ul>{dailyReport.results.map((item) => <li key={item}>{item}</li>)}</ul>
+                <strong>課題</strong>
+                <ul>{dailyReport.issues.map((item) => <li key={item}>{item}</li>)}</ul>
+                <strong>明日の予定</strong>
+                <ul>{dailyReport.tomorrow.map((item) => <li key={item}>{item}</li>)}</ul>
+              </div>
+            )}
+            {bossReport && (
+              <div className="draft-box">
+                <strong>上司報告</strong>
+                <p>{bossReport}</p>
+              </div>
+            )}
+          </article>
+
+          <article className="coach-card knowledge-card">
+            <strong>営業ナレッジ蓄積</strong>
+            <div className="knowledge-columns">
+              <div><span>似た案件</span><p>{knowledgeGroups.similar.map((entry) => entry.clientName).join("、") || "履歴待ち"}</p></div>
+              <div><span>成功案件</span><p>{knowledgeGroups.success.map((entry) => entry.clientName).join("、") || "履歴待ち"}</p></div>
+              <div><span>失注案件</span><p>{knowledgeGroups.lost.map((entry) => entry.clientName).join("、") || "履歴待ち"}</p></div>
+            </div>
+          </article>
+
+          <article className="coach-card roleplay-card">
+            <strong>AIロールプレイ</strong>
+            <div className="roleplay-controls">
+              <select value={roleplayScenario} onChange={(event) => setRoleplayScenario(event.target.value as RoleplayScenario)}>
+                {Object.entries(roleplayScenarios).map(([key, scenario]) => (
+                  <option key={key} value={key}>{scenario.label}</option>
+                ))}
+              </select>
+              <button className="secondary-button" type="button" onClick={startRoleplay}>模擬商談を開始</button>
+            </div>
+            <div className="roleplay-thread">
+              {roleplayMessages.map((message, index) => (
+                <div className={`roleplay-message ${message.role}`} key={`${message.role}-${index}`}>
+                  <span>{message.role === "customer" ? "お客様役" : "営業担当"}</span>
+                  <p>{message.text}</p>
+                </div>
+              ))}
+            </div>
+            <div className="roleplay-compose">
+              <input value={roleplayDraft} onChange={(event) => setRoleplayDraft(event.target.value)} placeholder="お客様へ回答してください" />
+              <button className="secondary-button" type="button" onClick={sendRoleplayMessage}>送信</button>
+            </div>
+            {roleplayFinished && (
+              <div className="draft-box">
+                <strong>評価</strong>
+                <p>課題確認と次回提案への誘導は良好です。予算・決裁者・比較対象を早めに確認するとさらに良くなります。</p>
+                <strong>改善点</strong>
+                <p>お客様の不安を復唱し、成果指標と提出物を明確にしましょう。</p>
+                <strong>おすすめ回答</strong>
+                <p>「まず成果目標を確認し、必須範囲とオプション範囲に分けて、社内説明しやすい要約資料もご用意します。」</p>
+              </div>
+            )}
+          </article>
+        </div>
+      </section>
+
+      )}
+
+      {activeMode === "minutes" && (
+        <section className="business-mode-panel" aria-label="議事録AI">
+          <div className="business-mode-heading">
+            <div>
+              <p className="eyebrow">Minutes AI</p>
+              <h2>議事録AI</h2>
+              <p>会議メモ、文字起こし、チャットログから、決定事項・未決事項・ToDoを整理します。</p>
+            </div>
+            <button className="primary-button" type="button" onClick={generateMinutesMode}>
+              <FileText size={18} aria-hidden="true" />
+              議事録を生成
+            </button>
+          </div>
+          <div className="business-mode-grid">
+            <label className="field business-input-card">
+              <span>会議メモ・文字起こし・チャットログ</span>
+              <textarea
+                value={minutesInput}
+                onChange={(event) => setMinutesInput(event.target.value)}
+                placeholder="例：本日の商談では、10月公開、WordPress希望、問い合わせ導線改善が主題。予算は次回確認。担当は営業が資料を作成し、制作側が概算見積を確認。"
+                rows={12}
+              />
+            </label>
+            <article className="business-output-card">
+              <strong>出力結果</strong>
+              {minutesResult ? (
+                <div className="business-output-sections">
+                  <div><span>議事録</span><ul>{minutesResult.minutes.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                  <div><span>決定事項</span><ul>{minutesResult.decisions.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                  <div><span>未決事項</span><ul>{minutesResult.unresolved.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                  <div>
+                    <span>ToDo / 担当者 / 期限</span>
+                    <div className="mini-table">
+                      {minutesResult.todos.map((todo) => (
+                        <div key={todo.task}><strong>{todo.task}</strong><small>{todo.owner} / {todo.deadline}</small></div>
+                      ))}
+                    </div>
+                  </div>
+                  <div><span>次回確認事項</span><ul>{minutesResult.nextConfirmations.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                </div>
+              ) : (
+                <p className="empty-state">会議メモを入力して「議事録を生成」を押してください。未入力の場合は営業提案AIの商談メモから作成します。</p>
+              )}
+            </article>
+          </div>
+        </section>
+      )}
+
+      {activeMode === "mail" && (
+        <section className="business-mode-panel" aria-label="メール作成AI">
+          <div className="business-mode-heading">
+            <div>
+              <p className="eyebrow">Mail AI</p>
+              <h2>メール作成AI</h2>
+              <p>目的、相手、伝えたい内容、トーンから、件名・本文・返信案を作成します。</p>
+            </div>
+            <button className="primary-button" type="button" onClick={generateMailMode}>
+              <Mail size={18} aria-hidden="true" />
+              メール文を作成
+            </button>
+          </div>
+          <div className="business-mode-grid">
+            <div className="business-input-card stacked-fields">
+              <label className="field"><span>目的</span><input value={mailPurpose} onChange={(event) => setMailPurpose(event.target.value)} placeholder="例：提案書初稿の送付" /></label>
+              <label className="field"><span>相手</span><input value={mailRecipient} onChange={(event) => setMailRecipient(event.target.value)} placeholder="例：株式会社サンプル ご担当者様" /></label>
+              <label className="field"><span>トーン</span><select value={mailTone} onChange={(event) => setMailTone(event.target.value)}><option>丁寧</option><option>やわらかい</option><option>簡潔</option><option>社内向け</option></select></label>
+              <label className="field"><span>伝えたい内容</span><textarea value={mailContent} onChange={(event) => setMailContent(event.target.value)} placeholder="共有したい要点を箇条書きで入力" rows={7} /></label>
+            </div>
+            <article className="business-output-card">
+              <strong>出力結果</strong>
+              {mailResult ? (
+                <div className="business-output-sections">
+                  <div><span>件名</span><p>{mailResult.subject}</p></div>
+                  <div><span>本文</span><pre>{mailResult.body}</pre></div>
+                  <div><span>返信案</span><p>{mailResult.reply}</p></div>
+                  <div><span>丁寧版</span><p>{mailResult.polite}</p></div>
+                  <div><span>短縮版</span><p>{mailResult.short}</p></div>
+                </div>
+              ) : (
+                <p className="empty-state">目的と伝えたい内容を入力すると、顧客向けメールのたたき台を作成します。</p>
+              )}
+            </article>
+          </div>
+        </section>
+      )}
+
+      {activeMode === "tasks" && (
+        <section className="business-mode-panel" aria-label="タスク整理AI">
+          <div className="business-mode-heading">
+            <div>
+              <p className="eyebrow">Task AI</p>
+              <h2>タスク整理AI</h2>
+              <p>メモ、議事録、依頼文をタスク一覧・優先度・担当者・期限に分解します。</p>
+            </div>
+            <button className="primary-button" type="button" onClick={generateTaskMode}>
+              <CheckCircle2 size={18} aria-hidden="true" />
+              タスクに分解
+            </button>
+          </div>
+          <div className="business-mode-grid">
+            <label className="field business-input-card">
+              <span>メモ・議事録・依頼文</span>
+              <textarea value={taskInput} onChange={(event) => setTaskInput(event.target.value)} placeholder="依頼内容や会議メモをそのまま貼り付け" rows={12} />
+            </label>
+            <article className="business-output-card">
+              <strong>出力結果</strong>
+              {taskResult ? (
+                <div className="business-output-sections">
+                  <div className="mini-table">
+                    {taskResult.tasks.map((task) => (
+                      <div key={task.task}>
+                        <strong>{task.task}</strong>
+                        <small>優先度: {task.priority} / 担当者: {task.owner} / 期限: {task.deadline}</small>
+                        <p>{task.risk}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div><span>次にやること</span><p>{taskResult.nextAction}</p></div>
+                </div>
+              ) : (
+                <p className="empty-state">依頼文を貼ると、すぐ動けるタスク一覧に変換します。</p>
+              )}
+            </article>
+          </div>
+        </section>
+      )}
+
+      {activeMode === "faq" && (
+        <section className="business-mode-panel" aria-label="社内FAQ AI">
+          <div className="business-mode-heading">
+            <div>
+              <p className="eyebrow">FAQ AI</p>
+              <h2>社内FAQ AI</h2>
+              <p>社内ルールや資料の確認事項に対して、回答案・確認部署・参照資料を整理します。</p>
+            </div>
+            <button className="primary-button" type="button" onClick={generateFaqMode}>
+              <Bot size={18} aria-hidden="true" />
+              回答案を作成
+            </button>
+          </div>
+          <div className="business-mode-grid">
+            <label className="field business-input-card">
+              <span>質問文</span>
+              <textarea value={faqQuestion} onChange={(event) => setFaqQuestion(event.target.value)} placeholder="例：概算見積の社内確認フローを教えてください" rows={8} />
+              <small>外部DB連携は未実装です。今後MCP/Google Drive連携で精度を高める想定です。</small>
+            </label>
+            <article className="business-output-card">
+              <strong>出力結果</strong>
+              {faqResult ? (
+                <div className="business-output-sections">
+                  <div><span>回答案</span><p>{faqResult.answer}</p></div>
+                  <div><span>確認が必要な部署</span><p>{faqResult.department}</p></div>
+                  <div><span>参照すべき資料</span><ul>{faqResult.references.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                  <div><span>注意点</span><ul>{faqResult.notes.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                </div>
+              ) : (
+                <p className="empty-state">質問を入力すると、社内確認の入口になる回答案を作成します。</p>
+              )}
+            </article>
+          </div>
+        </section>
+      )}
+
+      {activeMode === "summary" && (
+        <section className="business-mode-panel" aria-label="資料要約AI">
+          <div className="business-mode-heading">
+            <div>
+              <p className="eyebrow">Summary AI</p>
+              <h2>資料要約AI</h2>
+              <p>長文、議事録、提案書、メモを3行要約・重要ポイント・アクションに整理します。</p>
+            </div>
+            <button className="primary-button" type="button" onClick={generateSummaryMode}>
+              <FileCheck2 size={18} aria-hidden="true" />
+              資料を要約
+            </button>
+          </div>
+          <div className="business-mode-grid">
+            <label className="field business-input-card">
+              <span>長文・資料テキスト</span>
+              <textarea value={summaryInput} onChange={(event) => setSummaryInput(event.target.value)} placeholder="要約したい文章を貼り付け" rows={12} />
+            </label>
+            <article className="business-output-card">
+              <strong>出力結果</strong>
+              {summaryResult ? (
+                <div className="business-output-sections">
+                  <div><span>3行要約</span><ul>{summaryResult.threeLines.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                  <div><span>重要ポイント</span><ul>{summaryResult.points.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                  <div><span>アクション</span><ul>{summaryResult.actions.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                  <div><span>リスク</span><ul>{summaryResult.risks.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                  <div><span>上司向け要約</span><p>{summaryResult.bossSummary}</p></div>
+                </div>
+              ) : (
+                <p className="empty-state">長文を貼ると、共有しやすい要約に整えます。</p>
+              )}
+            </article>
+          </div>
+        </section>
+      )}
+
+      {activeMode === "reports" && (
+        <section className="business-mode-panel" aria-label="日報週報AI">
+          <div className="business-mode-heading">
+            <div>
+              <p className="eyebrow">Report AI</p>
+              <h2>日報/週報AI</h2>
+              <p>今日やったこと、商談メモ、タスクから、日報・週報・上司向け報告文を作成します。</p>
+            </div>
+            <div className="mode-action-row">
+              <button className="primary-button" type="button" onClick={generateReportMode}>
+                <Clipboard size={18} aria-hidden="true" />
+                日報を作成
+              </button>
+              <button className="secondary-button" type="button" onClick={generateReportMode}>
+                週報を作成
+              </button>
+            </div>
+          </div>
+          <div className="business-mode-grid">
+            <label className="field business-input-card">
+              <span>今日やったこと・商談メモ・タスク</span>
+              <textarea value={reportInput} onChange={(event) => setReportInput(event.target.value)} placeholder="例：午前にReady Crew案件の初回確認、午後に提案書作成、夕方に見積条件を確認。" rows={12} />
+            </label>
+            <article className="business-output-card">
+              <strong>出力結果</strong>
+              {reportResult ? (
+                <div className="business-output-sections">
+                  <div><span>日報</span><ul>{reportResult.daily.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                  <div><span>週報</span><ul>{reportResult.weekly.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                  <div><span>成果</span><ul>{reportResult.results.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                  <div><span>課題</span><ul>{reportResult.issues.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                  <div><span>明日の予定</span><ul>{reportResult.tomorrow.map((item) => <li key={item}>{item}</li>)}</ul></div>
+                  <div><span>上司向け報告文</span><p>{reportResult.bossMessage}</p></div>
+                </div>
+              ) : (
+                <p className="empty-state">活動メモを貼ると、日報・週報・上司向け報告に整えます。</p>
+              )}
+            </article>
+          </div>
+        </section>
+      )}
+
+      {activeMode === "sales" && (
       <section className="workspace-grid">
         <form className="input-panel chat-input-panel" onSubmit={handleSubmit}>
           <div className="panel-heading">
@@ -3091,6 +5046,21 @@ CMSはWordPress希望。競合：https://example.co.jp"
                 {chatReadiness.ready ? "生成可能" : "整理中"}
               </span>
             </div>
+            <div className="win-prediction-card">
+              <div>
+                <span>AI受注予測</span>
+                <strong>{dealEvaluation.riskLabel}</strong>
+              </div>
+              <div>
+                <span>受注確率</span>
+                <strong>{dealEvaluation.probability}%</strong>
+              </div>
+              <ul>
+                {dealEvaluation.positives.slice(0, 3).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
             <div className="live-brief-grid">
               {liveProjectSummary.map((section) => (
                 <article className="live-brief-card" key={section.title}>
@@ -3132,6 +5102,42 @@ CMSはWordPress希望。競合：https://example.co.jp"
                 </ol>
               </div>
             </div>
+            <div className="strategy-grid" aria-label="AI提案戦略">
+              {strategyCards.map((strategy) => (
+                <article className="strategy-card" key={strategy.title}>
+                  <span>AI提案戦略</span>
+                  <strong>{strategy.title}</strong>
+                  <p>{strategy.reason}</p>
+                </article>
+              ))}
+            </div>
+            <section className="preview-panel" aria-label="PowerPoint風プレビュー">
+              <div className="preview-heading">
+                <div>
+                  <p className="eyebrow">Preview</p>
+                  <h3>提案書プレビュー</h3>
+                </div>
+                <span>{editablePreviewSlides.length} slides</span>
+              </div>
+              <div className="preview-slide-grid">
+                {editablePreviewSlides.map((slide, index) => (
+                  <article className="preview-slide" key={`${slide.title}-${index}`}>
+                    <span>{index + 1}</span>
+                    <input
+                      value={slide.title}
+                      onChange={(event) => updatePreviewSlide(index, "title", event.target.value)}
+                      aria-label={`スライド${index + 1}タイトル`}
+                    />
+                    <textarea
+                      value={slide.body}
+                      onChange={(event) => updatePreviewSlide(index, "body", event.target.value)}
+                      aria-label={`スライド${index + 1}本文`}
+                      rows={4}
+                    />
+                  </article>
+                ))}
+              </div>
+            </section>
           </section>
 
           <div className="panel-heading">
@@ -3260,13 +5266,99 @@ CMSはWordPress希望。競合：https://example.co.jp"
                   </ol>
                 </div>
 
+                <section className="ai-quality-panel" aria-label="AI品質チェック">
+                  <div className="quality-total">
+                    <span>AI品質チェック</span>
+                    <strong>{qualityScore.total}点</strong>
+                    <small>100点満点</small>
+                  </div>
+                  <div className="quality-grid">
+                    <div><span>提案力</span><strong>{qualityScore.proposal}</strong></div>
+                    <div><span>説得力</span><strong>{qualityScore.persuasion}</strong></div>
+                    <div><span>ROI</span><strong>{qualityScore.roi}</strong></div>
+                    <div><span>差別化</span><strong>{qualityScore.differentiation}</strong></div>
+                    <div><span>読みやすさ</span><strong>{qualityScore.readability}</strong></div>
+                  </div>
+                  <ul>
+                    {qualityScore.improvements.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </section>
+
+                <section className="ai-assist-output-panel" aria-label="AI追加支援">
+                  <button className="secondary-button" type="button" onClick={() => setShowEmailDraft((current) => !current)}>
+                    <Mail size={16} aria-hidden="true" />
+                    提案書送付メールを作る
+                  </button>
+                  {showEmailDraft && (
+                    <div className="draft-box">
+                      <strong>件名</strong>
+                      <p>{draftEmail.subject}</p>
+                      <strong>本文</strong>
+                      <p>{draftEmail.body}</p>
+                      <strong>署名</strong>
+                      <p>{draftEmail.signature}</p>
+                    </div>
+                  )}
+                  <button className="secondary-button" type="button" onClick={() => setShowMinutes((current) => !current)}>
+                    <FileCheck2 size={16} aria-hidden="true" />
+                    AI議事録を作る
+                  </button>
+                  {showMinutes && (
+                    <div className="draft-box">
+                      <strong>議事録</strong>
+                      <ul>{aiMinutes.minutes.map((item) => <li key={item}>{item}</li>)}</ul>
+                      <strong>ToDo</strong>
+                      <ul>{aiMinutes.todos.map((item) => <li key={item}>{item}</li>)}</ul>
+                      <strong>次回アクション</strong>
+                      <ul>{aiMinutes.nextActions.map((item) => <li key={item}>{item}</li>)}</ul>
+                    </div>
+                  )}
+                </section>
+
+                <section className="win-improvement-panel" aria-label="AI改善提案">
+                  <strong>もっとこうすると受注率が上がります</strong>
+                  <ul>
+                    {winRateImprovements.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </section>
+
+                <section className="similar-case-panel" aria-label="似ている過去案件">
+                  <strong>似ている過去案件</strong>
+                  {similarCases.length ? (
+                    similarCases.map(({ entry, score }) => (
+                      <button className="similar-case-button" type="button" key={entry.id} onClick={() => restoreHistory(entry)}>
+                        <span>{entry.clientName}</span>
+                        <small>類似度 {score} / 再利用</small>
+                      </button>
+                    ))
+                  ) : (
+                    <p>生成履歴が増えると、似ている案件をここに表示します。</p>
+                  )}
+                </section>
+
                 <p className="eyebrow">Export</p>
                 <h3>{result.powerpoint_generation_data.deck_title}</h3>
-                <p className="ppt-help">Markdown、詳細版PowerPoint、要約版PowerPoint、見積書PDFを保存できます。</p>
+                <p className="ppt-help">おすすめ順に並べています。まずは要約版で共有し、必要に応じて詳細版と見積書を確認します。</p>
                 <div className="ppt-button-stack">
-                  <button className="ppt-download-button markdown" type="button" onClick={() => downloadMarkdown()}>
-                    <Download size={18} aria-hidden="true" />
-                    Markdown
+                  <button
+                    className="ppt-download-button summary"
+                    type="button"
+                    onClick={downloadSummaryPowerPoint}
+                    disabled={!result || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf}
+                  >
+                    {isDownloadingSummaryPowerPoint ? (
+                      <Loader2 className="spin" size={18} aria-hidden="true" />
+                    ) : (
+                      <FileDown size={18} aria-hidden="true" />
+                    )}
+                    <span>
+                      <strong>{isDownloadingSummaryPowerPoint ? "要約版生成中" : "要約PowerPoint"}</strong>
+                      <small>発表用</small>
+                    </span>
                   </button>
                   <button
                     className="ppt-download-button"
@@ -3279,20 +5371,10 @@ CMSはWordPress希望。競合：https://example.co.jp"
                     ) : (
                       <FileDown size={18} aria-hidden="true" />
                     )}
-                    {isDownloadingPowerPoint ? "生成中" : "PowerPoint"}
-                  </button>
-                  <button
-                    className="ppt-download-button summary"
-                    type="button"
-                    onClick={downloadSummaryPowerPoint}
-                    disabled={!result || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf}
-                  >
-                    {isDownloadingSummaryPowerPoint ? (
-                      <Loader2 className="spin" size={18} aria-hidden="true" />
-                    ) : (
-                      <FileDown size={18} aria-hidden="true" />
-                    )}
-                    {isDownloadingSummaryPowerPoint ? "要約版生成中" : "要約PowerPoint"}
+                    <span>
+                      <strong>{isDownloadingPowerPoint ? "生成中" : "通常PowerPoint"}</strong>
+                      <small>詳細提案用</small>
+                    </span>
                   </button>
                   <button
                     className="ppt-download-button pdf"
@@ -3305,7 +5387,17 @@ CMSはWordPress希望。競合：https://example.co.jp"
                     ) : (
                       <FileDown size={18} aria-hidden="true" />
                     )}
-                    {isDownloadingEstimatePdf ? "PDF生成中" : "見積書PDF"}
+                    <span>
+                      <strong>{isDownloadingEstimatePdf ? "PDF生成中" : "見積書PDF"}</strong>
+                      <small>見積確認用</small>
+                    </span>
+                  </button>
+                  <button className="ppt-download-button markdown" type="button" onClick={() => downloadMarkdown()}>
+                    <Download size={18} aria-hidden="true" />
+                    <span>
+                      <strong>Markdown</strong>
+                      <small>原稿確認用</small>
+                    </span>
                   </button>
                 </div>
                 <div className="slide-list">
@@ -3381,50 +5473,61 @@ CMSはWordPress希望。競合：https://example.co.jp"
         </section>
       </section>
 
+      )}
+
+      <section className="future-integration-panel" aria-label="今後の拡張予定">
+        <div className="section-heading">
+          <p className="eyebrow">Roadmap</p>
+          <h2>今後の拡張予定</h2>
+          <p>現時点では実連携せず、今後MCPで社内データや外部サービスと安全に連携する構想です。</p>
+        </div>
+        <div className="future-card-grid">
+          {[
+            "Google Drive連携",
+            "Gmail/Outlook連携",
+            "Googleカレンダー連携",
+            "Slack/Teams連携",
+            "kintone/HubSpot/Salesforce連携",
+            "社内FAQ/RAG連携"
+          ].map((item) => (
+            <article key={item}>
+              <strong>{item}</strong>
+              <p>今後MCPで連携予定</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       {isConfirmOpen && (
         <div className="confirm-overlay" role="dialog" aria-modal="true" aria-label="生成前確認">
           <div className="confirm-modal">
             <div className="confirm-header">
               <div>
                 <p className="eyebrow">Confirm</p>
-                <h2>この内容で生成しますか？</h2>
+                <h2>生成前の確認</h2>
               </div>
               <button className="icon-button" type="button" onClick={() => setIsConfirmOpen(false)} title="閉じる">
                 <X size={18} aria-hidden="true" />
               </button>
             </div>
 
-            <div className="summary-list">
-              {inputSummary.map((item) => (
-                <div key={item.label}>
+            <div className="confirm-easy-lead">
+              <strong>この内容で生成できます</strong>
+              <p>未入力項目は「未定」「要確認」「競合未確認」として扱い、次回確認事項へ反映します。</p>
+            </div>
+
+            <div className="confirm-card-grid">
+              {preGenerateCards.map((item) => (
+                <article className="confirm-card" key={item.label}>
                   <span>{item.label}</span>
                   <p>{item.value}</p>
-                </div>
+                </article>
               ))}
             </div>
 
             <div className={`confirm-rank rank-${dealEvaluation.rank.toLowerCase()}`}>
               <strong>{dealEvaluation.rank}ランク / 受注確率 {dealEvaluation.probability}%</strong>
               <span>{dealEvaluation.decision}</span>
-            </div>
-
-            <div className="confirm-plan-grid">
-              <div>
-                <strong>AI担当範囲</strong>
-                <ul>
-                  {proposalPlan.aiScope.slice(0, 3).map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <strong>人間の確認範囲</strong>
-                <ul>
-                  {proposalPlan.humanScope.slice(0, 3).map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
             </div>
 
             {missingItems.length > 0 && (
@@ -3450,13 +5553,14 @@ CMSはWordPress希望。競合：https://example.co.jp"
               <button className="secondary-button" type="button" onClick={() => setIsConfirmOpen(false)}>
                 戻って修正
               </button>
-              <button className="primary-button" type="button" onClick={generateProposal}>
-                {missingItems.length > 0 ? "この内容でも生成する" : "この内容で生成"}
+              <button className="primary-button confirm-generate-button" type="button" onClick={generateProposal}>
+                この内容で提案書を生成
               </button>
             </div>
           </div>
         </div>
       )}
     </main>
+    </AuthGate>
   );
 }

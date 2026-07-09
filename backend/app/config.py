@@ -24,6 +24,15 @@ def _as_float(value: str | None, default: float) -> float:
         return default
 
 
+def _as_int(value: str | None, default: int) -> int:
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+
 @dataclass(frozen=True)
 class Settings:
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
@@ -36,6 +45,9 @@ class Settings:
     )
     cors_origin_regex: str | None = os.getenv("CORS_ORIGIN_REGEX", "").strip() or None
     request_timeout_seconds: float = _as_float(os.getenv("REQUEST_TIMEOUT_SECONDS"), 60.0)
+    app_access_password: str = os.getenv("APP_ACCESS_PASSWORD", "")
+    app_auth_secret: str = os.getenv("APP_AUTH_SECRET", "") or os.getenv("APP_ACCESS_PASSWORD", "")
+    app_auth_token_ttl_seconds: int = _as_int(os.getenv("APP_AUTH_TOKEN_TTL_SECONDS"), 60 * 60 * 12)
 
 
 settings = Settings()

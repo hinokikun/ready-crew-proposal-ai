@@ -3,6 +3,22 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+class AuthLoginRequest(BaseModel):
+    password: str = Field(..., min_length=1, description="社内試験導入用の管理者パスワード")
+
+
+class AuthResponse(BaseModel):
+    authenticated: bool
+    token: str = ""
+    expires_in_seconds: int = 0
+    message: str = ""
+
+
+class AuthStatusResponse(BaseModel):
+    authenticated: bool
+    auth_configured: bool
+
+
 class ProposalRequest(BaseModel):
     project_brief: str = Field(..., min_length=20, description="Ready Crew の案件概要テキスト")
     client_company_info: str = Field("", description="提案先企業情報")
@@ -20,6 +36,23 @@ class ProposalRequest(BaseModel):
     own_service_info: str = Field("", description="自社サービス情報")
     past_proposal_template: str = Field("", description="過去提案書テンプレート")
     case_studies: str = Field("", description="成功事例データ")
+
+
+class CompanyResearchRequest(BaseModel):
+    url: str = Field("", description="調査対象の会社URL")
+    project_brief: str = Field("", description="案件概要")
+    client_company_info: str = Field("", description="提案先企業情報")
+
+
+class CompanyResearchResponse(BaseModel):
+    source_url: str
+    fetched: bool
+    overview: str
+    competitors: list[str]
+    recruitment: str
+    news: list[str]
+    services: list[str]
+    sns: list[str]
 
 
 class AssumedIssue(BaseModel):
