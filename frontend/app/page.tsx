@@ -158,6 +158,13 @@ type OutputDigestSection = {
   items: string[];
 };
 
+type ErrorAdvice = {
+  title: string;
+  cause: string;
+  action: string;
+  detail: string;
+};
+
 function allInputText(form: ProposalRequest) {
   return [
     form.project_brief,
@@ -922,6 +929,44 @@ function buildOutputDigest(
   ];
 }
 
+function buildErrorAdvice(message: string): ErrorAdvice {
+  const normalized = message.toLowerCase();
+
+  if (/429|rate|レート|制限|quota|insufficient_quota/.test(normalized) || /API.*制限|上限/.test(message)) {
+    return {
+      title: "OpenAI API制限の可能性があります",
+      cause: "短時間の利用回数、API利用上限、または請求設定により生成が止まった可能性があります。",
+      action: "少し時間を置いて再実行するか、OpenAIの利用上限・請求設定・APIキーを確認してください。",
+      detail: message
+    };
+  }
+
+  if (/400|422|入力|不足|min_length|validation|短く/.test(normalized) || /入力|不足/.test(message)) {
+    return {
+      title: "入力内容を確認してください",
+      cause: "案件概要が短い、必須項目が不足している、または送信形式が想定と異なる可能性があります。",
+      action: "案件概要に目的、予算、納期、既存サイトURL、競合情報を追記してから再生成してください。",
+      detail: message
+    };
+  }
+
+  if (/failed to fetch|network|通信|接続|cors|502|503|504|timeout|タイムアウト/.test(normalized) || /通信|接続|タイムアウト|CORS/.test(message)) {
+    return {
+      title: "通信エラーの可能性があります",
+      cause: "FrontendからBackendへ接続できていない、Backendが停止している、またはCORS設定が合っていない可能性があります。",
+      action: "RenderのBackendが起動しているか、VercelのNEXT_PUBLIC_API_URLとBackendのCORS設定を確認してください。",
+      detail: message
+    };
+  }
+
+  return {
+    title: "生成中にエラーが発生しました",
+    cause: "一時的なAPIエラー、入力内容、またはBackendログで確認できる問題の可能性があります。",
+    action: "入力内容を保存したうえで再実行し、解消しない場合はBackendログを確認してください。",
+    detail: message
+  };
+}
+
 function extractProbability(winProbability?: WinProbability, fallback = 0) {
   if (typeof winProbability?.probability === "number" && winProbability.probability > 0) {
     return winProbability.probability;
@@ -1059,6 +1104,7 @@ export default function Home() {
     () => (result?.markdown ? buildExportMarkdown(result.markdown, form) : ""),
     [result?.markdown, form]
   );
+  const errorAdvice = useMemo(() => (error ? buildErrorAdvice(error) : null), [error]);
 
   function updateField(field: keyof ProposalRequest, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -1256,6 +1302,40 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="capability-panel" aria-label="このAIでできること">
+        <div className="section-heading">
+          <p className="eyebrow">Value</p>
+          <h2>このAIでできること</h2>
+        </div>
+        <div className="capability-grid">
+          <article>
+            <strong>提案書作成時間を短縮</strong>
+            <p>案件概要から提案サマリー、課題、方針、構成案まで一気に初稿化します。</p>
+          </article>
+          <article>
+            <strong>不足情報をAIがチェック</strong>
+            <p>予算、納期、決裁者、競合、CMS、SEOなど、次回確認すべき情報を整理します。</p>
+          </article>
+          <article>
+            <strong>PowerPoint・PDFを自動生成</strong>
+            <p>詳細PPTX、要約PPTX、見積書PDFをダウンロードして、営業資料作成に使えます。</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="before-after-panel" aria-label="Before After比較">
+        <div>
+          <span>Before</span>
+          <strong>手作業で2〜3時間</strong>
+          <p>案件整理、構成検討、資料たたき台、見積整理を個別に作成。</p>
+        </div>
+        <div>
+          <span>After</span>
+          <strong>AIで20〜30分に短縮</strong>
+          <p>初稿生成後、人が30分程度で確認・調整して提出準備へ。</p>
+        </div>
+      </section>
+
       <section className="usage-steps" aria-label="使い方3ステップ">
         <article>
           <span>1</span>
@@ -1406,7 +1486,10 @@ export default function Home() {
           </section>
 
           <label className="field">
-            <span>案件概要</span>
+            <div className="field-title-row">
+              <span>案件概要</span>
+              <small>何を書けばいい？ 目的・予算・納期・既存URL・競合があると精度が上がります。</small>
+            </div>
             <textarea
               required
               minLength={20}
@@ -1418,7 +1501,10 @@ export default function Home() {
           </label>
 
           <label className="field">
-            <span>提案先企業情報</span>
+            <div className="field-title-row">
+              <span>提案先企業情報</span>
+              <small>企業名、業種、担当者、決裁者、既存サイトURLを書きます。</small>
+            </div>
             <textarea
               value={form.client_company_info}
               onChange={(event) => updateField("client_company_info", event.target.value)}
@@ -1428,7 +1514,10 @@ export default function Home() {
           </label>
 
           <label className="field">
-            <span>ヒアリング結果</span>
+            <div className="field-title-row">
+              <span>ヒアリング結果</span>
+              <small>決定事項、未決事項、次回確認事項をメモのまま貼り付けます。</small>
+            </div>
             <textarea
               value={form.hearing_result}
               onChange={(event) => updateField("hearing_result", event.target.value)}
@@ -1485,7 +1574,10 @@ export default function Home() {
 
           <div className="field-grid">
             <label className="field">
-              <span>競合企業名</span>
+              <div className="field-title-row">
+                <span>競合企業名</span>
+                <small>比較されやすい会社名</small>
+              </div>
               <textarea
                 value={form.competitor_company_name}
                 onChange={(event) => updateField("competitor_company_name", event.target.value)}
@@ -1495,7 +1587,10 @@ export default function Home() {
             </label>
 
             <label className="field">
-              <span>競合サイトURL</span>
+              <div className="field-title-row">
+                <span>競合サイトURL</span>
+                <small>公開ページのみ。ログイン操作は想定しません。</small>
+              </div>
               <textarea
                 value={form.competitor_site_url}
                 onChange={(event) => updateField("competitor_site_url", event.target.value)}
@@ -1777,10 +1872,19 @@ export default function Home() {
             {isLoading ? "生成中" : "提案書初稿を生成"}
           </button>
 
-          {error && (
-            <div className="error-box" role="alert">
+          {!canSubmit && !isLoading && (
+            <p className="submit-help">案件概要を20文字以上入力すると生成できます。サンプル入力から試すこともできます。</p>
+          )}
+
+          {errorAdvice && (
+            <div className="error-box detailed-error-box" role="alert">
               <AlertCircle size={18} aria-hidden="true" />
-              <span>{error}</span>
+              <div>
+                <strong>{errorAdvice.title}</strong>
+                <p><b>原因:</b> {errorAdvice.cause}</p>
+                <p><b>対処:</b> {errorAdvice.action}</p>
+                <small>{errorAdvice.detail}</small>
+              </div>
             </div>
           )}
         </form>
@@ -1811,9 +1915,27 @@ export default function Home() {
           )}
 
           {isLoading && (
-            <div className="empty-state">
-              <Loader2 className="spin" size={40} aria-hidden="true" />
-              <p>案件概要を分析し、課題と提案ストーリーを整理しています。</p>
+            <div className="loading-state" aria-live="polite">
+              <Loader2 className="spin" size={42} aria-hidden="true" />
+              <strong>提案書初稿を生成しています</strong>
+              <p>入力内容をもとに、営業提案で使える叩き台を整理しています。</p>
+              <div className="progress-steps">
+                <div className="is-active">
+                  <span>1</span>
+                  <strong>案件分析中</strong>
+                  <small>目的・課題・不足情報を確認</small>
+                </div>
+                <div>
+                  <span>2</span>
+                  <strong>提案構成作成中</strong>
+                  <small>ストーリーと章立てを整理</small>
+                </div>
+                <div>
+                  <span>3</span>
+                  <strong>資料生成準備中</strong>
+                  <small>PPTX・PDF出力データを準備</small>
+                </div>
+              </div>
             </div>
           )}
 
@@ -1883,6 +2005,16 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="decision-box">{dealEvaluation.decision}</div>
+
+                <div className="next-action-panel">
+                  <strong>次にやること</strong>
+                  <ol>
+                    <li>内容を確認</li>
+                    <li>不足情報を追記</li>
+                    <li>PowerPointをダウンロード</li>
+                    <li>人が最終確認して提出</li>
+                  </ol>
+                </div>
 
                 <p className="eyebrow">Export</p>
                 <h3>{result.powerpoint_generation_data.deck_title}</h3>
