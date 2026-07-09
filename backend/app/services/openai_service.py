@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from app.config import settings
 from app.models import AnalysisResponse, ProposalAnalysis, ProposalRequest
 from app.prompts import BASIC_PROPOSAL_STRUCTURE, SYSTEM_PROMPT, build_user_prompt
-from app.schemas import PROPOSAL_ANALYSIS_SCHEMA
+from app.schemas.proposal import PROPOSAL_ANALYSIS_SCHEMA
 from app.utils.markdown import build_markdown
 
 
