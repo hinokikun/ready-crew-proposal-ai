@@ -128,6 +128,26 @@ type HistoryEntry = {
   result: AnalysisResponse;
 };
 
+type ProposalPlan = {
+  inputInfo: string[];
+  outputs: string[];
+  aiScope: string[];
+  humanScope: string[];
+};
+
+type BrowserUsePlan = {
+  status: string;
+  target: string;
+  checks: string[];
+  safety: string[];
+};
+
+type ConceptBlock = {
+  title: string;
+  label: string;
+  items: string[];
+};
+
 function allInputText(form: ProposalRequest) {
   return [
     form.project_brief,
@@ -757,6 +777,89 @@ function buildInputSummary(form: ProposalRequest) {
   ];
 }
 
+function buildProposalPlan(
+  form: ProposalRequest,
+  checks: InfoCheck[],
+  estimate: EstimateSummary,
+  hearingQuestionCount: number
+): ProposalPlan {
+  const foundLabels = checks.filter((item) => item.found).map((item) => item.label);
+  const missingLabels = checks.filter((item) => !item.found).map((item) => item.label);
+  const competitorReady = Boolean(form.competitor_site_url.trim() || form.competitor_company_name.trim());
+
+  return {
+    inputInfo: [
+      `入力済み情報: ${foundLabels.length ? foundLabels.join("、") : "案件概要のみ"}`,
+      `不足情報: ${missingLabels.length ? missingLabels.join("、") : "大きな不足なし"}`,
+      `競合情報: ${competitorReady ? "比較観点を生成可能" : "URLまたは企業名の入力待ち"}`,
+      `概算見積: ${estimate.totalLabel} / ${estimate.budgetFit}`
+    ],
+    outputs: [
+      "Markdownの提案書初稿",
+      "通常版PowerPoint・要約PowerPoint",
+      "見積書PDF",
+      `次回ヒアリング質問 ${hearingQuestionCount}件`
+    ],
+    aiScope: [
+      "案件概要から顧客理解・課題・提案方針を整理",
+      "競合比較、見積、受注確率、ヒアリング項目を生成",
+      "過去テンプレート・成功事例の入力内容を提案構成へ反映",
+      "人間が確認しやすい初稿として出力"
+    ],
+    humanScope: [
+      "提案先の固有名詞、実績、金額、納期の最終確認",
+      "競合サイトの実画面確認と営業判断",
+      "機密情報・顧客情報の取り扱い判断",
+      "客先提出前の表現、法務、契約条件の確認"
+    ]
+  };
+}
+
+function buildBrowserUsePlan(form: ProposalRequest, competitorPoints: CompetitorPoint[]): BrowserUsePlan {
+  const target = form.competitor_site_url.trim() || form.competitor_company_name.trim() || "競合サイトURL未入力";
+  const hasTarget = target !== "競合サイトURL未入力";
+
+  return {
+    status: hasTarget ? "確認観点を生成済み" : "URL入力待ち",
+    target,
+    checks: competitorPoints.map((item) => `${item.label}: ${item.point}`),
+    safety: [
+      "公開ページの閲覧・比較観点生成に限定",
+      "ログイン、フォーム送信、問い合わせ送信は行わない",
+      "個人情報・認証情報・非公開情報は入力しない"
+    ]
+  };
+}
+
+function buildAutomationConcept(form: ProposalRequest, deal: DealEvaluation): ConceptBlock {
+  const client = extractClientName(form);
+  return {
+    title: "Automations想定",
+    label: "将来の自動確認機能",
+    items: [
+      "毎朝Ready Crew案件を確認し、新着案件を一覧化",
+      "予算・納期・決裁者・競合情報が揃う案件を優先表示",
+      `${client}のような高優先度案件は受注確率 ${deal.probability}% を目安に営業へ通知`,
+      "今回は自動実行せず、画面上の企画表示に留める"
+    ]
+  };
+}
+
+function buildMcpConcept(form: ProposalRequest): ConceptBlock {
+  const hasTemplate = Boolean(form.past_proposal_template.trim());
+  const hasCases = Boolean(form.case_studies.trim());
+  return {
+    title: "MCP連携構想",
+    label: "企画レベル",
+    items: [
+      `Google Drive: ${hasTemplate ? "入力済みテンプレートを提案構成に反映" : "過去提案書テンプレートの参照を想定"}`,
+      `GitHub: ${hasCases ? "成功事例データを実績紹介に反映" : "実績情報・制作ナレッジの参照を想定"}`,
+      "機密情報を扱う連携は、権限・保存範囲・共有先を確認してから実装",
+      "今回は外部連携せず、入力済みテキストだけで生成"
+    ]
+  };
+}
+
 function extractProbability(winProbability?: WinProbability, fallback = 0) {
   if (typeof winProbability?.probability === "number" && winProbability.probability > 0) {
     return winProbability.probability;
@@ -873,6 +976,13 @@ export default function Home() {
   const dealEvaluation = useMemo(() => deriveDealEvaluation(form, infoChecks, estimateSummary), [form, infoChecks, estimateSummary]);
   const competitorPoints = useMemo(() => deriveCompetitorPoints(form), [form]);
   const winningStrategy = useMemo(() => deriveWinningStrategy(form), [form]);
+  const proposalPlan = useMemo(
+    () => buildProposalPlan(form, infoChecks, estimateSummary, hearingQuestionCount),
+    [form, infoChecks, estimateSummary, hearingQuestionCount]
+  );
+  const browserUsePlan = useMemo(() => buildBrowserUsePlan(form, competitorPoints), [form, competitorPoints]);
+  const automationConcept = useMemo(() => buildAutomationConcept(form, dealEvaluation), [form, dealEvaluation]);
+  const mcpConcept = useMemo(() => buildMcpConcept(form), [form]);
   const inputSummary = useMemo(() => buildInputSummary(form), [form]);
   const displayedWin = useMemo(
     () => buildDisplayedWinProbability(result?.analysis.win_probability, dealEvaluation),
@@ -1126,6 +1236,50 @@ export default function Home() {
             )}
           </section>
 
+          <section className="plan-panel" aria-label="提案前プラン">
+            <div className="check-panel-header">
+              <div>
+                <p className="eyebrow">/plan</p>
+                <h3>提案前プラン</h3>
+              </div>
+              <span className="decision-pill rank-b">生成前整理</span>
+            </div>
+            <div className="plan-grid">
+              <article className="plan-card">
+                <strong>入力情報</strong>
+                <ul>
+                  {proposalPlan.inputInfo.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+              <article className="plan-card">
+                <strong>出力内容</strong>
+                <ul>
+                  {proposalPlan.outputs.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+              <article className="plan-card">
+                <strong>AIが担当する範囲</strong>
+                <ul>
+                  {proposalPlan.aiScope.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+              <article className="plan-card">
+                <strong>人間が確認する範囲</strong>
+                <ul>
+                  {proposalPlan.humanScope.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+            </div>
+          </section>
+
           <section className="hearing-panel" aria-label="ヒアリングシート">
             <div className="check-panel-header">
               <div>
@@ -1277,6 +1431,33 @@ export default function Home() {
                   <p>{item.point}</p>
                 </div>
               ))}
+            </div>
+            <div className="browser-use-box">
+              <div className="browser-use-header">
+                <div>
+                  <span>Browser Use活用想定</span>
+                  <strong>{browserUsePlan.status}</strong>
+                </div>
+                <small>{browserUsePlan.target}</small>
+              </div>
+              <div className="browser-use-grid">
+                <div>
+                  <strong>確認観点</strong>
+                  <ul>
+                    {browserUsePlan.checks.slice(0, 6).map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <strong>安全ルール</strong>
+                  <ul>
+                    {browserUsePlan.safety.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -1466,6 +1647,34 @@ export default function Home() {
               </div>
             </div>
             <div className="decision-box">{dealEvaluation.decision}</div>
+          </section>
+
+          <section className="workflow-panel" aria-label="業務改善連携構想">
+            <div className="check-panel-header">
+              <div>
+                <p className="eyebrow">Workflow Concept</p>
+                <h3>将来の自動化・連携構想</h3>
+              </div>
+              <span className="decision-pill rank-b">企画表示</span>
+            </div>
+            <div className="concept-grid">
+              {[automationConcept, mcpConcept].map((block) => (
+                <article className="concept-card" key={block.title}>
+                  <div className="concept-card-header">
+                    <strong>{block.title}</strong>
+                    <span>{block.label}</span>
+                  </div>
+                  <ul>
+                    {block.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+            <p className="safe-note">
+              この表示は業務改善コースの活用想定です。外部サービス連携、自動巡回、機密情報参照はまだ実行しません。
+            </p>
           </section>
 
           <button className="primary-button" type="submit" disabled={!canSubmit}>
@@ -1713,6 +1922,25 @@ export default function Home() {
             <div className={`confirm-rank rank-${dealEvaluation.rank.toLowerCase()}`}>
               <strong>{dealEvaluation.rank}ランク / 受注確率 {dealEvaluation.probability}%</strong>
               <span>{dealEvaluation.decision}</span>
+            </div>
+
+            <div className="confirm-plan-grid">
+              <div>
+                <strong>AI担当範囲</strong>
+                <ul>
+                  {proposalPlan.aiScope.slice(0, 3).map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <strong>人間の確認範囲</strong>
+                <ul>
+                  {proposalPlan.humanScope.slice(0, 3).map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             {missingItems.length > 0 && (

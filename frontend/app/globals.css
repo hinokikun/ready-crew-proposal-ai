@@ -329,11 +329,13 @@ button {
 
 .check-panel,
 .competitor-panel,
+.plan-panel,
 .hearing-panel,
 .meeting-panel,
 .estimate-input-panel,
 .estimate-panel,
 .deal-panel,
+.workflow-panel,
 .history-panel {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -353,6 +355,7 @@ button {
 
 .check-panel h3,
 .competitor-panel h3,
+.plan-panel h3,
 .hearing-panel h3,
 .meeting-panel h3,
 .estimate-input-panel h3,
@@ -365,6 +368,7 @@ button {
 
 .check-panel h3,
 .competitor-panel h3,
+.plan-panel h3,
 .hearing-panel h3,
 .meeting-panel h3,
 .estimate-input-panel h3,
@@ -444,6 +448,44 @@ button {
 .warning-box li,
 .factor-grid li {
   margin: 2px 0;
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.plan-card,
+.concept-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fffdf8;
+}
+
+.plan-card strong,
+.concept-card strong {
+  color: var(--primary);
+  font-size: 13px;
+}
+
+.plan-card ul,
+.concept-card ul,
+.browser-use-grid ul,
+.confirm-plan-grid ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.plan-card li,
+.concept-card li,
+.browser-use-grid li,
+.confirm-plan-grid li {
+  color: #4d392c;
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .hearing-list {
@@ -598,6 +640,63 @@ button {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.55;
+}
+
+.browser-use-box {
+  margin-top: 12px;
+  border: 1px solid rgba(47, 111, 101, 0.22);
+  border-radius: 8px;
+  padding: 12px;
+  background: linear-gradient(180deg, #f0f8f2 0%, #fffdf8 100%);
+}
+
+.browser-use-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.browser-use-header span {
+  display: block;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.browser-use-header strong {
+  display: block;
+  margin-top: 3px;
+  color: #285d55;
+  font-size: 15px;
+}
+
+.browser-use-header small {
+  max-width: 46%;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.browser-use-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.browser-use-grid > div {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(255, 253, 248, 0.82);
+}
+
+.browser-use-grid strong {
+  color: #4d392c;
+  font-size: 13px;
 }
 
 .estimate-total {
@@ -787,6 +886,45 @@ button {
   color: #285d55;
   font-weight: 800;
   text-align: center;
+}
+
+.workflow-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.concept-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.concept-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.concept-card-header span {
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: var(--cafe-sage);
+  color: #285d55;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.safe-note {
+  margin: 0;
+  border: 1px solid rgba(184, 107, 75, 0.24);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff7ef;
+  color: #68412f;
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .copy-note {
@@ -1201,6 +1339,25 @@ button {
   font-weight: 800;
 }
 
+.confirm-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.confirm-plan-grid > div {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fffdf8;
+}
+
+.confirm-plan-grid strong {
+  color: var(--primary);
+  font-size: 13px;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -1265,11 +1422,24 @@ button {
   .field-grid,
   .estimate-field-grid,
   .check-grid,
+  .plan-grid,
   .competitor-point-grid,
+  .browser-use-grid,
   .meeting-summary-grid,
   .priority-columns,
+  .concept-grid,
+  .confirm-plan-grid,
   .confirm-rank {
     grid-template-columns: 1fr;
+  }
+
+  .browser-use-header {
+    flex-direction: column;
+  }
+
+  .browser-use-header small {
+    max-width: none;
+    text-align: left;
   }
 
   .confirm-rank,
