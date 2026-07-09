@@ -41,10 +41,14 @@ const initialForm: ProposalRequest = {
   case_studies: ""
 };
 
-const sampleBrief = `コーポレートサイトのリニューアルを検討。
-問い合わせ数を増やしたいが、現行サイトは情報が古く、サービス内容が伝わりにくい。
-採用情報も強化したい。予算は300万円前後、9月公開希望。CMSで更新したい。
-SEOも強化したく、競合サイトとの差別化を相談したい。決裁者は代表取締役。既存サイトURL：https://example.co.jp`;
+const sampleBrief = `Ready Crew案件概要：
+首都圏で賃貸・売買仲介を行う不動産会社が、Webサイトリニューアルを検討中。
+目的は、物件問い合わせ数の増加、来店予約の獲得、地域名検索からの自然流入強化。
+現行サイトは情報が古く、スマホで物件情報を探しにくい。採用ページも最低限の内容のみ。
+予算感は350万〜500万円、公開希望は2026年10月末。CMSでお知らせ・実績・FAQを更新したい。
+既存サイトURL：https://sample-realty.example.jp
+競合は地域大手の不動産会社2社。物件検索、CTA、実績訴求、SEOコンテンツで差別化したい。
+決裁者は代表取締役、窓口は営業企画部。初回提案では概算費用とスケジュールも知りたい。`;
 
 type Rank = "A" | "B" | "C" | "D";
 
@@ -58,6 +62,7 @@ type InfoCheck = {
   key: string;
   label: string;
   found: boolean;
+  targetField: string;
   nextQuestion: string;
 };
 
@@ -148,6 +153,11 @@ type ConceptBlock = {
   items: string[];
 };
 
+type OutputDigestSection = {
+  title: string;
+  items: string[];
+};
+
 function allInputText(form: ProposalRequest) {
   return [
     form.project_brief,
@@ -182,42 +192,49 @@ function buildInfoChecks(form: ProposalRequest): InfoCheck[] {
       key: "budget",
       label: "予算",
       found: budgetIsClear,
+      targetField: "見積条件 > 予算感",
       nextQuestion: "想定予算、上限、分割提案の可否"
     },
     {
       key: "deadline",
       label: "納期",
       found: hasAny(text, ["納期", "公開希望", "公開時期", "リリース", "9月", "10月", "急ぎ", "早め"]) && !/納期.*未定|公開.*未定/.test(text),
+      targetField: "見積条件 > 公開希望時期",
       nextQuestion: "希望公開日、必達期限、社内確認に必要な期間"
     },
     {
       key: "decision-maker",
       label: "決裁者",
       found: hasAny(text, ["決裁", "決裁者", "代表", "社長", "役員", "部長", "責任者", "稟議", "承認"]),
+      targetField: "案件概要 または 提案先企業情報",
       nextQuestion: "最終決裁者、選定関与者、稟議の流れ"
     },
     {
       key: "current-site",
       label: "既存サイトURL",
       found: hasAny(text, [/https?:\/\/\S+/, "既存サイトURL", "URL"]),
+      targetField: "提案先企業情報",
       nextQuestion: "既存サイトURL、アクセス状況、改善したいページ"
     },
     {
       key: "cms",
       label: "CMS希望",
       found: hasAny(text, ["CMS", "WordPress", "ワードプレス", "更新", "運用"]),
+      targetField: "見積条件 > CMS有無",
       nextQuestion: "CMS要否、更新担当者、更新頻度、承認フロー"
     },
     {
       key: "seo",
       label: "SEO希望",
       found: hasAny(text, ["SEO", "検索", "自然検索", "流入", "記事", "コンテンツマーケティング"]),
+      targetField: "見積条件 > SEO対策有無",
       nextQuestion: "狙いたい検索キーワード、現状流入、SEO対象ページ"
     },
     {
       key: "competitor",
       label: "競合有無",
       found: Boolean(form.competitor_site_url.trim() || form.competitor_company_name.trim()) || hasAny(text, ["競合", "他社", "比較", "ベンチマーク", "差別化"]),
+      targetField: "競合企業名・競合サイトURL",
       nextQuestion: "比較対象の競合サイト、勝ちたい訴求軸"
     }
   ];
@@ -860,6 +877,51 @@ function buildMcpConcept(form: ProposalRequest): ConceptBlock {
   };
 }
 
+function buildOutputDigest(
+  result: AnalysisResponse | null,
+  estimate: EstimateSummary,
+  form: ProposalRequest,
+  missingItems: InfoCheck[],
+  hearingSummary: HearingResultSummary
+): OutputDigestSection[] {
+  if (!result) {
+    return [];
+  }
+
+  const analysis = result.analysis;
+  const topIssues = analysis.issue_priorities.length
+    ? analysis.issue_priorities.slice(0, 3).map((item) => `${item.issue}: ${item.proposed_response}`)
+    : analysis.assumed_customer_issues.slice(0, 3).map((item) => item.issue);
+  const nextItems = uniqueTextItems([
+    ...missingItems.map((item) => `${item.targetField}: ${item.nextQuestion}`),
+    ...hearingSummary.nextConfirmations
+  ]).slice(0, 4);
+  const schedule = form.desired_launch_timing.trim() || "公開希望時期は次回確認";
+
+  return [
+    {
+      title: "提案要約",
+      items: [analysis.project_summary, `受注確率: ${analysis.win_probability.probability ?? 0}% / ${analysis.win_probability.rank}ランク`]
+    },
+    {
+      title: "顧客課題",
+      items: topIssues.length ? topIssues : ["顧客課題はMarkdown本文で確認できます。"]
+    },
+    {
+      title: "提案方針",
+      items: [analysis.proposal_policy, analysis.proposal_story].filter(Boolean).slice(0, 2)
+    },
+    {
+      title: "見積・スケジュール",
+      items: [`概算見積: ${estimate.totalLabel}（${estimate.budgetFit}）`, `スケジュール: ${schedule}`]
+    },
+    {
+      title: "次回確認事項",
+      items: nextItems.length ? nextItems : ["客先提出前に固有名詞、金額、納期、実績表記を最終確認します。"]
+    }
+  ];
+}
+
 function extractProbability(winProbability?: WinProbability, fallback = 0) {
   if (typeof winProbability?.probability === "number" && winProbability.probability > 0) {
     return winProbability.probability;
@@ -987,6 +1049,10 @@ export default function Home() {
   const displayedWin = useMemo(
     () => buildDisplayedWinProbability(result?.analysis.win_probability, dealEvaluation),
     [result?.analysis.win_probability, dealEvaluation]
+  );
+  const outputDigest = useMemo(
+    () => buildOutputDigest(result, estimateSummary, form, missingItems, hearingResultSummary),
+    [result, estimateSummary, form, missingItems, hearingResultSummary]
   );
   const displayedProbability = displayedWin.probability;
   const displayedMarkdown = useMemo(
@@ -1159,21 +1225,21 @@ export default function Home() {
     setForm((current) => ({
       ...current,
       project_brief: sampleBrief,
-      client_company_info: "株式会社サンプル不動産\n地域密着で売買・賃貸仲介を展開\n既存サイトURL：https://example.co.jp",
-      competitor_site_url: "https://competitor-example.co.jp",
-      competitor_company_name: "サンプル競合不動産",
-      estimated_page_count: "12ページ",
+      client_company_info: "株式会社東都リビング\n首都圏で賃貸・売買仲介、物件管理を展開\n既存サイトURL：https://sample-realty.example.jp\n決裁者：代表取締役、窓口：営業企画部",
+      competitor_site_url: "https://area-rival-realty.example.jp",
+      competitor_company_name: "エリア大手不動産グループ",
+      estimated_page_count: "18ページ",
       cms_required: "あり",
       contact_form_required: "あり",
       special_function_required: "物件検索あり",
       seo_required: "あり",
       content_creation_required: "原稿作成一部あり",
-      desired_launch_timing: "9月公開希望",
-      budget_range: "300万〜500万円",
-      hearing_result: "問い合わせ増加を最優先にしたい。CMSはWordPressで進める方針で合意。予算は300万〜500万円で検討中。公開希望は9月だが、素材準備の担当者は未定。競合サイトは次回共有予定。年間問い合わせ目標は未確認。",
-      own_service_info: "Webサイト制作、情報設計、CMS構築、SEO設計、公開後の改善運用を支援",
-      past_proposal_template: "提案サマリー、課題整理、解決策、制作方針、スケジュール、実績紹介、費用概算を含む提案書構成",
-      case_studies: "不動産会社A：問い合わせ件数150%増加\n不動産会社B：CV率1.8倍"
+      desired_launch_timing: "2026年10月末公開希望",
+      budget_range: "350万〜500万円",
+      hearing_result: "問い合わせ数の増加を最優先にしたい。CMSはWordPressで進める方針。予算は350万〜500万円。公開希望は2026年10月末。物件登録データの連携方法は未確認。年間問い合わせ目標は現状比150%。",
+      own_service_info: "Webサイト制作、情報設計、CMS構築、物件検索UI設計、SEO初期設計、公開後の改善運用、月次レポートを支援",
+      past_proposal_template: "表紙、提案サマリー、現状理解、競合比較、ターゲット分析、Web戦略、サイトマップ、KPI、制作方針、スケジュール、体制、費用概算、今後の進め方",
+      case_studies: "不動産会社A：問い合わせ件数150%増加\n不動産会社B：CV率1.8倍\n住宅販売会社C：自然検索流入2.1倍"
     }));
   }
 
@@ -1188,6 +1254,30 @@ export default function Home() {
           <CheckCircle2 size={16} aria-hidden="true" />
           MVP
         </div>
+      </section>
+
+      <section className="usage-steps" aria-label="使い方3ステップ">
+        <article>
+          <span>1</span>
+          <div>
+            <strong>案件概要を入力</strong>
+            <p>Ready Crewの案件概要、企業情報、競合情報を貼り付けます。</p>
+          </div>
+        </article>
+        <article>
+          <span>2</span>
+          <div>
+            <strong>不足情報・提案前プランを確認</strong>
+            <p>追記すべき項目と、AI・人間の担当範囲を確認します。</p>
+          </div>
+        </article>
+        <article>
+          <span>3</span>
+          <div>
+            <strong>提案書・要約版・見積書をダウンロード</strong>
+            <p>Markdown、PPTX、要約PPTX、見積書PDFを保存できます。</p>
+          </div>
+        </article>
       </section>
 
       <section className="workspace-grid">
@@ -1226,9 +1316,14 @@ export default function Home() {
                 <AlertCircle size={18} aria-hidden="true" />
                 <div>
                   <strong>次回確認事項</strong>
+                  <p className="warning-lead">不足があっても生成できます。精度を上げる場合は、以下の欄へ追記してください。</p>
                   <ul>
                     {missingItems.map((item) => (
-                      <li key={item.key}>{item.nextQuestion}</li>
+                      <li className="missing-guidance-item" key={item.key}>
+                        <strong>{item.label}</strong>
+                        <span>追記先: {item.targetField}</span>
+                        <small>{item.nextQuestion}</small>
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -1694,7 +1789,7 @@ export default function Home() {
           <div className="panel-heading">
             <div>
               <p className="eyebrow">Output</p>
-              <h2>Markdown結果</h2>
+              <h2>生成結果</h2>
             </div>
             <div className="toolbar">
               <button className="icon-button" type="button" onClick={copyMarkdown} disabled={!result} title="Markdownをコピー">
@@ -1724,6 +1819,19 @@ export default function Home() {
 
           {result && (
             <div className="output-layout">
+              <section className="output-summary-panel" aria-label="生成結果サマリー">
+                {outputDigest.map((section) => (
+                  <article className="output-summary-card" key={section.title}>
+                    <strong>{section.title}</strong>
+                    <ul>
+                      {section.items.slice(0, 4).map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </article>
+                ))}
+              </section>
+
               <article className="markdown-preview">
                 <pre>{displayedMarkdown}</pre>
               </article>
@@ -1948,9 +2056,14 @@ export default function Home() {
                 <AlertCircle size={18} aria-hidden="true" />
                 <div>
                   <strong>不足情報があります。生成は可能ですが、次回確認事項として反映します。</strong>
+                  <p className="warning-lead">提案精度を上げる場合は、以下の欄へ追記してください。</p>
                   <ul>
                     {missingItems.map((item) => (
-                      <li key={item.key}>{item.nextQuestion}</li>
+                      <li className="missing-guidance-item" key={item.key}>
+                        <strong>{item.label}</strong>
+                        <span>追記先: {item.targetField}</span>
+                        <small>{item.nextQuestion}</small>
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -1962,7 +2075,7 @@ export default function Home() {
                 戻って修正
               </button>
               <button className="primary-button" type="button" onClick={generateProposal}>
-                この内容で生成
+                {missingItems.length > 0 ? "この内容でも生成する" : "この内容で生成"}
               </button>
             </div>
           </div>
