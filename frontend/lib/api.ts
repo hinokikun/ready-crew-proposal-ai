@@ -1,9 +1,36 @@
 import type { AnalysisResponse, ProposalRequest } from "@/types/proposal";
-import type { AuditLog, CrmCustomer, CrmProject, FeedbackEntry, FeedbackRating, FeedbackSummary, ManagedUser, UserRole } from "@/types/app";
+import type {
+  AuditLog,
+  CrmCustomer,
+  CrmProject,
+  FeedbackEntry,
+  FeedbackRating,
+  FeedbackSummary,
+  ImprovementDashboardData,
+  ManagedUser,
+  OperationReadinessData,
+  OperationReadinessStatus,
+  TrialReportData,
+  UsageDashboardData,
+  UserRole
+} from "@/types/app";
 import { getAuthHeaders } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/config";
 
-export type { AuditLog, CrmCustomer, CrmProject, FeedbackEntry, FeedbackRating, FeedbackSummary, ManagedUser } from "@/types/app";
+export type {
+  AuditLog,
+  CrmCustomer,
+  CrmProject,
+  FeedbackEntry,
+  FeedbackRating,
+  FeedbackSummary,
+  ImprovementDashboardData,
+  ManagedUser,
+  OperationReadinessData,
+  OperationReadinessStatus,
+  TrialReportData,
+  UsageDashboardData
+} from "@/types/app";
 
 export type CompanyResearchApiResponse = {
   source_url: string;
@@ -108,6 +135,47 @@ export async function getAuditLogs(): Promise<{ logs: AuditLog[] }> {
 
 export async function getFeedback(): Promise<{ feedback: FeedbackEntry[]; summary: FeedbackSummary }> {
   return fetchJson("/api/feedback");
+}
+
+export async function getUsageDashboard(): Promise<{ dashboard: UsageDashboardData }> {
+  return fetchJson("/api/logs/usage-dashboard");
+}
+
+export async function downloadUsageDashboardCsv(): Promise<Blob> {
+  const response = await fetch(`${API_BASE_URL}/api/logs/usage-dashboard.csv`, {
+    method: "GET",
+    headers: {
+      ...getAuthHeaders()
+    }
+  });
+
+  if (!response.ok) {
+    let message = `利用状況CSVの作成に失敗しました。Status=${response.status}`;
+    try {
+      const errorBody = (await response.json()) as { detail?: string };
+      if (errorBody.detail) message = `${message}: ${errorBody.detail}`;
+    } catch {
+      message = `${message}: Backendからエラー詳細を取得できませんでした。`;
+    }
+    throw new Error(message);
+  }
+
+  return response.blob();
+}
+
+export async function createTrialReport(payload: { admin_comment: string }): Promise<{ report: TrialReportData }> {
+  return fetchJson("/api/logs/trial-report", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function getOperationReadiness(): Promise<{ readiness: OperationReadinessData }> {
+  return fetchJson("/api/logs/operation-readiness");
+}
+
+export async function getImprovementDashboard(): Promise<{ dashboard: ImprovementDashboardData }> {
+  return fetchJson("/api/logs/improvement-dashboard");
 }
 
 export async function submitFeedback(payload: {
