@@ -10,6 +10,11 @@ def test_health_endpoint_reports_runtime_status(client: TestClient) -> None:
     assert body["status"] == "ok"
     assert body["app_version"]
     assert body["environment"]
+    assert "git" in body
+    assert "commit" in body["git"]
+    assert body["routes"]["beautiful_ai_status"] == "/api/beautiful-ai/status"
+    assert body["routes"]["beautiful_ai_status_registered"] is True
+    assert body["beautiful_ai"]["route_registered"] is True
     assert body["auth_configured"] is True
     assert body["mock_ai"] is True
     assert body["ai_api"] == "mock"
@@ -22,6 +27,15 @@ def test_health_endpoint_reports_runtime_status(client: TestClient) -> None:
     assert body["timestamp"]
     assert "DATABASE_URL" not in body
     assert "OPENAI_API_KEY" not in body
+
+
+def test_openapi_includes_beautiful_ai_status(client: TestClient) -> None:
+    response = client.get("/openapi.json")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "/api/beautiful-ai/status" in body["paths"]
+    assert "get" in body["paths"]["/api/beautiful-ai/status"]
 
 
 def test_health_live_endpoint_reports_process_status(client: TestClient) -> None:

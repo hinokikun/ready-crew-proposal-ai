@@ -1,12 +1,42 @@
 import { fetchJson } from "@/api/client";
+import { getAuthHeaders } from "@/lib/auth";
+import { API_BASE_URL } from "@/lib/config";
 import type { PowerPointData, ProposalRequest, WinProbability } from "@/types/proposal";
 
 export type BeautifulAiStatus = {
   enabled: boolean;
   configured: boolean;
   mock: boolean;
+  api_reachable?: boolean;
+  route_found?: boolean;
+  backend_version?: string;
+  last_success_at?: string;
+  last_error_type?: string;
   provider: string;
   message: string;
+};
+
+export type BeautifulAiStatusProbe = {
+  status: BeautifulAiStatus | null;
+  apiReachable: boolean;
+  routeFound: boolean;
+  httpStatus: number | null;
+  message: string;
+  checkedAt: string;
+};
+
+export type BackendHealthProbe = {
+  reachable: boolean;
+  httpStatus: number | null;
+  appVersion: string;
+  gitCommit: string;
+  gitCommitShort: string;
+  gitBranch: string;
+  beautifulAiRouteRegistered: boolean | null;
+  beautifulAiEnabled: boolean | null;
+  beautifulAiMock: boolean | null;
+  message: string;
+  checkedAt: string;
 };
 
 export type BeautifulAiPresentation = {
@@ -43,6 +73,119 @@ export type BeautifulAiPresentationPayload = {
 
 export async function getBeautifulAiStatus() {
   return fetchJson<BeautifulAiStatus>("/api/beautiful-ai/status");
+}
+
+export async function getBeautifulAiStatusProbe(): Promise<BeautifulAiStatusProbe> {
+  const checkedAt = new Date().toLocaleString("ja-JP");
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/beautiful-ai/status`, {
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders()
+      }
+    });
+    if (response.ok) {
+      const status = (await response.json()) as BeautifulAiStatus;
+      return {
+        status,
+        apiReachable: status.api_reachable ?? true,
+        routeFound: status.route_found ?? true,
+        httpStatus: response.status,
+        message: status.message || "Beautiful.ai status APIに接続できました。",
+        checkedAt
+      };
+    }
+    return {
+      status: null,
+      apiReachable: false,
+      routeFound: response.status !== 404,
+      httpStatus: response.status,
+      message: beautifulAiStatusErrorMessage(response.status),
+      checkedAt
+    };
+  } catch {
+    return {
+      status: null,
+      apiReachable: false,
+      routeFound: false,
+      httpStatus: null,
+      message: "Beautiful.ai status APIへ接続できません。Backend URL、CORS、Renderの起動状態を確認してください。",
+      checkedAt
+    };
+  }
+}
+
+export async function getBackendHealthProbe(): Promise<BackendHealthProbe> {
+  const checkedAt = new Date().toLocaleString("ja-JP");
+  try {
+    const response = await fetch(`${API_BASE_URL}/health`, { cache: "no-store" });
+    if (!response.ok) {
+      return {
+        reachable: false,
+        httpStatus: response.status,
+        appVersion: "",
+        gitCommit: "",
+        gitCommitShort: "",
+        gitBranch: "",
+        beautifulAiRouteRegistered: null,
+        beautifulAiEnabled: null,
+        beautifulAiMock: null,
+        message: `Render /health が status=${response.status} を返しました。`,
+        checkedAt
+      };
+    }
+    const body = (await response.json()) as {
+      app_version?: string;
+      git?: { commit?: string; commit_short?: string; branch?: string };
+      routes?: { beautiful_ai_status_registered?: boolean };
+      beautiful_ai?: { enabled?: boolean; mock?: boolean; route_registered?: boolean };
+    };
+    const routeRegistered = body.beautiful_ai?.route_registered ?? body.routes?.beautiful_ai_status_registered ?? null;
+    return {
+      reachable: true,
+      httpStatus: response.status,
+      appVersion: body.app_version || "",
+      gitCommit: body.git?.commit || "",
+      gitCommitShort: body.git?.commit_short || (body.git?.commit || "").slice(0, 7),
+      gitBranch: body.git?.branch || "",
+      beautifulAiRouteRegistered: routeRegistered,
+      beautifulAiEnabled: body.beautiful_ai?.enabled ?? null,
+      beautifulAiMock: body.beautiful_ai?.mock ?? null,
+      message: "Render /health に接続できました。",
+      checkedAt
+    };
+  } catch {
+    return {
+      reachable: false,
+      httpStatus: null,
+      appVersion: "",
+      gitCommit: "",
+      gitCommitShort: "",
+      gitBranch: "",
+      beautifulAiRouteRegistered: null,
+      beautifulAiEnabled: null,
+      beautifulAiMock: null,
+      message: "Render /health へ接続できません。Backend URLまたはRenderの起動状態を確認してください。",
+      checkedAt
+    };
+  }
+}
+
+function beautifulAiStatusErrorMessage(status: number) {
+  if (status === 404) {
+    return "Beautiful.ai APIルートが見つかりません。Renderが最新コミットをデプロイしているか、/health の route_registered を確認してください。";
+  }
+  if (status === 401) {
+    return "Beautiful.ai status APIの認証に失敗しました。ログイン期限切れの可能性があります。再ログインしてください。";
+  }
+  if (status === 403) {
+    return "Beautiful.ai status APIを見る権限がありません。ログイン中の権限を確認してください。";
+  }
+  if (status >= 500) {
+    return "Beautiful.ai status APIでBackendエラーが発生しました。Renderログを確認してください。";
+  }
+  return `Beautiful.ai status APIを確認できませんでした。status=${status}`;
 }
 
 export async function createBeautifulAiPresentation(payload: BeautifulAiPresentationPayload) {

@@ -24,7 +24,8 @@ router = APIRouter(prefix="/api/beautiful-ai", tags=["beautiful-ai"])
 
 @router.get("/status", response_model=BeautifulAiStatusResponse)
 async def get_status(_: dict = Depends(require_roles("admin", "manager", "member", "viewer"))) -> BeautifulAiStatusResponse:
-    return get_beautiful_ai_status()
+    with get_db() as db:
+        return get_beautiful_ai_status(db)
 
 
 @router.post("/presentations", dependencies=[Depends(rate_limit_dependency("generation"))])

@@ -9578,6 +9578,108 @@ button {
   color: #7a3d24;
 }
 
+.beautiful-ai-status-card {
+  width: min(100%, 1120px);
+  margin: 16px auto 0;
+  padding: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+.beautiful-ai-status-heading,
+.beautiful-ai-version-box {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.beautiful-ai-status-heading h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 0;
+  font-size: 1.05rem;
+}
+
+.compact-button {
+  min-height: 36px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.beautiful-ai-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.beautiful-ai-status-grid article,
+.beautiful-ai-version-box > div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.beautiful-ai-status-grid span,
+.beautiful-ai-version-box span {
+  display: block;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.beautiful-ai-status-grid strong,
+.beautiful-ai-version-box strong {
+  display: block;
+  margin-top: 3px;
+  color: #0f172a;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.beautiful-ai-status-grid .is-ok {
+  background: #ecfdf5;
+  border-color: rgba(5, 150, 105, 0.22);
+}
+
+.beautiful-ai-status-grid .is-alert {
+  background: #fff7ed;
+  border-color: rgba(234, 88, 12, 0.22);
+}
+
+.beautiful-ai-status-grid .is-neutral {
+  background: #f8fafc;
+}
+
+.beautiful-ai-version-box {
+  margin-top: 10px;
+}
+
+.beautiful-ai-version-box > div {
+  flex: 1 1 0;
+}
+
+.beautiful-ai-status-message,
+.beautiful-ai-version-warning {
+  margin: 10px 0 0;
+  font-size: 0.86rem;
+}
+
+.beautiful-ai-status-message {
+  color: #334155;
+}
+
+.beautiful-ai-version-warning {
+  color: #9a3412;
+  font-weight: 700;
+}
+
 .ppt-download-button.markdown {
   border: 1px solid var(--border);
   background: #fffdf8;
@@ -10066,6 +10168,15 @@ button {
 }
 
 @media (max-width: 640px) {
+  .beautiful-ai-status-heading,
+  .beautiful-ai-version-box {
+    display: grid;
+  }
+
+  .beautiful-ai-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .todays-briefing-panel {
     padding: 14px;
     border-radius: 14px;

@@ -36,7 +36,34 @@ class BeautifulAiServiceError(Exception):
         super().__init__(message)
 
 
-def get_beautiful_ai_status() -> BeautifulAiStatusResponse:
+def _get_beautiful_ai_runtime_summary(db: Connection | None) -> dict[str, str]:
+    if db is None:
+        return {"last_success_at": "", "last_error_type": ""}
+    last_success = db.execute(
+        """
+        SELECT updated_at
+        FROM beautiful_ai_presentations
+        WHERE status IN ('created', 'succeeded', 'completed', 'mock')
+        ORDER BY updated_at DESC, id DESC
+        LIMIT 1
+        """
+    ).fetchone()
+    last_error = db.execute(
+        """
+        SELECT error_type
+        FROM beautiful_ai_presentations
+        WHERE status = 'failed' AND error_type != ''
+        ORDER BY updated_at DESC, id DESC
+        LIMIT 1
+        """
+    ).fetchone()
+    return {
+        "last_success_at": str(last_success["updated_at"] if last_success else ""),
+        "last_error_type": str(last_error["error_type"] if last_error else ""),
+    }
+
+
+def get_beautiful_ai_status(db: Connection | None = None) -> BeautifulAiStatusResponse:
     configured = bool(settings.beautiful_ai_api_key) or settings.beautiful_ai_mock
     enabled = settings.beautiful_ai_enabled and configured
     if settings.beautiful_ai_mock and settings.beautiful_ai_enabled:
@@ -47,7 +74,18 @@ def get_beautiful_ai_status() -> BeautifulAiStatusResponse:
         message = "Beautiful.ai連携は未設定です。既存PPTXをご利用ください。"
     else:
         message = "Beautiful.ai APIキーを設定してください。"
-    return BeautifulAiStatusResponse(enabled=enabled, configured=configured, mock=settings.beautiful_ai_mock, message=message)
+    runtime_summary = _get_beautiful_ai_runtime_summary(db)
+    return BeautifulAiStatusResponse(
+        enabled=enabled,
+        configured=configured,
+        mock=settings.beautiful_ai_mock,
+        api_reachable=True,
+        route_found=True,
+        backend_version=settings.app_version,
+        last_success_at=runtime_summary["last_success_at"],
+        last_error_type=runtime_summary["last_error_type"],
+        message=message,
+    )
 
 
 def list_presentations_by_project(db: Connection, project_id: str) -> list[BeautifulAiPresentationRecord]:

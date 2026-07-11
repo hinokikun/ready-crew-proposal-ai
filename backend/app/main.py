@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from app.config import settings
 from app.auth import ensure_not_maintenance_mode, require_roles
 from app.db import get_db, get_db_health, init_db, seed_default_templates
+from app.deployment_info import get_git_metadata
 from app.knowledge.services import add_knowledge_entry, build_best_practices, search_similar_knowledge
 from app.models import (
     AnalysisResponse,
@@ -201,10 +202,26 @@ def build_health_payload() -> dict[str, Any]:
     db_ready = db_connected and int(db_health.get("db_tables_count", 0)) > 0
     ai_api = "mock" if settings.use_mock_ai else ("configured" if settings.openai_api_key else "missing")
     ready = auth_configured and db_ready and ai_api != "missing"
+    beautiful_ai_status_route_registered = any(
+        getattr(route, "path", "") == "/api/beautiful-ai/status" and "GET" in getattr(route, "methods", set())
+        for route in app.routes
+    )
     return {
         "status": "ok" if ready else "degraded",
         "app_version": settings.app_version,
         "environment": settings.environment,
+        "git": get_git_metadata(),
+        "routes": {
+            "beautiful_ai_status": "/api/beautiful-ai/status",
+            "beautiful_ai_status_registered": beautiful_ai_status_route_registered,
+            "beautiful_ai_docs_tag": "beautiful-ai",
+        },
+        "beautiful_ai": {
+            "enabled": bool(settings.beautiful_ai_enabled),
+            "configured": bool(settings.beautiful_ai_api_key or settings.beautiful_ai_mock),
+            "mock": bool(settings.beautiful_ai_mock),
+            "route_registered": beautiful_ai_status_route_registered,
+        },
         "auth_configured": auth_configured,
         "pilot_mode": settings.pilot_mode,
         "pilot_start_date": settings.pilot_start_date,

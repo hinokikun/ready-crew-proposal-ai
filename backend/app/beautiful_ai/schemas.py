@@ -66,6 +66,11 @@ class BeautifulAiStatusResponse(BaseModel):
     enabled: bool
     configured: bool
     mock: bool
+    api_reachable: bool = True
+    route_found: bool = True
+    backend_version: str = ""
+    last_success_at: str = ""
+    last_error_type: str = ""
     provider: str = "beautiful.ai"
     message: str
 

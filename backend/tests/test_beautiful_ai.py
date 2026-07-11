@@ -67,6 +67,11 @@ def test_beautiful_ai_status_disabled(client: TestClient, admin_headers: dict[st
     assert response.status_code == 200
     body = response.json()
     assert body["enabled"] is False
+    assert body["api_reachable"] is True
+    assert body["route_found"] is True
+    assert "backend_version" in body
+    assert "last_success_at" in body
+    assert "last_error_type" in body
     assert "api_key" not in str(body).lower()
 
 

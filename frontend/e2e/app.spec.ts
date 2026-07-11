@@ -156,6 +156,45 @@ test("品質ゲート未完了ではBeautiful.ai作成ボタンを押せない",
   await expect(page.getByLabel("AIウィザード").getByRole("button", { name: /Beautiful.aiで提案書を作成/ })).toBeDisabled({ timeout: 25000 });
 });
 
+test("Beautiful.ai Status CardでEnabledとMockを確認できる", async ({ page }) => {
+  await login(page, memberEmail);
+  const card = page.getByTestId("beautiful-ai-status-card");
+  await expect(card).toBeVisible();
+  await expect(card.getByText("Enabled")).toBeVisible();
+  await expect(card.getByText("有効")).toBeVisible();
+  await expect(card.getByText("Mock")).toBeVisible();
+  await expect(card.getByText("ON", { exact: true })).toBeVisible();
+  await expect(card.getByText("API reachable")).toBeVisible();
+  await expect(card.getByText("到達")).toBeVisible();
+  await expect(card.getByText("Route found")).toBeVisible();
+  await expect(card.getByText("検出")).toBeVisible();
+});
+
+test("Beautiful.ai Disabled時も状態と無効ボタンを確認できる", async ({ page }) => {
+  await mockApi(page, { beautifulStatus: "disabled", beautifulEnabled: false });
+  await login(page, memberEmail);
+  await expect(page.getByTestId("beautiful-ai-status-card").getByText("無効")).toBeVisible();
+  await page.locator(".wizard-sample-experience .primary-button").click();
+  await scrollToOutputs(page);
+  await expect(page.getByTestId("beautiful-ai-create-button").first()).toBeDisabled({ timeout: 25000 });
+  await expect(page.getByText("Beautiful.ai連携は未設定です。").first()).toBeVisible();
+});
+
+test("Beautiful.ai statusが404の場合はUIでRender未反映を確認できる", async ({ page }) => {
+  await mockApi(page, { beautifulStatus: "not_found" });
+  await login(page, memberEmail);
+  const card = page.getByTestId("beautiful-ai-status-card");
+  await expect(card.getByText("Route found")).toBeVisible();
+  await expect(card.getByText("未検出")).toBeVisible();
+  await expect(card.getByText(/Beautiful.ai APIルートが見つかりません/)).toBeVisible();
+});
+
+test("FrontendとBackendのバージョン不一致を検出できる", async ({ page }) => {
+  await mockApi(page, { backendCommit: "different-backend-commit" });
+  await login(page, memberEmail);
+  await expect(page.getByTestId("beautiful-ai-status-card").getByText(/FrontendとBackendのバージョンが一致していません/)).toBeVisible();
+});
+
 async function login(page: Page, email: string) {
   await page.goto("/");
   await page.getByLabel("メールアドレス").fill(email);
@@ -216,8 +255,10 @@ type MockOptions = {
   analyzeError?: "maintenance" | "rate";
   hasUsageData?: boolean;
   beautifulEnabled?: boolean;
+  beautifulStatus?: "enabled" | "disabled" | "mock" | "not_found" | "unauthorized" | "forbidden" | "server_error";
   beautifulError?: 403 | 429;
   qualityGateComplete?: boolean;
+  backendCommit?: string;
 };
 
 async function mockApi(page: Page, options: MockOptions = {}) {
@@ -231,7 +272,23 @@ async function mockApi(page: Page, options: MockOptions = {}) {
       db_tables_count: 0,
       auth_configured: true,
       pptx: "available",
-      pdf: "available"
+      pdf: "available",
+      app_version: "17.3-e2e",
+      git: {
+        commit: options.backendCommit ?? "e2e-frontend-commit",
+        commit_short: (options.backendCommit ?? "e2e-frontend-commit").slice(0, 7),
+        branch: "main"
+      },
+      routes: {
+        beautiful_ai_status: "/api/beautiful-ai/status",
+        beautiful_ai_status_registered: options.beautifulStatus !== "not_found"
+      },
+      beautiful_ai: {
+        enabled: options.beautifulEnabled ?? options.beautifulStatus !== "disabled",
+        configured: options.beautifulEnabled ?? options.beautifulStatus !== "disabled",
+        mock: true,
+        route_registered: options.beautifulStatus !== "not_found"
+      }
     })
   );
 
@@ -263,6 +320,9 @@ async function mockApi(page: Page, options: MockOptions = {}) {
     }
     if (path.endsWith("/api/analyze")) {
       return json(route, proposalResponse());
+    }
+    if (path.endsWith("/api/beautiful-ai/status")) {
+      return beautifulStatusJson(route, options);
     }
     if (path.includes("/api/beautiful-ai/presentations") && options.beautifulError === 403) {
       return json(
@@ -322,6 +382,29 @@ function json(route: Route, body: unknown, status = 200) {
     status,
     contentType: "application/json",
     body: JSON.stringify(body)
+  });
+}
+
+function beautifulStatusJson(route: Route, options: MockOptions) {
+  if (options.beautifulStatus === "not_found") {
+    return json(route, { detail: "Not Found" }, 404);
+  }
+  if (options.beautifulStatus === "unauthorized") {
+    return json(route, { detail: "Unauthorized" }, 401);
+  }
+  if (options.beautifulStatus === "forbidden") {
+    return json(route, { detail: "Forbidden" }, 403);
+  }
+  if (options.beautifulStatus === "server_error") {
+    return json(route, { detail: "Internal Server Error" }, 500);
+  }
+  const enabled = options.beautifulEnabled ?? options.beautifulStatus !== "disabled";
+  return json(route, {
+    enabled,
+    configured: enabled,
+    mock: true,
+    provider: "beautiful.ai",
+    message: enabled ? "Beautiful.ai連携は利用可能です。" : "Beautiful.ai連携は未設定です。"
   });
 }
 

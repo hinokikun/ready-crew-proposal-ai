@@ -169,3 +169,8 @@ BEAUTIFUL_AI_MOCK=false
 社内検証では `BEAUTIFUL_AI_ENABLED=true` と `BEAUTIFUL_AI_MOCK=true` を設定すると、実APIを呼ばずに動作確認できます。APIキーはFrontend/Vercelへ設定しないでください。
 
 詳細: [Beautiful.ai連携](docs/BEAUTIFUL_AI_INTEGRATION.md)
+## Beautiful.ai 本番接続確認手順
+
+Beautiful.aiが本番環境で表示・動作するかは、画面上の「Beautiful.ai接続確認」カードで確認できます。VercelのFrontend Build Version、RenderのCurrent backend version、`/api/beautiful-ai/status` の到達状態、Route foundを比較してください。
+
+詳細手順: [Beautiful.ai Production Verification](docs/BEAUTIFUL_AI_PRODUCTION_VERIFICATION.md)
