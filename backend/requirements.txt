@@ -6,5 +6,7 @@ pydantic==1.10.24
 python-pptx>=1.0.2,<2.0.0
 reportlab>=4.2.5,<5.0.0
 SQLAlchemy>=2.0.36,<3.0.0
+alembic>=1.13.3,<2.0.0
+psycopg[binary]>=3.2.3,<4.0.0
 pytest>=8.3.5,<9.0.0
 httpx>=0.28.1,<1.0.0

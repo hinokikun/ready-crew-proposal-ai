@@ -20,8 +20,11 @@ def client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> TestClient:
     monkeypatch.setenv("USE_MOCK_AI", "true")
     monkeypatch.setenv("APP_AUTH_SECRET", "test-secret")
     monkeypatch.setenv("INITIAL_ADMIN_EMAIL", "admin@example.com")
-    monkeypatch.setenv("INITIAL_ADMIN_PASSWORD", "admin-password")
+    monkeypatch.setenv("INITIAL_ADMIN_PASSWORD", "test-password")
     monkeypatch.setenv("CORS_ORIGINS", "http://localhost:3000")
+    monkeypatch.setenv("RATE_LIMIT_LOGIN_LIMIT", "1000")
+    monkeypatch.setenv("RATE_LIMIT_GENERATION_LIMIT", "1000")
+    monkeypatch.setenv("RATE_LIMIT_ADMIN_LIMIT", "1000")
     _reload_app_modules()
     main = importlib.import_module("app.main")
     with TestClient(main.app) as test_client:
@@ -32,7 +35,7 @@ def client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> TestClient:
 def admin_headers(client: TestClient) -> dict[str, str]:
     response = client.post(
         "/api/auth/login",
-        json={"email": "admin@example.com", "password": "admin-password"},
+        json={"email": "admin@example.com", "password": "test-password"},
     )
     assert response.status_code == 200
     return {"Authorization": f"Bearer {response.json()['token']}"}

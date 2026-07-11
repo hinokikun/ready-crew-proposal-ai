@@ -13,6 +13,16 @@ services:
         value: "3.13.5"
       - key: OPENAI_API_KEY
         sync: false
+      - key: BEAUTIFUL_AI_API_KEY
+        sync: false
+      - key: BEAUTIFUL_AI_ENABLED
+        value: "false"
+      - key: BEAUTIFUL_AI_BASE_URL
+        value: "https://www.beautiful.ai/api/v1"
+      - key: BEAUTIFUL_AI_TIMEOUT_SECONDS
+        value: "120"
+      - key: BEAUTIFUL_AI_MOCK
+        value: "false"
       - key: OPENAI_MODEL
         value: "gpt-4.1-mini"
       - key: USE_MOCK_AI

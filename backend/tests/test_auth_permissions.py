@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 def test_admin_login_success(client: TestClient) -> None:
     response = client.post(
         "/api/auth/login",
-        json={"email": "admin@example.com", "password": "admin-password"},
+        json={"email": "admin@example.com", "password": "test-password"},
     )
 
     assert response.status_code == 200

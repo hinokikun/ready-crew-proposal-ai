@@ -70,12 +70,12 @@ export function AuthGate({ children }: AuthGateProps) {
   if (!isAuthenticated) {
     return (
       <main className="auth-shell">
-        <form className="auth-card" onSubmit={handleLogin}>
+        <form className="auth-card" data-testid="login-form" onSubmit={handleLogin}>
           <div className="auth-icon">
             <Lock size={22} aria-hidden="true" />
           </div>
           <p className="eyebrow">Internal Trial Access</p>
-          <h1>AI Workspace</h1>
+          <h1>AI営業秘書</h1>
           <p>社内試験導入用の簡易ログインです。管理者から共有されたパスワードを入力してください。</p>
           <label className="field">
             <span>メールアドレス</span>
@@ -98,7 +98,7 @@ export function AuthGate({ children }: AuthGateProps) {
             />
           </label>
           {error && <div className="auth-error">{error}</div>}
-          <button className="primary-button" disabled={isLoggingIn || !password.trim()} type="submit">
+          <button className="primary-button" data-testid="login-submit" disabled={isLoggingIn || !password.trim()} type="submit">
             {isLoggingIn ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Lock size={18} aria-hidden="true" />}
             {isLoggingIn ? "ログイン中" : "ログイン"}
           </button>

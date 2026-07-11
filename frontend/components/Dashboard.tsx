@@ -34,8 +34,8 @@ export const Dashboard = memo(DashboardBase);
 function MetricGrid({ metrics, label, className = "" }: { metrics: DashboardMetric[]; label: string; className?: string }) {
   return (
     <section className={`dashboard-grid ${className}`.trim()} aria-label={label}>
-      {metrics.map((metric) => (
-        <article className="dashboard-card" key={metric.label}>
+      {metrics.map((metric, index) => (
+        <article className="dashboard-card" key={`${metric.label}-${index}`}>
           <span>{metric.label}</span>
           <strong>{metric.value}</strong>
           <small>{metric.note}</small>

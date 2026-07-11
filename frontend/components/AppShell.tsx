@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -22,22 +22,46 @@ import {
   X
 } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
-import { AiWorkspacePanel, type AiWorkspaceAgentKey } from "@/components/AiWorkspacePanel";
+import { WorkspaceProgress, type AiWorkspaceAgentKey } from "@/components/workspace/WorkspaceProgress";
 import { AdminAuditLogPanel } from "@/components/AdminAuditLogPanel";
 import { AdminFeedbackPanel } from "@/components/AdminFeedbackPanel";
 import { AdminImprovementDashboardPanel } from "@/components/AdminImprovementDashboardPanel";
+import { AdminKnowledgePanel } from "@/components/AdminKnowledgePanel";
 import { AdminOperationReadinessPanel } from "@/components/AdminOperationReadinessPanel";
+import { AdminPilotDashboardPanel } from "@/components/AdminPilotDashboardPanel";
+import { AdminProductAnalyticsPanel } from "@/components/AdminProductAnalyticsPanel";
+import { AdminReleaseManagementPanel } from "@/components/AdminReleaseManagementPanel";
+import { AdminReviewPanel } from "@/components/AdminReviewPanel";
 import { AdminTrialReportPanel } from "@/components/AdminTrialReportPanel";
 import { AdminUsageDashboardPanel } from "@/components/AdminUsageDashboardPanel";
 import { AdminUsersPanel } from "@/components/AdminUsersPanel";
 import { CrmPanel } from "@/components/CrmPanel";
 import { Dashboard } from "@/components/Dashboard";
+import { ExternalIntegrationsPanel } from "@/components/ExternalIntegrationsPanel";
 import { Header } from "@/components/Header";
 import { HealthStatus, type HealthSnapshot } from "@/components/HealthStatus";
+import { LearningDashboard } from "@/components/LearningDashboard";
 import { PermissionNotice } from "@/components/PermissionNotice";
+import { PromptStudio } from "@/components/PromptStudio";
+import { QueueMonitor } from "@/components/QueueMonitor";
+import { RealOperationsDashboard } from "@/components/dashboard/RealOperationsDashboard";
 import { SecurityNotice } from "@/components/SecurityNotice";
 import { SettingsPanel } from "@/components/SettingsPanel";
+import { ReleaseUpdatesPanel } from "@/components/ReleaseUpdatesPanel";
 import { StatusMessage } from "@/components/ui/StatusMessage";
+import {
+  GUIDE_TUTORIAL_KEY,
+  HISTORY_KEY,
+  MAX_HISTORY_COUNT,
+  PILOT_CHECKLIST_KEY,
+  emptyFeedbackSummary,
+  feedbackRatingLabels,
+  initialForm,
+  initialPilotFeedbackScores,
+  pilotFeedbackQuestions,
+  sampleBrief,
+  type PilotFeedbackScores
+} from "@/components/app-shell/constants";
 import {
   analyzeProposal,
   createUser,
@@ -47,71 +71,39 @@ import {
   getDbLogs,
   getFeedback,
   getUsageDashboard,
+  getPilotStatus,
   listUsers,
   researchCompanyUrl,
   saveUsageLogToBackend,
   submitFeedback,
+  confirmPilotChecklist,
   updateUserActive,
+  updateUserPilot,
   type CrmCustomer,
   type CrmProject,
   type FeedbackEntry,
   type FeedbackRating,
   type FeedbackSummary,
   type ManagedUser,
+  type PilotStatus,
   type UsageDashboardData,
   type AuditLog
 } from "@/lib/api";
 import { getStoredUser, type AuthUser } from "@/lib/auth";
+import {
+  buildBeautifulAiPayload,
+  createBeautifulAiPresentation,
+  getBeautifulAiStatus,
+  recordBeautifulAiEditorOpened,
+  type BeautifulAiPresentation,
+  type BeautifulAiStatus
+} from "@/lib/beautifulAi";
 import { toFriendlyError } from "@/lib/errorMessage";
 import { downloadEstimatePdf } from "@/lib/pdf";
 import { downloadProposalPowerPoint, downloadSummaryProposalPowerPoint } from "@/lib/pptx";
 import { appendUsageLog, readUsageLogs, type UsageLogEntry } from "@/lib/storage";
+import { trackEvent } from "@/lib/analytics";
 import type { AnalysisResponse, ProposalRequest, WinProbability } from "@/types/proposal";
-
-const HISTORY_KEY = "ready-crew-proposal-history-v1";
-const GUIDE_TUTORIAL_KEY = "ready-crew-guide-tutorial-seen-v1";
-const MAX_HISTORY_COUNT = 10;
-
-const emptyFeedbackSummary: FeedbackSummary = {
-  usable: 0,
-  needs_revision: 0,
-  hard_to_use: 0,
-  comments: 0
-};
-
-const feedbackRatingLabels: Record<FeedbackRating, string> = {
-  usable: "使えそう",
-  needs_revision: "修正すれば使えそう",
-  hard_to_use: "使いにくい"
-};
-
-const initialForm: ProposalRequest = {
-  project_brief: "",
-  client_company_info: "",
-  competitor_site_url: "",
-  competitor_company_name: "",
-  estimated_page_count: "",
-  cms_required: "",
-  contact_form_required: "",
-  special_function_required: "",
-  seo_required: "",
-  content_creation_required: "",
-  desired_launch_timing: "",
-  budget_range: "",
-  hearing_result: "",
-  own_service_info: "",
-  past_proposal_template: "",
-  case_studies: ""
-};
-
-const sampleBrief = `Ready Crew案件概要：
-首都圏で賃貸・売買仲介を行う不動産会社が、Webサイトリニューアルを検討中。
-目的は、物件問い合わせ数の増加、来店予約の獲得、地域名検索からの自然流入強化。
-現行サイトは情報が古く、スマホで物件情報を探しにくい。採用ページも最低限の内容のみ。
-予算感は350万〜500万円、公開希望は2026年10月末。CMSでお知らせ・実績・FAQを更新したい。
-既存サイトURL：https://sample-realty.example.jp
-競合は地域大手の不動産会社2社。物件検索、CTA、実績訴求、SEOコンテンツで差別化したい。
-決裁者は代表取締役、窓口は営業企画部。初回提案では概算費用とスケジュールも知りたい。`;
 
 type Rank = "A" | "B" | "C" | "D";
 type InputMode = "easy" | "detail";
@@ -152,6 +144,15 @@ type ChatQuestion = {
 
 type ChatAnswers = Partial<Record<ChatAnswerKey, string>>;
 type SourceTemplateKind = "readyCrew" | "hearing" | "slack";
+
+function hashWorkspaceSeed(value: string) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(36);
+}
 
 type ExtractedInfo = {
   companyName: string;
@@ -351,7 +352,7 @@ type AutoFlowStatus = "idle" | "typing" | "analyzing" | "question" | "reviewing"
 
 const MAX_ASSISTANT_QUESTIONS = 3;
 
-const wizardSteps: Array<{ step: GuideStep; title: string }> = [
+export const wizardSteps: Array<{ step: GuideStep; title: string }> = [
   { step: 1, title: "案件メールを貼る" },
   { step: 2, title: "AIに全部おまかせ" },
   { step: 3, title: "内容確認" },
@@ -359,7 +360,7 @@ const wizardSteps: Array<{ step: GuideStep; title: string }> = [
   { step: 5, title: "PPTダウンロード" }
 ];
 
-function buildWizardMessage(step: GuideStep) {
+export function buildWizardMessage(step: GuideStep) {
   switch (step) {
     case 1:
       return "案件メールを貼るだけで提案書を作成します。";
@@ -2215,7 +2216,7 @@ function extractClientName(form: ProposalRequest, result?: AnalysisResponse | nu
   return firstLine || "提案先企業";
 }
 
-function buildInputSummary(form: ProposalRequest) {
+export function buildInputSummary(form: ProposalRequest) {
   const brief = form.project_brief.trim().replace(/\s+/g, " ");
   return [
     { label: "提案先", value: extractClientName(form) },
@@ -2360,70 +2361,14 @@ function buildOutputDigest(
 }
 
 function buildErrorAdvice(message: string): ErrorAdvice {
-  const normalized = message.toLowerCase();
-
-  if (/401|403|ログイン|認証|password|unauthorized/.test(normalized)) {
-    return {
-      title: "認証エラー",
-      cause: "ログイン期限切れ、パスワード誤り、またはBackend側のAPP_ACCESS_PASSWORD未設定の可能性があります。",
-      action: "次の行動: 再ログイン / RenderのAPP_ACCESS_PASSWORDを確認 / Frontendを再読み込みする。",
-      detail: message
-    };
-  }
-
-  if (/ppt|powerpoint|pptx/.test(normalized)) {
-    return {
-      title: "PPTX作成に失敗しました",
-      cause: "PowerPoint作成処理、入力データ、またはBackend側の一時的な問題の可能性があります。",
-      action: "次の行動: Backendログ確認 / 入力文字量を減らす / 再実行する。",
-      detail: message
-    };
-  }
-
-  if (/pdf|見積書/.test(normalized)) {
-    return {
-      title: "PDF作成に失敗しました",
-      cause: "PDF作成処理、見積データ、またはBackend側の一時的な問題の可能性があります。",
-      action: "次の行動: Backendログ確認 / 提案書作成後に再度PDFを出力する。",
-      detail: message
-    };
-  }
-
-  if (/429|rate|レート|制限|quota|insufficient_quota/.test(normalized) || /API.*制限|上限/.test(message)) {
-    return {
-      title: "OpenAI API制限の可能性があります",
-      cause: "短時間の利用回数、API利用上限、または請求設定により生成が止まった可能性があります。",
-      action: "次の行動: 時間を置く / モックモードで試す / OpenAIの利用上限・請求設定・APIキーを確認する。",
-      detail: message
-    };
-  }
-
-  if (/400|422|入力|不足|min_length|validation|短く/.test(normalized) || /入力|不足/.test(message)) {
-    return {
-      title: "入力内容を確認してください",
-      cause: "案件概要が短い、必須項目が不足している、または送信形式が想定と異なる可能性があります。",
-      action: "次の行動: 不足項目を確認 / 案件メールを貼り直す / 確認画面からこのまま作成する。",
-      detail: message
-    };
-  }
-
-  if (/failed to fetch|network|通信|接続|cors|502|503|504|timeout|タイムアウト/.test(normalized) || /通信|接続|タイムアウト|CORS/.test(message)) {
-    return {
-      title: "通信エラーの可能性があります",
-      cause: "FrontendからBackendへ接続できていない、Backendが停止している、またはCORS設定が合っていない可能性があります。",
-      action: "次の行動: 再読み込み / Backend確認 / NEXT_PUBLIC_API_URLとCORS設定を確認する。",
-      detail: message
-    };
-  }
-
+  const friendly = toFriendlyError(new Error(message));
   return {
-    title: "作成中にエラーが発生しました",
-    cause: "一時的なAPIエラー、入力内容、またはBackendログで確認できる問題の可能性があります。",
-    action: "次の行動: 再実行 / 入力内容を確認 / 解消しない場合はBackendログを確認する。",
+    title: friendly.title,
+    cause: friendly.cause,
+    action: friendly.action,
     detail: message
   };
 }
-
 function extractProbability(winProbability?: WinProbability, fallback = 0) {
   if (typeof winProbability?.probability === "number" && winProbability.probability > 0) {
     return winProbability.probability;
@@ -2736,12 +2681,18 @@ export default function Home() {
   const [isDownloadingPowerPoint, setIsDownloadingPowerPoint] = useState(false);
   const [isDownloadingSummaryPowerPoint, setIsDownloadingSummaryPowerPoint] = useState(false);
   const [isDownloadingEstimatePdf, setIsDownloadingEstimatePdf] = useState(false);
+  const [isCreatingBeautifulAi, setIsCreatingBeautifulAi] = useState(false);
+  const [beautifulAiStatus, setBeautifulAiStatus] = useState<BeautifulAiStatus | null>(null);
+  const [beautifulAiResult, setBeautifulAiResult] = useState<BeautifulAiPresentation | null>(null);
+  const [beautifulAiError, setBeautifulAiError] = useState("");
   const [error, setError] = useState("");
-  const [lastDownloadRetry, setLastDownloadRetry] = useState<"pptx" | "summary-pptx" | "estimate-pdf" | null>(null);
+  const [lastDownloadRetry, setLastDownloadRetry] = useState<"pptx" | "summary-pptx" | "estimate-pdf" | "beautiful-ai" | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
   const [healthSnapshot, setHealthSnapshot] = useState<HealthSnapshot | null>(null);
   const [usageLogs, setUsageLogs] = useState<UsageLogEntry[]>([]);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [pilotStatus, setPilotStatus] = useState<PilotStatus | null>(null);
+  const [showPilotChecklist, setShowPilotChecklist] = useState(false);
   const [managedUsers, setManagedUsers] = useState<ManagedUser[]>([]);
   const [crmCustomers, setCrmCustomers] = useState<CrmCustomer[]>([]);
   const [crmProjects, setCrmProjects] = useState<CrmProject[]>([]);
@@ -2753,6 +2704,7 @@ export default function Home() {
   const [isDownloadingUsageCsv, setIsDownloadingUsageCsv] = useState(false);
   const [feedbackRating, setFeedbackRating] = useState<FeedbackRating | "">("");
   const [feedbackComment, setFeedbackComment] = useState("");
+  const [pilotFeedbackScores, setPilotFeedbackScores] = useState<PilotFeedbackScores>(initialPilotFeedbackScores);
   const [feedbackStatus, setFeedbackStatus] = useState<"idle" | "sending" | "sent">("idle");
   const [feedbackError, setFeedbackError] = useState("");
   const [isGuideEnabled, setIsGuideEnabled] = useState(true);
@@ -2761,10 +2713,14 @@ export default function Home() {
   const [autoFlowStatus, setAutoFlowStatus] = useState<AutoFlowStatus>("idle");
   const [isAutoGenerationPaused, setIsAutoGenerationPaused] = useState(false);
   const [hasDownloadedSummary, setHasDownloadedSummary] = useState(false);
+  const [qualityGateUnlocked, setQualityGateUnlocked] = useState(false);
+  const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const autoAnalyzeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoReviewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAutoAnalyzedSourceRef = useRef("");
   const lastAutoGeneratedSignatureRef = useRef("");
+  const loginAnalyticsTrackedRef = useRef(false);
+  const pasteAnalyticsTrackedRef = useRef(false);
 
   useEffect(() => {
     setHistory(safeHistoryParse(window.localStorage.getItem(HISTORY_KEY)));
@@ -2776,10 +2732,56 @@ export default function Home() {
     return () => window.removeEventListener("ready-crew-auth-changed", handler);
   }, []);
 
+  useEffect(() => {
+    if (rawSourceText.trim().length >= 10 && !pasteAnalyticsTrackedRef.current) {
+      pasteAnalyticsTrackedRef.current = true;
+      trackEvent({ name: "case_paste", feature: "proposal", status: "success", meta: { source: "paste" } });
+    }
+    if (!rawSourceText.trim()) {
+      pasteAnalyticsTrackedRef.current = false;
+    }
+  }, [rawSourceText]);
+
+  useEffect(() => {
+    if (!result) {
+      setQualityGateUnlocked(false);
+      setBeautifulAiResult(null);
+      setBeautifulAiError("");
+    }
+  }, [result]);
+
   async function refreshAccountData() {
     const storedUser = getStoredUser();
     setCurrentUser(storedUser);
+    if (storedUser) {
+      try {
+        setBeautifulAiStatus(await getBeautifulAiStatus());
+      } catch {
+        setBeautifulAiStatus(null);
+      }
+    } else {
+      setBeautifulAiStatus(null);
+    }
+    let nextPilotStatus: PilotStatus | null = null;
+    try {
+      const status = await getPilotStatus();
+      nextPilotStatus = status.pilot;
+      setPilotStatus(status.pilot);
+    } catch {
+      setPilotStatus(null);
+    }
+    if (storedUser && nextPilotStatus?.pilot_mode && storedUser.role !== "admin") {
+      const checklistKey = `${PILOT_CHECKLIST_KEY}-${storedUser.id}`;
+      setShowPilotChecklist(window.localStorage.getItem(checklistKey) !== "true");
+    } else {
+      setShowPilotChecklist(false);
+    }
+    if (storedUser && !loginAnalyticsTrackedRef.current) {
+      loginAnalyticsTrackedRef.current = true;
+      trackEvent({ name: "login", feature: "auth", status: "success", meta: { source: "app" } });
+    }
     if (!storedUser) {
+      loginAnalyticsTrackedRef.current = false;
       setDbLogCount(0);
       setManagedUsers([]);
       setAuditLogs([]);
@@ -2841,7 +2843,13 @@ export default function Home() {
   const canSubmit = useMemo(() => {
     return form.project_brief.trim().length >= 20 && !isLoading;
   }, [form.project_brief, isLoading]);
-  const canGenerate = currentUser?.role === "admin" || currentUser?.role === "member";
+  const isMaintenanceMode = Boolean(pilotStatus?.maintenance_mode);
+  const canGenerate = (currentUser?.role === "admin" || currentUser?.role === "member") && !isMaintenanceMode;
+  const canDownloadMainOutputs = Boolean(result && canGenerate && qualityGateUnlocked);
+  const currentWorkspaceId = useMemo(
+    () => hashWorkspaceSeed(rawSourceText || form.project_brief || companyHomeUrl || "default"),
+    [companyHomeUrl, form.project_brief, rawSourceText]
+  );
   const hasGuideInput = Boolean(rawSourceText.trim() || companyHomeUrl.trim() || form.project_brief.trim());
   const hasGuideOrganizedContent = Boolean(extractedInfo || urlInsight || form.project_brief.trim().length >= 20);
   const currentGuideStep: GuideStep = result
@@ -2853,11 +2861,6 @@ export default function Home() {
         : !hasViewedOrganizedResult
           ? 3
           : 4;
-  const currentWizardMessage = useMemo(() => buildWizardMessage(currentGuideStep), [currentGuideStep]);
-  const currentWizardStepTitle = useMemo(
-    () => wizardSteps.find((item) => item.step === currentGuideStep)?.title ?? "次の操作",
-    [currentGuideStep]
-  );
   const wizardChatQuestion = chatQuestionFlow[Math.min(chatQuestionIndex, chatQuestionFlow.length - 1)];
   const autoFlowMessage = useMemo(
     () => buildAutoFlowMessage(autoFlowStatus, result, wizardChatQuestion),
@@ -2948,6 +2951,10 @@ export default function Home() {
     () => buildDisplayedWinProbability(result?.analysis.win_probability, dealEvaluation),
     [result?.analysis.win_probability, dealEvaluation]
   );
+
+  function showMaintenanceError() {
+    setError("現在メンテナンス中です。履歴確認やCRM閲覧はできますが、新規作成・PPT/PDF作成は一時停止しています。");
+  }
   const outputDigest = useMemo(
     () => buildOutputDigest(result, estimateSummary, form, missingItems, hearingResultSummary),
     [result, estimateSummary, form, missingItems, hearingResultSummary]
@@ -3017,19 +3024,45 @@ export default function Home() {
       status,
       error_type: errorType
     }).catch(() => undefined);
+    trackEvent({
+      name: "feature_used",
+      feature: outputType || featureName,
+      status,
+      errorType,
+      meta: {
+        output: outputType,
+        category: errorType || undefined
+      }
+    });
     setUsageLogs(readUsageLogs());
   }
 
   function openDetailsPanel(panelId: string) {
-    const globalMenu = document.getElementById("global-detail-menu") as HTMLDetailsElement | null;
-    if (globalMenu && panelId !== "global-detail-menu") {
-      globalMenu.open = true;
-    }
-    const panel = document.getElementById(panelId) as HTMLDetailsElement | null;
+    const panel = document.getElementById(panelId) as HTMLElement | null;
     if (panel) {
-      panel.open = true;
+      let parentDetails = panel.parentElement?.closest("details") as HTMLDetailsElement | null;
+      while (parentDetails) {
+        parentDetails.open = true;
+        parentDetails = parentDetails.parentElement?.closest("details") as HTMLDetailsElement | null;
+      }
+      if (panel instanceof HTMLDetailsElement) {
+        panel.open = true;
+      }
       panel.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
+    }
+    if (panelId.startsWith("admin-") && panelId !== "admin-menu-panel") {
+      const adminMenu = document.getElementById("admin-menu-panel") as HTMLDetailsElement | null;
+      if (adminMenu) {
+        adminMenu.open = true;
+        setIsAdminMenuOpen(true);
+        window.setTimeout(() => openDetailsPanel(panelId), 0);
+        return;
+      }
+    }
+    const globalMenu = document.getElementById("global-detail-menu") as HTMLDetailsElement | null;
+    if (globalMenu) {
+      globalMenu.open = true;
     }
     globalMenu?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -3039,7 +3072,7 @@ export default function Home() {
     openDetailsPanel("result-sales-panel");
   }
 
-  async function handleCreateUser(payload: { email: string; password: string; role: "admin" | "member" | "viewer" }) {
+  async function handleCreateUser(payload: { email: string; password: string; role: "admin" | "manager" | "member" | "viewer" }) {
     await createUser(payload);
     const users = await listUsers();
     setManagedUsers(users.users);
@@ -3049,6 +3082,26 @@ export default function Home() {
     await updateUserActive(userId, isActive);
     const users = await listUsers();
     setManagedUsers(users.users);
+  }
+
+  async function handleTogglePilot(userId: number, pilotEnabled: boolean) {
+    await updateUserPilot(userId, { pilot_enabled: pilotEnabled });
+    const users = await listUsers();
+    setManagedUsers(users.users);
+    await refreshAccountData();
+  }
+
+  async function handleConfirmPilotChecklist() {
+    if (!currentUser) return;
+    setError("");
+    try {
+      await confirmPilotChecklist();
+      window.localStorage.setItem(`${PILOT_CHECKLIST_KEY}-${currentUser.id}`, new Date().toISOString());
+      setShowPilotChecklist(false);
+      await refreshAccountData();
+    } catch (caught) {
+      setError(toFriendlyError(caught).title);
+    }
   }
 
   async function handleDownloadUsageCsv() {
@@ -3070,6 +3123,22 @@ export default function Home() {
     } finally {
       setIsDownloadingUsageCsv(false);
     }
+  }
+
+  function openOperationsTarget(target: string) {
+    if (target === "new-case") {
+      document.querySelector(".wizard-main-input textarea, .one-screen-input textarea")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      const input = document.querySelector(".wizard-main-input textarea, .one-screen-input textarea") as HTMLTextAreaElement | null;
+      input?.focus();
+      return;
+    }
+    if (target === "operations-search") {
+      const input = document.querySelector(".operations-search-panel input") as HTMLInputElement | null;
+      input?.scrollIntoView({ behavior: "smooth", block: "center" });
+      input?.focus();
+      return;
+    }
+    openDetailsPanel(target);
   }
 
   async function runCompanyResearch() {
@@ -3520,6 +3589,10 @@ export default function Home() {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isMaintenanceMode) {
+      showMaintenanceError();
+      return;
+    }
     if (!canGenerate) {
       setError("閲覧のみ権限では提案書を作成できません。adminまたはmemberでログインしてください。");
       return;
@@ -3533,6 +3606,10 @@ export default function Home() {
   }
 
   async function generateProposal(sourceForm = form) {
+    if (isMaintenanceMode) {
+      showMaintenanceError();
+      return;
+    }
     if (!canGenerate) {
       setError("閲覧のみ権限では提案書を作成できません。adminまたはmemberでログインしてください。");
       return;
@@ -3544,13 +3621,21 @@ export default function Home() {
     setAutoFlowStatus("generating");
     setError("");
     setCopyState("idle");
+    const analysisStartedAt = performance.now();
+    trackEvent({ name: "ai_analysis_start", feature: "proposal", status: "start", meta: { mode: inputMode } });
 
     try {
       const response = await analyzeProposal(nextForm);
+      const durationMs = performance.now() - analysisStartedAt;
+      trackEvent({ name: "ai_analysis_complete", feature: "proposal", status: "success", durationMs, meta: { mode: inputMode } });
+      trackEvent({ name: "proposal_generated", feature: "proposal", status: "success", durationMs, meta: { output: "markdown" } });
       setResult(response);
+      setBeautifulAiResult(null);
+      setBeautifulAiError("");
       setHasDownloadedSummary(false);
       setFeedbackRating("");
       setFeedbackComment("");
+      setPilotFeedbackScores(initialPilotFeedbackScores);
       setFeedbackStatus("idle");
       setFeedbackError("");
       setAutoFlowStatus("complete");
@@ -3560,6 +3645,14 @@ export default function Home() {
       void refreshAccountData();
     } catch (caught) {
       const friendly = toFriendlyError(caught);
+      trackEvent({
+        name: "ai_analysis_complete",
+        feature: "proposal",
+        status: "failure",
+        durationMs: performance.now() - analysisStartedAt,
+        errorType: friendly.category,
+        meta: { category: friendly.category }
+      });
       recordUsage("提案書作成", allInputText(nextForm).length, "markdown", "failure", friendly.category);
       setError(`${friendly.title}。${friendly.action}`);
       setAutoFlowStatus("idle");
@@ -3588,8 +3681,16 @@ export default function Home() {
   }
 
   async function downloadPowerPointFor(targetResult: AnalysisResponse, targetForm: ProposalRequest, summary: boolean) {
+    if (isMaintenanceMode) {
+      showMaintenanceError();
+      return;
+    }
     if (!canGenerate) {
       setError("閲覧のみ権限ではPowerPointを作成できません。adminまたはmemberでログインしてください。");
+      return;
+    }
+    if (targetResult === result && !qualityGateUnlocked) {
+      setError("提出前確認ゲートを完了すると、PowerPointをダウンロードできます。AI Workspaceの確認項目をチェックしてください。");
       return;
     }
     if (summary) {
@@ -3598,6 +3699,9 @@ export default function Home() {
       setIsDownloadingPowerPoint(true);
     }
     setError("");
+    const downloadStartedAt = performance.now();
+    const downloadEventName = summary ? "summary_ppt_download" : "detail_ppt_download";
+    const downloadFeatureName = summary ? "summary_ppt" : "detail_ppt";
 
     try {
       const downloader = summary ? downloadSummaryProposalPowerPoint : downloadProposalPowerPoint;
@@ -3620,6 +3724,13 @@ export default function Home() {
         targetForm.past_proposal_template,
         targetForm.case_studies
       );
+      trackEvent({
+        name: downloadEventName,
+        feature: downloadFeatureName,
+        status: "success",
+        durationMs: performance.now() - downloadStartedAt,
+        meta: { output: summary ? "summary-pptx" : "pptx" }
+      });
       recordUsage(summary ? "要約PowerPoint" : "PowerPoint", allInputText(targetForm).length, summary ? "summary-pptx" : "pptx", "success");
       if (summary) {
         setHasDownloadedSummary(true);
@@ -3628,6 +3739,14 @@ export default function Home() {
       void refreshAccountData();
     } catch (caught) {
       const friendly = toFriendlyError(caught);
+      trackEvent({
+        name: downloadEventName,
+        feature: downloadFeatureName,
+        status: "failure",
+        durationMs: performance.now() - downloadStartedAt,
+        errorType: friendly.category,
+        meta: { category: friendly.category }
+      });
       recordUsage(summary ? "要約PowerPoint" : "PowerPoint", allInputText(targetForm).length, summary ? "summary-pptx" : "pptx", "failure", friendly.category);
       setLastDownloadRetry(summary ? "summary-pptx" : "pptx");
       setError(`${friendly.title}。${friendly.action}`);
@@ -3651,12 +3770,21 @@ export default function Home() {
   }
 
   async function downloadEstimatePdfFor(targetResult: AnalysisResponse, targetForm: ProposalRequest) {
+    if (isMaintenanceMode) {
+      showMaintenanceError();
+      return;
+    }
     if (!canGenerate) {
       setError("閲覧のみ権限では見積書PDFを作成できません。adminまたはmemberでログインしてください。");
       return;
     }
+    if (targetResult === result && !qualityGateUnlocked) {
+      setError("提出前確認ゲートを完了すると、見積PDFをダウンロードできます。AI Workspaceの確認項目をチェックしてください。");
+      return;
+    }
     setIsDownloadingEstimatePdf(true);
     setError("");
+    const pdfStartedAt = performance.now();
 
     try {
       await downloadEstimatePdf(
@@ -3664,11 +3792,26 @@ export default function Home() {
         targetForm,
         targetResult.analysis.win_probability
       );
+      trackEvent({
+        name: "estimate_pdf_download",
+        feature: "estimate_pdf",
+        status: "success",
+        durationMs: performance.now() - pdfStartedAt,
+        meta: { output: "estimate-pdf" }
+      });
       recordUsage("見積書PDF", allInputText(targetForm).length, "estimate-pdf", "success");
       setLastDownloadRetry(null);
       void refreshAccountData();
     } catch (caught) {
       const friendly = toFriendlyError(caught);
+      trackEvent({
+        name: "estimate_pdf_download",
+        feature: "estimate_pdf",
+        status: "failure",
+        durationMs: performance.now() - pdfStartedAt,
+        errorType: friendly.category,
+        meta: { category: friendly.category }
+      });
       recordUsage("見積書PDF", allInputText(targetForm).length, "estimate-pdf", "failure", friendly.category);
       setLastDownloadRetry("estimate-pdf");
       setError(`${friendly.title}。${friendly.action}`);
@@ -3682,6 +3825,72 @@ export default function Home() {
     await downloadEstimatePdfFor(result, form);
   }
 
+  async function createBeautifulAiCurrent() {
+    if (isMaintenanceMode) {
+      showMaintenanceError();
+      return;
+    }
+    if (!result) return;
+    if (!canGenerate) {
+      setError("閲覧のみ権限ではBeautiful.ai提案書を作成できません。adminまたはmemberでログインしてください。");
+      return;
+    }
+    if (!qualityGateUnlocked) {
+      setError("提出前確認ゲートを完了すると、Beautiful.ai提案書を作成できます。AI Workspaceの確認項目をチェックしてください。");
+      return;
+    }
+    if (!beautifulAiStatus?.enabled) {
+      const message = beautifulAiStatus?.message || "Beautiful.ai連携は未設定です。既存PPTXをご利用ください。";
+      setBeautifulAiError(message);
+      setError(message);
+      return;
+    }
+
+    setIsCreatingBeautifulAi(true);
+    setBeautifulAiError("");
+    setError("");
+    const startedAt = performance.now();
+    try {
+      const response = await createBeautifulAiPresentation(
+        buildBeautifulAiPayload(currentWorkspaceId, result.powerpoint_generation_data, form, result.analysis.win_probability)
+      );
+      setBeautifulAiResult(response);
+      trackEvent({
+        name: "beautiful_ai_created",
+        feature: "beautiful_ai",
+        status: "success",
+        durationMs: performance.now() - startedAt,
+        meta: { output: "beautiful-ai" }
+      });
+      recordUsage("Beautiful.ai", allInputText(form).length, "beautiful-ai", "success");
+      setLastDownloadRetry(null);
+      void refreshAccountData();
+    } catch (caught) {
+      const friendly = toFriendlyError(caught);
+      const message = `${friendly.title}。${friendly.action} 既存PPTXも利用できます。`;
+      setBeautifulAiError(message);
+      setError(message);
+      setLastDownloadRetry("beautiful-ai");
+      trackEvent({
+        name: "beautiful_ai_created",
+        feature: "beautiful_ai",
+        status: "failure",
+        durationMs: performance.now() - startedAt,
+        errorType: friendly.category,
+        meta: { category: friendly.category }
+      });
+      recordUsage("Beautiful.ai", allInputText(form).length, "beautiful-ai", "failure", friendly.category);
+    } finally {
+      setIsCreatingBeautifulAi(false);
+    }
+  }
+
+  function openBeautifulAiUrl(url: string) {
+    if (!url || !beautifulAiResult?.presentation_id) return;
+    void recordBeautifulAiEditorOpened(beautifulAiResult.presentation_id).catch(() => undefined);
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
   async function retryLastDownload() {
     if (!result || !lastDownloadRetry) return;
     if (lastDownloadRetry === "pptx") {
@@ -3690,6 +3899,10 @@ export default function Home() {
     }
     if (lastDownloadRetry === "summary-pptx") {
       await downloadPowerPointFor(result, form, true);
+      return;
+    }
+    if (lastDownloadRetry === "beautiful-ai") {
+      await createBeautifulAiCurrent();
       return;
     }
     await downloadEstimatePdfFor(result, form);
@@ -3748,12 +3961,19 @@ export default function Home() {
       setFeedbackError("評価を1つ選んでください。");
       return;
     }
+    const pilotScoresText = pilotFeedbackQuestions
+      .map((question) => `${question.label}: ${pilotFeedbackScores[question.key] || "未回答"}/5`)
+      .join("\n");
+    const sanitizedComment = [pilotScoresText, feedbackComment.trim()]
+      .filter(Boolean)
+      .join("\n\nコメント:\n")
+      .slice(0, 1000);
     setFeedbackStatus("sending");
     setFeedbackError("");
     try {
       const response = await submitFeedback({
         rating: feedbackRating,
-        comment: feedbackComment,
+        comment: sanitizedComment,
         feature_name: "提案書作成"
       });
       setFeedbackSummary(response.summary);
@@ -3785,6 +4005,7 @@ export default function Home() {
     setCopyState("idle");
     setFeedbackRating("");
     setFeedbackComment("");
+    setPilotFeedbackScores(initialPilotFeedbackScores);
     setFeedbackStatus("idle");
     setFeedbackError("");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -4003,15 +4224,52 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
     <AuthGate>
     <main className={`app-shell ${isDarkMode ? "dark-mode" : ""}`}>
       <Header isDarkMode={isDarkMode} onToggleDarkMode={() => setIsDarkMode((current) => !current)} />
+      {pilotStatus?.pilot_mode && (
+        <section className="pilot-mode-banner" aria-label="社内試験利用中">
+          <strong>社内試験利用中</strong>
+          <span>AI作成内容は社外提出前に必ず人が確認してください。</span>
+          {pilotStatus.pilot_end_date && <small>終了予定: {pilotStatus.pilot_end_date}</small>}
+        </section>
+      )}
+      {isMaintenanceMode && (
+        <section className="maintenance-banner" role="alert">
+          <strong>メンテナンス中</strong>
+          <span>新規作成・PPT/PDF作成は一時停止しています。履歴確認、CRM、管理画面は利用できます。</span>
+        </section>
+      )}
+      {currentUser && <ReleaseUpdatesPanel />}
+
+      {currentUser && (
+        <RealOperationsDashboard
+          projects={crmProjects}
+          history={history}
+          usageLogs={usageLogs}
+          auditLogs={auditLogs}
+          usageDashboard={usageDashboard}
+          feedbackSummary={feedbackSummary}
+          qualityGateWaiting={Boolean(result && !qualityGateUnlocked)}
+          hasProposalResult={Boolean(result)}
+          isAdmin={currentUser.role === "admin"}
+          onOpenPanel={openOperationsTarget}
+          onFocusNewCase={() => openOperationsTarget("new-case")}
+        />
+      )}
 
       <section className="ai-wizard-shell" aria-label="AIウィザード">
-        <AiWorkspacePanel
+        <WorkspaceProgress
           status={autoFlowStatus}
           hasInput={hasGuideInput}
           hasResult={Boolean(result)}
           isLoading={isLoading}
           canAdminRerun={currentUser?.role === "admin"}
+          canPersist={currentUser?.role === "admin" || currentUser?.role === "manager" || currentUser?.role === "member"}
+          canRequestReview={currentUser?.role === "admin" || currentUser?.role === "member"}
+          canCompleteQualityGate={currentUser?.role === "admin" || currentUser?.role === "member"}
+          canBypassQualityGate={currentUser?.role === "admin"}
+          onQualityGateChange={setQualityGateUnlocked}
           onRerunAgent={rerunAiWorkspaceAgent}
+          workspaceSeed={rawSourceText || form.project_brief || companyHomeUrl || "default"}
+          workspaceTitle={result?.powerpoint_generation_data.deck_title || form.client_company_info || form.project_brief.slice(0, 60) || "AI Workspace提案"}
         />
 
         <div className="wizard-chat-card" aria-live="polite">
@@ -4057,6 +4315,7 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
               <label className="field wizard-main-input wizard-paste-only">
                 <span>案件メール・URL・議事録・メモ</span>
                 <textarea
+                  data-testid="project-source-input"
                   value={rawSourceText}
                   onChange={(event) => {
                     setRawSourceText(event.target.value);
@@ -4159,11 +4418,46 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
                   className="ppt-download-button summary wizard-main-action"
                   type="button"
                   onClick={downloadSummaryPowerPoint}
-                  disabled={!result || !canGenerate || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf}
+                  disabled={!canDownloadMainOutputs || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf || isCreatingBeautifulAi}
                 >
                   {isDownloadingSummaryPowerPoint ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <FileDown size={18} aria-hidden="true" />}
                   <span><strong>要約PPTをダウンロード</strong><small>発表用</small></span>
                 </button>
+                {beautifulAiStatus?.enabled ? (
+                  <button
+                    className="ppt-download-button beautiful-ai"
+                    type="button"
+                    onClick={createBeautifulAiCurrent}
+                    disabled={!canDownloadMainOutputs || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf || isCreatingBeautifulAi}
+                  >
+                    {isCreatingBeautifulAi ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Sparkles size={18} aria-hidden="true" />}
+                    <span>
+                      <strong>{isCreatingBeautifulAi ? "Beautiful.aiでスライドをデザインしています" : "Beautiful.aiで提案書を作成"}</strong>
+                      <small>外部デザイン編集用</small>
+                    </span>
+                  </button>
+                ) : (
+                  <p className="beautiful-ai-unset">{beautifulAiStatus?.message || "Beautiful.ai連携は未設定です。"}</p>
+                )}
+                {beautifulAiResult && (
+                  <div className="beautiful-ai-result" aria-live="polite">
+                    <strong>Beautiful.ai提案書を作成しました</strong>
+                    <div>
+                      {beautifulAiResult.editor_url && (
+                        <button className="text-button" type="button" onClick={() => openBeautifulAiUrl(beautifulAiResult.editor_url)}>
+                          Beautiful.aiで編集
+                        </button>
+                      )}
+                      {beautifulAiResult.player_url && (
+                        <button className="text-button" type="button" onClick={() => openBeautifulAiUrl(beautifulAiResult.player_url)}>
+                          プレゼンテーションを表示
+                        </button>
+                      )}
+                    </div>
+                    <small>共有権限はBeautiful.ai側で確認してください。</small>
+                  </div>
+                )}
+                {beautifulAiError && <p className="beautiful-ai-error">{beautifulAiError}</p>}
                 <details className="wizard-other-format-menu">
                   <summary>その他の出力</summary>
                   <div className="wizard-download-grid">
@@ -4171,7 +4465,7 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
                       className="ppt-download-button"
                       type="button"
                       onClick={downloadPowerPoint}
-                      disabled={!result || !canGenerate || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf}
+                      disabled={!canDownloadMainOutputs || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf || isCreatingBeautifulAi}
                     >
                       {isDownloadingPowerPoint ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <FileDown size={18} aria-hidden="true" />}
                       <span><strong>通常PPT</strong><small>詳細提案用</small></span>
@@ -4180,7 +4474,7 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
                       className="ppt-download-button pdf"
                       type="button"
                       onClick={downloadEstimatePdfCurrent}
-                      disabled={!result || !canGenerate || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf}
+                      disabled={!canDownloadMainOutputs || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf || isCreatingBeautifulAi}
                     >
                       {isDownloadingEstimatePdf ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <FileDown size={18} aria-hidden="true" />}
                       <span><strong>見積PDF</strong><small>見積確認用</small></span>
@@ -4254,6 +4548,32 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
                   </label>
                 ))}
               </div>
+              <div className="pilot-feedback-likert" aria-label="Pilot 5段階評価">
+                <strong>Pilot評価（5段階）</strong>
+                <p>コメント欄に顧客本文や案件本文を貼らないでください。</p>
+                {pilotFeedbackQuestions.map((question) => (
+                  <label key={question.key}>
+                    <span>{question.label}</span>
+                    <select
+                      disabled={feedbackStatus === "sent" || feedbackStatus === "sending"}
+                      value={pilotFeedbackScores[question.key]}
+                      onChange={(event) =>
+                        setPilotFeedbackScores((current) => ({
+                          ...current,
+                          [question.key]: Number(event.target.value)
+                        }))
+                      }
+                    >
+                      <option value={0}>未回答</option>
+                      <option value={1}>1</option>
+                      <option value={2}>2</option>
+                      <option value={3}>3</option>
+                      <option value={4}>4</option>
+                      <option value={5}>5</option>
+                    </select>
+                  </label>
+                ))}
+              </div>
               <label className="field feedback-comment-field">
                 <span>コメント</span>
                 <textarea
@@ -4310,7 +4630,9 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
         </details>
       </section>
 
-      <section className="one-screen-start" aria-label="初期入力">
+      <details className="advanced-foldout secondary-guidance-panel">
+        <summary>入力ガイド・詳細操作を開く</summary>
+      <section className="one-screen-start" aria-label="入力ガイド・詳細操作">
         <div className="one-screen-copy">
           <p className="eyebrow">はじめに</p>
           <h2>案件メールを貼るだけで、提案書・見積・商談準備をAIが整理します。</h2>
@@ -4407,6 +4729,7 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
           </button>
         </div>
       </section>
+      </details>
 
       <details className="advanced-foldout" id="dashboard-panel">
         <summary>ダッシュボードを見る</summary>
@@ -4415,7 +4738,7 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
           monthlyDashboardMetrics={monthlyDashboardMetrics}
           operationDashboardMetrics={operationDashboardMetrics}
         />
-        <CrmPanel customers={crmCustomers} projects={crmProjects} />
+        <CrmPanel customers={crmCustomers} projects={crmProjects} currentRole={currentUser?.role} onChanged={() => void refreshAccountData()} />
       </details>
 
       <details className="advanced-foldout ai-functions-menu" id="ai-functions-panel">
@@ -4483,12 +4806,25 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
           <strong>最近使った機能</strong>
           <span>{recentFeatures.length ? recentFeatures.join(" / ") : "まだ作成履歴はありません"}</span>
         </div>
+        {currentUser?.role !== "admin" && (
+          <details className="advanced-foldout" id="external-intake-candidates-panel-detail">
+            <summary>外部連携の案件候補を見る</summary>
+            <ExternalIntegrationsPanel currentRole={currentUser?.role} showSettings={false} />
+          </details>
+        )}
       </section>
       </details>
 
       {currentUser?.role === "admin" && (
-      <details className="advanced-foldout admin-menu-foldout" id="admin-menu-panel">
+      <details
+        className="advanced-foldout admin-menu-foldout"
+        data-testid="admin-menu"
+        id="admin-menu-panel"
+        onToggle={(event) => setIsAdminMenuOpen(event.currentTarget.open)}
+      >
         <summary>管理者メニュー・接続状態を開く</summary>
+      {isAdminMenuOpen && (
+        <>
       <SecurityNotice />
       <HealthStatus onChange={setHealthSnapshot} />
       <SettingsPanel
@@ -4556,10 +4892,28 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
           </div>
         </section>
         <>
+          <p className="admin-menu-category-label">運用管理</p>
           <details className="advanced-foldout">
             <summary>運用準備チェックを開く</summary>
             <AdminOperationReadinessPanel />
           </details>
+          <details className="advanced-foldout">
+            <summary>ユーザー管理を開く</summary>
+            <AdminUsersPanel users={managedUsers} onCreateUser={handleCreateUser} onToggleUser={handleToggleUser} onTogglePilot={handleTogglePilot} />
+          </details>
+          <details className="advanced-foldout" id="admin-pilot-dashboard-panel">
+            <summary>Pilot Dashboardを開く</summary>
+            <AdminPilotDashboardPanel />
+          </details>
+          <details className="advanced-foldout">
+            <summary>監査ログを開く</summary>
+            <AdminAuditLogPanel logs={auditLogs} />
+          </details>
+          <details className="advanced-foldout">
+            <summary>フィードバック一覧を開く</summary>
+            <AdminFeedbackPanel feedback={feedbackEntries} summary={feedbackSummary} />
+          </details>
+          <p className="admin-menu-category-label">改善分析</p>
           <details className="advanced-foldout">
             <summary>改善提案ダッシュボードを開く</summary>
             <AdminImprovementDashboardPanel />
@@ -4572,24 +4926,56 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
               onDownloadCsv={() => void handleDownloadUsageCsv()}
             />
           </details>
+          <details className="advanced-foldout" id="admin-product-analytics-panel">
+            <summary>Product Analyticsを開く</summary>
+            <AdminProductAnalyticsPanel />
+          </details>
+          <details className="advanced-foldout" id="admin-queue-monitor-panel">
+            <summary>AI Queue Monitorを開く</summary>
+            <QueueMonitor />
+          </details>
+          <details className="advanced-foldout" id="admin-learning-panel">
+            <summary>AI Learning Dashboardを開く</summary>
+            <LearningDashboard />
+          </details>
+          <p className="admin-menu-category-label">AI実験/Prompt管理</p>
+          <details className="advanced-foldout" id="admin-prompt-studio-panel">
+            <summary>Prompt Studioを開く</summary>
+            <PromptStudio />
+          </details>
+          <p className="admin-menu-category-label">外部連携</p>
+          <details className="advanced-foldout" id="admin-integration-panel">
+            <summary>外部連携を開く</summary>
+            <ExternalIntegrationsPanel currentRole={currentUser?.role} showSettings />
+          </details>
+          <p className="admin-menu-category-label">ナレッジ管理</p>
+          <details className="advanced-foldout" id="admin-knowledge-panel">
+            <summary>Knowledge Intelligenceを開く</summary>
+            <AdminKnowledgePanel />
+          </details>
+          <p className="admin-menu-category-label">社内展開・監査</p>
           <details className="advanced-foldout">
             <summary>試験導入レポート作成を開く</summary>
             <AdminTrialReportPanel />
           </details>
-          <details className="advanced-foldout">
-            <summary>ユーザー管理を開く</summary>
-            <AdminUsersPanel users={managedUsers} onCreateUser={handleCreateUser} onToggleUser={handleToggleUser} />
-          </details>
-          <details className="advanced-foldout">
-            <summary>監査ログを開く</summary>
-            <AdminAuditLogPanel logs={auditLogs} />
-          </details>
-          <details className="advanced-foldout">
-            <summary>フィードバック一覧を開く</summary>
-            <AdminFeedbackPanel feedback={feedbackEntries} summary={feedbackSummary} />
-          </details>
         </>
+        </>
+      )}
       </details>
+      )}
+
+      {(currentUser?.role === "admin" || currentUser?.role === "manager") && (
+        <details className="advanced-foldout release-menu-foldout" id="release-management-panel">
+          <summary>リリース管理を開く</summary>
+          <AdminReleaseManagementPanel />
+        </details>
+      )}
+
+      {(currentUser?.role === "admin" || currentUser?.role === "manager") && (
+        <details className="advanced-foldout review-menu-foldout" id="review-menu-panel">
+          <summary>レビュー依頼一覧を開く</summary>
+          <AdminReviewPanel />
+        </details>
       )}
 
       <details className="digital-coworker-panel advanced-foldout" id="company-research-panel" aria-label="AI社員">
@@ -6476,6 +6862,18 @@ CMSはWordPress希望。競合：https://example.co.jp"
                     </ul>
                   </article>
                 ))}
+                {result.knowledge_insights?.similar && (
+                  <article className="output-summary-card knowledge-output-card">
+                    <strong>過去の類似案件</strong>
+                    <ul>
+                      <li>{result.knowledge_insights.similar.matches.length}件ヒット</li>
+                      <li>{result.knowledge_insights.similar.recommendation}</li>
+                      {(result.knowledge_insights.similar.success_patterns[0] || result.knowledge_insights.similar.lost_patterns[0]) && (
+                        <li>{result.knowledge_insights.similar.success_patterns[0] || result.knowledge_insights.similar.lost_patterns[0]}</li>
+                      )}
+                    </ul>
+                  </article>
+                )}
               </section>
 
               <article className="markdown-preview">
@@ -6491,7 +6889,7 @@ CMSはWordPress希望。競合：https://example.co.jp"
                     className={`ppt-download-button summary ${isGuideEnabled && currentGuideStep === 5 ? "guide-target" : ""}`}
                     type="button"
                     onClick={downloadSummaryPowerPoint}
-                    disabled={!result || !canGenerate || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf}
+                    disabled={!canDownloadMainOutputs || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf || isCreatingBeautifulAi}
                   >
                     {isGuideEnabled && currentGuideStep === 5 && <span className="guide-label button-guide-label">次はこちら</span>}
                     {isDownloadingSummaryPowerPoint ? (
@@ -6504,11 +6902,50 @@ CMSはWordPress希望。競合：https://example.co.jp"
                       <small>発表用</small>
                     </span>
                   </button>
+                  {beautifulAiStatus?.enabled ? (
+                    <button
+                      className="ppt-download-button beautiful-ai"
+                      type="button"
+                      onClick={createBeautifulAiCurrent}
+                      disabled={!canDownloadMainOutputs || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf || isCreatingBeautifulAi}
+                    >
+                      {isCreatingBeautifulAi ? (
+                        <Loader2 className="spin" size={18} aria-hidden="true" />
+                      ) : (
+                        <Sparkles size={18} aria-hidden="true" />
+                      )}
+                      <span>
+                        <strong>{isCreatingBeautifulAi ? "Beautiful.aiでスライドをデザインしています" : "Beautiful.aiで提案書を作成"}</strong>
+                        <small>外部デザイン編集用</small>
+                      </span>
+                    </button>
+                  ) : (
+                    <p className="beautiful-ai-unset">{beautifulAiStatus?.message || "Beautiful.ai連携は未設定です。"}</p>
+                  )}
+                  {beautifulAiResult && (
+                    <div className="beautiful-ai-result" aria-live="polite">
+                      <strong>Beautiful.ai提案書を作成しました</strong>
+                      <div>
+                        {beautifulAiResult.editor_url && (
+                          <button className="text-button" type="button" onClick={() => openBeautifulAiUrl(beautifulAiResult.editor_url)}>
+                            Beautiful.aiで編集
+                          </button>
+                        )}
+                        {beautifulAiResult.player_url && (
+                          <button className="text-button" type="button" onClick={() => openBeautifulAiUrl(beautifulAiResult.player_url)}>
+                            プレゼンテーションを表示
+                          </button>
+                        )}
+                      </div>
+                      <small>共有権限はBeautiful.ai側で確認してください。</small>
+                    </div>
+                  )}
+                  {beautifulAiError && <p className="beautiful-ai-error">{beautifulAiError}</p>}
                   <button
                     className="ppt-download-button"
                     type="button"
                     onClick={downloadPowerPoint}
-                    disabled={!result || !canGenerate || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf}
+                    disabled={!canDownloadMainOutputs || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf || isCreatingBeautifulAi}
                   >
                     {isDownloadingPowerPoint ? (
                       <Loader2 className="spin" size={18} aria-hidden="true" />
@@ -6524,7 +6961,7 @@ CMSはWordPress希望。競合：https://example.co.jp"
                     className="ppt-download-button pdf"
                     type="button"
                     onClick={downloadEstimatePdfCurrent}
-                    disabled={!result || !canGenerate || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf}
+                    disabled={!canDownloadMainOutputs || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf || isCreatingBeautifulAi}
                   >
                     {isDownloadingEstimatePdf ? (
                       <Loader2 className="spin" size={18} aria-hidden="true" />
@@ -6818,6 +7255,25 @@ CMSはWordPress希望。競合：https://example.co.jp"
                 開始する
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showPilotChecklist && currentUser && (
+        <div className="pilot-checklist-overlay" role="dialog" aria-modal="true" aria-label="社内試験利用の確認">
+          <div className="pilot-checklist-modal">
+            <p className="eyebrow">社内試験利用</p>
+            <h2>利用前に確認してください</h2>
+            <ul>
+              <li>顧客の機密情報を必要以上に入力しない</li>
+              <li>AI出力は必ず人が確認する</li>
+              <li>社外提出前に品質ゲートと上司レビューを確認する</li>
+              <li>問題があればフィードバックを送る</li>
+            </ul>
+            <p className="status-note">確認日時のみ保存します。案件本文や顧客情報は保存しません。</p>
+            <button className="primary-button" type="button" onClick={() => void handleConfirmPilotChecklist()}>
+              確認して開始する
+            </button>
           </div>
         </div>
       )}

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI Workspace",
-  description: "AI社員が協力して提案準備を進める社内業務支援ワークスペース"
+  title: "AI営業秘書",
+  description: "案件メールから提案準備、見積、商談確認までを支援する社内AIワークスペース"
 };
 
 export default function RootLayout({

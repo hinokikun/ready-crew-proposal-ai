@@ -1,228 +1,208 @@
-import type { AnalysisResponse, ProposalRequest } from "@/types/proposal";
-import type {
-  AuditLog,
-  CrmCustomer,
-  CrmProject,
-  FeedbackEntry,
-  FeedbackRating,
-  FeedbackSummary,
-  ImprovementDashboardData,
-  ManagedUser,
-  OperationReadinessData,
-  OperationReadinessStatus,
-  TrialReportData,
-  UsageDashboardData,
-  UserRole
-} from "@/types/app";
-import { getAuthHeaders } from "@/lib/auth";
-import { API_BASE_URL } from "@/lib/config";
-
 export type {
   AuditLog,
+  AiNotification,
+  AiNotificationAnalytics,
+  AiNotificationCenterData,
+  AiNotificationPriority,
+  AiNotificationStatus,
+  AiNotificationSummary,
+  ActionQueueItem,
+  ActionQueueStatus,
   CrmCustomer,
   CrmProject,
+  DailyBriefingAnalytics,
+  DailyBriefingAgentComment,
+  DailyBriefingData,
+  DailyBriefingSuggestion,
+  DailyBriefingSummary,
+  DailyBriefingTimelineItem,
   FeedbackEntry,
   FeedbackRating,
   FeedbackSummary,
+  PilotDashboardData,
+  PilotEndReport,
+  PilotFeedbackMetrics,
+  PilotFeedbackPreview,
+  PilotIncident,
+  PilotIssue,
+  PilotIssueSeverity,
+  PilotIssueStatus,
+  PilotJudgment,
+  PilotMaintenanceState,
+  PilotRetentionPreview,
+  PilotStatus,
+  ConnectorReadinessItem,
+  DryRunLog,
+  ExternalIntakeCandidate,
+  ExternalIntakeSourceType,
   ImprovementDashboardData,
+  IntegrationDryRunResult,
+  IntegrationDryRunTemplate,
+  IntegrationAnalytics,
+  IntegrationSetting,
+  IntegrationStatus,
+  LearningAnalytics,
+  LearningDashboardData,
+  LearningImprovement,
+  LearningRun,
+  LearningSimulation,
   ManagedUser,
   OperationReadinessData,
   OperationReadinessStatus,
+  OrchestratorAnalytics,
+  OrchestratorStatus,
+  PromptExperiment,
+  PromptExperimentAnalytics,
+  PromptMetricSummary,
+  PromptStudioDashboardData,
+  PromptVersion,
+  PromptVersionStatus,
+  PromptWinnerRecommendation,
+  KnowledgeBestPractices,
+  KnowledgeSearchInsights,
+  ProductAnalyticsDashboardData,
+  ProjectHandoff,
+  ProjectLifecycleAnalytics,
+  ProjectLifecycleDetail,
+  ProjectLifecycleEvent,
+  ProjectLifecycleStatus,
+  ProjectLostReason,
+  ProjectOutcome,
+  ProjectRetrospective,
+  ProposalKnowledgeEntry,
+  ProposalTemplateEntry,
+  ReleaseNoteEntry,
   TrialReportData,
-  UsageDashboardData
+  UsageDashboardData,
+  UserRole,
+  ProposalReviewEntry,
+  ProposalReviewRevision,
+  ProposalReviewStatus,
+  QualityGateRecord,
+  ReleaseRecord,
+  ReleaseRecordStatus,
+  WorkspaceConversationRecord,
+  WorkspaceSummary,
+  WorkspaceWorkLogRecord
 } from "@/types/app";
 
-export type CompanyResearchApiResponse = {
-  source_url: string;
-  fetched: boolean;
-  overview: string;
-  competitors: string[];
-  recruitment: string;
-  news: string[];
-  services: string[];
-  sns: string[];
-};
-
-export async function analyzeProposal(payload: ProposalRequest): Promise<AnalysisResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/analyze`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeaders()
-    },
-    body: JSON.stringify(payload)
-  });
-
-  if (!response.ok) {
-    let message = `分析に失敗しました。status=${response.status}`;
-
-    try {
-      const errorBody = (await response.json()) as { detail?: string };
-      if (errorBody.detail) {
-        message = `${message}: ${errorBody.detail}`;
-      }
-    } catch {
-      message = `${message}: バックエンドからエラー詳細を取得できませんでした。`;
-    }
-
-    throw new Error(message);
-  }
-
-  return response.json() as Promise<AnalysisResponse>;
-}
-
-export async function researchCompanyUrl(payload: {
-  url: string;
-  project_brief: string;
-  client_company_info: string;
-}): Promise<CompanyResearchApiResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/company-research`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeaders()
-    },
-    body: JSON.stringify(payload)
-  });
-
-  if (!response.ok) {
-    let message = `会社URL調査に失敗しました。status=${response.status}`;
-
-    try {
-      const errorBody = (await response.json()) as { detail?: string };
-      if (errorBody.detail) {
-        message = `${message}: ${errorBody.detail}`;
-      }
-    } catch {
-      message = `${message}: バックエンドからエラー詳細を取得できませんでした。`;
-    }
-
-    throw new Error(message);
-  }
-
-  return response.json() as Promise<CompanyResearchApiResponse>;
-}
-
-export async function listUsers(): Promise<{ users: ManagedUser[] }> {
-  return fetchJson("/api/users");
-}
-
-export async function createUser(payload: { email: string; password: string; role: UserRole }): Promise<{ user: ManagedUser }> {
-  return fetchJson("/api/users", {
-    method: "POST",
-    body: JSON.stringify(payload)
-  });
-}
-
-export async function updateUserActive(userId: number, isActive: boolean): Promise<{ user: ManagedUser }> {
-  return fetchJson(`/api/users/${userId}`, {
-    method: "PATCH",
-    body: JSON.stringify({ is_active: isActive })
-  });
-}
-
-export async function getCrm(): Promise<{ customers: CrmCustomer[]; projects: CrmProject[] }> {
-  return fetchJson("/api/projects/crm");
-}
-
-export async function getDbLogs(): Promise<{ logs: Array<Record<string, string | number | null>> }> {
-  return fetchJson("/api/logs");
-}
-
-export async function getAuditLogs(): Promise<{ logs: AuditLog[] }> {
-  return fetchJson("/api/logs/audit");
-}
-
-export async function getFeedback(): Promise<{ feedback: FeedbackEntry[]; summary: FeedbackSummary }> {
-  return fetchJson("/api/feedback");
-}
-
-export async function getUsageDashboard(): Promise<{ dashboard: UsageDashboardData }> {
-  return fetchJson("/api/logs/usage-dashboard");
-}
-
-export async function downloadUsageDashboardCsv(): Promise<Blob> {
-  const response = await fetch(`${API_BASE_URL}/api/logs/usage-dashboard.csv`, {
-    method: "GET",
-    headers: {
-      ...getAuthHeaders()
-    }
-  });
-
-  if (!response.ok) {
-    let message = `利用状況CSVの作成に失敗しました。Status=${response.status}`;
-    try {
-      const errorBody = (await response.json()) as { detail?: string };
-      if (errorBody.detail) message = `${message}: ${errorBody.detail}`;
-    } catch {
-      message = `${message}: Backendからエラー詳細を取得できませんでした。`;
-    }
-    throw new Error(message);
-  }
-
-  return response.blob();
-}
-
-export async function createTrialReport(payload: { admin_comment: string }): Promise<{ report: TrialReportData }> {
-  return fetchJson("/api/logs/trial-report", {
-    method: "POST",
-    body: JSON.stringify(payload)
-  });
-}
-
-export async function getOperationReadiness(): Promise<{ readiness: OperationReadinessData }> {
-  return fetchJson("/api/logs/operation-readiness");
-}
-
-export async function getImprovementDashboard(): Promise<{ dashboard: ImprovementDashboardData }> {
-  return fetchJson("/api/logs/improvement-dashboard");
-}
-
-export async function submitFeedback(payload: {
-  rating: FeedbackRating;
-  comment: string;
-  feature_name: string;
-}): Promise<{ feedback: FeedbackEntry; summary: FeedbackSummary }> {
-  return fetchJson("/api/feedback", {
-    method: "POST",
-    body: JSON.stringify(payload)
-  });
-}
-
-export async function saveUsageLogToBackend(payload: {
-  feature_name: string;
-  input_length: number;
-  output_type: string;
-  status: "success" | "failure";
-  error_type?: string;
-}): Promise<{ ok: boolean }> {
-  return fetchJson("/api/logs", {
-    method: "POST",
-    body: JSON.stringify(payload)
-  });
-}
-
-async function fetchJson<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeaders(),
-      ...(init.headers ?? {})
-    }
-  });
-
-  if (!response.ok) {
-    let message = `APIリクエストに失敗しました。status=${response.status}`;
-    try {
-      const errorBody = (await response.json()) as { detail?: string };
-      if (errorBody.detail) message = `${message}: ${errorBody.detail}`;
-    } catch {
-      message = `${message}: バックエンドからエラー詳細を取得できませんでした。`;
-    }
-    throw new Error(message);
-  }
-
-  return response.json() as Promise<T>;
-}
-
+export { analyzeProposal, researchCompanyUrl, type CompanyResearchApiResponse } from "@/api/proposal";
+export { getTodayBriefing, saveBriefingEvent } from "@/api/briefing";
+export {
+  archiveAiNotification,
+  getAiNotifications,
+  markAiNotificationActioned,
+  markAiNotificationRead,
+  runAiWatchEngine
+} from "@/api/notifications";
+export { createUser, listUsers, updateUserActive, updateUserPilot } from "@/api/users";
+export {
+  completeProject,
+  createProject,
+  generateProjectHandoff,
+  getCrm,
+  getProjectLifecycle,
+  getProjectLifecycleAnalytics,
+  registerProjectOutcome,
+  updateProjectStatus,
+  type ProjectCompletePayload,
+  type ProjectCreatePayload,
+  type ProjectHandoffPayload
+} from "@/api/crm";
+export {
+  createTrialReport,
+  downloadUsageDashboardCsv,
+  getAuditLogs,
+  getDbLogs,
+  getImprovementDashboard,
+  getOperationReadiness,
+  getUsageDashboard,
+  saveUsageLogToBackend
+} from "@/api/logs";
+export { getFeedback, submitFeedback } from "@/api/feedback";
+export {
+  applyPilotDataRetention,
+  confirmPilotChecklist,
+  createPilotIssue,
+  createPilotIssueFromFeedback,
+  endPilot,
+  getPilotDashboard,
+  getPilotIssues,
+  getPilotStatus,
+  previewPilotDataRetention,
+  updatePilotIssue,
+  updatePilotMaintenance
+} from "@/api/pilot";
+export {
+  convertExternalIntakeCandidate,
+  createExternalIntake,
+  getExternalIntakeCandidates,
+  getConnectorReadiness,
+  getIntegrationDryRunLogs,
+  getIntegrationSettings,
+  reviewExternalIntakeCandidate,
+  runIntegrationDryRun,
+  updateIntegrationSetting,
+  type ExternalIntakePayload,
+  type IntegrationSettingPayload
+} from "@/api/integrations";
+export {
+  createReleaseNote,
+  getProductAnalyticsDashboard,
+  getReleaseNotes,
+  saveProductAnalyticsEvent,
+  updateProductAnalyticsErrorResolved
+} from "@/api/analytics";
+export { getLearningDashboard, runLearningAnalysis, updateLearningImprovementStatus } from "@/api/learning";
+export {
+  createPromptExperiment,
+  createPromptExperimentFromLearning,
+  createPromptVersion,
+  getPromptStudioDashboard,
+  judgePromptExperiment,
+  recordPromptMetric,
+  rollbackPromptVersion,
+  routePromptVersion,
+  updatePromptVersionStatus,
+  type PromptExperimentPayload,
+  type PromptVersionPayload
+} from "@/api/prompts";
+export {
+  getActionQueue,
+  getOrchestratorAnalytics,
+  getProjectOrchestratorStatus,
+  retryQueueAction,
+  runProjectOrchestrator,
+  startProjectOrchestrator
+} from "@/api/orchestrator";
+export {
+  createKnowledgeEntry,
+  createProposalTemplate,
+  getKnowledgeBestPractices,
+  getKnowledgeEntries,
+  getProposalTemplates,
+  recalculateKnowledgeQuality,
+  searchKnowledge,
+  updateKnowledgeEvaluation,
+  updateKnowledgeStatus,
+  updateProposalTemplateActive,
+  type CreateKnowledgePayload,
+  type CreateTemplatePayload
+} from "@/api/knowledge";
+export {
+  getWorkspaceConversation,
+  getWorkspaceSummary,
+  saveWorkspaceConversation,
+  type WorkspaceConversationPayload
+} from "@/api/workspace";
+export {
+  applyReviewFeedback,
+  getProposalReview,
+  getProposalReviewRevisions,
+  listProposalReviews,
+  rerequestProposalReview,
+  requestProposalReview,
+  updateProposalReview
+} from "@/api/reviews";
+export { bypassQualityGate, completeQualityGate, getQualityGate, saveQualityGate } from "@/api/qualityGates";
+export { createReleaseRecord, getReleases, publishReleaseRecord, updateReleaseRecord, type ReleaseRecordPayload } from "@/api/releases";

@@ -12,6 +12,9 @@ type HealthResponse = {
   pptx?: string;
   pdf?: string;
   db?: string;
+  db_connected?: boolean;
+  db_type?: string;
+  db_tables_count?: number;
 };
 
 export type HealthSnapshot = {
@@ -20,6 +23,8 @@ export type HealthSnapshot = {
   mockMode: boolean | null;
   authConfigured: boolean | null;
   dbStatus: string;
+  dbType: string;
+  dbTablesCount: number;
   checkedAt: string;
 };
 
@@ -34,6 +39,8 @@ export function HealthStatus({ onChange }: HealthStatusProps) {
     mockMode: null,
     authConfigured: null,
     dbStatus: "未確認",
+    dbType: "未確認",
+    dbTablesCount: 0,
     checkedAt: ""
   });
 
@@ -43,12 +50,15 @@ export function HealthStatus({ onChange }: HealthStatusProps) {
       const response = await fetch(`${API_BASE_URL}/health`, { cache: "no-store" });
       if (!response.ok) throw new Error("health failed");
       const body = (await response.json()) as HealthResponse;
+      const dbConnected = Boolean(body.db_connected || body.db === "connected");
       const snapshot: HealthSnapshot = {
         backendOk: body.status === "ok",
         aiStatus: body.ai_api === "missing" ? "要確認" : "利用可能",
         mockMode: Boolean(body.mock_ai),
         authConfigured: Boolean(body.auth_configured),
-        dbStatus: body.db === "connected" ? "接続済み" : "要確認",
+        dbStatus: dbConnected ? "接続済み" : "要確認",
+        dbType: body.db_type || "未確認",
+        dbTablesCount: body.db_tables_count || 0,
         checkedAt
       };
       setHealth(snapshot);
@@ -60,6 +70,8 @@ export function HealthStatus({ onChange }: HealthStatusProps) {
         mockMode: null,
         authConfigured: null,
         dbStatus: "要確認",
+        dbType: "未確認",
+        dbTablesCount: 0,
         checkedAt
       };
       setHealth(snapshot);
@@ -88,7 +100,7 @@ export function HealthStatus({ onChange }: HealthStatusProps) {
         <StatusItem label="AI API" ok={health.aiStatus === "利用可能"} value={health.aiStatus} />
         <StatusItem label="PPTX作成" ok={health.backendOk} value={health.backendOk ? "利用可能" : "要確認"} />
         <StatusItem label="PDF作成" ok={health.backendOk} value={health.backendOk ? "利用可能" : "要確認"} />
-        <StatusItem label="DB接続" ok={health.dbStatus === "接続済み"} value={health.dbStatus} />
+        <StatusItem label="DB接続" ok={health.dbStatus === "接続済み"} value={`${health.dbStatus} / ${health.dbType} / ${health.dbTablesCount} tables`} />
       </div>
     </section>
   );

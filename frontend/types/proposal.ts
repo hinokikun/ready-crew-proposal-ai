@@ -107,5 +107,42 @@ export type AnalysisResponse = {
   analysis: ProposalAnalysis;
   markdown: string;
   powerpoint_generation_data: PowerPointData;
+  knowledge_insights?: KnowledgeInsights;
+};
+
+export type KnowledgeEntry = {
+  id: number;
+  industry: string;
+  company_size: string;
+  project_summary: string;
+  adopted_proposal: string;
+  proposal_story: string;
+  adoption_reason: string;
+  lost_reason: string;
+  result: string;
+  owner_memo: string;
+  outcome: "success" | "lost" | "unknown" | string;
+  rating: number;
+  evaluation_status: "effective" | "needs_improvement" | string;
+  tags: string;
+  similarity_score?: number;
+  is_high_quality?: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type KnowledgeInsights = {
+  similar?: {
+    industry: string;
+    matches: KnowledgeEntry[];
+    success_patterns: string[];
+    lost_patterns: string[];
+    recommendation: string;
+  };
+  best_practices?: {
+    winning_structures: string[];
+    frequent_proposals: string[];
+    industry_success_examples: Array<{ industry: string; count: number }>;
+  };
 };
 

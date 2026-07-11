@@ -10,22 +10,35 @@ frontend/.env.local
 
 .venv/
 backend/.venv/
+backend/.codex-test-venv/
+backend/.pip-cache/
+backend/.pytest-tmp/
 .venv-*/
 node_modules/
 frontend/node_modules/
 .next/
 frontend/.next/
 __pycache__/
+.pytest_cache/
 *.pyc
 dist/
 build/
 coverage/
+.coverage
 *.log
 *.db
 *.sqlite
 *.sqlite3
 backend/app.db
+.pytest-tmp/
+.npm-cache/
+playwright-report/
+test-results/
 frontend/.vercel/
+frontend/.npm-cache/
+frontend/playwright-report/
+frontend/test-results/
+*.tsbuildinfo
 
 tmp/
 outputs/
