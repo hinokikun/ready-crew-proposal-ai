@@ -1,4 +1,4 @@
-import { fetchBlob, fetchJson } from "@/api/client";
+﻿import { fetchBlob, fetchJson } from "@/client-api/client";
 import type {
   AuditLog,
   ImprovementDashboardData,

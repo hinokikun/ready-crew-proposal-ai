@@ -1,4 +1,4 @@
-import { fetchJson } from "@/api/client";
+﻿import { fetchJson } from "@/client-api/client";
 import type { WorkspaceConversationRecord, WorkspaceSummary, WorkspaceWorkLogRecord } from "@/types/app";
 
 export type WorkspaceConversationPayload = {

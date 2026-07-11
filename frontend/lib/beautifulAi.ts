@@ -1,4 +1,4 @@
-import { fetchJson } from "@/api/client";
+﻿import { fetchJson } from "@/client-api/client";
 import { getAuthHeaders } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/config";
 import type { PowerPointData, ProposalRequest, WinProbability } from "@/types/proposal";

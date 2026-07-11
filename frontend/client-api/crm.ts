@@ -1,4 +1,4 @@
-import { fetchJson } from "@/api/client";
+﻿import { fetchJson } from "@/client-api/client";
 import type { CrmCustomer, CrmProject, ProjectLifecycleDetail, ProjectLifecycleStatus, ProjectLostReason } from "@/types/app";
 
 export function getCrm(): Promise<{ customers: CrmCustomer[]; projects: CrmProject[] }> {

@@ -1,4 +1,4 @@
-import { fetchJson } from "@/api/client";
+﻿import { fetchJson } from "@/client-api/client";
 import type {
   ProductAnalyticsDashboardData,
   ProductAnalyticsEventPayload,

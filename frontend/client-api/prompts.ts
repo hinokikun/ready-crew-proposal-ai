@@ -1,4 +1,4 @@
-import { fetchJson } from "@/api/client";
+﻿import { fetchJson } from "@/client-api/client";
 import type { PromptExperiment, PromptExperimentAnalytics, PromptStudioDashboardData, PromptVersion, PromptWinnerRecommendation } from "@/types/app";
 
 export type PromptVersionPayload = {

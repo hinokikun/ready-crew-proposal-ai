@@ -1,4 +1,4 @@
-import { fetchJson } from "@/api/client";
+﻿import { fetchJson } from "@/client-api/client";
 import type { ReleaseRecord, ReleaseRecordStatus } from "@/types/app";
 
 export type ReleaseRecordPayload = {

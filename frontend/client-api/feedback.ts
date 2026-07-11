@@ -1,4 +1,4 @@
-import { fetchJson } from "@/api/client";
+﻿import { fetchJson } from "@/client-api/client";
 import type { FeedbackEntry, FeedbackRating, FeedbackSummary } from "@/types/app";
 
 export function getFeedback(): Promise<{ feedback: FeedbackEntry[]; summary: FeedbackSummary }> {

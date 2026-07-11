@@ -1,5 +1,5 @@
-import type { AnalysisResponse, ProposalRequest } from "@/types/proposal";
-import { fetchJson } from "@/api/client";
+﻿import type { AnalysisResponse, ProposalRequest } from "@/types/proposal";
+import { fetchJson } from "@/client-api/client";
 
 export type CompanyResearchApiResponse = {
   source_url: string;

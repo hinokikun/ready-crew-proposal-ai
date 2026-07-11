@@ -1,4 +1,4 @@
-import { fetchJson } from "@/api/client";
+﻿import { fetchJson } from "@/client-api/client";
 import type { ProposalReviewEntry, ProposalReviewRevision, ProposalReviewStatus } from "@/types/app";
 
 export function listProposalReviews(): Promise<{ reviews: ProposalReviewEntry[] }> {

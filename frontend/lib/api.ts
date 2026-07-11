@@ -1,4 +1,4 @@
-export type {
+﻿export type {
   AuditLog,
   AiNotification,
   AiNotificationAnalytics,
@@ -86,16 +86,16 @@ export type {
   WorkspaceWorkLogRecord
 } from "@/types/app";
 
-export { analyzeProposal, researchCompanyUrl, type CompanyResearchApiResponse } from "@/api/proposal";
-export { getTodayBriefing, saveBriefingEvent } from "@/api/briefing";
+export { analyzeProposal, researchCompanyUrl, type CompanyResearchApiResponse } from "@/client-api/proposal";
+export { getTodayBriefing, saveBriefingEvent } from "@/client-api/briefing";
 export {
   archiveAiNotification,
   getAiNotifications,
   markAiNotificationActioned,
   markAiNotificationRead,
   runAiWatchEngine
-} from "@/api/notifications";
-export { createUser, listUsers, updateUserActive, updateUserPilot } from "@/api/users";
+} from "@/client-api/notifications";
+export { createUser, listUsers, updateUserActive, updateUserPilot } from "@/client-api/users";
 export {
   completeProject,
   createProject,
@@ -108,7 +108,7 @@ export {
   type ProjectCompletePayload,
   type ProjectCreatePayload,
   type ProjectHandoffPayload
-} from "@/api/crm";
+} from "@/client-api/crm";
 export {
   createTrialReport,
   downloadUsageDashboardCsv,
@@ -118,8 +118,8 @@ export {
   getOperationReadiness,
   getUsageDashboard,
   saveUsageLogToBackend
-} from "@/api/logs";
-export { getFeedback, submitFeedback } from "@/api/feedback";
+} from "@/client-api/logs";
+export { getFeedback, submitFeedback } from "@/client-api/feedback";
 export {
   applyPilotDataRetention,
   confirmPilotChecklist,
@@ -132,7 +132,7 @@ export {
   previewPilotDataRetention,
   updatePilotIssue,
   updatePilotMaintenance
-} from "@/api/pilot";
+} from "@/client-api/pilot";
 export {
   convertExternalIntakeCandidate,
   createExternalIntake,
@@ -145,15 +145,15 @@ export {
   updateIntegrationSetting,
   type ExternalIntakePayload,
   type IntegrationSettingPayload
-} from "@/api/integrations";
+} from "@/client-api/integrations";
 export {
   createReleaseNote,
   getProductAnalyticsDashboard,
   getReleaseNotes,
   saveProductAnalyticsEvent,
   updateProductAnalyticsErrorResolved
-} from "@/api/analytics";
-export { getLearningDashboard, runLearningAnalysis, updateLearningImprovementStatus } from "@/api/learning";
+} from "@/client-api/analytics";
+export { getLearningDashboard, runLearningAnalysis, updateLearningImprovementStatus } from "@/client-api/learning";
 export {
   createPromptExperiment,
   createPromptExperimentFromLearning,
@@ -166,7 +166,7 @@ export {
   updatePromptVersionStatus,
   type PromptExperimentPayload,
   type PromptVersionPayload
-} from "@/api/prompts";
+} from "@/client-api/prompts";
 export {
   getActionQueue,
   getOrchestratorAnalytics,
@@ -174,7 +174,7 @@ export {
   retryQueueAction,
   runProjectOrchestrator,
   startProjectOrchestrator
-} from "@/api/orchestrator";
+} from "@/client-api/orchestrator";
 export {
   createKnowledgeEntry,
   createProposalTemplate,
@@ -188,13 +188,13 @@ export {
   updateProposalTemplateActive,
   type CreateKnowledgePayload,
   type CreateTemplatePayload
-} from "@/api/knowledge";
+} from "@/client-api/knowledge";
 export {
   getWorkspaceConversation,
   getWorkspaceSummary,
   saveWorkspaceConversation,
   type WorkspaceConversationPayload
-} from "@/api/workspace";
+} from "@/client-api/workspace";
 export {
   applyReviewFeedback,
   getProposalReview,
@@ -203,6 +203,6 @@ export {
   rerequestProposalReview,
   requestProposalReview,
   updateProposalReview
-} from "@/api/reviews";
-export { bypassQualityGate, completeQualityGate, getQualityGate, saveQualityGate } from "@/api/qualityGates";
-export { createReleaseRecord, getReleases, publishReleaseRecord, updateReleaseRecord, type ReleaseRecordPayload } from "@/api/releases";
+} from "@/client-api/reviews";
+export { bypassQualityGate, completeQualityGate, getQualityGate, saveQualityGate } from "@/client-api/qualityGates";
+export { createReleaseRecord, getReleases, publishReleaseRecord, updateReleaseRecord, type ReleaseRecordPayload } from "@/client-api/releases";

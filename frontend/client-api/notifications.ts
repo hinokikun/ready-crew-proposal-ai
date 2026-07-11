@@ -1,4 +1,4 @@
-import { fetchJson } from "@/api/client";
+﻿import { fetchJson } from "@/client-api/client";
 import type { AiNotification, AiNotificationCenterData } from "@/types/app";
 
 export function getAiNotifications(): Promise<AiNotificationCenterData> {

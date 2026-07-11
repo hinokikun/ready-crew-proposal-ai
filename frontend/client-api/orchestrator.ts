@@ -1,4 +1,4 @@
-import { fetchJson } from "@/api/client";
+﻿import { fetchJson } from "@/client-api/client";
 import type { ActionQueueItem, OrchestratorAnalytics, OrchestratorStatus } from "@/types/app";
 
 export function getActionQueue(params: { status?: string; limit?: number } = {}): Promise<{ queue: ActionQueueItem[] }> {
