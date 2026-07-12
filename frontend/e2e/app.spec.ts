@@ -354,7 +354,7 @@ async function mockApi(page: Page, options: MockOptions = {}) {
         route,
         {
           detail: {
-            error_type: "beautiful_ai_forbidden",
+            error_type: "beautiful_ai_access_not_enabled",
             message: "Beautiful.ai APIの利用権限が有効になっていません",
             fallback_available: true
           }
@@ -449,7 +449,7 @@ function mockResponse(path: string, options: MockOptions = {}) {
     if (options.beautifulError === 403) {
       return {
         detail: {
-          error_type: "beautiful_ai_forbidden",
+          error_type: "beautiful_ai_access_not_enabled",
           message: "Beautiful.ai APIの利用権限が有効になっていません",
           fallback_available: true
         }

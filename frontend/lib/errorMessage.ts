@@ -10,7 +10,15 @@ export function toFriendlyError(error: unknown): FriendlyError {
   const normalized = message.toLowerCase();
 
   if (/beautiful\.ai|beautiful_ai/.test(normalized)) {
-    if (/401|unauthorized|apiキー|api key/.test(normalized)) {
+    if (/400|bad_request/.test(normalized)) {
+      return {
+        category: "Beautiful.ai送信内容エラー",
+        title: "Beautiful.aiへ送信した内容を確認してください",
+        cause: "Beautiful.ai APIが送信内容を受け付けませんでした。",
+        action: "提案内容を短くするか、既存PPTXをご利用ください。"
+      };
+    }
+    if (/401|unauthorized|invalid_api_key|api key|apiキー/.test(normalized)) {
       return {
         category: "Beautiful.ai認証エラー",
         title: "Beautiful.ai APIキーを確認してください",
@@ -18,12 +26,20 @@ export function toFriendlyError(error: unknown): FriendlyError {
         action: "RenderのBeautiful.ai APIキー設定を確認してください。既存PPTXも利用できます。"
       };
     }
-    if (/403|forbidden|権限/.test(normalized)) {
+    if (/403|forbidden|access_not_enabled|権限/.test(normalized)) {
       return {
         category: "Beautiful.ai権限エラー",
         title: "Beautiful.ai APIの利用権限が有効になっていません",
         cause: "Beautiful.ai側のAPI利用権限、プラン、またはワークスペース設定に問題がある可能性があります。",
         action: "Beautiful.aiの契約・API権限を確認してください。既存PPTXも利用できます。"
+      };
+    }
+    if (/404|endpoint_not_found/.test(normalized)) {
+      return {
+        category: "Beautiful.ai接続先エラー",
+        title: "Beautiful.ai APIの接続先が見つかりません",
+        cause: "BackendのBeautiful.ai接続先設定、またはBeautiful.ai側のAPIエンドポイントが想定と異なる可能性があります。",
+        action: "RenderのBEAUTIFUL_AI_BASE_URLを確認してください。既存PPTXも利用できます。"
       };
     }
     if (/429|rate|limit|上限/.test(normalized)) {
@@ -55,7 +71,7 @@ export function toFriendlyError(error: unknown): FriendlyError {
       category: "認証エラー",
       title: "ログイン状態を確認してください",
       cause: "ログイン期限切れ、権限不足、または認証設定に問題がある可能性があります。",
-      action: "一度ログアウトして再ログインしてください。管理者の場合はadmin権限とRenderの認証環境変数を確認してください。"
+      action: "一度ログアウトして再ログインしてください。管理者は権限とRenderの認証環境変数を確認してください。"
     };
   }
 
@@ -63,7 +79,7 @@ export function toFriendlyError(error: unknown): FriendlyError {
     return {
       category: "OpenAI API制限",
       title: "AI APIの利用上限に達した可能性があります",
-      cause: "短時間の利用回数、API利用上限、またはリクエスト設定が原因の可能性があります。",
+      cause: "短時間の利用集中、API利用上限、またはリクエスト設定が原因の可能性があります。",
       action: "時間を置いて再実行してください。研修やデモではRenderでUSE_MOCK_AI=trueにしてモックモードで確認できます。"
     };
   }
@@ -90,7 +106,7 @@ export function toFriendlyError(error: unknown): FriendlyError {
     return {
       category: "入力不足",
       title: "入力内容を確認してください",
-      cause: "案件概要が短い、必須情報が不足している、または送信形式が想定と異なる可能性があります。",
+      cause: "案件概要が短い、必要情報が不足している、または送信形式が想定と異なる可能性があります。",
       action: "案件メール、会社名、困りごと、予算、納期のうち分かる範囲を追記してください。不明な項目は「未定」「要確認」で問題ありません。"
     };
   }

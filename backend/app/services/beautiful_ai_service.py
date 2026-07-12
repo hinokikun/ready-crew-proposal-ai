@@ -191,8 +191,17 @@ def _make_mock_response(project_id: str, title: str) -> dict[str, str]:
 
 
 def _extract_api_result(data: dict[str, Any], fallback_title: str) -> dict[str, str]:
-    nested = data.get("presentation") if isinstance(data.get("presentation"), dict) else {}
-    source = {**data, **nested}
+    sources: list[dict[str, Any]] = [data]
+    for key in ("data", "presentation", "result"):
+        nested_value = data.get(key)
+        if isinstance(nested_value, dict):
+            sources.append(nested_value)
+            nested_presentation = nested_value.get("presentation")
+            if isinstance(nested_presentation, dict):
+                sources.append(nested_presentation)
+    source: dict[str, Any] = {}
+    for item in sources:
+        source.update(item)
     presentation_id = str(source.get("presentation_id") or source.get("presentationId") or source.get("id") or "")
     editor_url = str(source.get("editor_url") or source.get("editorUrl") or source.get("editUrl") or source.get("url") or "")
     player_url = str(source.get("player_url") or source.get("playerUrl") or source.get("shareUrl") or source.get("viewUrl") or "")
@@ -221,10 +230,22 @@ async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
     }
     async with httpx.AsyncClient(timeout=settings.beautiful_ai_timeout_seconds) as client:
         response = await client.post(_endpoint(), headers=headers, json=payload)
+    if response.status_code == 400:
+        raise BeautifulAiServiceError(
+            status_code=400,
+            error_type="beautiful_ai_bad_request",
+            message="Beautiful.aiへ送信した内容を受け付けられませんでした。入力内容を確認してください。",
+        )
     if response.status_code == 401:
-        raise BeautifulAiServiceError(status_code=401, error_type="beautiful_ai_unauthorized", message="Beautiful.ai APIキーを確認してください")
+        raise BeautifulAiServiceError(status_code=401, error_type="beautiful_ai_invalid_api_key", message="Beautiful.ai APIキーを確認してください。")
     if response.status_code == 403:
-        raise BeautifulAiServiceError(status_code=403, error_type="beautiful_ai_forbidden", message="Beautiful.ai APIの利用権限が有効になっていません")
+        raise BeautifulAiServiceError(status_code=403, error_type="beautiful_ai_access_not_enabled", message="Beautiful.ai APIの利用権限が有効になっていません。")
+    if response.status_code == 404:
+        raise BeautifulAiServiceError(
+            status_code=502,
+            error_type="beautiful_ai_endpoint_not_found",
+            message="Beautiful.ai外部APIのエンドポイントが見つかりません。BackendのBeautiful.ai接続先を確認してください。",
+        )
     if response.status_code == 429:
         retry_after = response.headers.get("Retry-After")
         raise BeautifulAiServiceError(
@@ -233,9 +254,14 @@ async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
             message="Beautiful.aiの利用上限に達しました。時間を置くか既存PPTXをご利用ください",
             retry_after_seconds=int(retry_after) if retry_after and retry_after.isdigit() else None,
         )
+    if response.status_code >= 500:
+        raise BeautifulAiServiceError(status_code=502, error_type="beautiful_ai_service_error", message="Beautiful.ai側で処理に失敗しました。既存PPTXをご利用ください。")
     if response.status_code >= 400:
-        raise BeautifulAiServiceError(status_code=502, error_type="beautiful_ai_service_error", message="Beautiful.ai側で処理に失敗しました。既存PPTXをご利用ください")
-    parsed = response.json()
+        raise BeautifulAiServiceError(status_code=502, error_type="beautiful_ai_service_error", message="Beautiful.ai連携で処理に失敗しました。既存PPTXをご利用ください。")
+    try:
+        parsed = response.json()
+    except ValueError as exc:
+        raise BeautifulAiServiceError(status_code=502, error_type="beautiful_ai_service_error", message="Beautiful.ai APIの応答を解析できませんでした。") from exc
     return parsed if isinstance(parsed, dict) else {}
 
 

@@ -190,9 +190,12 @@ def test_beautiful_ai_runtime_maintenance_blocks_create(
 @pytest.mark.parametrize(
     ("status_code", "error_type", "expected_status"),
     [
-        (401, "beautiful_ai_unauthorized", 401),
-        (403, "beautiful_ai_forbidden", 403),
+        (400, "beautiful_ai_bad_request", 400),
+        (401, "beautiful_ai_invalid_api_key", 401),
+        (403, "beautiful_ai_access_not_enabled", 403),
+        (502, "beautiful_ai_endpoint_not_found", 502),
         (429, "beautiful_ai_rate_limit", 429),
+        (502, "beautiful_ai_service_error", 502),
     ],
 )
 def test_beautiful_ai_safe_error_mapping(
@@ -227,6 +230,78 @@ def test_beautiful_ai_safe_error_mapping(
         assert detail["error_type"] == error_type
         assert "test-beautiful-key" not in serialized
         assert "authorization" not in serialized
+
+
+def test_beautiful_ai_extracts_nested_data_response() -> None:
+    service = importlib.import_module("app.services.beautiful_ai_service")
+    result = service._extract_api_result(
+        {
+            "data": {
+                "presentationId": "nested-presentation",
+                "editorUrl": "https://www.beautiful.ai/editor/nested-presentation",
+                "playerUrl": "https://www.beautiful.ai/player/nested-presentation",
+                "status": "created",
+                "title": "Nested response",
+            }
+        },
+        "Fallback title",
+    )
+    assert result == {
+        "presentation_id": "nested-presentation",
+        "editor_url": "https://www.beautiful.ai/editor/nested-presentation",
+        "player_url": "https://www.beautiful.ai/player/nested-presentation",
+        "status": "created",
+        "title": "Nested response",
+    }
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("external_status", "expected_error_type", "expected_service_status"),
+    [
+        (400, "beautiful_ai_bad_request", 400),
+        (401, "beautiful_ai_invalid_api_key", 401),
+        (403, "beautiful_ai_access_not_enabled", 403),
+        (404, "beautiful_ai_endpoint_not_found", 502),
+        (429, "beautiful_ai_rate_limit", 429),
+        (500, "beautiful_ai_service_error", 502),
+    ],
+)
+async def test_beautiful_ai_post_payload_maps_external_status(
+    monkeypatch: pytest.MonkeyPatch,
+    external_status: int,
+    expected_error_type: str,
+    expected_service_status: int,
+) -> None:
+    service = importlib.import_module("app.services.beautiful_ai_service")
+
+    class FakeResponse:
+        status_code = external_status
+        headers = {"Retry-After": "30"} if external_status == 429 else {}
+
+        def json(self) -> dict[str, Any]:
+            return {}
+
+    class FakeClient:
+        def __init__(self, *_: Any, **__: Any) -> None:
+            pass
+
+        async def __aenter__(self) -> "FakeClient":
+            return self
+
+        async def __aexit__(self, *_: Any) -> None:
+            return None
+
+        async def post(self, *_: Any, **__: Any) -> FakeResponse:
+            return FakeResponse()
+
+    monkeypatch.setattr(service.httpx, "AsyncClient", FakeClient)
+
+    with pytest.raises(service.BeautifulAiServiceError) as exc_info:
+        await service._post_payload({"slides": []})
+
+    assert exc_info.value.error_type == expected_error_type
+    assert exc_info.value.status_code == expected_service_status
 
 
 def test_beautiful_ai_api_key_is_not_returned_or_stored(
