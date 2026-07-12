@@ -48,7 +48,7 @@ type AiWorkspacePanelProps = {
   canRequestReview?: boolean;
   canCompleteQualityGate?: boolean;
   canBypassQualityGate?: boolean;
-  onQualityGateChange?: (unlocked: boolean) => void;
+  onQualityGateChange?: (unlocked: boolean, gate?: QualityGateRecord | null) => void;
   onRerunAgent: (agent: AiWorkspaceAgentKey) => void;
   workspaceSeed?: string;
   workspaceTitle?: string;
@@ -595,10 +595,10 @@ function AiWorkspacePanelBase({
         nextChecked[item] = true;
       });
       setCheckedGateItems(nextChecked);
-      onQualityGateChange?.(Boolean(response.gate?.download_unlocked));
+      onQualityGateChange?.(Boolean(response.gate?.download_unlocked), response.gate ?? null);
     } catch {
       setQualityGateNotice("提出前確認ゲートを読み込めませんでした。Backend接続を確認してください。");
-      onQualityGateChange?.(false);
+      onQualityGateChange?.(false, null);
     }
   }, [onQualityGateChange, workspaceId]);
 
@@ -733,7 +733,7 @@ function AiWorkspacePanelBase({
     try {
       const response = await saveQualityGate(workspaceId, selectedGateItems);
       setQualityGate(response.gate);
-      onQualityGateChange?.(Boolean(response.gate?.download_unlocked));
+      onQualityGateChange?.(Boolean(response.gate?.download_unlocked), response.gate ?? null);
       setQualityGateNotice("確認状況を保存しました。");
     } catch {
       setQualityGateNotice("確認状況を保存できませんでした。Backend接続を確認してください。");
@@ -753,11 +753,11 @@ function AiWorkspacePanelBase({
     try {
       const response = await completeQualityGate(workspaceId, selectedGateItems);
       setQualityGate(response.gate);
-      onQualityGateChange?.(Boolean(response.gate?.download_unlocked));
+      onQualityGateChange?.(Boolean(response.gate?.download_unlocked), response.gate ?? null);
       setQualityGateNotice("ダウンロード可能になりました。");
     } catch {
       setQualityGateNotice("品質ゲートを完了できませんでした。権限またはBackend接続を確認してください。");
-      onQualityGateChange?.(false);
+      onQualityGateChange?.(false, null);
     } finally {
       setIsQualityGateSaving(false);
     }
@@ -774,11 +774,11 @@ function AiWorkspacePanelBase({
     try {
       const response = await bypassQualityGate(workspaceId, bypassReason);
       setQualityGate(response.gate);
-      onQualityGateChange?.(Boolean(response.gate?.download_unlocked));
+      onQualityGateChange?.(Boolean(response.gate?.download_unlocked), response.gate ?? null);
       setQualityGateNotice("管理者バイパスを記録しました。ダウンロード可能です。");
     } catch {
       setQualityGateNotice("管理者バイパスに失敗しました。権限またはBackend接続を確認してください。");
-      onQualityGateChange?.(false);
+      onQualityGateChange?.(false, null);
     } finally {
       setIsQualityGateBypassing(false);
     }

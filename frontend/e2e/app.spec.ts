@@ -195,6 +195,30 @@ test("FrontendとBackendのバージョン不一致を検出できる", async ({
   await expect(page.getByTestId("beautiful-ai-status-card").getByText(/FrontendとBackendのバージョンが一致していません/)).toBeVisible();
 });
 
+test("Beautiful.ai診断はmemberのAdmin=falseをブロック扱いにしない", async ({ page }) => {
+  await login(page, memberEmail);
+  await page.locator(".wizard-sample-experience .primary-button").click();
+  await scrollToOutputs(page);
+  const wizard = page.locator(".ai-wizard-shell");
+  const diagnostics = wizard.getByTestId("beautiful-ai-disabled-reasons").first();
+  await expect(diagnostics).toBeVisible({ timeout: 25000 });
+  await expect(diagnostics.locator("article").filter({ hasText: "Admin" }).getByText("false")).toBeVisible();
+  await expect(diagnostics.locator("article").filter({ hasText: "Role Allowed" }).getByText("true")).toBeVisible();
+  await expect(diagnostics.locator("article").filter({ hasText: "Quality Gate" }).getByText("true")).toBeVisible();
+  await expect(wizard.getByTestId("beautiful-ai-create-button")).toBeEnabled();
+});
+
+test("Beautiful.ai診断はmock=falseでも作成ボタンを有効にする", async ({ page }) => {
+  await mockApi(page, { beautifulMock: false });
+  await login(page, memberEmail);
+  await page.locator(".wizard-sample-experience .primary-button").click();
+  await scrollToOutputs(page);
+  const wizard = page.locator(".ai-wizard-shell");
+  const diagnostics = wizard.getByTestId("beautiful-ai-disabled-reasons").first();
+  await expect(diagnostics.locator("article").filter({ hasText: "Mock" }).getByText("false")).toBeVisible({ timeout: 25000 });
+  await expect(wizard.getByTestId("beautiful-ai-create-button")).toBeEnabled();
+});
+
 async function login(page: Page, email: string) {
   await page.goto("/");
   await page.getByLabel("メールアドレス").fill(email);
@@ -255,6 +279,7 @@ type MockOptions = {
   analyzeError?: "maintenance" | "rate";
   hasUsageData?: boolean;
   beautifulEnabled?: boolean;
+  beautifulMock?: boolean;
   beautifulStatus?: "enabled" | "disabled" | "mock" | "not_found" | "unauthorized" | "forbidden" | "server_error";
   beautifulError?: 403 | 429;
   qualityGateComplete?: boolean;
@@ -286,7 +311,7 @@ async function mockApi(page: Page, options: MockOptions = {}) {
       beautiful_ai: {
         enabled: options.beautifulEnabled ?? options.beautifulStatus !== "disabled",
         configured: options.beautifulEnabled ?? options.beautifulStatus !== "disabled",
-        mock: true,
+        mock: options.beautifulMock ?? true,
         route_registered: options.beautifulStatus !== "not_found"
       }
     })
@@ -402,7 +427,7 @@ function beautifulStatusJson(route: Route, options: MockOptions) {
   return json(route, {
     enabled,
     configured: enabled,
-    mock: true,
+    mock: options.beautifulMock ?? true,
     provider: "beautiful.ai",
     message: enabled ? "Beautiful.ai連携は利用可能です。" : "Beautiful.ai連携は未設定です。"
   });
@@ -414,7 +439,7 @@ function mockResponse(path: string, options: MockOptions = {}) {
     return {
       enabled,
       configured: enabled,
-      mock: true,
+      mock: options.beautifulMock ?? true,
       provider: "beautiful.ai",
       message: enabled ? "Beautiful.ai連携は利用可能です。" : "Beautiful.ai連携は未設定です。"
     };
@@ -535,10 +560,13 @@ function mockResponse(path: string, options: MockOptions = {}) {
   }
   if (path.includes("/quality-gates")) {
     const complete = options.qualityGateComplete ?? true;
+    const parts = path.split("/");
+    const qualityGateIndex = parts.indexOf("quality-gates");
+    const projectId = qualityGateIndex >= 0 ? decodeURIComponent(parts[qualityGateIndex + 1] || "e2e") : "e2e";
     return {
       gate: complete
-        ? { project_id: "e2e", checklist_items: ["company", "budget"], completed: true, bypassed: false, download_unlocked: true }
-        : { project_id: "e2e", checklist_items: [], completed: false, bypassed: false, download_unlocked: false }
+        ? { project_id: projectId, checklist_items: ["company", "budget"], completed: true, bypassed: false, download_unlocked: true }
+        : { project_id: projectId, checklist_items: [], completed: false, bypassed: false, download_unlocked: false }
     };
   }
   if (path.includes("/reviews")) return { reviews: [], review: null, revisions: [] };

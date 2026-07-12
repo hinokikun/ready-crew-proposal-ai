@@ -99,6 +99,46 @@ def test_beautiful_ai_mock_success_and_duplicate_prevention(
         assert len(records.json()["presentations"]) == 1
 
 
+def test_beautiful_ai_member_can_create_with_real_api_mode(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    sample_pptx_payload: dict[str, Any],
+) -> None:
+    with _client_with_env(
+        monkeypatch,
+        tmp_path,
+        BEAUTIFUL_AI_ENABLED="true",
+        BEAUTIFUL_AI_MOCK="false",
+        BEAUTIFUL_AI_API_KEY="test-beautiful-key",
+    ) as client:
+        service = importlib.import_module("app.services.beautiful_ai_service")
+
+        async def fake_post(_: dict[str, Any]) -> dict[str, Any]:
+            return {
+                "id": "real-mode-test",
+                "editor_url": "https://www.beautiful.ai/editor/real-mode-test",
+                "player_url": "https://www.beautiful.ai/player/real-mode-test",
+                "status": "created",
+            }
+
+        monkeypatch.setattr(service, "_post_payload", fake_post)
+        admin_headers = _login(client)
+        member_headers = _create_user_and_login(client, admin_headers, "beautiful-member@example.com", "member")
+        project_id = "member-real-mode-project"
+        _complete_quality_gate(client, member_headers, project_id)
+
+        response = client.post(
+            "/api/beautiful-ai/presentations",
+            headers=member_headers,
+            json=_beautiful_payload(sample_pptx_payload, project_id),
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["presentation_id"] == "real-mode-test"
+        assert body["editor_url"].startswith("https://www.beautiful.ai/")
+
+
 def test_beautiful_ai_requires_completed_quality_gate(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
