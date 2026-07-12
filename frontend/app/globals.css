@@ -9578,6 +9578,98 @@ button {
   color: #7a3d24;
 }
 
+.beautiful-ai-diagnostics {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 12px;
+  background: #fffdf8;
+  color: var(--text);
+}
+
+.beautiful-ai-diagnostics-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.beautiful-ai-diagnostics-heading span {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.beautiful-ai-diagnostics-heading .is-ready {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.beautiful-ai-diagnostics-heading .is-blocked {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.beautiful-ai-check-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.beautiful-ai-check-grid article {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.beautiful-ai-check-grid article > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.beautiful-ai-check-grid span {
+  color: #64748b;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.beautiful-ai-check-grid strong {
+  color: #0f172a;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.beautiful-ai-check-grid small {
+  color: #64748b;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.beautiful-ai-check-grid .is-ok {
+  background: #ecfdf5;
+  border-color: rgba(5, 150, 105, 0.22);
+}
+
+.beautiful-ai-check-grid .is-alert {
+  background: #fff7ed;
+  border-color: rgba(234, 88, 12, 0.24);
+}
+
+.beautiful-ai-check-grid .is-neutral {
+  background: #f8fafc;
+}
+
 .beautiful-ai-status-card {
   width: min(100%, 1120px);
   margin: 16px auto 0;
@@ -10093,7 +10185,8 @@ button {
 
   .wizard-effect-grid,
   .trial-check-grid,
-  .feedback-summary-grid {
+  .feedback-summary-grid,
+  .beautiful-ai-check-grid {
     grid-template-columns: 1fr;
   }
 
