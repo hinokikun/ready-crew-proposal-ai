@@ -6,6 +6,7 @@ from typing import Any
 
 from app.knowledge.services import add_knowledge_entry, infer_industry, sanitize_text
 from app.repositories import create_audit_log, get_or_create_customer, get_or_create_project, get_project_detail, row_to_dict
+from app.scope_policy import ScopeContext, scope_where
 
 
 PROJECT_STATUSES = [
@@ -54,12 +55,15 @@ def _insert_event(
     to_status: str = "",
     note: str = "",
 ) -> None:
+    context = db.execute("SELECT organization_id, workspace_id FROM projects WHERE id = ?", (project_id,)).fetchone()
+    organization_id = int(context["organization_id"] if context else 1)
+    workspace_id = int(context["workspace_id"] if context else 1)
     db.execute(
         """
-        INSERT INTO project_lifecycle_events (project_id, user_id, event_type, from_status, to_status, note)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO project_lifecycle_events (project_id, user_id, event_type, from_status, to_status, note, organization_id, workspace_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (project_id, user_id, event_type[:80], from_status[:80], to_status[:80], _safe(note, 500)),
+        (project_id, user_id, event_type[:80], from_status[:80], to_status[:80], _safe(note, 500), organization_id, workspace_id),
     )
 
 
@@ -73,7 +77,7 @@ def create_project_record(
     win_probability: int = 0,
     next_action: str = "",
 ) -> dict[str, Any]:
-    customer_id = get_or_create_customer(db, _safe(customer_name, 160))
+    customer_id = get_or_create_customer(db, _safe(customer_name, 160), user_id=user_id)
     project_id = get_or_create_project(
         db,
         customer_id,
@@ -81,6 +85,7 @@ def create_project_record(
         _safe(summary, 800),
         max(0, min(int(win_probability or 0), 100)),
         _safe(next_action, 500),
+        user_id=user_id,
     )
     project = get_project_detail(db, project_id)
     if project and project.get("status") in {"", "draft"}:
@@ -301,21 +306,25 @@ def complete_project_with_retrospective(
     return get_project_lifecycle(db, project_id)
 
 
-def build_project_lifecycle_analytics(db: Connection) -> dict[str, Any]:
-    total_projects = int(db.execute("SELECT COUNT(*) AS count FROM projects").fetchone()["count"] or 0)
-    won_count = int(db.execute("SELECT COUNT(*) AS count FROM project_outcomes WHERE outcome = 'won'").fetchone()["count"] or 0)
-    lost_count = int(db.execute("SELECT COUNT(*) AS count FROM project_outcomes WHERE outcome = 'lost'").fetchone()["count"] or 0)
-    completed_count = int(db.execute("SELECT COUNT(*) AS count FROM projects WHERE status = '完了'").fetchone()["count"] or 0)
+def build_project_lifecycle_analytics(db: Connection, scope: ScopeContext | None = None) -> dict[str, Any]:
+    project_where, project_params = scope_where(scope, "p") if scope else ("1 = 1", ())
+    outcome_where, outcome_params = scope_where(scope, "o") if scope else ("1 = 1", ())
+    review_where, review_params = scope_where(scope, "r") if scope else ("1 = 1", ())
+    total_projects = int(db.execute(f"SELECT COUNT(*) AS count FROM projects p WHERE {project_where}", project_params).fetchone()["count"] or 0)
+    won_count = int(db.execute(f"SELECT COUNT(*) AS count FROM project_outcomes o WHERE outcome = 'won' AND {outcome_where}", outcome_params).fetchone()["count"] or 0)
+    lost_count = int(db.execute(f"SELECT COUNT(*) AS count FROM project_outcomes o WHERE outcome = 'lost' AND {outcome_where}", outcome_params).fetchone()["count"] or 0)
+    completed_count = int(db.execute(f"SELECT COUNT(*) AS count FROM projects p WHERE status = '完了' AND {project_where}", project_params).fetchone()["count"] or 0)
     decided_count = won_count + lost_count
 
     lost_rows = db.execute(
-        """
+        f"""
         SELECT lost_reason, COUNT(*) AS count
-        FROM project_outcomes
-        WHERE outcome = 'lost'
+        FROM project_outcomes o
+        WHERE outcome = 'lost' AND {outcome_where}
         GROUP BY lost_reason
         ORDER BY count DESC
-        """
+        """,
+        outcome_params,
     ).fetchall()
     lost_reasons = [
         {
@@ -326,11 +335,22 @@ def build_project_lifecycle_analytics(db: Connection) -> dict[str, Any]:
         for row in lost_rows
     ]
 
-    review_count = int(db.execute("SELECT COUNT(*) AS count FROM proposal_reviews").fetchone()["count"] or 0)
-    revision_count = int(db.execute("SELECT COUNT(*) AS count FROM proposal_review_revisions").fetchone()["count"] or 0)
+    review_count = int(db.execute(f"SELECT COUNT(*) AS count FROM proposal_reviews r WHERE {review_where}", review_params).fetchone()["count"] or 0)
+    revision_count = int(
+        db.execute(
+            f"""
+            SELECT COUNT(*) AS count
+            FROM proposal_review_revisions rv
+            INNER JOIN proposal_reviews r ON r.id = rv.review_id
+            WHERE {review_where}
+            """,
+            review_params,
+        ).fetchone()["count"]
+        or 0
+    )
 
     durations: list[float] = []
-    project_rows = db.execute("SELECT id, created_at, updated_at FROM projects").fetchall()
+    project_rows = db.execute(f"SELECT p.id, p.created_at, p.updated_at FROM projects p WHERE {project_where}", project_params).fetchall()
     for project in project_rows:
         start_event = db.execute(
             "SELECT created_at FROM project_lifecycle_events WHERE project_id = ? ORDER BY created_at ASC, id ASC LIMIT 1",

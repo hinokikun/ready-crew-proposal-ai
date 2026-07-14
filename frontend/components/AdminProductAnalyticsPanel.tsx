@@ -416,6 +416,77 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
         </details>
       ) : null}
 
+      {dashboard.presentation ? (
+        <details className="advanced-foldout" open>
+          <summary>Presentation Analytics</summary>
+          <div className="usage-dashboard-grid">
+            <article>
+              <span>Average Score</span>
+              <strong>{dashboard.presentation.average_review_score}</strong>
+              <p>Presentation Reviewの平均点</p>
+            </article>
+            <article>
+              <span>Reviews</span>
+              <strong>{dashboard.presentation.review_count}</strong>
+              <p>レビュー実行数</p>
+            </article>
+            <article>
+              <span>Revisions</span>
+              <strong>{dashboard.presentation.revision_count}</strong>
+              <p>Revision作成数</p>
+            </article>
+            <article>
+              <span>Added</span>
+              <strong>{dashboard.presentation.added_slide_count}</strong>
+              <p>追加スライド候補</p>
+            </article>
+            <article>
+              <span>Removed</span>
+              <strong>{dashboard.presentation.removed_slide_count}</strong>
+              <p>削除スライド候補</p>
+            </article>
+            <article>
+              <span>Adoption</span>
+              <strong>{dashboard.presentation.improvement_adoption_rate}%</strong>
+              <p>改善採用率</p>
+            </article>
+          </div>
+        </details>
+      ) : null}
+
+      {dashboard.proposal_optimization ? (
+        <details className="advanced-foldout" open>
+          <summary>Proposal Optimization Dashboard</summary>
+          <div className="usage-dashboard-grid">
+            <article>
+              <span>Backlog</span>
+              <strong>{dashboard.proposal_optimization.backlog_count}</strong>
+              <p>改善候補数</p>
+            </article>
+            <article>
+              <span>Adoption</span>
+              <strong>{dashboard.proposal_optimization.improvement_adoption_rate}%</strong>
+              <p>改善採用率</p>
+            </article>
+            <article>
+              <span>Success</span>
+              <strong>{dashboard.proposal_optimization.improvement_success_rate}%</strong>
+              <p>改善承認率</p>
+            </article>
+            <article>
+              <span>Revision</span>
+              <strong>{dashboard.proposal_optimization.revision_success_rate}%</strong>
+              <p>Revision成功率</p>
+            </article>
+            <article>
+              <span>Win Effect</span>
+              <strong>+{dashboard.proposal_optimization.predicted_win_rate_improvement}%</strong>
+              <p>受注率改善予測</p>
+            </article>
+          </div>
+        </details>
+      ) : null}
+
       {dashboard.learning ? (
         <details className="advanced-foldout" open>
           <summary>AI Learning & Optimization</summary>

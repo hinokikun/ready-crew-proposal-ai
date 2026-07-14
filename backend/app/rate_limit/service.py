@@ -55,6 +55,23 @@ def rate_limit_dependency(scope: str) -> Callable[[Request], None]:
         if result.allowed:
             return
         request_id = getattr(request.state, "request_id", "") or new_request_id()
+        if scope == "login":
+            try:
+                from app.db import get_db
+                from app.repositories import create_audit_log
+
+                with get_db() as db:
+                    create_audit_log(
+                        db,
+                        None,
+                        "rate_limit",
+                        "auth",
+                        "login",
+                        "blocked",
+                        f"sanitized=true;request_id={request_id}",
+                    )
+            except Exception:
+                pass
         raise HTTPException(
             status_code=429,
             detail={

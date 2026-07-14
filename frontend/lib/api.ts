@@ -60,6 +60,17 @@
   PromptWinnerRecommendation,
   KnowledgeBestPractices,
   KnowledgeSearchInsights,
+  PresentationAnalytics,
+  ProposalBestPractice,
+  ProposalImprovementBacklogItem,
+  ProposalOptimizationDashboard,
+  ProposalOptimizationData,
+  PresentationImprovement,
+  PresentationReview,
+  PresentationReviewIssue,
+  PresentationReviewScore,
+  PresentationRevision,
+  PresentationRevisionChange,
   ProductAnalyticsDashboardData,
   ProjectHandoff,
   ProjectLifecycleAnalytics,
@@ -82,6 +93,8 @@
   ReleaseRecord,
   ReleaseRecordStatus,
   WorkspaceConversationRecord,
+  WorkspaceContext,
+  WorkspaceContextItem,
   WorkspaceSummary,
   WorkspaceWorkLogRecord
 } from "@/types/app";
@@ -195,6 +208,30 @@ export {
   saveWorkspaceConversation,
   type WorkspaceConversationPayload
 } from "@/client-api/workspace";
+export { getWorkspaceContext, switchWorkspaceContext } from "@/client-api/organizations";
+export {
+  approvePresentationRevision,
+  comparePresentationRevisions,
+  createPresentationReview,
+  createPresentationRevision,
+  generateBeautifulAiRevision,
+  getPresentationReviewTimeline,
+  rejectPresentationRevision,
+  type PresentationReviewPayload
+} from "@/client-api/presentationReview";
+export {
+  approveProposalOptimizationItem,
+  extractProposalBestPractices,
+  getProposalBestPractices,
+  getProposalOptimizationDashboard,
+  getProposalOptimizationRecommendations,
+  getProposalOptimizationRevisionActions,
+  markProposalOptimizationInRevision,
+  runProposalOptimization,
+  updateProposalBestPracticeStatus,
+  updateProposalOptimizationMeasurement,
+  updateProposalOptimizationStatus
+} from "@/client-api/proposalOptimization";
 export {
   applyReviewFeedback,
   getProposalReview,

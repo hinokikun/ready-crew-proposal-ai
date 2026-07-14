@@ -19,22 +19,22 @@ router = APIRouter(prefix="/api/orchestrator", tags=["orchestrator"])
 async def get_queue(
     status: str = Query("", max_length=40),
     limit: int = Query(100, ge=1, le=200),
-    _: dict = Depends(require_roles("admin", "manager")),
+    user: dict = Depends(require_roles("admin", "manager")),
 ) -> dict:
     with get_db() as db:
-        return {"queue": list_action_queue(db, status=status, limit=limit)}
+        return {"queue": list_action_queue(db, status=status, limit=limit, user_id=int(user["id"]))}
 
 
 @router.get("/analytics")
-async def get_analytics(_: dict = Depends(require_roles("admin", "manager"))) -> dict:
+async def get_analytics(user: dict = Depends(require_roles("admin", "manager"))) -> dict:
     with get_db() as db:
-        return {"orchestrator": build_orchestrator_analytics(db)}
+        return {"orchestrator": build_orchestrator_analytics(db, int(user["id"]))}
 
 
 @router.get("/projects/{project_id}/status")
-async def get_project_status(project_id: int, _: dict = Depends(require_roles("admin", "manager", "member", "viewer"))) -> dict:
+async def get_project_status(project_id: int, user: dict = Depends(require_roles("admin", "manager", "member", "viewer"))) -> dict:
     with get_db() as db:
-        return {"orchestrator": get_project_orchestrator_status(db, project_id)}
+        return {"orchestrator": get_project_orchestrator_status(db, project_id, int(user["id"]))}
 
 
 @router.post("/projects/{project_id}/start")

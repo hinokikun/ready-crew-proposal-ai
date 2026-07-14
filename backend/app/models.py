@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class AuthLoginRequest(BaseModel):
+    login_mode: Literal["user", "admin"] | None = None
     email: str = Field("", description="ログインメールアドレス")
     password: str = Field(..., min_length=1, description="社内試験導入用の管理者パスワード")
 
@@ -14,6 +15,7 @@ class AuthResponse(BaseModel):
     expires_in_seconds: int = 0
     message: str = ""
     user: dict | None = None
+    login_mode: Literal["user", "admin"] | None = None
 
 
 class AuthStatusResponse(BaseModel):
@@ -25,14 +27,38 @@ class AuthStatusResponse(BaseModel):
 class UserCreateRequest(BaseModel):
     email: str
     password: str = Field(..., min_length=8)
-    role: Literal["admin", "manager", "member", "viewer"]
+    role: Literal["admin", "user", "manager", "member", "viewer"]
 
 
 class UserUpdateRequest(BaseModel):
     is_active: bool | None = None
+    role: Literal["admin", "user", "manager", "member", "viewer"] | None = None
+    password: str | None = Field(None, min_length=8, max_length=200)
     pilot_enabled: bool | None = None
     pilot_completed: bool | None = None
     pilot_note: str = Field("", max_length=500)
+
+
+class OrganizationCreateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=160)
+    slug: str = Field(..., min_length=1, max_length=80)
+
+
+class WorkspaceCreateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=160)
+    slug: str = Field(..., min_length=1, max_length=80)
+
+
+class WorkspaceContextSwitchRequest(BaseModel):
+    organization_id: int = Field(..., ge=1)
+    workspace_id: int = Field(..., ge=1)
+
+
+class WorkspaceMembershipRequest(BaseModel):
+    user_id: int = Field(..., ge=1)
+    organization_id: int = Field(..., ge=1)
+    workspace_id: int = Field(..., ge=1)
+    membership_role: Literal["organization_admin", "member"] = "member"
 
 
 class PilotEndRequest(BaseModel):

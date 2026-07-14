@@ -17,7 +17,7 @@ from app.beautiful_ai.schemas import (
 )
 from app.config import settings
 from app.quality_gates import get_quality_gate
-from app.repositories import create_audit_log
+from app.repositories import create_audit_log, get_user_context_ids
 
 
 class BeautifulAiServiceError(Exception):
@@ -88,30 +88,38 @@ def get_beautiful_ai_status(db: Connection | None = None) -> BeautifulAiStatusRe
     )
 
 
-def list_presentations_by_project(db: Connection, project_id: str) -> list[BeautifulAiPresentationRecord]:
+def list_presentations_by_project(
+    db: Connection,
+    project_id: str,
+    *,
+    organization_id: int | None = None,
+    workspace_id: int | None = None,
+) -> list[BeautifulAiPresentationRecord]:
+    context_org_id = int(organization_id or 1)
+    context_workspace_id = int(workspace_id or 1)
     rows = db.execute(
         """
         SELECT id, project_id, presentation_id, title, editor_url, player_url, status, theme_id, provider, error_type, created_at, updated_at
         FROM beautiful_ai_presentations
-        WHERE project_id = ?
+        WHERE project_id = ? AND organization_id = ? AND workspace_id = ?
         ORDER BY updated_at DESC, id DESC
         LIMIT 20
         """,
-        (project_id[:120],),
+        (project_id[:120], context_org_id, context_workspace_id),
     ).fetchall()
     return [BeautifulAiPresentationRecord(**dict(row)) for row in rows]
 
 
-def _latest_success(db: Connection, project_id: str) -> dict[str, Any] | None:
+def _latest_success(db: Connection, project_id: str, *, organization_id: int, workspace_id: int) -> dict[str, Any] | None:
     row = db.execute(
         """
         SELECT *
         FROM beautiful_ai_presentations
-        WHERE project_id = ? AND status IN ('created', 'succeeded', 'completed', 'mock')
+        WHERE project_id = ? AND organization_id = ? AND workspace_id = ? AND status IN ('created', 'succeeded', 'completed', 'mock')
         ORDER BY updated_at DESC, id DESC
         LIMIT 1
         """,
-        (project_id[:120],),
+        (project_id[:120], organization_id, workspace_id),
     ).fetchone()
     return dict(row) if row else None
 
@@ -130,12 +138,14 @@ def _insert_presentation_record(
     provider: str = "beautiful.ai",
     request_summary: str = "",
     error_type: str = "",
+    organization_id: int = 1,
+    workspace_id: int = 1,
 ) -> dict[str, Any]:
     cursor = db.execute(
         """
         INSERT INTO beautiful_ai_presentations
-            (project_id, user_id, presentation_id, title, editor_url, player_url, status, theme_id, provider, request_summary, error_type)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (project_id, user_id, presentation_id, title, editor_url, player_url, status, theme_id, provider, request_summary, error_type, organization_id, workspace_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             request.project_id[:120],
@@ -149,6 +159,8 @@ def _insert_presentation_record(
             provider[:80],
             request_summary[:500],
             error_type[:80],
+            organization_id,
+            workspace_id,
         ),
     )
     row = db.execute("SELECT * FROM beautiful_ai_presentations WHERE id = ?", (cursor.lastrowid,)).fetchone()
@@ -179,7 +191,7 @@ def _safe_url(value: str) -> str:
 
 
 def _make_mock_response(project_id: str, title: str) -> dict[str, str]:
-    suffix = hashlib.sha256(project_id.encode("utf-8")).hexdigest()[:12]
+    suffix = hashlib.sha256(f"{project_id}:{title}".encode("utf-8")).hexdigest()[:12]
     presentation_id = f"mock-{suffix}"
     return {
         "presentation_id": presentation_id,
@@ -265,8 +277,8 @@ async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
     return parsed if isinstance(parsed, dict) else {}
 
 
-def _ensure_quality_gate_unlocked(db: Connection, project_id: str) -> None:
-    gate = get_quality_gate(db, project_id)
+def _ensure_quality_gate_unlocked(db: Connection, project_id: str, user_id: int) -> None:
+    gate = get_quality_gate(db, project_id, user_id)
     if not gate or not bool(gate.get("download_unlocked")):
         raise BeautifulAiServiceError(
             status_code=409,
@@ -285,9 +297,10 @@ async def create_beautiful_ai_presentation(
     if not status.enabled:
         raise BeautifulAiServiceError(status_code=503, error_type="beautiful_ai_disabled", message=status.message)
 
-    _ensure_quality_gate_unlocked(db, request.project_id)
+    organization_id, workspace_id = get_user_context_ids(db, user_id)
+    _ensure_quality_gate_unlocked(db, request.project_id, user_id)
     if not request.force_new:
-        existing = _latest_success(db, request.project_id)
+        existing = _latest_success(db, request.project_id, organization_id=organization_id, workspace_id=workspace_id)
         if existing:
             return _response_from_record(existing)
 
@@ -312,6 +325,8 @@ async def create_beautiful_ai_presentation(
             theme_id=payload_model.themeId,
             request_summary=request_summary,
             error_type="beautiful_ai_timeout",
+            organization_id=organization_id,
+            workspace_id=workspace_id,
         )
         create_audit_log(db, user_id, "beautiful_ai_generation_failed", "beautiful_ai", request.project_id, "failure", "error_type=beautiful_ai_timeout")
         raise BeautifulAiServiceError(
@@ -329,6 +344,8 @@ async def create_beautiful_ai_presentation(
             theme_id=payload_model.themeId,
             request_summary=request_summary,
             error_type=exc.error_type,
+            organization_id=organization_id,
+            workspace_id=workspace_id,
         )
         create_audit_log(db, user_id, "beautiful_ai_generation_failed", "beautiful_ai", request.project_id, "failure", f"error_type={exc.error_type}")
         raise
@@ -346,6 +363,8 @@ async def create_beautiful_ai_presentation(
         status=api_result.get("status") or "created",
         theme_id=payload_model.themeId,
         request_summary=request_summary,
+        organization_id=organization_id,
+        workspace_id=workspace_id,
     )
     create_audit_log(db, user_id, "beautiful_ai_generation_succeeded", "beautiful_ai", request.project_id, "success", "fallback_available=true")
     return _response_from_record(record)

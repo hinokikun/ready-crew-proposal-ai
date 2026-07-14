@@ -1,5 +1,14 @@
 # SECURITY
 
+## Version 23.1 Login Mode Security
+
+- ログイン画面は「利用者ログイン」と「管理者ログイン」に分かれています。
+- Backendの `/api/auth/login` は任意の `login_mode` を受け取り、ロールと入口の一致を確認します。
+- `login_mode` 未指定の既存クライアントは従来互換でログインできます。
+- `admin` / `manager` は管理者ログイン、`member` / `viewer` は利用者ログインを使用します。
+- 入口不一致、無効ユーザー、ログイン失敗、レート制限は監査ログへ保存します。
+- 監査ログにはパスワード、トークン、APIキー、Authorization、メールアドレス全文を保存しません。
+
 ## 保存しない情報
 
 以下はDB、Analytics、監査ログ、Knowledge、Release Notes、Integration設定に保存しません。
@@ -100,7 +109,56 @@ Never expose or paste:
 ## Beautiful.ai Integration Security
 
 - Beautiful.ai API calls are made only from the Backend.
+
+## Version 18.2 Organization / Workspace Security
+
+- Backend resolves `scope=workspace|organization|system` from the authenticated user. Frontend scope values are never trusted directly.
+- General users are limited to the current workspace. Organization scope is limited to admin/manager. System scope is limited to admin.
+- Aggregation APIs must default to `workspace`.
+- Audit logs include actor user, actor role, organization, workspace, action, target type, target id, request id, and timestamp. They must not include customer body text, generated proposal text, passwords, tokens, or API keys.
+- Workspace-dependent browser storage keys include user id, organization id, and workspace id.
+- Auth tokens are currently stored in `localStorage` for the browser app. This is acceptable for pilot/internal use only with HTTPS, short token expiry, and no shared devices. A future production hardening option is an HttpOnly secure cookie.
+- `DATABASE_URL`, API keys, OAuth tokens, and passwords must never be displayed in Settings, health responses, logs, CSV, Markdown, screenshots, or release notes.
 - `BEAUTIFUL_AI_API_KEY` must be configured only in Render secrets, never in Vercel or `NEXT_PUBLIC_*` variables.
 - The app stores Beautiful.ai presentation IDs and returned editor/player URLs only.
 - The app does not store Authorization headers, Beautiful.ai tokens, full case emails, full generated proposal text, or API keys.
 - If Beautiful.ai fails, users can continue with the existing PPTX/PDF outputs.
+
+## Version 19.1 Presentation Review / Revision Security
+
+- Review results are stored as scores, short evidence summaries, selected actions, sanitized outlines, and metadata only.
+- Full slide body text, raw Beautiful.ai response bodies, customer emails, API keys, tokens, and passwords must not be saved.
+- `member` can create reviews and draft revisions.
+- `manager` and `admin` can approve, reject, and regenerate approved revisions in Beautiful.ai.
+- `viewer` can read only.
+- All presentation review and revision records are scoped by `organization_id` and `workspace_id`.
+
+## Version 20.0 Proposal Optimization Security
+
+- Proposal Optimization stores backlog metadata, scores, confidence, simulation estimates, and sanitized explanations only.
+- Best Practice Library stores reusable patterns only.
+- Full proposal text, full case emails, customer confidential information, API keys, passwords, Beautiful.ai tokens, and raw Beautiful.ai responses must not be stored.
+- `member` can view and select optimization recommendations.
+- `manager` and `admin` can approve optimization recommendations.
+- `viewer` can read only.
+- All optimization backlog and best practice records are scoped by `organization_id` and `workspace_id`.
+- Simulation values are estimates and must be presented as estimates.
+
+## Version 20.1 Evidence Governance Security
+
+- Optimization evidence must use aggregate metadata only.
+- Evidence displays must not include customer names, customer emails, proposal body text, or raw generated text.
+- Predictions must include `is_estimate`, `sample_size`, `evidence_type`, `calculation_method`, `confidence`, and `requires_human_review`.
+- Low-sample recommendations must be marked as `ai_estimate` or `insufficient_data`.
+- Best Practice records are AI-usable only after manager/admin approval.
+- Invalid Backlog status transitions are rejected by the backend.
+
+## Version 22 Security Notes
+
+Version 22??????????????????????????????????????????????
+
+- `app.db` ?Facade?????????????????????????
+- `app.health` ????Health????????API???DATABASE_URL?Beautiful.ai token???????
+- Router??? `app.router_registry` ??????????Router? `require_roles` ??????????
+- Organization / Workspace ???????????Context / Scope??????????
+- CSS??????????????DOM???????????????????

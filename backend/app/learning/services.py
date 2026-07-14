@@ -16,7 +16,7 @@ from app.learning.repositories import (
 
 
 def run_learning_analysis(db: Connection, *, user_id: int | None) -> dict[str, Any]:
-    metrics = collect_learning_signals(db)
+    metrics = collect_learning_signals(db, user_id)
     analysis = analyze_learning_signals(metrics)
     run_id = create_learning_run(
         db,
@@ -26,16 +26,16 @@ def run_learning_analysis(db: Connection, *, user_id: int | None) -> dict[str, A
     )
     improvements = save_learning_improvements(db, run_id=run_id, improvements=analysis["improvements"])
     return {
-        "run": get_latest_learning_run(db),
+        "run": get_latest_learning_run(db, user_id),
         "improvements": improvements,
         "release_candidate": analysis["release_candidate"],
-        "analytics": build_learning_analytics(db),
+        "analytics": build_learning_analytics(db, user_id),
     }
 
 
-def get_learning_dashboard(db: Connection) -> dict[str, Any]:
-    run = get_latest_learning_run(db)
-    improvements = list_latest_learning_improvements(db, 30)
+def get_learning_dashboard(db: Connection, user_id: int | None = None) -> dict[str, Any]:
+    run = get_latest_learning_run(db, user_id)
+    improvements = list_latest_learning_improvements(db, 30, user_id)
     release_candidate = {
         "version": (run or {}).get("release_candidate_version", "13.6候補"),
         "summary": (run or {}).get("release_candidate_summary", "Learningを実行すると、Version 13.6候補が表示されます。"),
@@ -44,7 +44,7 @@ def get_learning_dashboard(db: Connection) -> dict[str, Any]:
         "run": run,
         "improvements": improvements,
         "release_candidate": release_candidate,
-        "analytics": build_learning_analytics(db),
+        "analytics": build_learning_analytics(db, user_id),
     }
 
 
@@ -52,5 +52,5 @@ def adopt_learning_improvement(db: Connection, *, improvement_id: int, status: s
     return update_improvement_status(db, improvement_id=improvement_id, status=status, user_id=user_id)
 
 
-def build_learning_analytics(db: Connection) -> dict[str, Any]:
-    return build_learning_analytics_from_db(db)
+def build_learning_analytics(db: Connection, user_id: int | None = None) -> dict[str, Any]:
+    return build_learning_analytics_from_db(db, user_id)

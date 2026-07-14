@@ -85,6 +85,8 @@ APIキー、パスワード、DB接続文字列はコードへ書かず、`.env`
 
 ## ドキュメント
 
+- [Organization管理](docs/ORGANIZATION.md)
+- [Workspace管理](docs/WORKSPACE.md)
 - [環境構築](docs/SETUP.md)
 - [運用手順](docs/OPERATIONS.md)
 - [セキュリティ方針](docs/SECURITY.md)
@@ -92,6 +94,8 @@ APIキー、パスワード、DB接続文字列はコードへ書かず、`.env`
 - [構成・DB・API](docs/ARCHITECTURE.md)
 - [リリース手順](docs/RELEASE.md)
 - [Version 14.1 Production Release Audit](docs/RELEASE_AUDIT.md)
+- [ロール権限一覧](docs/ROLE_PERMISSIONS.md)
+- [ロール権限監査](docs/ROLE_PERMISSION_AUDIT.md)
 
 ## Testing
 
@@ -174,3 +178,60 @@ BEAUTIFUL_AI_MOCK=false
 Beautiful.aiが本番環境で表示・動作するかは、画面上の「Beautiful.ai接続確認」カードで確認できます。VercelのFrontend Build Version、RenderのCurrent backend version、`/api/beautiful-ai/status` の到達状態、Route foundを比較してください。
 
 詳細手順: [Beautiful.ai Production Verification](docs/BEAUTIFUL_AI_PRODUCTION_VERIFICATION.md)
+
+## Version 22 Production Architecture Refactoring
+
+Version 22???????????????????????????AI???API?DB?????????????
+
+????:
+
+- `frontend/app/globals.css` ? `frontend/app/styles/` ?????
+- `frontend/components/AppShell.tsx` ????? `frontend/components/app-shell/types.ts` ???
+- `backend/app/db.py` ???Facade?????? `backend/app/database/` ?????
+- `backend/app/main.py` ??Router???Health payload?????
+- `backend/app/services/pptx_service.py` ??????? `pptx_theme.py` ???
+
+??? `docs/ARCHITECTURE.md`, `docs/PRODUCTION_CHECKLIST.md`, `docs/ARCHITECTURE_SCORE.md` ??????????
+# Version 22.1 Refactoring Note
+
+Version 22.1 is an internal decomposition sprint. It does not change UI behavior, API routes, DB schema, Beautiful.ai behavior, roles, workspace isolation, or generated output contracts.
+
+Key records:
+
+- `docs/REFACTORING_BASELINE.md`
+- `docs/APPSHELL_DECOMPOSITION.md`
+- `docs/REFACTORING_RESULTS.md`
+- `docs/TESTING.md`
+# Version 22.2 Maintenance Notes
+
+- AppShell UI sections were decomposed without UI/API/DB changes.
+- PPTX generation now has structural regression snapshots for detailed and summary decks.
+- See `docs/APPSHELL_UI_DECOMPOSITION.md`, `docs/PPTX_VISUAL_REGRESSION.md`, and `docs/V22_2_REFACTORING_RESULTS.md`.
+## Version 23.1 ログイン入口
+
+ログイン画面は「利用者ログイン」と「管理者ログイン」に分かれています。
+
+- 利用者ログイン: `member` / `viewer` 向け。案件入力、AI Workspace、提案書作成、PPT/PDF、Beautiful.aiを利用します。
+- 管理者ログイン: `admin` / `manager` 向け。ユーザー管理、Organization / Workspace管理、Analytics、監査ログ、Prompt Studio、Knowledge、Learning、Pilot、Integrations、Release、Maintenance、UATを利用します。
+- 既存互換: `POST /api/auth/login` の `login_mode` が未指定の場合は従来どおりログインできます。
+- 詳細: `docs/LOGIN_GUIDE.md` と `docs/ROLE_PERMISSIONS.md` を参照してください。
+## Version 23.0 Simple Guided UI
+
+一般利用者の初期画面を「かんたん操作フロー」に整理しました。新しい営業機能、Backend API、DB変更はありません。
+
+7ステップ:
+
+1. 案件入力
+2. AI作成
+3. 内容確認
+4. 品質確認
+5. 出力
+6. 改善
+7. 完了
+
+通常モードでは技術診断や管理者向けパネルを隠し、admin / managerは詳細モードで確認できます。詳しくは以下を参照してください。
+
+- `docs/SIMPLE_UI_SPEC.md`
+- `docs/GUIDED_FLOW.md`
+- `docs/QUALITY_GATE_UI.md`
+- `docs/BEAUTIFUL_AI_USER_FLOW.md`

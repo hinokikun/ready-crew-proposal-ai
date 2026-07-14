@@ -1,0 +1,89 @@
+:root {
+  --background: #f6f7fb;
+  --surface: #ffffff;
+  --surface-muted: #eef2f7;
+  --text: #111827;
+  --muted: #667085;
+  --border: #d9e0ea;
+  --primary: #1e3a8a;
+  --primary-hover: #172554;
+  --accent: #2563eb;
+  --danger: #b42318;
+  --danger-bg: #fff1f0;
+  --shadow: 0 20px 54px rgba(15, 23, 42, 0.1);
+  --cafe-cream: #f8fafc;
+  --cafe-paper: #ffffff;
+  --cafe-sage: #eaf1ff;
+  --cafe-terracotta: #2563eb;
+}
+
+.app-error-card,
+.app-loading-card {
+  display: grid;
+  gap: 16px;
+}
+
+.app-error-card {
+  align-items: start;
+  grid-template-columns: auto 1fr;
+  max-width: 720px;
+}
+
+.app-error-card svg {
+  color: #b42318;
+  margin-top: 4px;
+}
+
+.skeleton-block {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+
+.skeleton-line {
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+  background: linear-gradient(90deg, #eef2f7 0%, #f8fafc 48%, #eef2f7 100%);
+  border-radius: 999px;
+  display: block;
+  height: 12px;
+  max-width: 100%;
+}
+
+.skeleton-line:nth-child(2) {
+  width: 88%;
+}
+
+.skeleton-line:nth-child(3) {
+  width: 72%;
+}
+
+.skeleton-line:nth-child(4) {
+  width: 94%;
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 58%;
+}
+
+@keyframes skeleton-pulse {
+  0% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-line {
+    animation: none;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}

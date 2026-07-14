@@ -80,3 +80,24 @@ psql "$DATABASE_URL" < backup_YYYYMMDD_HHMMSS.sql
 - バックアップが作成されている
 - リストア手順を社内テスト環境で確認済み
 - SQLite利用時は永続化リスクを関係者が理解している
+## Version 18.2 Migration Backup Checklist
+
+Before running `20260713_1820_workspace_isolation_acceptance`:
+
+1. Back up SQLite `app.db` or take a managed PostgreSQL snapshot.
+2. Record row counts:
+
+```sql
+SELECT COUNT(*) FROM quality_gates;
+SELECT COUNT(*) FROM projects;
+SELECT COUNT(*) FROM proposal_reviews;
+SELECT COUNT(*) FROM proposal_knowledge;
+SELECT COUNT(*) FROM analytics_events;
+SELECT COUNT(*) FROM audit_logs;
+```
+
+3. Run `alembic upgrade head`.
+4. Re-run the same counts.
+5. Confirm the Quality Gate unique index is scoped by `(organization_id, workspace_id, project_id)`.
+
+If counts differ unexpectedly, stop the rollout, keep Maintenance Mode enabled, and restore from the verified backup.

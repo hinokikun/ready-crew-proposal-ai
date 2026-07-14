@@ -5,6 +5,8 @@ from sqlite3 import Connection
 from typing import Any
 
 from app.knowledge.services import sanitize_text
+from app.repositories import get_user_context_ids
+from app.scope_policy import ScopeContext, scope_where
 
 
 TERMINAL_STATUSES = {"受注", "失注", "完了"}
@@ -41,26 +43,43 @@ def _project_title(project: dict[str, Any]) -> str:
     return f"{customer} / {name}" if customer else name
 
 
-def _load_projects(db: Connection) -> list[dict[str, Any]]:
+def _scope(db: Connection, user_id: int) -> tuple[int, int]:
+    return get_user_context_ids(db, user_id)
+
+
+def _load_projects(db: Connection, user_id: int) -> list[dict[str, Any]]:
+    organization_id, workspace_id = _scope(db, user_id)
     rows = db.execute(
         """
         SELECT p.*, c.company_name AS customer_name
         FROM projects p
         LEFT JOIN customers c ON c.id = p.customer_id
+        WHERE p.organization_id = ? AND p.workspace_id = ?
         ORDER BY p.updated_at DESC, p.id DESC
         LIMIT 200
-        """
+        """,
+        (organization_id, workspace_id),
     ).fetchall()
     projects: list[dict[str, Any]] = []
     for row in rows:
         project = dict(row)
         review = db.execute(
-            "SELECT id, status, review_comment, review_requested_at, updated_at FROM proposal_reviews WHERE project_id = ? ORDER BY updated_at DESC, id DESC LIMIT 1",
-            (str(project["id"]),),
+            """
+            SELECT id, status, review_comment, review_requested_at, updated_at
+            FROM proposal_reviews
+            WHERE project_id = ? AND organization_id = ? AND workspace_id = ?
+            ORDER BY updated_at DESC, id DESC LIMIT 1
+            """,
+            (str(project["id"]), organization_id, workspace_id),
         ).fetchone()
         gate = db.execute(
-            "SELECT completed, bypassed, updated_at FROM quality_gates WHERE project_id = ? LIMIT 1",
-            (str(project["id"]),),
+            """
+            SELECT completed, bypassed, updated_at
+            FROM quality_gates
+            WHERE project_id = ? AND organization_id = ? AND workspace_id = ?
+            LIMIT 1
+            """,
+            (str(project["id"]), organization_id, workspace_id),
         ).fetchone()
         project["review"] = dict(review) if review else None
         project["quality_gate"] = dict(gate) if gate else None
@@ -80,6 +99,8 @@ def _notification_payload(
     source_type: str,
     source_id: str,
     project_id: int | None = None,
+    organization_id: int = 1,
+    workspace_id: int = 1,
 ) -> dict[str, Any]:
     key_parts = [str(user_id), rule, source_type, source_id]
     return {
@@ -93,12 +114,15 @@ def _notification_payload(
         "recommended_action": _safe(recommended_action, 220),
         "source_type": source_type,
         "source_id": source_id,
+        "organization_id": organization_id,
+        "workspace_id": workspace_id,
     }
 
 
 def _build_project_notifications(projects: list[dict[str, Any]], user_id: int, now: datetime) -> list[dict[str, Any]]:
     notifications: list[dict[str, Any]] = []
     for project in projects:
+        project_notification_start = len(notifications)
         project_id = int(project.get("id") or 0)
         if not project_id or str(project.get("status") or "") in TERMINAL_STATUSES:
             continue
@@ -208,16 +232,22 @@ def _build_project_notifications(projects: list[dict[str, Any]], user_id: int, n
                     project_id=project_id,
                 )
             )
+        for item in notifications[project_notification_start:]:
+            item["organization_id"] = int(project.get("organization_id") or 1)
+            item["workspace_id"] = int(project.get("workspace_id") or 1)
     return notifications
 
 
 def _build_knowledge_notifications(db: Connection, user_id: int) -> list[dict[str, Any]]:
+    organization_id, workspace_id = _scope(db, user_id)
     row = db.execute(
         """
         SELECT COUNT(*) AS count
         FROM proposal_knowledge
         WHERE approval_status IN ('draft', 'pending_review')
-        """
+          AND organization_id = ? AND workspace_id = ?
+        """,
+        (organization_id, workspace_id),
     ).fetchone()
     count = int(row["count"] if row else 0)
     if count <= 0:
@@ -234,14 +264,19 @@ def _build_knowledge_notifications(db: Connection, user_id: int) -> list[dict[st
             source_type="knowledge",
             source_id="pending",
             project_id=None,
+            organization_id=organization_id,
+            workspace_id=workspace_id,
         )
     ]
 
 
 def _upsert_notification(db: Connection, item: dict[str, Any]) -> None:
     existing = db.execute(
-        "SELECT id, status FROM ai_notifications WHERE notification_key = ?",
-        (item["notification_key"],),
+        """
+        SELECT id, status FROM ai_notifications
+        WHERE notification_key = ? AND organization_id = ? AND workspace_id = ?
+        """,
+        (item["notification_key"], item.get("organization_id") or 1, item.get("workspace_id") or 1),
     ).fetchone()
     if existing:
         if existing["status"] == "archived":
@@ -250,7 +285,7 @@ def _upsert_notification(db: Connection, item: dict[str, Any]) -> None:
             """
             UPDATE ai_notifications
             SET priority = ?, title = ?, message = ?, recommended_action = ?, agent_name = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
+            WHERE id = ? AND organization_id = ? AND workspace_id = ?
             """,
             (
                 item["priority"],
@@ -259,14 +294,16 @@ def _upsert_notification(db: Connection, item: dict[str, Any]) -> None:
                 item["recommended_action"],
                 item["agent_name"],
                 existing["id"],
+                item.get("organization_id") or 1,
+                item.get("workspace_id") or 1,
             ),
         )
         return
     db.execute(
         """
         INSERT INTO ai_notifications
-        (notification_key, user_id, project_id, agent_name, priority, title, message, recommended_action, source_type, source_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (notification_key, user_id, project_id, agent_name, priority, title, message, recommended_action, source_type, source_id, organization_id, workspace_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             item["notification_key"],
@@ -279,13 +316,15 @@ def _upsert_notification(db: Connection, item: dict[str, Any]) -> None:
             item["recommended_action"],
             item["source_type"],
             item["source_id"],
+            item.get("organization_id") or 1,
+            item.get("workspace_id") or 1,
         ),
     )
 
 
 def run_ai_watch_engine(db: Connection, user_id: int) -> dict[str, Any]:
     now = datetime.now()
-    projects = _load_projects(db)
+    projects = _load_projects(db, user_id)
     candidates = _build_project_notifications(projects, user_id, now) + _build_knowledge_notifications(db, user_id)
     candidates.sort(key=lambda item: (_priority_rank(item["priority"]), item["title"]), reverse=True)
     for item in candidates:
@@ -294,6 +333,7 @@ def run_ai_watch_engine(db: Connection, user_id: int) -> dict[str, Any]:
 
 
 def list_notifications(db: Connection, user_id: int) -> dict[str, Any]:
+    organization_id, workspace_id = _scope(db, user_id)
     rows = db.execute(
         """
         SELECT n.*, p.name AS project_name, c.company_name AS customer_name
@@ -301,13 +341,14 @@ def list_notifications(db: Connection, user_id: int) -> dict[str, Any]:
         LEFT JOIN projects p ON p.id = n.project_id
         LEFT JOIN customers c ON c.id = p.customer_id
         WHERE n.user_id = ? AND n.status != 'archived'
+          AND n.organization_id = ? AND n.workspace_id = ?
         ORDER BY
             CASE n.priority WHEN '高' THEN 3 WHEN '中' THEN 2 WHEN '低' THEN 1 ELSE 0 END DESC,
             n.updated_at DESC,
             n.id DESC
         LIMIT 100
         """,
-        (user_id,),
+        (user_id, organization_id, workspace_id),
     ).fetchall()
     notifications = [dict(row) for row in rows]
     unread_count = sum(1 for item in notifications if item.get("status") == "unread")
@@ -325,20 +366,22 @@ def list_notifications(db: Connection, user_id: int) -> dict[str, Any]:
 
 
 def mark_notification_read(db: Connection, notification_id: int, user_id: int) -> dict[str, Any] | None:
+    organization_id, workspace_id = _scope(db, user_id)
     db.execute(
         """
         UPDATE ai_notifications
         SET status = CASE WHEN status = 'archived' THEN status ELSE 'read' END,
             read_at = COALESCE(read_at, CURRENT_TIMESTAMP),
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = ? AND user_id = ?
+        WHERE id = ? AND user_id = ? AND organization_id = ? AND workspace_id = ?
         """,
-        (notification_id, user_id),
+        (notification_id, user_id, organization_id, workspace_id),
     )
     return _get_notification(db, notification_id, user_id)
 
 
 def mark_notification_actioned(db: Connection, notification_id: int, user_id: int) -> dict[str, Any] | None:
+    organization_id, workspace_id = _scope(db, user_id)
     db.execute(
         """
         UPDATE ai_notifications
@@ -346,14 +389,15 @@ def mark_notification_actioned(db: Connection, notification_id: int, user_id: in
             read_at = COALESCE(read_at, CURRENT_TIMESTAMP),
             actioned_at = COALESCE(actioned_at, CURRENT_TIMESTAMP),
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = ? AND user_id = ?
+        WHERE id = ? AND user_id = ? AND organization_id = ? AND workspace_id = ?
         """,
-        (notification_id, user_id),
+        (notification_id, user_id, organization_id, workspace_id),
     )
     return _get_notification(db, notification_id, user_id)
 
 
 def archive_notification(db: Connection, notification_id: int, user_id: int) -> dict[str, Any] | None:
+    organization_id, workspace_id = _scope(db, user_id)
     db.execute(
         """
         UPDATE ai_notifications
@@ -361,28 +405,33 @@ def archive_notification(db: Connection, notification_id: int, user_id: int) -> 
             read_at = COALESCE(read_at, CURRENT_TIMESTAMP),
             archived_at = COALESCE(archived_at, CURRENT_TIMESTAMP),
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = ? AND user_id = ?
+        WHERE id = ? AND user_id = ? AND organization_id = ? AND workspace_id = ?
         """,
-        (notification_id, user_id),
+        (notification_id, user_id, organization_id, workspace_id),
     )
     return _get_notification(db, notification_id, user_id)
 
 
 def _get_notification(db: Connection, notification_id: int, user_id: int) -> dict[str, Any] | None:
-    row = db.execute("SELECT * FROM ai_notifications WHERE id = ? AND user_id = ?", (notification_id, user_id)).fetchone()
+    organization_id, workspace_id = _scope(db, user_id)
+    row = db.execute(
+        "SELECT * FROM ai_notifications WHERE id = ? AND user_id = ? AND organization_id = ? AND workspace_id = ?",
+        (notification_id, user_id, organization_id, workspace_id),
+    ).fetchone()
     return dict(row) if row else None
 
 
-def build_notification_analytics(db: Connection) -> dict[str, Any]:
-    total = int(db.execute("SELECT COUNT(*) AS count FROM ai_notifications").fetchone()["count"] or 0)
-    read = int(db.execute("SELECT COUNT(*) AS count FROM ai_notifications WHERE read_at IS NOT NULL").fetchone()["count"] or 0)
-    actioned = int(db.execute("SELECT COUNT(*) AS count FROM ai_notifications WHERE actioned_at IS NOT NULL").fetchone()["count"] or 0)
+def build_notification_analytics(db: Connection, scope: ScopeContext | None = None) -> dict[str, Any]:
+    where_sql, params = scope_where(scope) if scope else ("1 = 1", ())
+    total = int(db.execute(f"SELECT COUNT(*) AS count FROM ai_notifications WHERE {where_sql}", params).fetchone()["count"] or 0)
+    read = int(db.execute(f"SELECT COUNT(*) AS count FROM ai_notifications WHERE read_at IS NOT NULL AND {where_sql}", params).fetchone()["count"] or 0)
+    actioned = int(db.execute(f"SELECT COUNT(*) AS count FROM ai_notifications WHERE actioned_at IS NOT NULL AND {where_sql}", params).fetchone()["count"] or 0)
     now = datetime.now()
-    unread_rows = db.execute("SELECT created_at FROM ai_notifications WHERE status = 'unread'").fetchall()
+    unread_rows = db.execute(f"SELECT created_at FROM ai_notifications WHERE status = 'unread' AND {where_sql}", params).fetchall()
     ignored = sum(1 for row in unread_rows if _days_since(row["created_at"], now) >= 3)
     return {
         "total": total,
-        "unread": int(db.execute("SELECT COUNT(*) AS count FROM ai_notifications WHERE status = 'unread'").fetchone()["count"] or 0),
+        "unread": int(db.execute(f"SELECT COUNT(*) AS count FROM ai_notifications WHERE status = 'unread' AND {where_sql}", params).fetchone()["count"] or 0),
         "read_rate": round((read / total) * 100, 1) if total else 0,
         "action_rate": round((actioned / total) * 100, 1) if total else 0,
         "ignored_rate": round((ignored / total) * 100, 1) if total else 0,

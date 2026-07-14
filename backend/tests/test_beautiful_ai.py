@@ -99,6 +99,49 @@ def test_beautiful_ai_mock_success_and_duplicate_prevention(
         assert len(records.json()["presentations"]) == 1
 
 
+def test_beautiful_ai_presentations_are_separated_by_workspace(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    sample_pptx_payload: dict[str, Any],
+) -> None:
+    with _client_with_env(monkeypatch, tmp_path, BEAUTIFUL_AI_ENABLED="true", BEAUTIFUL_AI_MOCK="true") as client:
+        headers = _login(client)
+        project_id = "beautiful-workspace-project"
+        _complete_quality_gate(client, headers, project_id)
+
+        default_create = client.post("/api/beautiful-ai/presentations", headers=headers, json=_beautiful_payload(sample_pptx_payload, project_id))
+        assert default_create.status_code == 200
+        default_records = client.get(f"/api/beautiful-ai/presentations/{project_id}", headers=headers)
+        assert default_records.status_code == 200
+        assert len(default_records.json()["presentations"]) == 1
+
+        org_response = client.post("/api/organizations", headers=headers, json={"name": "Beautiful Org", "slug": "beautiful-org"})
+        assert org_response.status_code == 200
+        organization_id = int(org_response.json()["organization"]["id"])
+        context = client.get("/api/organizations/context", headers=headers)
+        workspace_id = next(item["workspace_id"] for item in context.json()["available"] if item["organization_id"] == organization_id)
+        switched = client.patch(
+            "/api/organizations/context",
+            headers=headers,
+            json={"organization_id": organization_id, "workspace_id": workspace_id},
+        )
+        assert switched.status_code == 200
+
+        separated_records = client.get(f"/api/beautiful-ai/presentations/{project_id}", headers=headers)
+        assert separated_records.status_code == 200
+        assert separated_records.json()["presentations"] == []
+
+        _complete_quality_gate(client, headers, project_id)
+        workspace_create = client.post(
+            "/api/beautiful-ai/presentations",
+            headers=headers,
+            json=_beautiful_payload({**sample_pptx_payload, "force_new": True}, project_id),
+        )
+        assert workspace_create.status_code == 200
+        workspace_records = client.get(f"/api/beautiful-ai/presentations/{project_id}", headers=headers)
+        assert len(workspace_records.json()["presentations"]) == 1
+
+
 def test_beautiful_ai_member_can_create_with_real_api_mode(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

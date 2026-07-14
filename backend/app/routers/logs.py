@@ -1,7 +1,7 @@
 import csv
 from io import StringIO
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 
 from app.auth import require_roles
@@ -14,42 +14,68 @@ from app.repositories import (
     create_audit_log,
     create_history_log,
     list_audit_logs,
-    list_usage_logs,
+    list_usage_logs_scoped,
     summarize_usage_dashboard,
 )
+from app.scope_policy import ScopeName, resolve_scope
 
 router = APIRouter(prefix="/api/logs", tags=["logs"])
 
 
+def _scope_query(default: ScopeName = "workspace") -> Query:
+    return Query(default, pattern="^(workspace|organization|system)$")
+
+
 @router.get("")
-async def get_logs(_: dict = Depends(require_roles("admin", "member", "viewer"))) -> dict:
+async def get_logs(
+    user: dict = Depends(require_roles("admin", "member", "viewer")),
+    scope: str = _scope_query(),
+) -> dict:
     with get_db() as db:
-        return {"logs": list_usage_logs(db, 100)}
+        resolved_scope = resolve_scope(db, user, scope)
+        return {"logs": list_usage_logs_scoped(db, 100, resolved_scope), "scope": resolved_scope.response_meta}
 
 
 @router.get("/audit")
-async def get_audit_logs(_: dict = Depends(require_roles("admin"))) -> dict:
+async def get_audit_logs(
+    user: dict = Depends(require_roles("admin", "manager")),
+    scope: str = _scope_query("organization"),
+) -> dict:
     with get_db() as db:
-        return {"logs": list_audit_logs(db, 200)}
+        resolved_scope = resolve_scope(db, user, scope)
+        return {"logs": list_audit_logs(db, 200, resolved_scope), "scope": resolved_scope.response_meta}
 
 
 @router.get("/usage-dashboard")
-async def get_usage_dashboard(_: dict = Depends(require_roles("admin"))) -> dict:
+async def get_usage_dashboard(
+    user: dict = Depends(require_roles("admin", "manager")),
+    scope: str = _scope_query(),
+) -> dict:
     with get_db() as db:
-        return {"dashboard": summarize_usage_dashboard(db)}
+        resolved_scope = resolve_scope(db, user, scope)
+        return {"dashboard": summarize_usage_dashboard(db, resolved_scope)}
 
 
 @router.get("/usage-dashboard.csv")
-async def download_usage_dashboard_csv(_: dict = Depends(require_roles("admin"))) -> Response:
+async def download_usage_dashboard_csv(
+    user: dict = Depends(require_roles("admin", "manager")),
+    scope: str = _scope_query(),
+) -> Response:
     with get_db() as db:
-        dashboard = summarize_usage_dashboard(db)
+        resolved_scope = resolve_scope(db, user, scope)
+        dashboard = summarize_usage_dashboard(db, resolved_scope)
 
     output = StringIO()
     writer = csv.writer(output)
+    scope_info = dashboard.get("scope", {})
 
     writer.writerow(["AI営業秘書 利用状況ダッシュボード"])
+    writer.writerow(["集計範囲", scope_info.get("scope", "workspace")])
+    writer.writerow(["Organization", scope_info.get("organization_name", "")])
+    writer.writerow(["Workspace", scope_info.get("workspace_name", "")])
     writer.writerow([])
-    writer.writerow(["集計", "件数"])
+
+    writer.writerow(["指標", "件数"])
     summary_labels = {
         "total_usage": "総利用回数",
         "today_usage": "今日の利用回数",
@@ -63,7 +89,7 @@ async def download_usage_dashboard_csv(_: dict = Depends(require_roles("admin"))
         writer.writerow([label, dashboard["summary"].get(key, 0)])
 
     writer.writerow([])
-    writer.writerow(["エラー分析", "件数"])
+    writer.writerow(["エラー分類", "件数"])
     error_labels = {
         "api_limit": "API上限",
         "backend_unreachable": "Backend未接続",
@@ -75,14 +101,23 @@ async def download_usage_dashboard_csv(_: dict = Depends(require_roles("admin"))
         writer.writerow([label, dashboard["error_analysis"].get(key, 0)])
 
     writer.writerow([])
-    writer.writerow(["機能別利用集計", "利用回数", "成功", "失敗"])
+    writer.writerow(["機能別利用", "利用回数", "成功", "失敗"])
     for item in dashboard["features"]:
         writer.writerow([item["feature_name"], item["usage_count"], item["success_count"], item["failure_count"]])
 
     writer.writerow([])
     writer.writerow(["利用者別集計", "ロール", "利用回数", "最終利用日時", "成功", "失敗"])
     for item in dashboard["users"]:
-        writer.writerow([item["user_name"], item["user_role"], item["usage_count"], item["last_used_at"], item["success_count"], item["failure_count"]])
+        writer.writerow(
+            [
+                item["user_name"],
+                item["user_role"],
+                item["usage_count"],
+                item["last_used_at"],
+                item["success_count"],
+                item["failure_count"],
+            ]
+        )
 
     writer.writerow([])
     writer.writerow(["フィードバック集計", "件数"])
@@ -95,23 +130,37 @@ async def download_usage_dashboard_csv(_: dict = Depends(require_roles("admin"))
     for key, label in feedback_labels.items():
         writer.writerow([label, dashboard["feedback_summary"].get(key, 0)])
 
+    file_scope = scope_info.get("scope", "workspace")
     return Response(
         content=f"\ufeff{output.getvalue()}",
         media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": "attachment; filename=ai-sales-secretary-usage-dashboard.csv"},
+        headers={"Content-Disposition": f"attachment; filename=ai-sales-secretary-usage-{file_scope}.csv"},
     )
 
 
 @router.post("/trial-report")
-async def create_trial_report(payload: TrialReportRequest, user: dict = Depends(require_roles("admin"))) -> dict:
+async def create_trial_report(
+    payload: TrialReportRequest,
+    user: dict = Depends(require_roles("admin", "manager")),
+    scope: str = _scope_query(),
+) -> dict:
     with get_db() as db:
-        report = build_trial_report(db, payload.admin_comment)
-        create_audit_log(db, int(user["id"]), "generate", "trial_report", "", "success", "sanitized=true")
+        resolved_scope = resolve_scope(db, user, scope)
+        report = build_trial_report(db, payload.admin_comment, resolved_scope)
+        create_audit_log(
+            db,
+            int(user["id"]),
+            "generate",
+            "trial_report",
+            "",
+            "success",
+            f"sanitized=true;scope={resolved_scope.scope}",
+        )
     return {"report": report}
 
 
 @router.get("/operation-readiness")
-async def get_operation_readiness(user: dict = Depends(require_roles("admin"))) -> dict:
+async def get_operation_readiness(user: dict = Depends(require_roles("admin", "manager"))) -> dict:
     with get_db() as db:
         readiness = build_operation_readiness_check(db)
         create_audit_log(db, int(user["id"]), "generate", "operation_readiness", "", "success", "sanitized=true")
@@ -119,10 +168,22 @@ async def get_operation_readiness(user: dict = Depends(require_roles("admin"))) 
 
 
 @router.get("/improvement-dashboard")
-async def get_improvement_dashboard(user: dict = Depends(require_roles("admin"))) -> dict:
+async def get_improvement_dashboard(
+    user: dict = Depends(require_roles("admin", "manager")),
+    scope: str = _scope_query(),
+) -> dict:
     with get_db() as db:
-        dashboard = build_improvement_dashboard(db)
-        create_audit_log(db, int(user["id"]), "generate", "improvement_dashboard", "", "success", "sanitized=true")
+        resolved_scope = resolve_scope(db, user, scope)
+        dashboard = build_improvement_dashboard(db, resolved_scope)
+        create_audit_log(
+            db,
+            int(user["id"]),
+            "generate",
+            "improvement_dashboard",
+            "",
+            "success",
+            f"sanitized=true;scope={resolved_scope.scope}",
+        )
     return {"dashboard": dashboard}
 
 

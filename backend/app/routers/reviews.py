@@ -17,15 +17,15 @@ router = APIRouter(prefix="/api/reviews", tags=["reviews"])
 
 
 @router.get("")
-async def get_reviews(_: dict = Depends(require_roles("admin", "manager"))) -> dict:
+async def get_reviews(user: dict = Depends(require_roles("admin", "manager"))) -> dict:
     with get_db() as db:
-        return {"reviews": list_reviews(db, 100)}
+        return {"reviews": list_reviews(db, 100, int(user["id"]))}
 
 
 @router.get("/{project_id}")
-async def get_review(project_id: str, _: dict = Depends(require_roles("admin", "manager", "member", "viewer"))) -> dict:
+async def get_review(project_id: str, user: dict = Depends(require_roles("admin", "manager", "member", "viewer"))) -> dict:
     with get_db() as db:
-        review = get_review_by_project(db, project_id)
+        review = get_review_by_project(db, project_id, int(user["id"]))
     return {"review": review}
 
 
@@ -68,7 +68,7 @@ async def post_rerequest_review(review_id: int, user: dict = Depends(require_rol
 
 
 @router.get("/{review_id}/revisions")
-async def get_review_revisions(review_id: int, _: dict = Depends(require_roles("admin", "manager", "member", "viewer"))) -> dict:
+async def get_review_revisions(review_id: int, user: dict = Depends(require_roles("admin", "manager", "member", "viewer"))) -> dict:
     with get_db() as db:
-        revisions = list_review_revisions(db, review_id)
+        revisions = list_review_revisions(db, review_id, int(user["id"]))
     return {"revisions": revisions}

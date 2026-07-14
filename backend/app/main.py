@@ -11,8 +11,8 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from app.config import settings
 from app.auth import ensure_not_maintenance_mode, require_roles
-from app.db import get_db, get_db_health, init_db, seed_default_templates
-from app.deployment_info import get_git_metadata
+from app.db import get_db, get_db_health, init_db, seed_default_organization, seed_default_templates
+from app.health import build_health_payload as build_application_health_payload
 from app.knowledge.services import add_knowledge_entry, build_best_practices, search_similar_knowledge
 from app.models import (
     AnalysisResponse,
@@ -25,25 +25,7 @@ from app.observability import get_request_role, log_structured, new_request_id, 
 from app.rate_limit import rate_limit_dependency
 from app.repositories import create_history_log, ensure_initial_admin, get_or_create_customer, get_or_create_project
 from app.prompts.repositories import record_prompt_metric, select_prompt_version_for_project
-from app.routers import analytics as analytics_router
-from app.routers import auth as auth_router
-from app.routers import beautiful_ai as beautiful_ai_router
-from app.routers import briefing as briefing_router
-from app.routers import feedback as feedback_router
-from app.routers import integrations as integrations_router
-from app.routers import knowledge as knowledge_router
-from app.routers import learning as learning_router
-from app.routers import logs as logs_router
-from app.routers import notifications as notifications_router
-from app.routers import orchestrator as orchestrator_router
-from app.routers import pilot as pilot_router
-from app.routers import prompts as prompts_router
-from app.routers import projects as projects_router
-from app.routers import quality_gates as quality_gates_router
-from app.routers import releases as releases_router
-from app.routers import reviews as reviews_router
-from app.routers import users as users_router
-from app.routers import workspace as workspace_router
+from app.router_registry import include_application_routers
 from app.services.company_research_service import build_company_research_response, extract_public_page_text, normalize_public_url
 from app.services.openai_service import OpenAIServiceError, generate_proposal
 from app.services.pdf_service import PDF_MEDIA_TYPE, build_estimate_pdf_bytes, build_estimate_pdf_filename
@@ -64,6 +46,7 @@ async def lifespan(app: FastAPI):
     if get_db_health().get("db_tables_count", 0):
         with get_db() as db:
             ensure_initial_admin(db)
+            seed_default_organization(db)
         seed_default_templates()
     yield
 
@@ -147,25 +130,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
         return JSONResponse(body, status_code=exc.status_code, headers=headers)
     return JSONResponse({"detail": exc.detail}, status_code=exc.status_code, headers=headers)
 
-app.include_router(auth_router.router)
-app.include_router(users_router.router)
-app.include_router(briefing_router.router)
-app.include_router(notifications_router.router)
-app.include_router(orchestrator_router.router)
-app.include_router(pilot_router.router)
-app.include_router(projects_router.router)
-app.include_router(logs_router.router)
-app.include_router(feedback_router.router)
-app.include_router(integrations_router.router)
-app.include_router(analytics_router.router)
-app.include_router(knowledge_router.router)
-app.include_router(learning_router.router)
-app.include_router(prompts_router.router)
-app.include_router(workspace_router.router)
-app.include_router(reviews_router.router)
-app.include_router(quality_gates_router.router)
-app.include_router(releases_router.router)
-app.include_router(beautiful_ai_router.router)
+include_application_routers(app)
 
 
 @app.get("/")
@@ -175,7 +140,7 @@ async def root() -> dict[str, str]:
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
-    return build_health_payload()
+    return build_application_health_payload(app)
 
 
 @app.get("/health/live")
@@ -190,55 +155,9 @@ async def health_live() -> dict[str, Any]:
 
 @app.get("/health/ready")
 async def health_ready() -> JSONResponse:
-    payload = build_health_payload()
+    payload = build_application_health_payload(app)
     status_code = 200 if payload["status"] == "ok" else 503
     return JSONResponse(payload, status_code=status_code)
-
-
-def build_health_payload() -> dict[str, Any]:
-    db_health = get_db_health()
-    auth_configured = bool(settings.app_auth_secret and (settings.initial_admin_email or settings.app_access_password))
-    db_connected = bool(db_health["db_connected"])
-    db_ready = db_connected and int(db_health.get("db_tables_count", 0)) > 0
-    ai_api = "mock" if settings.use_mock_ai else ("configured" if settings.openai_api_key else "missing")
-    ready = auth_configured and db_ready and ai_api != "missing"
-    beautiful_ai_status_route_registered = any(
-        getattr(route, "path", "") == "/api/beautiful-ai/status" and "GET" in getattr(route, "methods", set())
-        for route in app.routes
-    )
-    return {
-        "status": "ok" if ready else "degraded",
-        "app_version": settings.app_version,
-        "environment": settings.environment,
-        "git": get_git_metadata(),
-        "routes": {
-            "beautiful_ai_status": "/api/beautiful-ai/status",
-            "beautiful_ai_status_registered": beautiful_ai_status_route_registered,
-            "beautiful_ai_docs_tag": "beautiful-ai",
-        },
-        "beautiful_ai": {
-            "enabled": bool(settings.beautiful_ai_enabled),
-            "configured": bool(settings.beautiful_ai_api_key or settings.beautiful_ai_mock),
-            "mock": bool(settings.beautiful_ai_mock),
-            "route_registered": beautiful_ai_status_route_registered,
-        },
-        "auth_configured": auth_configured,
-        "pilot_mode": settings.pilot_mode,
-        "pilot_start_date": settings.pilot_start_date,
-        "pilot_end_date": settings.pilot_end_date,
-        "pilot_max_users": settings.pilot_max_users,
-        "maintenance_mode": settings.maintenance_mode,
-        "mock_ai": settings.use_mock_ai,
-        "ai_api": ai_api,
-        "pptx": "available",
-        "pdf": "available",
-        "db": "connected" if db_connected else "error",
-        "db_connected": db_connected,
-        "db_type": db_health["db_type"],
-        "db_tables_count": db_health["db_tables_count"],
-        "startup_schema_migration_enabled": db_health.get("startup_schema_migration_enabled", False),
-        "timestamp": utc_timestamp(),
-    }
 
 
 @app.post("/api/company-research", response_model=CompanyResearchResponse)
@@ -293,7 +212,7 @@ async def analyze(
                 },
                 int(user["id"]),
             )
-            customer_id = get_or_create_customer(db, extract_customer_name(payload), "", extract_contact_person(payload))
+            customer_id = get_or_create_customer(db, extract_customer_name(payload), "", extract_contact_person(payload), user_id=int(user["id"]))
             project_id = get_or_create_project(
                 db,
                 customer_id,

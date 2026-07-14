@@ -29,12 +29,12 @@ router = APIRouter(prefix="/api/knowledge", tags=["knowledge"])
 
 @router.get("/entries")
 async def list_entries(
-    _: dict = Depends(require_roles("admin", "manager")),
+    user: dict = Depends(require_roles("admin", "manager")),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ) -> dict:
     with get_db() as db:
-        return {"entries": get_knowledge_entries(db, limit, offset)}
+        return {"entries": get_knowledge_entries(db, limit, offset, int(user["id"]))}
 
 
 @router.post("/entries")
@@ -119,27 +119,27 @@ async def recalculate_entry_quality(
 
 
 @router.post("/search")
-async def search_entries(payload: KnowledgeSearchRequest, _: dict = Depends(require_roles("admin", "manager", "member"))) -> dict:
+async def search_entries(payload: KnowledgeSearchRequest, user: dict = Depends(require_roles("admin", "manager", "member"))) -> dict:
     with get_db() as db:
-        return {"insights": search_similar_knowledge(db, payload.project_summary, payload.industry, payload.limit)}
+        return {"insights": search_similar_knowledge(db, payload.project_summary, payload.industry, payload.limit, int(user["id"]))}
 
 
 @router.get("/best-practices")
-async def best_practices(_: dict = Depends(require_roles("admin", "manager", "member"))) -> dict:
+async def best_practices(user: dict = Depends(require_roles("admin", "manager", "member"))) -> dict:
     with get_db() as db:
-        return {"best_practices": build_best_practices(db)}
+        return {"best_practices": build_best_practices(db, int(user["id"]))}
 
 
 @router.get("/templates")
 async def list_proposal_templates(
-    _: dict = Depends(require_roles("admin", "member", "viewer")),
+    user: dict = Depends(require_roles("admin", "member", "viewer")),
     category: str = Query("", max_length=40),
     include_inactive: bool = Query(False),
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ) -> dict:
     with get_db() as db:
-        return {"templates": get_templates(db, category, include_inactive, limit, offset)}
+        return {"templates": get_templates(db, category, include_inactive, limit, offset, int(user["id"]))}
 
 
 @router.post("/templates")

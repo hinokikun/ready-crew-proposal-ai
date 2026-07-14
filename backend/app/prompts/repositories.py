@@ -4,7 +4,7 @@ import re
 from sqlite3 import Connection
 from typing import Any
 
-from app.repositories import create_audit_log, row_to_dict
+from app.repositories import create_audit_log, get_user_context_ids, row_to_dict
 
 PROMPT_STATUSES = {"draft", "testing", "active", "archived"}
 EXPERIMENT_STATUSES = {"draft", "testing", "active", "paused", "completed", "archived"}
@@ -30,23 +30,43 @@ def _rows(rows: list[Any]) -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
-def list_prompt_versions(db: Connection) -> list[dict[str, Any]]:
+def _workspace_scope(db: Connection, user_id: int | None) -> tuple[int, int]:
+    return get_user_context_ids(db, user_id)
+
+
+def _scoped_prompt_clause() -> str:
+    return "(pv.scope_type = 'system' OR (pv.organization_id = ? AND pv.workspace_id = ?))"
+
+
+def _scoped_experiment_clause() -> str:
+    return "(e.scope_type = 'system' OR (e.organization_id = ? AND e.workspace_id = ?))"
+
+
+def list_prompt_versions(db: Connection, user_id: int | None = None) -> list[dict[str, Any]]:
+    organization_id, workspace_id = _workspace_scope(db, user_id)
     rows = db.execute(
         """
         SELECT pv.*, COALESCE(u.email, '') AS created_by_email
         FROM prompt_versions pv
         LEFT JOIN users u ON u.id = pv.created_by
+        WHERE (pv.scope_type = 'system' OR (pv.organization_id = ? AND pv.workspace_id = ?))
         ORDER BY pv.prompt_name ASC, pv.created_at DESC, pv.id DESC
-        """
+        """,
+        (organization_id, workspace_id),
     ).fetchall()
     return _rows(rows)
 
 
-def get_prompt_version(db: Connection, prompt_name: str, version: str) -> dict[str, Any] | None:
+def get_prompt_version(db: Connection, prompt_name: str, version: str, user_id: int | None = None) -> dict[str, Any] | None:
+    organization_id, workspace_id = _workspace_scope(db, user_id)
     return _row(
         db.execute(
-            "SELECT * FROM prompt_versions WHERE prompt_name = ? AND version = ?",
-            (_safe_text(prompt_name, 80), _safe_text(version, 40)),
+            """
+            SELECT * FROM prompt_versions
+            WHERE prompt_name = ? AND version = ?
+              AND (scope_type = 'system' OR (organization_id = ? AND workspace_id = ?))
+            """,
+            (_safe_text(prompt_name, 80), _safe_text(version, 40), organization_id, workspace_id),
         ).fetchone()
     )
 
@@ -62,18 +82,22 @@ def create_prompt_version(
     status: str,
     user_id: int | None,
 ) -> dict[str, Any]:
+    organization_id, workspace_id = _workspace_scope(db, user_id)
     safe_status = status if status in PROMPT_STATUSES else "draft"
     safe_name = _safe_text(prompt_name, 80)
     safe_version = _safe_text(version, 40)
-    if get_prompt_version(db, safe_name, safe_version):
+    if get_prompt_version(db, safe_name, safe_version, user_id):
         raise ValueError("Prompt version already exists.")
     if safe_status == "active":
-        db.execute("UPDATE prompt_versions SET status = 'archived' WHERE prompt_name = ? AND status = 'active'", (safe_name,))
+        db.execute(
+            "UPDATE prompt_versions SET status = 'archived' WHERE prompt_name = ? AND status = 'active' AND organization_id = ? AND workspace_id = ?",
+            (safe_name, organization_id, workspace_id),
+        )
     cursor = db.execute(
         """
         INSERT INTO prompt_versions
-        (prompt_name, version, description, target_agent, prompt_template, created_by, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        (prompt_name, version, description, target_agent, prompt_template, created_by, status, organization_id, workspace_id, scope_type, scope_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'workspace', ?)
         """,
         (
             safe_name,
@@ -83,6 +107,9 @@ def create_prompt_version(
             _safe_text(prompt_template, 4000),
             user_id,
             safe_status,
+            organization_id,
+            workspace_id,
+            workspace_id,
         ),
     )
     create_audit_log(db, user_id, "save", "prompt_version", str(cursor.lastrowid or ""), "success", f"name={safe_name};version={safe_version};status={safe_status}")
@@ -90,37 +117,56 @@ def create_prompt_version(
 
 
 def update_prompt_version_status(db: Connection, *, version_id: int, status: str, user_id: int | None) -> dict[str, Any] | None:
+    organization_id, workspace_id = _workspace_scope(db, user_id)
     safe_status = status if status in PROMPT_STATUSES else "draft"
-    current = _row(db.execute("SELECT * FROM prompt_versions WHERE id = ?", (version_id,)).fetchone())
+    current = _row(
+        db.execute(
+            """
+            SELECT * FROM prompt_versions
+            WHERE id = ? AND (scope_type = 'system' OR (organization_id = ? AND workspace_id = ?))
+            """,
+            (version_id, organization_id, workspace_id),
+        ).fetchone()
+    )
     if not current:
         return None
     if safe_status == "active":
-        db.execute("UPDATE prompt_versions SET status = 'archived' WHERE prompt_name = ? AND status = 'active'", (current["prompt_name"],))
-    db.execute("UPDATE prompt_versions SET status = ? WHERE id = ?", (safe_status, version_id))
+        db.execute(
+            "UPDATE prompt_versions SET status = 'archived' WHERE prompt_name = ? AND status = 'active' AND organization_id = ? AND workspace_id = ?",
+            (current["prompt_name"], organization_id, workspace_id),
+        )
+    db.execute("UPDATE prompt_versions SET status = ? WHERE id = ? AND organization_id = ? AND workspace_id = ?", (safe_status, version_id, organization_id, workspace_id))
     create_audit_log(db, user_id, "setting_change", "prompt_version", str(version_id), "success", f"status={safe_status}")
-    return _row(db.execute("SELECT * FROM prompt_versions WHERE id = ?", (version_id,)).fetchone())
+    return _row(db.execute("SELECT * FROM prompt_versions WHERE id = ? AND organization_id = ? AND workspace_id = ?", (version_id, organization_id, workspace_id)).fetchone())
 
 
 def rollback_prompt_version(db: Connection, *, prompt_name: str, version: str, user_id: int | None) -> dict[str, Any] | None:
+    organization_id, workspace_id = _workspace_scope(db, user_id)
     safe_name = _safe_text(prompt_name, 80)
     safe_version = _safe_text(version, 40)
-    target = get_prompt_version(db, safe_name, safe_version)
+    target = get_prompt_version(db, safe_name, safe_version, user_id)
     if not target:
         return None
-    db.execute("UPDATE prompt_versions SET status = 'archived' WHERE prompt_name = ? AND status = 'active'", (safe_name,))
-    db.execute("UPDATE prompt_versions SET status = 'active' WHERE id = ?", (target["id"],))
+    db.execute(
+        "UPDATE prompt_versions SET status = 'archived' WHERE prompt_name = ? AND status = 'active' AND organization_id = ? AND workspace_id = ?",
+        (safe_name, organization_id, workspace_id),
+    )
+    db.execute("UPDATE prompt_versions SET status = 'active' WHERE id = ? AND organization_id = ? AND workspace_id = ?", (target["id"], organization_id, workspace_id))
     create_audit_log(db, user_id, "setting_change", "prompt_rollback", str(target["id"]), "success", f"name={safe_name};version={safe_version}")
     return _row(db.execute("SELECT * FROM prompt_versions WHERE id = ?", (target["id"],)).fetchone())
 
 
-def list_experiments(db: Connection) -> list[dict[str, Any]]:
+def list_experiments(db: Connection, user_id: int | None = None) -> list[dict[str, Any]]:
+    organization_id, workspace_id = _workspace_scope(db, user_id)
     rows = db.execute(
         """
         SELECT e.*, COALESCE(u.email, '') AS created_by_email
         FROM experiments e
         LEFT JOIN users u ON u.id = e.created_by
+        WHERE (e.scope_type = 'system' OR (e.organization_id = ? AND e.workspace_id = ?))
         ORDER BY e.created_at DESC, e.id DESC
-        """
+        """,
+        (organization_id, workspace_id),
     ).fetchall()
     return _rows(rows)
 
@@ -138,13 +184,14 @@ def create_experiment(
     end_at: str,
     user_id: int | None,
 ) -> dict[str, Any]:
+    organization_id, workspace_id = _workspace_scope(db, user_id)
     safe_status = status if status in EXPERIMENT_STATUSES else "draft"
     safe_prompt = _safe_text(target_prompt, 80)
     cursor = db.execute(
         """
         INSERT INTO experiments
-        (experiment_name, target_prompt, control_version, candidate_version, traffic_ratio, status, start_at, end_at, created_by)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (experiment_name, target_prompt, control_version, candidate_version, traffic_ratio, status, start_at, end_at, created_by, organization_id, workspace_id, scope_type, scope_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'workspace', ?)
         """,
         (
             _safe_text(experiment_name, 120),
@@ -156,6 +203,9 @@ def create_experiment(
             _safe_text(start_at, 40),
             _safe_text(end_at, 40),
             user_id,
+            organization_id,
+            workspace_id,
+            workspace_id,
         ),
     )
     create_audit_log(db, user_id, "save", "prompt_experiment", str(cursor.lastrowid or ""), "success", f"target={safe_prompt};status={safe_status}")
@@ -163,16 +213,18 @@ def create_experiment(
 
 
 def select_prompt_version_for_project(db: Connection, *, prompt_name: str, project_id: int | None, user_id: int | None) -> dict[str, Any]:
+    organization_id, workspace_id = _workspace_scope(db, user_id)
     safe_name = _safe_text(prompt_name, 80)
     experiment = _row(
         db.execute(
             """
             SELECT * FROM experiments
             WHERE target_prompt = ? AND status IN ('testing', 'active')
+              AND (scope_type = 'system' OR (organization_id = ? AND workspace_id = ?))
             ORDER BY created_at DESC, id DESC
             LIMIT 1
             """,
-            (safe_name,),
+            (safe_name, organization_id, workspace_id),
         ).fetchone()
     )
     if experiment:
@@ -190,7 +242,7 @@ def select_prompt_version_for_project(db: Connection, *, prompt_name: str, proje
                 """,
                 (experiment["id"], project_id, user_id, selected_version, assignment_key),
             )
-        version_row = get_prompt_version(db, safe_name, selected_version)
+        version_row = get_prompt_version(db, safe_name, selected_version, user_id)
         return {
             "prompt_name": safe_name,
             "version": selected_version,
@@ -206,16 +258,21 @@ def select_prompt_version_for_project(db: Connection, *, prompt_name: str, proje
             """
             SELECT * FROM prompt_versions
             WHERE prompt_name = ? AND status = 'active'
+              AND (scope_type = 'system' OR (organization_id = ? AND workspace_id = ?))
             ORDER BY created_at DESC, id DESC
             LIMIT 1
             """,
-            (safe_name,),
+            (safe_name, organization_id, workspace_id),
         ).fetchone()
     )
     fallback = active or _row(
         db.execute(
-            "SELECT * FROM prompt_versions WHERE prompt_name = ? ORDER BY created_at DESC, id DESC LIMIT 1",
-            (safe_name,),
+            """
+            SELECT * FROM prompt_versions
+            WHERE prompt_name = ? AND (scope_type = 'system' OR (organization_id = ? AND workspace_id = ?))
+            ORDER BY created_at DESC, id DESC LIMIT 1
+            """,
+            (safe_name, organization_id, workspace_id),
         ).fetchone()
     )
     if not fallback:
@@ -243,12 +300,14 @@ def record_prompt_metric(
     quality_gate_passed: bool,
     proposal_time_seconds: int,
     user_rating: str,
+    user_id: int | None = None,
 ) -> dict[str, Any]:
+    organization_id, workspace_id = _workspace_scope(db, user_id)
     cursor = db.execute(
         """
         INSERT INTO prompt_experiment_metrics
-        (experiment_id, prompt_name, prompt_version, project_id, outcome, review_count, quality_gate_passed, proposal_time_seconds, user_rating)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (experiment_id, prompt_name, prompt_version, project_id, outcome, review_count, quality_gate_passed, proposal_time_seconds, user_rating, organization_id, workspace_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             experiment_id,
@@ -260,12 +319,15 @@ def record_prompt_metric(
             1 if quality_gate_passed else 0,
             max(0, int(proposal_time_seconds)),
             _safe_text(user_rating, 40),
+            organization_id,
+            workspace_id,
         ),
     )
     return _row(db.execute("SELECT * FROM prompt_experiment_metrics WHERE id = ?", (cursor.lastrowid,)).fetchone()) or {}
 
 
-def build_prompt_analytics_from_db(db: Connection) -> dict[str, Any]:
+def build_prompt_analytics_from_db(db: Connection, user_id: int | None = None) -> dict[str, Any]:
+    organization_id, workspace_id = _workspace_scope(db, user_id)
     rows = db.execute(
         """
         SELECT
@@ -278,10 +340,13 @@ def build_prompt_analytics_from_db(db: Connection) -> dict[str, Any]:
             SUM(CASE WHEN quality_gate_passed = 1 THEN 1 ELSE 0 END) AS quality_gate_passed_count,
             AVG(proposal_time_seconds) AS average_proposal_time_seconds
         FROM prompt_experiment_metrics
+        WHERE organization_id = ? AND workspace_id = ?
         GROUP BY prompt_name, prompt_version
         ORDER BY sample_count DESC, prompt_name ASC
         LIMIT 100
         """
+        ,
+        (organization_id, workspace_id),
     ).fetchall()
     prompt_metrics = []
     for row in rows:
@@ -293,18 +358,30 @@ def build_prompt_analytics_from_db(db: Connection) -> dict[str, Any]:
         item["average_proposal_time_seconds"] = round(float(item.get("average_proposal_time_seconds") or 0), 1)
         prompt_metrics.append(item)
     return {
-        "prompt_versions_count": int(db.execute("SELECT COUNT(*) AS count FROM prompt_versions").fetchone()["count"] or 0),
-        "experiments_count": int(db.execute("SELECT COUNT(*) AS count FROM experiments").fetchone()["count"] or 0),
-        "active_experiments_count": int(db.execute("SELECT COUNT(*) AS count FROM experiments WHERE status IN ('testing', 'active')").fetchone()["count"] or 0),
-        "assignments_count": int(db.execute("SELECT COUNT(*) AS count FROM experiment_assignments").fetchone()["count"] or 0),
-        "metrics_count": int(db.execute("SELECT COUNT(*) AS count FROM prompt_experiment_metrics").fetchone()["count"] or 0),
+        "prompt_versions_count": int(db.execute("SELECT COUNT(*) AS count FROM prompt_versions WHERE organization_id = ? AND workspace_id = ?", (organization_id, workspace_id)).fetchone()["count"] or 0),
+        "experiments_count": int(db.execute("SELECT COUNT(*) AS count FROM experiments WHERE organization_id = ? AND workspace_id = ?", (organization_id, workspace_id)).fetchone()["count"] or 0),
+        "active_experiments_count": int(db.execute("SELECT COUNT(*) AS count FROM experiments WHERE status IN ('testing', 'active') AND organization_id = ? AND workspace_id = ?", (organization_id, workspace_id)).fetchone()["count"] or 0),
+        "assignments_count": int(
+            db.execute(
+                """
+                SELECT COUNT(*) AS count
+                FROM experiment_assignments a
+                JOIN experiments e ON e.id = a.experiment_id
+                WHERE e.organization_id = ? AND e.workspace_id = ?
+                """,
+                (organization_id, workspace_id),
+            ).fetchone()["count"]
+            or 0
+        ),
+        "metrics_count": int(db.execute("SELECT COUNT(*) AS count FROM prompt_experiment_metrics WHERE organization_id = ? AND workspace_id = ?", (organization_id, workspace_id)).fetchone()["count"] or 0),
         "prompt_metrics": prompt_metrics,
-        "winner_recommendations": judge_experiment_winners(db, min_samples=3, persist=False),
+        "winner_recommendations": judge_experiment_winners(db, min_samples=3, persist=False, user_id=user_id),
     }
 
 
-def judge_experiment_winners(db: Connection, *, min_samples: int = 3, persist: bool = True) -> list[dict[str, Any]]:
-    experiments = list_experiments(db)
+def judge_experiment_winners(db: Connection, *, min_samples: int = 3, persist: bool = True, user_id: int | None = None) -> list[dict[str, Any]]:
+    organization_id, workspace_id = _workspace_scope(db, user_id)
+    experiments = list_experiments(db, user_id)
     recommendations: list[dict[str, Any]] = []
     for experiment in experiments:
         if experiment["status"] not in {"testing", "active"}:
@@ -322,10 +399,10 @@ def judge_experiment_winners(db: Connection, *, min_samples: int = 3, persist: b
                     SUM(CASE WHEN quality_gate_passed = 1 THEN 1 ELSE 0 END) AS quality_gate_passed_count,
                     AVG(proposal_time_seconds) AS average_proposal_time_seconds
                 FROM prompt_experiment_metrics
-                WHERE experiment_id = ?
+                WHERE experiment_id = ? AND organization_id = ? AND workspace_id = ?
                 GROUP BY prompt_version
                 """,
-                (experiment["id"],),
+                (experiment["id"], organization_id, workspace_id),
             ).fetchall()
         }
         control = metrics.get(experiment["control_version"])
@@ -350,7 +427,10 @@ def judge_experiment_winners(db: Connection, *, min_samples: int = 3, persist: b
         confidence = min(95, 55 + abs(candidate_score - control_score))
         reason = f"{winner} は受注率・品質ゲート通過率・レビュー回数の総合スコアが高いです。"
         if persist:
-            db.execute("UPDATE experiments SET winner = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (winner, experiment["id"]))
+            db.execute(
+                "UPDATE experiments SET winner = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND organization_id = ? AND workspace_id = ?",
+                (winner, experiment["id"], organization_id, workspace_id),
+            )
             create_audit_log(db, None, "setting_change", "prompt_experiment_winner", str(experiment["id"]), "success", f"winner={winner}")
         recommendations.append(
             {

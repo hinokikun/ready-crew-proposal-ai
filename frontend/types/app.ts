@@ -1,10 +1,15 @@
-export type UserRole = "admin" | "manager" | "member" | "viewer";
+export type UserRole = "admin" | "user" | "manager" | "member" | "viewer";
+export type LoginMode = "user" | "admin";
 
 export type AuthUser = {
   id: number;
   email: string;
   role: UserRole;
+  role_group?: "admin" | "user";
+  role_label?: string;
   is_active?: boolean;
+  current_organization_id?: number;
+  current_workspace_id?: number;
   pilot_enabled?: boolean;
   pilot_started_at?: string;
   pilot_last_used_at?: string;
@@ -18,12 +23,15 @@ export type LoginResult = {
   expires_in_seconds: number;
   message: string;
   user?: AuthUser;
+  login_mode?: LoginMode | null;
 };
 
 export type ManagedUser = {
   id: number;
   email: string;
   role: UserRole;
+  role_group?: "admin" | "user";
+  role_label?: string;
   is_active: number | boolean;
   pilot_enabled?: number | boolean;
   pilot_started_at?: string;
@@ -32,6 +40,23 @@ export type ManagedUser = {
   pilot_note?: string;
   created_at: string;
   updated_at: string;
+};
+
+export type WorkspaceContextItem = {
+  organization_id: number;
+  organization_name: string;
+  workspace_id: number;
+  workspace_name: string;
+  membership_role: "system_admin" | "organization_admin" | "member" | string;
+};
+
+export type WorkspaceContext = {
+  current: WorkspaceContextItem & {
+    user_id?: number;
+    system_role?: UserRole | string;
+    scope?: "admin" | "organization_admin" | "user" | string;
+  };
+  available: WorkspaceContextItem[];
 };
 
 export type PilotStatus = {
@@ -679,8 +704,235 @@ export type ProductAnalyticsDashboardData = {
   notification_center?: AiNotificationAnalytics;
   integrations?: IntegrationAnalytics;
   orchestrator?: OrchestratorAnalytics;
+  presentation?: PresentationAnalytics;
+  proposal_optimization?: ProposalOptimizationDashboard;
   learning?: LearningAnalytics;
   prompt_experiments?: PromptExperimentAnalytics;
+};
+
+export type PresentationReviewScore = {
+  key: string;
+  label: string;
+  score: number;
+  reason?: string;
+  evidence?: string;
+  confidence?: number;
+  requires_human_review?: boolean;
+};
+
+export type PresentationReviewIssue = {
+  category: string;
+  severity: string;
+  summary: string;
+};
+
+export type PresentationImprovement = {
+  action_id?: string;
+  action_type?: string;
+  type: string;
+  change_type: "追加" | "削除" | "修正" | "統合" | "分割" | "並べ替え" | "変更なし" | string;
+  priority?: "high" | "medium" | "low" | string;
+  title?: string;
+  summary: string;
+  target: string;
+  reason?: string;
+  instruction?: string;
+  status?: string;
+  selected?: boolean;
+};
+
+export type PresentationReview = {
+  id: number;
+  project_id: string;
+  project_name: string;
+  average_score: number;
+  scores: PresentationReviewScore[];
+  issues: PresentationReviewIssue[];
+  improvements: PresentationImprovement[];
+  actions?: PresentationImprovement[];
+  improvement_summary: string;
+  improvement_count: number;
+  unresolved_issue_count?: number;
+  overall_score?: number;
+  outline?: Record<string, unknown>;
+  approved: boolean;
+  beautiful_ai_presentation_id: string;
+  created_at: string;
+  updated_at: string;
+  latest_revision?: PresentationRevision | null;
+};
+
+export type PresentationRevision = {
+  id: number;
+  project_id: string;
+  review_id: number | null;
+  revision_number: number;
+  revision_label: string;
+  slide_count: number;
+  added_slide_count: number;
+  removed_slide_count: number;
+  modified_slide_count: number;
+  improvement_summary: string;
+  beautiful_ai_presentation_id: string;
+  editor_url?: string;
+  player_url?: string;
+  status?: "draft" | "reviewing" | "generation_requested" | "generating" | "generated" | "approved" | "rejected" | "failed" | "archived" | string;
+  approved: boolean;
+  approved_by?: number | null;
+  approved_at?: string | null;
+  generated_at?: string | null;
+  generation_error_type?: string;
+  selected_actions?: PresentationImprovement[];
+  outline?: Record<string, unknown>;
+  diff?: PresentationRevisionChange[];
+  created_by: number | null;
+  created_by_email?: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PresentationRevisionChange = {
+  id: number;
+  project_id: string;
+  from_revision_id: number | null;
+  to_revision_id: number;
+  change_type: "追加" | "削除" | "修正" | "統合" | "分割" | "並べ替え" | "変更なし" | string;
+  change_summary: string;
+  change_reason?: string;
+  before_summary?: string;
+  after_summary?: string;
+  field_name?: string;
+  human_action?: string;
+  action_id?: string;
+  created_at: string;
+};
+
+export type PresentationAnalytics = {
+  average_review_score: number;
+  review_count: number;
+  improvement_count: number;
+  revision_count: number;
+  added_slide_count: number;
+  removed_slide_count: number;
+  improvement_adoption_rate: number;
+  beautiful_ai_revision_success_rate?: number;
+  approval_rate?: number;
+  unresolved_issue_count?: number;
+  generation_failure_count?: number;
+};
+
+export type ProposalOptimizationSimulation = {
+  win_rate_delta: number;
+  review_count_delta: number;
+  proposal_time_delta: number;
+  quality_gate_delta: number;
+  is_estimated: boolean;
+  is_estimate?: boolean;
+  note: string;
+  confidence: number;
+  sample_size?: number;
+  evidence_type?: string;
+  calculation_method?: string;
+  generated_at?: string;
+  requires_human_review?: boolean;
+};
+
+export type ProposalImprovementBacklogItem = {
+  id: number;
+  project_id: string;
+  category: string;
+  title: string;
+  summary: string;
+  priority: "High" | "Medium" | "Low" | string;
+  impact: number;
+  confidence: number;
+  expected_improvement: number;
+  effort: number;
+  importance: number;
+  adoption_rate: number;
+  predicted_win_rate_delta: number;
+  composite_score: number;
+  status: "suggested" | "selected" | "approved" | "in_revision" | "applied" | "measured" | "rejected" | "archived" | string;
+  owner: number | null;
+  source_type: string;
+  explanation: string;
+  simulation: ProposalOptimizationSimulation;
+  predicted_effect?: ProposalOptimizationSimulation;
+  measured_effect?: Record<string, unknown>;
+  evidence_type?: string;
+  sample_size?: number;
+  is_estimate?: boolean;
+  calculation_method?: string;
+  measurement_status?: "pending" | "insufficient_data" | "measured" | "inconclusive" | string;
+  measured_at?: string | null;
+  measurement_period?: string;
+  outcome_type?: string;
+  requires_human_review?: boolean;
+  evidence_summary?: string;
+  evidence_period?: string;
+  created_by: number | null;
+  approved_by: number | null;
+  approved_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProposalBestPractice = {
+  id: number;
+  category: string;
+  title: string;
+  pattern_summary: string;
+  source_type: string;
+  success_metric: string;
+  confidence: number;
+  adoption_count: number;
+  status?: "draft" | "pending_review" | "approved" | "rejected" | "archived" | string;
+  normalized_title?: string;
+  tags?: string;
+  structure_summary?: string;
+  cta_type?: string;
+  slide_order_pattern?: string;
+  evidence_count?: number;
+  evidence_period?: string;
+  confidential_risk?: string;
+  quality_score?: number;
+  has_prediction?: boolean;
+  approved_by?: number | null;
+  approved_at?: string | null;
+  approval_reason?: string;
+  rejection_reason?: string;
+  archived_reason?: string;
+  merged_into_id?: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProposalOptimizationDashboard = {
+  backlog_count: number;
+  improvement_adoption_rate: number;
+  improvement_success_rate: number;
+  improvement_rejection_rate: number;
+  average_improvements: number;
+  average_revisions: number;
+  revision_success_rate: number;
+  predicted_win_rate_improvement: number;
+  estimated_improvement_count?: number;
+  measured_improvement_count?: number;
+  insufficient_sample_count?: number;
+  human_review_required_count?: number;
+  best_practice_approval_rate?: number;
+  revision_link_rate?: number;
+  prediction_measurement_gap?: number | null;
+  measurement_uncertainty_rate?: number;
+  average_prediction_error?: number | null;
+  confidence_success_rate?: number;
+};
+
+export type ProposalOptimizationData = {
+  recommendations: ProposalImprovementBacklogItem[];
+  backlog: ProposalImprovementBacklogItem[];
+  dashboard: ProposalOptimizationDashboard;
+  note: string;
 };
 
 export type IntegrationStatus = "未接続" | "接続準備中" | "接続済み" | "エラー" | string;

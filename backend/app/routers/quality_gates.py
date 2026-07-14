@@ -9,9 +9,9 @@ router = APIRouter(prefix="/api/quality-gates", tags=["quality-gates"])
 
 
 @router.get("/{project_id}")
-async def get_gate(project_id: str, _: dict = Depends(require_roles("admin", "manager", "member", "viewer"))) -> dict:
+async def get_gate(project_id: str, user: dict = Depends(require_roles("admin", "manager", "member", "viewer"))) -> dict:
     with get_db() as db:
-        return {"gate": get_quality_gate(db, project_id)}
+        return {"gate": get_quality_gate(db, project_id, int(user["id"]))}
 
 
 @router.post("/{project_id}")

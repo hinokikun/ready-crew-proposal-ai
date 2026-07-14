@@ -462,6 +462,13 @@ def convert_external_candidate_to_project(db: Connection, *, item_id: int, user:
         """,
         (project_id, item_id),
     )
+    db.execute(
+        """
+        INSERT INTO project_lifecycle_events (project_id, user_id, event_type, note)
+        VALUES (?, ?, 'external_intake_converted', ?)
+        """,
+        (project_id, int(user["id"]), "外部連携候補から案件化しました。"),
+    )
     save_workspace_bundle(
         db,
         int(user["id"]),

@@ -10,6 +10,7 @@ from app.beautiful_ai.schemas import (
     BeautifulAiStoredListResponse,
 )
 from app.db import get_db
+from app.repositories import get_user_context_ids
 from app.rate_limit.service import rate_limit_dependency
 from app.services.beautiful_ai_service import (
     BeautifulAiServiceError,
@@ -46,9 +47,10 @@ async def create_presentation(payload: BeautifulAiPresentationRequest, user: dic
 
 
 @router.get("/presentations/{project_id}", response_model=BeautifulAiStoredListResponse)
-async def get_presentations(project_id: str, _: dict = Depends(require_roles("admin", "manager", "member", "viewer"))) -> dict:
+async def get_presentations(project_id: str, user: dict = Depends(require_roles("admin", "manager", "member", "viewer"))) -> dict:
     with get_db() as db:
-        presentations = list_presentations_by_project(db, project_id)
+        organization_id, workspace_id = get_user_context_ids(db, int(user["id"]))
+        presentations = list_presentations_by_project(db, project_id, organization_id=organization_id, workspace_id=workspace_id)
     return {"presentations": presentations}
 
 

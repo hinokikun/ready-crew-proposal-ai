@@ -16,12 +16,12 @@ router = APIRouter(prefix="/api/workspace", tags=["workspace"])
 @router.get("/conversations")
 async def get_workspace_conversations(
     project_id: str = Query("", max_length=120),
-    _: dict = Depends(require_roles("admin", "member", "viewer")),
+    user: dict = Depends(require_roles("admin", "member", "viewer")),
 ) -> dict:
     with get_db() as db:
         if project_id:
-            return get_workspace_conversation_bundle(db, project_id)
-        return {"conversations": list_workspace_conversations(db, 100)}
+            return get_workspace_conversation_bundle(db, project_id, int(user["id"]))
+        return {"conversations": list_workspace_conversations(db, 100, int(user["id"]))}
 
 
 @router.post("/conversations")
@@ -43,16 +43,16 @@ async def post_workspace_conversations(
 @router.get("/conversations/{project_id}")
 async def get_workspace_conversation_by_project(
     project_id: str,
-    _: dict = Depends(require_roles("admin", "member", "viewer")),
+    user: dict = Depends(require_roles("admin", "member", "viewer")),
 ) -> dict:
     with get_db() as db:
-        return get_workspace_conversation_bundle(db, project_id)
+        return get_workspace_conversation_bundle(db, project_id, int(user["id"]))
 
 
 @router.get("/summary/{project_id}")
 async def get_workspace_summary_by_project(
     project_id: str,
-    _: dict = Depends(require_roles("admin", "member", "viewer")),
+    user: dict = Depends(require_roles("admin", "member", "viewer")),
 ) -> dict:
     with get_db() as db:
-        return {"summary": get_workspace_summary(db, project_id)}
+        return {"summary": get_workspace_summary(db, project_id, int(user["id"]))}

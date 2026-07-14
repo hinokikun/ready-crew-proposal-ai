@@ -5,6 +5,7 @@ from app.auth import require_roles
 from app.db import get_db
 from app.models import AnalyticsEventRequest, AnalyticsErrorUpdateRequest, ReleaseNoteCreateRequest
 from app.repositories import create_audit_log
+from app.scope_policy import resolve_scope
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
@@ -27,21 +28,37 @@ async def post_analytics_event(payload: AnalyticsEventRequest, user: dict = Depe
 
 @router.get("/dashboard")
 async def get_analytics_dashboard(
-    _: dict = Depends(require_roles("admin")),
+    user: dict = Depends(require_roles("admin", "manager")),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
+    scope: str = Query("workspace", pattern="^(workspace|organization|system)$"),
 ) -> dict:
     with get_db() as db:
-        return {"dashboard": get_dashboard(db, limit, offset)}
+        resolved_scope = resolve_scope(db, user, scope)
+        return {"dashboard": get_dashboard(db, limit, offset, resolved_scope)}
 
 
 @router.patch("/errors/{error_id}")
-async def patch_analytics_error(error_id: int, payload: AnalyticsErrorUpdateRequest, user: dict = Depends(require_roles("admin"))) -> dict:
+async def patch_analytics_error(
+    error_id: int,
+    payload: AnalyticsErrorUpdateRequest,
+    user: dict = Depends(require_roles("admin", "manager")),
+    scope: str = Query("workspace", pattern="^(workspace|organization|system)$"),
+) -> dict:
     with get_db() as db:
-        error = set_error_resolved(db, error_id, payload.resolved)
+        resolved_scope = resolve_scope(db, user, scope)
+        error = set_error_resolved(db, error_id, payload.resolved, resolved_scope)
         if not error:
             raise HTTPException(status_code=404, detail="Analytics error was not found.")
-        create_audit_log(db, int(user["id"]), "setting_change", "analytics_error", str(error_id), "success", f"resolved={payload.resolved}")
+        create_audit_log(
+            db,
+            int(user["id"]),
+            "setting_change",
+            "analytics_error",
+            str(error_id),
+            "success",
+            f"resolved={payload.resolved};scope={resolved_scope.scope}",
+        )
         return {"error": error}
 
 

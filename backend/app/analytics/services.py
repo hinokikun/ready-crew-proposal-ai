@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sqlite3 import Connection
 from typing import Any
+from app.scope_policy import ScopeContext
 
 from app.analytics.repositories import (
     build_product_analytics_dashboard,
@@ -37,12 +38,12 @@ def record_event(
     )
 
 
-def get_dashboard(db: Connection, limit: int = 20, offset: int = 0) -> dict[str, Any]:
-    return build_product_analytics_dashboard(db, limit, offset)
+def get_dashboard(db: Connection, limit: int = 20, offset: int = 0, scope: ScopeContext | None = None) -> dict[str, Any]:
+    return build_product_analytics_dashboard(db, limit, offset, scope)
 
 
-def set_error_resolved(db: Connection, error_id: int, resolved: bool) -> dict[str, Any] | None:
-    return update_error_resolved(db, error_id, resolved)
+def set_error_resolved(db: Connection, error_id: int, resolved: bool, scope: ScopeContext | None = None) -> dict[str, Any] | None:
+    return update_error_resolved(db, error_id, resolved, scope)
 
 
 def get_release_notes(db: Connection, limit: int = 20, offset: int = 0) -> list[dict[str, Any]]:

@@ -34,6 +34,7 @@ import {
   type WorkspaceSummary,
   type WorkspaceWorkLogRecord
 } from "@/lib/api";
+import { buildScopedStorageKey } from "@/lib/storage";
 export type { AiWorkspaceAgentKey } from "@/components/ai-workspace/types";
 
 type AiWorkspaceStatus = "idle" | "typing" | "analyzing" | "question" | "reviewing" | "generating" | "complete";
@@ -451,7 +452,7 @@ function AiWorkspacePanelBase({
   const lastPersistSignatureRef = useRef("");
 
   const workspaceId = useMemo(() => hashWorkspaceSeed(workspaceSeed || "default"), [workspaceSeed]);
-  const storageKey = `${STORAGE_PREFIX}:${workspaceId}`;
+  const storageKey = useMemo(() => buildScopedStorageKey(`${STORAGE_PREFIX}:${workspaceId}`), [workspaceId]);
 
   useEffect(() => {
     try {

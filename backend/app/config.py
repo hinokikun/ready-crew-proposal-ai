@@ -60,8 +60,11 @@ class Settings:
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///app.db")
     log_level: str = os.getenv("LOG_LEVEL", "INFO").upper()
     allow_startup_schema_migration: bool = _as_bool(
-        os.getenv("ALLOW_STARTUP_SCHEMA_MIGRATION"),
-        os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "local")).strip().lower() not in {"production", "prod"},
+        os.getenv("AUTO_SCHEMA_PATCH"),
+        _as_bool(
+            os.getenv("ALLOW_STARTUP_SCHEMA_MIGRATION"),
+            os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "local")).strip().lower() not in {"production", "prod"},
+        ),
     )
     rate_limit_enabled: bool = _as_bool(os.getenv("RATE_LIMIT_ENABLED"), True)
     rate_limit_login_limit: int = _as_int(os.getenv("RATE_LIMIT_LOGIN_LIMIT"), 10)
@@ -80,6 +83,13 @@ class Settings:
     beautiful_ai_image_source: str = os.getenv("BEAUTIFUL_AI_IMAGE_SOURCE", "ai")
     beautiful_ai_image_style: str = os.getenv("BEAUTIFUL_AI_IMAGE_STYLE", "clean corporate proposal")
     beautiful_ai_timeout_seconds: int = _as_int(os.getenv("BEAUTIFUL_AI_TIMEOUT_SECONDS"), 120)
+    presentation_max_revisions: int = _as_int(os.getenv("PRESENTATION_MAX_REVISIONS"), 3)
+    optimization_min_sample_size: int = _as_int(os.getenv("OPTIMIZATION_MIN_SAMPLE_SIZE"), 10)
+    optimization_weight_impact: float = _as_float(os.getenv("OPTIMIZATION_WEIGHT_IMPACT"), 0.30)
+    optimization_weight_confidence: float = _as_float(os.getenv("OPTIMIZATION_WEIGHT_CONFIDENCE"), 0.25)
+    optimization_weight_urgency: float = _as_float(os.getenv("OPTIMIZATION_WEIGHT_URGENCY"), 0.20)
+    optimization_weight_adoption: float = _as_float(os.getenv("OPTIMIZATION_WEIGHT_ADOPTION"), 0.15)
+    optimization_weight_effort: float = _as_float(os.getenv("OPTIMIZATION_WEIGHT_EFFORT"), 0.10)
 
 
 settings = Settings()

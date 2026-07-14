@@ -17,6 +17,7 @@ from app.knowledge.repositories import (
     update_knowledge_status,
     update_template_active,
 )
+from app.repositories import get_user_context_ids
 
 
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
@@ -161,8 +162,12 @@ def add_knowledge_entry(db: Connection, payload: dict[str, Any], user_id: int | 
     return create_knowledge_entry(db, _normalise_entry_payload(payload), user_id)
 
 
-def get_knowledge_entries(db: Connection, limit: int = 20, offset: int = 0) -> list[dict[str, Any]]:
-    return [_format_knowledge_entry(entry) for entry in list_knowledge_entries(db, limit, offset)]
+def get_knowledge_entries(db: Connection, limit: int = 20, offset: int = 0, user_id: int | None = None) -> list[dict[str, Any]]:
+    organization_id, workspace_id = get_user_context_ids(db, user_id)
+    return [
+        _format_knowledge_entry(entry)
+        for entry in list_knowledge_entries(db, limit, offset, organization_id=organization_id, workspace_id=workspace_id)
+    ]
 
 
 def set_knowledge_evaluation(db: Connection, entry_id: int, rating: int, evaluation_status: str) -> dict[str, Any]:
@@ -226,11 +231,12 @@ def _score_candidate(query_tokens: set[str], industry: str, candidate: dict[str,
     return float(score)
 
 
-def search_similar_knowledge(db: Connection, project_summary: str, industry: str = "", limit: int = 5) -> dict[str, Any]:
+def search_similar_knowledge(db: Connection, project_summary: str, industry: str = "", limit: int = 5, user_id: int | None = None) -> dict[str, Any]:
     safe_summary = sanitize_text(project_summary, 700)
     inferred_industry = industry or infer_industry(safe_summary)
     query_tokens = _tokens(f"{inferred_industry} {safe_summary}")
-    candidates = list_search_candidates(db, 200, approved_only=True)
+    organization_id, workspace_id = get_user_context_ids(db, user_id)
+    candidates = list_search_candidates(db, 200, approved_only=True, organization_id=organization_id, workspace_id=workspace_id)
     scored = []
     for candidate in candidates:
         score = _score_candidate(query_tokens, inferred_industry, candidate)
@@ -271,8 +277,12 @@ def build_knowledge_recommendation(matches: list[dict[str, Any]]) -> str:
     return "類似の失注理由を先に確認し、差別化・予算整合・決裁者確認を提案前に補強することを推奨します。"
 
 
-def build_best_practices(db: Connection) -> dict[str, Any]:
-    entries = [_format_knowledge_entry(entry) for entry in list_search_candidates(db, 300, approved_only=True)]
+def build_best_practices(db: Connection, user_id: int | None = None) -> dict[str, Any]:
+    organization_id, workspace_id = get_user_context_ids(db, user_id)
+    entries = [
+        _format_knowledge_entry(entry)
+        for entry in list_search_candidates(db, 300, approved_only=True, organization_id=organization_id, workspace_id=workspace_id)
+    ]
     successful = [entry for entry in entries if entry.get("outcome") == "success" and int(entry.get("rating") or 0) >= 4]
     industry_counter = Counter(entry.get("industry") or "other" for entry in successful)
     proposal_counter = Counter()
@@ -330,8 +340,19 @@ def add_template(db: Connection, payload: dict[str, Any], user_id: int | None) -
     return _format_template(create_template(db, _normalise_template_payload(payload), user_id))
 
 
-def get_templates(db: Connection, category: str = "", include_inactive: bool = False, limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
-    return [_format_template(template) for template in list_templates(db, category, include_inactive, limit, offset)]
+def get_templates(
+    db: Connection,
+    category: str = "",
+    include_inactive: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+    user_id: int | None = None,
+) -> list[dict[str, Any]]:
+    organization_id, workspace_id = get_user_context_ids(db, user_id)
+    return [
+        _format_template(template)
+        for template in list_templates(db, category, include_inactive, limit, offset, organization_id=organization_id, workspace_id=workspace_id)
+    ]
 
 
 def set_template_active(db: Connection, template_id: int, is_active: bool) -> dict[str, Any]:

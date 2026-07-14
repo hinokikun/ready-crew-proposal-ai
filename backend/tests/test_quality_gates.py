@@ -127,3 +127,38 @@ def test_quality_gate_audit_log_is_recorded(client: TestClient, admin_headers: d
     assert "quality_gate_complete" in event_types
     assert "quality_gate_bypass" in event_types
     assert "quality_gate_bypass_reason" in event_types
+
+
+def test_quality_gate_is_separated_by_workspace(client: TestClient, admin_headers: dict[str, str]) -> None:
+    project_id = "same-external-project"
+    first = client.patch(
+        f"/api/quality-gates/{project_id}/complete",
+        headers=admin_headers,
+        json={"checklist_items": CHECKLIST_ITEMS},
+    )
+    assert first.status_code == 200
+    assert first.json()["gate"]["download_unlocked"] is True
+
+    org_response = client.post("/api/organizations", headers=admin_headers, json={"name": "Quality Org", "slug": "quality-org"})
+    assert org_response.status_code == 200
+    organization_id = int(org_response.json()["organization"]["id"])
+    context = client.get("/api/organizations/context", headers=admin_headers)
+    workspace_id = next(item["workspace_id"] for item in context.json()["available"] if item["organization_id"] == organization_id)
+    switched = client.patch(
+        "/api/organizations/context",
+        headers=admin_headers,
+        json={"organization_id": organization_id, "workspace_id": workspace_id},
+    )
+    assert switched.status_code == 200
+
+    empty = client.get(f"/api/quality-gates/{project_id}", headers=admin_headers)
+    assert empty.status_code == 200
+    assert empty.json()["gate"] is None
+
+    second = client.patch(
+        f"/api/quality-gates/{project_id}/complete",
+        headers=admin_headers,
+        json={"checklist_items": CHECKLIST_ITEMS[:4]},
+    )
+    assert second.status_code == 200
+    assert second.json()["gate"]["download_unlocked"] is True

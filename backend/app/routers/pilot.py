@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.auth import get_current_user, require_roles
 from app.config import settings
@@ -26,6 +26,7 @@ from app.repositories import (
     update_pilot_issue,
 )
 from app.rate_limit import rate_limit_dependency
+from app.scope_policy import resolve_scope
 
 router = APIRouter(prefix="/api/pilot", tags=["pilot"])
 
@@ -44,17 +45,18 @@ async def confirm_checklist(user: dict = Depends(get_current_user)) -> dict:
 
 
 @router.get("/dashboard")
-async def get_dashboard(user: dict = Depends(require_roles("admin"))) -> dict:
+async def get_dashboard(user: dict = Depends(require_roles("admin", "manager")), scope: str = Query("workspace", pattern="^(workspace|organization|system)$")) -> dict:
     with get_db() as db:
-        dashboard = build_pilot_dashboard(db)
-        create_audit_log(db, int(user["id"]), "view", "pilot_dashboard", "", "success", "sanitized=true")
+        resolved_scope = resolve_scope(db, user, scope)
+        dashboard = build_pilot_dashboard(db, resolved_scope)
+        create_audit_log(db, int(user["id"]), "view", "pilot_dashboard", "", "success", f"sanitized=true;scope={resolved_scope.scope}")
     return {"dashboard": dashboard}
 
 
 @router.get("/issues")
 async def get_issues(user: dict = Depends(require_roles("admin", "manager"))) -> dict:
     with get_db() as db:
-        issues = list_pilot_issues(db)
+        issues = list_pilot_issues(db, user_id=int(user["id"]))
         create_audit_log(db, int(user["id"]), "view", "pilot_issues", "", "success", "sanitized=true")
     return {"issues": issues}
 
@@ -121,17 +123,31 @@ async def data_retention(payload: PilotDataRetentionRequest, user: dict = Depend
 
 
 @router.post("/end")
-async def end_pilot(payload: PilotEndRequest, user: dict = Depends(require_roles("admin"))) -> dict:
+async def end_pilot(
+    payload: PilotEndRequest,
+    user: dict = Depends(require_roles("admin")),
+    scope: str = Query("workspace", pattern="^(workspace|organization|system)$"),
+) -> dict:
     with get_db() as db:
-        report = build_pilot_end_report(db, payload.admin_comment)
+        resolved_scope = resolve_scope(db, user, scope)
+        report = build_pilot_end_report(db, payload.admin_comment, resolved_scope)
+        scope_clause = ""
+        scope_params: tuple[int, ...] = ()
+        if resolved_scope.scope == "organization":
+            scope_clause = "AND current_organization_id = ?"
+            scope_params = (resolved_scope.organization_id,)
+        elif resolved_scope.scope == "workspace":
+            scope_clause = "AND current_organization_id = ? AND current_workspace_id = ?"
+            scope_params = (resolved_scope.organization_id, int(resolved_scope.workspace_id or 1))
         db.execute(
-            """
+            f"""
             UPDATE users
             SET pilot_completed = 1,
                 pilot_enabled = 0,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE pilot_enabled = 1 AND role != 'admin'
-            """
+            WHERE pilot_enabled = 1 AND role != 'admin' {scope_clause}
+            """,
+            scope_params,
         )
-        create_audit_log(db, int(user["id"]), "settings_change", "pilot", "end", "success", "pilot_ended=true")
+        create_audit_log(db, int(user["id"]), "settings_change", "pilot", "end", "success", f"pilot_ended=true;scope={resolved_scope.scope}")
     return {"report": report}

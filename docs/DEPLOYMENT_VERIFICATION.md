@@ -106,3 +106,27 @@ PASS Viewer generation guard
 - Smoke Test が `FAIL 0`
 - 管理者と一般ユーザーの権限差が確認できている
 - APIキー、DATABASE_URL、パスワードが画面・ログ・レスポンスに出ていない
+## Version 18.2 Workspace Isolation Verification
+
+After deploying Render and Vercel:
+
+1. Open Render `/health`.
+2. Confirm:
+   - `db_connected: true`
+   - `migration_ready: true`
+   - `migration_current` matches `migration_head`
+   - no `DATABASE_URL` or secret values are returned
+3. Open Render `/health/ready`; it must return 200 before production traffic.
+4. Run the cloud smoke test:
+
+```powershell
+python scripts/smoke_test.py
+```
+
+Recommended optional environment variables for the smoke test:
+
+- `SMOKE_FORBIDDEN_ORGANIZATION_ID`
+- `SMOKE_FORBIDDEN_WORKSPACE_ID`
+- `SMOKE_OTHER_WORKSPACE_PROJECT_ID`
+
+These validate that workspace switching and direct ID access are rejected across scope.

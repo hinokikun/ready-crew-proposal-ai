@@ -1,10 +1,11 @@
 import { API_BASE_URL } from "@/lib/config";
-import type { AuthUser, LoginResult } from "@/types/app";
+import type { AuthUser, LoginMode, LoginResult } from "@/types/app";
 
-export type { AuthUser, LoginResult } from "@/types/app";
+export type { AuthUser, LoginMode, LoginResult } from "@/types/app";
 
 const AUTH_TOKEN_KEY = "ready-crew-auth-token-v1";
 const AUTH_USER_KEY = "ready-crew-auth-user-v1";
+const LOGIN_MODE_KEY = "ready-crew-login-mode-v1";
 
 export function getAuthToken() {
   if (typeof window === "undefined") return "";
@@ -25,6 +26,17 @@ export function saveAuthUser(user: AuthUser | undefined) {
   window.localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
 }
 
+export function getStoredLoginMode(): LoginMode {
+  if (typeof window === "undefined") return "user";
+  const stored = window.localStorage.getItem(LOGIN_MODE_KEY);
+  return stored === "admin" ? "admin" : "user";
+}
+
+export function saveLoginMode(mode: LoginMode) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(LOGIN_MODE_KEY, mode);
+}
+
 export function getStoredUser(): AuthUser | null {
   if (typeof window === "undefined") return null;
   try {
@@ -39,13 +51,26 @@ export function clearAuthToken() {
   window.localStorage.removeItem(AUTH_USER_KEY);
 }
 
-export async function loginWithPassword(password: string, email = ""): Promise<LoginResult> {
+export async function logoutCurrentSession() {
+  try {
+    await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      method: "POST",
+      headers: getAuthHeaders()
+    });
+  } catch {
+    // Logout must continue even if the audit request cannot be delivered.
+  } finally {
+    clearAuthToken();
+  }
+}
+
+export async function loginWithPassword(password: string, email = "", loginMode?: LoginMode): Promise<LoginResult> {
   const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify(loginMode ? { email, password, login_mode: loginMode } : { email, password })
   });
 
   if (!response.ok) {
@@ -56,6 +81,7 @@ export async function loginWithPassword(password: string, email = ""): Promise<L
   const result = (await response.json()) as LoginResult;
   saveAuthToken(result.token);
   saveAuthUser(result.user);
+  if (loginMode) saveLoginMode(loginMode);
   return result;
 }
 

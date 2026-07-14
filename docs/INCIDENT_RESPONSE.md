@@ -214,3 +214,28 @@ cd backend
 - admin/member/viewerでログイン確認
 - 案件作成、要約PPT、詳細PPT、見積PDFのいずれかを安全なテストデータで確認
 - 監査ログに復旧操作が残っている
+## Version 18.2 Workspace Isolation Incident
+
+Treat any suspected cross-organization or cross-workspace data exposure as high severity.
+
+Immediate actions:
+
+1. Enable Maintenance Mode.
+2. Stop new proposal generation, PPT/PDF generation, and Orchestrator execution.
+3. Preserve audit logs and request IDs.
+4. Check affected scope:
+   - user id
+   - organization id
+   - workspace id
+   - endpoint
+   - target id
+5. Do not export logs that contain customer body text or generated proposal text.
+6. Verify `/health/ready` and migration readiness.
+7. Restore from backup if migration corrupted scope columns or Quality Gate uniqueness.
+
+Resolution criteria:
+
+- cross-scope API returns `403` or `404`
+- admin aggregate defaults to `scope=workspace`
+- system aggregate requires explicit `scope=system` and admin role
+- cloud smoke test passes with forbidden workspace and other-project IDOR checks

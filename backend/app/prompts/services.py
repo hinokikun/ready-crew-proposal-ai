@@ -16,20 +16,20 @@ from app.prompts.repositories import (
     select_prompt_version_for_project,
     update_prompt_version_status,
 )
-from app.repositories import create_audit_log, row_to_dict
+from app.repositories import create_audit_log, get_user_context_ids, row_to_dict
 
 
-def get_prompt_studio_dashboard(db: Connection) -> dict[str, Any]:
+def get_prompt_studio_dashboard(db: Connection, user_id: int | None = None) -> dict[str, Any]:
     return {
-        "versions": list_prompt_versions(db),
-        "experiments": list_experiments(db),
-        "analytics": build_prompt_experiment_analytics(db),
-        "winner_recommendations": judge_experiment_winners(db, min_samples=3, persist=False),
+        "versions": list_prompt_versions(db, user_id),
+        "experiments": list_experiments(db, user_id),
+        "analytics": build_prompt_experiment_analytics(db, user_id),
+        "winner_recommendations": judge_experiment_winners(db, min_samples=3, persist=False, user_id=user_id),
     }
 
 
-def build_prompt_experiment_analytics(db: Connection) -> dict[str, Any]:
-    return build_prompt_analytics_from_db(db)
+def build_prompt_experiment_analytics(db: Connection, user_id: int | None = None) -> dict[str, Any]:
+    return build_prompt_analytics_from_db(db, user_id)
 
 
 def create_prompt_version_from_payload(db: Connection, *, payload: Any, user_id: int | None) -> dict[str, Any]:
@@ -72,7 +72,7 @@ def route_prompt_from_payload(db: Connection, *, payload: Any, user_id: int | No
     return select_prompt_version_for_project(db, prompt_name=payload.prompt_name, project_id=payload.project_id, user_id=user_id)
 
 
-def record_prompt_metric_from_payload(db: Connection, *, payload: Any) -> dict[str, Any]:
+def record_prompt_metric_from_payload(db: Connection, *, payload: Any, user_id: int | None = None) -> dict[str, Any]:
     return record_prompt_metric(
         db,
         experiment_id=payload.experiment_id,
@@ -84,11 +84,12 @@ def record_prompt_metric_from_payload(db: Connection, *, payload: Any) -> dict[s
         quality_gate_passed=payload.quality_gate_passed,
         proposal_time_seconds=payload.proposal_time_seconds,
         user_rating=payload.user_rating,
+        user_id=user_id,
     )
 
 
 def judge_experiment(db: Connection, *, experiment_id: int, user_id: int | None) -> dict[str, Any] | None:
-    recommendations = judge_experiment_winners(db, min_samples=3, persist=True)
+    recommendations = judge_experiment_winners(db, min_samples=3, persist=True, user_id=user_id)
     selected = next((item for item in recommendations if int(item["experiment_id"]) == experiment_id), None)
     if selected:
         create_audit_log(db, user_id, "setting_change", "prompt_experiment_judgement", str(experiment_id), "success", f"winner={selected.get('recommended_version', '')}")
@@ -96,7 +97,13 @@ def judge_experiment(db: Connection, *, experiment_id: int, user_id: int | None)
 
 
 def create_experiment_from_learning(db: Connection, *, improvement_id: int, user_id: int | None) -> dict[str, Any] | None:
-    improvement = row_to_dict(db.execute("SELECT * FROM learning_improvements WHERE id = ?", (improvement_id,)).fetchone())
+    organization_id, workspace_id = get_user_context_ids(db, user_id)
+    improvement = row_to_dict(
+        db.execute(
+            "SELECT * FROM learning_improvements WHERE id = ? AND organization_id = ? AND workspace_id = ?",
+            (improvement_id, organization_id, workspace_id),
+        ).fetchone()
+    )
     if not improvement:
         return None
     prompt_name = _prompt_name_from_learning(improvement)
@@ -130,23 +137,29 @@ def create_experiment_from_learning(db: Connection, *, improvement_id: int, user
 
 
 def _ensure_baseline_prompt(db: Connection, *, prompt_name: str, target_agent: str, user_id: int | None) -> dict[str, Any]:
+    organization_id, workspace_id = get_user_context_ids(db, user_id)
     row = row_to_dict(
         db.execute(
             """
             SELECT * FROM prompt_versions
             WHERE prompt_name = ? AND status = 'active'
+              AND (scope_type = 'system' OR (organization_id = ? AND workspace_id = ?))
             ORDER BY created_at DESC, id DESC
             LIMIT 1
             """,
-            (prompt_name,),
+            (prompt_name, organization_id, workspace_id),
         ).fetchone()
     )
     if row:
         return row
     existing = row_to_dict(
         db.execute(
-            "SELECT * FROM prompt_versions WHERE prompt_name = ? ORDER BY created_at ASC, id ASC LIMIT 1",
-            (prompt_name,),
+            """
+            SELECT * FROM prompt_versions
+            WHERE prompt_name = ? AND (scope_type = 'system' OR (organization_id = ? AND workspace_id = ?))
+            ORDER BY created_at ASC, id ASC LIMIT 1
+            """,
+            (prompt_name, organization_id, workspace_id),
         ).fetchone()
     )
     if existing:

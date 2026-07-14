@@ -5,7 +5,8 @@ from datetime import datetime
 from sqlite3 import Connection
 from typing import Any
 
-from app.repositories import create_audit_log, get_project_detail
+from app.repositories import create_audit_log, get_project_detail, get_user_context_ids
+from app.scope_policy import ScopeContext, scope_where
 from app.workspace.repositories import save_workspace_bundle
 
 
@@ -102,6 +103,16 @@ def _safe_text(value: str, max_length: int = 500) -> str:
     return text[:max_length]
 
 
+def _scope(db: Connection, user_id: int | None) -> tuple[int, int]:
+    return get_user_context_ids(db, user_id)
+
+
+def _project_in_scope(project: dict[str, Any] | None, organization_id: int, workspace_id: int) -> bool:
+    if not project:
+        return False
+    return int(project.get("organization_id") or 1) == organization_id and int(project.get("workspace_id") or 1) == workspace_id
+
+
 def _parse_time(value: str | None) -> datetime | None:
     if not value:
         return None
@@ -159,25 +170,30 @@ def _insert_workspace_update(
 
 
 def enqueue_project_orchestration(db: Connection, *, project_id: int, user_id: int | None) -> dict[str, Any]:
+    organization_id, workspace_id = _scope(db, user_id)
     project = get_project_detail(db, project_id)
-    if not project:
+    if not _project_in_scope(project, organization_id, workspace_id):
         return {"created": 0, "project_id": project_id}
 
     created = 0
     for item in ACTION_PLAN:
         existing = db.execute(
-            "SELECT id FROM action_queue WHERE project_id = ? AND action_type = ? LIMIT 1",
-            (project_id, item["action_type"]),
+            """
+            SELECT id FROM action_queue
+            WHERE project_id = ? AND action_type = ? AND organization_id = ? AND workspace_id = ?
+            LIMIT 1
+            """,
+            (project_id, item["action_type"], organization_id, workspace_id),
         ).fetchone()
         if existing:
             continue
         db.execute(
             """
             INSERT INTO action_queue
-            (project_id, action_type, agent, status, priority, reason, result_summary, created_by)
-            VALUES (?, ?, ?, 'pending', ?, ?, '', ?)
+            (project_id, action_type, agent, status, priority, reason, result_summary, created_by, organization_id, workspace_id)
+            VALUES (?, ?, ?, 'pending', ?, ?, '', ?, ?, ?)
             """,
-            (project_id, item["action_type"], item["agent"], int(item["priority"]), _safe_text(item["reason"], 500), user_id),
+            (project_id, item["action_type"], item["agent"], int(item["priority"]), _safe_text(item["reason"], 500), user_id, organization_id, workspace_id),
         )
         created += 1
 
@@ -205,7 +221,7 @@ def enqueue_project_orchestration(db: Connection, *, project_id: int, user_id: i
                 }
             ],
         )
-    return {"created": created, "project_id": project_id, "queue": list_project_queue(db, project_id)}
+    return {"created": created, "project_id": project_id, "queue": list_project_queue(db, project_id, user_id)}
 
 
 def _needs_human_input(project: dict[str, Any], action_type: str) -> bool:
@@ -265,23 +281,27 @@ def _complete_action(db: Connection, *, action: dict[str, Any], user_id: int | N
 
 
 def _create_orchestrator_notification(db: Connection, *, project_id: int, user_id: int | None) -> None:
+    organization_id, workspace_id = _scope(db, user_id)
     key = f"{user_id or 'system'}|orchestrator_complete|project|{project_id}"
-    existing = db.execute("SELECT id FROM ai_notifications WHERE notification_key = ?", (key,)).fetchone()
+    existing = db.execute(
+        "SELECT id FROM ai_notifications WHERE notification_key = ? AND organization_id = ? AND workspace_id = ?",
+        (key, organization_id, workspace_id),
+    ).fetchone()
     if existing:
         db.execute(
             """
             UPDATE ai_notifications
             SET status = 'unread', updated_at = CURRENT_TIMESTAMP
-            WHERE notification_key = ?
+            WHERE notification_key = ? AND organization_id = ? AND workspace_id = ?
             """,
-            (key,),
+            (key, organization_id, workspace_id),
         )
         return
     db.execute(
         """
         INSERT INTO ai_notifications
-        (notification_key, user_id, project_id, agent_name, priority, title, message, recommended_action, source_type, source_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (notification_key, user_id, project_id, agent_name, priority, title, message, recommended_action, source_type, source_id, organization_id, workspace_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             key,
@@ -294,13 +314,16 @@ def _create_orchestrator_notification(db: Connection, *, project_id: int, user_i
             "提出前品質ゲートを確認し、要約PPTをダウンロードしてください。",
             "orchestrator",
             str(project_id),
+            organization_id,
+            workspace_id,
         ),
     )
 
 
 def run_project_orchestrator(db: Connection, *, project_id: int, user_id: int | None, max_actions: int = 20) -> dict[str, Any]:
+    organization_id, workspace_id = _scope(db, user_id)
     project = get_project_detail(db, project_id)
-    if not project:
+    if not _project_in_scope(project, organization_id, workspace_id):
         return {"project_id": project_id, "executed": 0, "queue": []}
     executed = 0
     for _ in range(max_actions):
@@ -308,20 +331,27 @@ def run_project_orchestrator(db: Connection, *, project_id: int, user_id: int | 
             """
             SELECT * FROM action_queue
             WHERE project_id = ? AND status IN ('pending', 'retry_waiting')
+              AND organization_id = ? AND workspace_id = ?
             ORDER BY priority DESC, id ASC
             LIMIT 1
             """,
-            (project_id,),
+            (project_id, organization_id, workspace_id),
         ).fetchone()
         if not action_row:
             break
         action = dict(action_row)
         action_id = int(action["id"])
         try:
-            db.execute("UPDATE action_queue SET status = 'running', started_at = CURRENT_TIMESTAMP WHERE id = ?", (action_id,))
+            db.execute(
+                "UPDATE action_queue SET status = 'running', started_at = CURRENT_TIMESTAMP WHERE id = ? AND organization_id = ? AND workspace_id = ?",
+                (action_id, organization_id, workspace_id),
+            )
             _complete_action(db, action=action, user_id=user_id, project=project)
             executed += 1
-            latest = db.execute("SELECT status FROM action_queue WHERE id = ?", (action_id,)).fetchone()
+            latest = db.execute(
+                "SELECT status FROM action_queue WHERE id = ? AND organization_id = ? AND workspace_id = ?",
+                (action_id, organization_id, workspace_id),
+            ).fetchone()
             if latest and latest["status"] == "needs_human":
                 break
         except Exception as exc:
@@ -331,19 +361,23 @@ def run_project_orchestrator(db: Connection, *, project_id: int, user_id: int | 
                 """
                 UPDATE action_queue
                 SET status = ?, retry_count = ?, error_type = ?, completed_at = CURRENT_TIMESTAMP
-                WHERE id = ?
+                WHERE id = ? AND organization_id = ? AND workspace_id = ?
                 """,
-                (status, retry_count, _safe_text(type(exc).__name__, 120), action_id),
+                (status, retry_count, _safe_text(type(exc).__name__, 120), action_id, organization_id, workspace_id),
             )
             create_audit_log(db, user_id, "orchestrator_action_failed", "action_queue", str(action_id), "failure", f"retry_count={retry_count}")
             if status == "failure":
                 break
     create_audit_log(db, user_id, "orchestrator_run", "project", str(project_id), "success", f"executed={executed}")
-    return {"project_id": project_id, "executed": executed, **get_project_orchestrator_status(db, project_id)}
+    return {"project_id": project_id, "executed": executed, **get_project_orchestrator_status(db, project_id, user_id)}
 
 
 def retry_queue_action(db: Connection, *, action_id: int, user_id: int | None) -> dict[str, Any] | None:
-    row = db.execute("SELECT * FROM action_queue WHERE id = ?", (action_id,)).fetchone()
+    organization_id, workspace_id = _scope(db, user_id)
+    row = db.execute(
+        "SELECT * FROM action_queue WHERE id = ? AND organization_id = ? AND workspace_id = ?",
+        (action_id, organization_id, workspace_id),
+    ).fetchone()
     if not row:
         return None
     action = dict(row)
@@ -352,12 +386,15 @@ def retry_queue_action(db: Connection, *, action_id: int, user_id: int | None) -
         """
         UPDATE action_queue
         SET status = 'pending', retry_count = ?, error_type = '', started_at = NULL, completed_at = NULL
-        WHERE id = ?
+        WHERE id = ? AND organization_id = ? AND workspace_id = ?
         """,
-        (retry_count, action_id),
+        (retry_count, action_id, organization_id, workspace_id),
     )
     create_audit_log(db, user_id, "orchestrator_action_retry", "action_queue", str(action_id), "success", f"retry_count={retry_count}")
-    updated = db.execute("SELECT * FROM action_queue WHERE id = ?", (action_id,)).fetchone()
+    updated = db.execute(
+        "SELECT * FROM action_queue WHERE id = ? AND organization_id = ? AND workspace_id = ?",
+        (action_id, organization_id, workspace_id),
+    ).fetchone()
     return _decorate_action(db, _row_to_dict(updated))
 
 
@@ -389,33 +426,36 @@ def _next_agent_for_project(db: Connection, project_id: int, current_action_id: 
     return str(row["agent"]) if row else ""
 
 
-def list_project_queue(db: Connection, project_id: int) -> list[dict[str, Any]]:
+def list_project_queue(db: Connection, project_id: int, user_id: int | None = None) -> list[dict[str, Any]]:
+    organization_id, workspace_id = _scope(db, user_id)
     rows = db.execute(
         """
         SELECT * FROM action_queue
-        WHERE project_id = ?
+        WHERE project_id = ? AND organization_id = ? AND workspace_id = ?
         ORDER BY priority DESC, id ASC
         """,
-        (project_id,),
+        (project_id, organization_id, workspace_id),
     ).fetchall()
     return [_decorate_action(db, dict(row)) for row in rows]
 
 
-def list_action_queue(db: Connection, *, status: str = "", limit: int = 100) -> list[dict[str, Any]]:
+def list_action_queue(db: Connection, *, status: str = "", limit: int = 100, user_id: int | None = None) -> list[dict[str, Any]]:
+    organization_id, workspace_id = _scope(db, user_id)
     if status:
         rows = db.execute(
             """
             SELECT * FROM action_queue
-            WHERE status = ?
+            WHERE status = ? AND organization_id = ? AND workspace_id = ?
             ORDER BY created_at DESC, priority DESC, id DESC
             LIMIT ?
             """,
-            (status, max(1, min(limit, 200))),
+            (status, organization_id, workspace_id, max(1, min(limit, 200))),
         ).fetchall()
     else:
         rows = db.execute(
             """
             SELECT * FROM action_queue
+            WHERE organization_id = ? AND workspace_id = ?
             ORDER BY
                 CASE status
                     WHEN 'running' THEN 1
@@ -430,13 +470,13 @@ def list_action_queue(db: Connection, *, status: str = "", limit: int = 100) -> 
                 id DESC
             LIMIT ?
             """,
-            (max(1, min(limit, 200)),),
+            (organization_id, workspace_id, max(1, min(limit, 200))),
         ).fetchall()
     return [_decorate_action(db, dict(row)) for row in rows]
 
 
-def get_project_orchestrator_status(db: Connection, project_id: int) -> dict[str, Any]:
-    queue = list_project_queue(db, project_id)
+def get_project_orchestrator_status(db: Connection, project_id: int, user_id: int | None = None) -> dict[str, Any]:
+    queue = list_project_queue(db, project_id, user_id)
     current = next((item for item in queue if item.get("status") == "running"), None)
     if not current:
         current = next((item for item in queue if item.get("status") in {"pending", "retry_waiting", "needs_human"}), None)
@@ -457,8 +497,19 @@ def get_project_orchestrator_status(db: Connection, project_id: int) -> dict[str
     }
 
 
-def build_orchestrator_analytics(db: Connection) -> dict[str, Any]:
-    rows = [dict(row) for row in db.execute("SELECT * FROM action_queue").fetchall()]
+def build_orchestrator_analytics(db: Connection, user_id: int | None = None, scope: ScopeContext | None = None) -> dict[str, Any]:
+    if scope:
+        where_sql, params = scope_where(scope)
+    else:
+        organization_id, workspace_id = _scope(db, user_id)
+        where_sql, params = "organization_id = ? AND workspace_id = ?", (organization_id, workspace_id)
+    rows = [
+        dict(row)
+        for row in db.execute(
+            f"SELECT * FROM action_queue WHERE {where_sql}",
+            params,
+        ).fetchall()
+    ]
     total = len(rows)
     status_counts: dict[str, int] = {}
     retry_items = 0

@@ -34,6 +34,9 @@ REQUIRED_HEALTH_FIELDS = {
     "pilot_mode",
     "pilot_max_users",
     "maintenance_mode",
+    "migration_current",
+    "migration_head",
+    "migration_ready",
 }
 
 
@@ -201,6 +204,10 @@ def main() -> int:
         smoke.pass_("Mock AI mode")
     else:
         smoke.warn("Mock AI mode", "off; smoke test still avoids generation calls")
+    if body.get("migration_ready") is True:
+        smoke.pass_("Migration readiness", f"current={body.get('migration_current')}, head={body.get('migration_head')}")
+    else:
+        smoke.fail("Migration readiness", f"current={body.get('migration_current')}, head={body.get('migration_head')}")
 
     live = request("GET", f"{backend_url}/health/live")
     smoke.pass_("Live health") if live.status == 200 else smoke.fail("Live health", f"status={live.status}")
@@ -225,6 +232,69 @@ def main() -> int:
         smoke.pass_("Login API", f"role={role}")
     else:
         smoke.fail("Login API", f"status={login_result.status}")
+
+    current_org_id = 0
+    current_workspace_id = 0
+    if token:
+        context = request("GET", f"{backend_url}/api/organizations/context", token=token)
+        context_body = context.json_body or {}
+        current = context_body.get("current") if isinstance(context_body.get("current"), dict) else {}
+        current_org_id = int(current.get("organization_id") or 0)
+        current_workspace_id = int(current.get("workspace_id") or 0)
+        if context.status == 200 and current_org_id and current_workspace_id:
+            smoke.pass_("Current organization/workspace", f"organization={current_org_id}, workspace={current_workspace_id}")
+        else:
+            smoke.fail("Current organization/workspace", f"status={context.status}")
+
+        if current_org_id and current_workspace_id:
+            allowed_switch = request(
+                "PATCH",
+                f"{backend_url}/api/organizations/context",
+                token=token,
+                data={"organization_id": current_org_id, "workspace_id": current_workspace_id},
+            )
+            if allowed_switch.status == 200:
+                smoke.pass_("Allowed workspace switch", "current workspace re-selected")
+            else:
+                smoke.fail("Allowed workspace switch", f"status={allowed_switch.status}")
+
+        forbidden_org = env("SMOKE_FORBIDDEN_ORGANIZATION_ID")
+        forbidden_workspace = env("SMOKE_FORBIDDEN_WORKSPACE_ID")
+        if forbidden_org and forbidden_workspace:
+            forbidden_switch = request(
+                "PATCH",
+                f"{backend_url}/api/organizations/context",
+                token=token,
+                data={"organization_id": int(forbidden_org), "workspace_id": int(forbidden_workspace)},
+            )
+            if forbidden_switch.status in {403, 404}:
+                smoke.pass_("Disallowed workspace switch rejection", f"status={forbidden_switch.status}")
+            else:
+                smoke.fail("Disallowed workspace switch rejection", f"status={forbidden_switch.status}")
+        else:
+            smoke.skip("Disallowed workspace switch rejection", "set SMOKE_FORBIDDEN_ORGANIZATION_ID and SMOKE_FORBIDDEN_WORKSPACE_ID")
+
+        crm = request("GET", f"{backend_url}/api/projects/crm", token=token)
+        if crm.status == 200:
+            smoke.pass_("Current workspace projects", "/api/projects/crm")
+        else:
+            smoke.fail("Current workspace projects", f"status={crm.status}")
+
+        other_project_id = env("SMOKE_OTHER_WORKSPACE_PROJECT_ID")
+        if other_project_id:
+            other_project = request("GET", f"{backend_url}/api/projects/{other_project_id}", token=token)
+            if other_project.status in {403, 404}:
+                smoke.pass_("Other workspace project IDOR rejection", f"status={other_project.status}")
+            else:
+                smoke.fail("Other workspace project IDOR rejection", f"status={other_project.status}")
+        else:
+            smoke.skip("Other workspace project IDOR rejection", "set SMOKE_OTHER_WORKSPACE_PROJECT_ID")
+
+        beautiful_status = request("GET", f"{backend_url}/api/beautiful-ai/status", token=token)
+        if beautiful_status.status == 200:
+            smoke.pass_("Beautiful.ai status", "reachable")
+        else:
+            smoke.fail("Beautiful.ai status", f"status={beautiful_status.status}")
 
     if pilot_mode and role != "admin":
         if user.get("pilot_enabled") is True:

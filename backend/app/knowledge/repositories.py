@@ -3,12 +3,15 @@ from __future__ import annotations
 from sqlite3 import Connection
 from typing import Any
 
+from app.repositories import get_user_context_ids
+
 
 def _row_to_dict(row: Any) -> dict[str, Any]:
     return dict(row) if row is not None else {}
 
 
 def create_knowledge_entry(db: Connection, data: dict[str, Any], user_id: int | None) -> dict[str, Any]:
+    organization_id, workspace_id = get_user_context_ids(db, user_id)
     cursor = db.execute(
         """
         INSERT INTO proposal_knowledge (
@@ -31,9 +34,11 @@ def create_knowledge_entry(db: Connection, data: dict[str, Any], user_id: int | 
             confidential_flags,
             source_type,
             source_note,
-            created_by
+            created_by,
+            organization_id,
+            workspace_id
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             data["industry"],
@@ -56,6 +61,8 @@ def create_knowledge_entry(db: Connection, data: dict[str, Any], user_id: int | 
             data["source_type"],
             data["source_note"],
             user_id,
+            organization_id,
+            workspace_id,
         ),
     )
     return get_knowledge_entry(db, int(cursor.lastrowid))
@@ -76,7 +83,14 @@ def get_knowledge_entry(db: Connection, entry_id: int) -> dict[str, Any]:
     return _row_to_dict(row)
 
 
-def list_knowledge_entries(db: Connection, limit: int = 20, offset: int = 0) -> list[dict[str, Any]]:
+def list_knowledge_entries(
+    db: Connection,
+    limit: int = 20,
+    offset: int = 0,
+    *,
+    organization_id: int = 1,
+    workspace_id: int = 1,
+) -> list[dict[str, Any]]:
     rows = db.execute(
         """
         SELECT
@@ -84,10 +98,11 @@ def list_knowledge_entries(db: Connection, limit: int = 20, offset: int = 0) -> 
             COALESCE(u.email, '') AS created_by_email
         FROM proposal_knowledge k
         LEFT JOIN users u ON u.id = k.created_by
+        WHERE k.organization_id = ? AND k.workspace_id = ?
         ORDER BY k.rating DESC, k.updated_at DESC, k.id DESC
         LIMIT ? OFFSET ?
         """,
-        (limit, offset),
+        (organization_id, workspace_id, limit, offset),
     ).fetchall()
     return [_row_to_dict(row) for row in rows]
 
@@ -137,8 +152,19 @@ def update_knowledge_quality(
     return get_knowledge_entry(db, entry_id)
 
 
-def list_search_candidates(db: Connection, limit: int = 100, approved_only: bool = True) -> list[dict[str, Any]]:
-    where_sql = "WHERE approval_status = 'approved'" if approved_only else ""
+def list_search_candidates(
+    db: Connection,
+    limit: int = 100,
+    approved_only: bool = True,
+    *,
+    organization_id: int = 1,
+    workspace_id: int = 1,
+) -> list[dict[str, Any]]:
+    conditions = ["organization_id = ?", "workspace_id = ?"]
+    params: list[Any] = [organization_id, workspace_id]
+    if approved_only:
+        conditions.append("approval_status = 'approved'")
+    where_sql = f"WHERE {' AND '.join(conditions)}"
     rows = db.execute(
         f"""
         SELECT *
@@ -147,12 +173,13 @@ def list_search_candidates(db: Connection, limit: int = 100, approved_only: bool
         ORDER BY quality_score DESC, rating DESC, updated_at DESC
         LIMIT ?
         """,
-        (limit,),
+        (*params, limit),
     ).fetchall()
     return [_row_to_dict(row) for row in rows]
 
 
 def create_template(db: Connection, data: dict[str, Any], user_id: int | None) -> dict[str, Any]:
+    organization_id, workspace_id = get_user_context_ids(db, user_id)
     cursor = db.execute(
         """
         INSERT INTO proposal_templates (
@@ -162,9 +189,11 @@ def create_template(db: Connection, data: dict[str, Any], user_id: int | None) -
             structure,
             recommended_for,
             is_active,
-            created_by
+            created_by,
+            organization_id,
+            workspace_id
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             data["category"],
@@ -174,6 +203,8 @@ def create_template(db: Connection, data: dict[str, Any], user_id: int | None) -
             data["recommended_for"],
             1 if data["is_active"] else 0,
             user_id,
+            organization_id,
+            workspace_id,
         ),
     )
     return get_template(db, int(cursor.lastrowid))
@@ -194,9 +225,18 @@ def get_template(db: Connection, template_id: int) -> dict[str, Any]:
     return _row_to_dict(row)
 
 
-def list_templates(db: Connection, category: str = "", include_inactive: bool = False, limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
-    conditions = []
-    params: list[Any] = []
+def list_templates(
+    db: Connection,
+    category: str = "",
+    include_inactive: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+    *,
+    organization_id: int = 1,
+    workspace_id: int = 1,
+) -> list[dict[str, Any]]:
+    conditions = ["t.organization_id = ?", "t.workspace_id = ?"]
+    params: list[Any] = [organization_id, workspace_id]
     if category:
         conditions.append("category = ?")
         params.append(category)

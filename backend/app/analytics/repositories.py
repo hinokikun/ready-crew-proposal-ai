@@ -10,8 +10,12 @@ from app.daily_briefing import build_daily_briefing_analytics
 from app.integrations import build_integration_analytics
 from app.learning.services import build_learning_analytics
 from app.orchestrator import build_orchestrator_analytics
+from app.presentation_review import build_presentation_analytics
+from app.proposal_optimization import build_optimization_dashboard
 from app.project_lifecycle import build_project_lifecycle_analytics
 from app.prompts.services import build_prompt_experiment_analytics
+from app.repositories import get_user_context_ids
+from app.scope_policy import ScopeContext, scope_where
 
 
 FUNNEL_STEPS = [
@@ -32,6 +36,16 @@ SAFE_METADATA_KEYS = {"source", "mode", "output", "reason", "category"}
 
 def _row_to_dict(row: Any) -> dict[str, Any]:
     return dict(row) if row is not None else {}
+
+
+def _scope_meta(scope: ScopeContext | None) -> dict[str, Any]:
+    return scope.response_meta if scope else {"scope": "system"}
+
+
+def _scope_clause(scope: ScopeContext | None, alias: str = "") -> tuple[str, tuple[Any, ...]]:
+    if not scope:
+        return "1 = 1", ()
+    return scope_where(scope, alias)
 
 
 def _safe_metadata(metadata: dict[str, Any] | None) -> str:
@@ -70,20 +84,21 @@ def record_analytics_event(
     error_type: str = "",
     metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    organization_id, workspace_id = get_user_context_ids(db, user_id)
     db.execute(
         """
-        INSERT INTO analytics_sessions (session_key, user_id)
-        VALUES (?, ?)
+        INSERT INTO analytics_sessions (session_key, user_id, organization_id, workspace_id)
+        VALUES (?, ?, ?, ?)
         ON CONFLICT(session_key) DO NOTHING
         """,
-        (session_key, user_id),
+        (session_key, user_id, organization_id, workspace_id),
     )
     db.execute(
         """
-        INSERT INTO analytics_events (session_key, user_id, event_name, feature_name, status, duration_ms, metadata)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO analytics_events (session_key, user_id, event_name, feature_name, status, duration_ms, metadata, organization_id, workspace_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (session_key, user_id, event_name, feature_name, status, max(duration_ms, 0), _safe_metadata(metadata)),
+        (session_key, user_id, event_name, feature_name, status, max(duration_ms, 0), _safe_metadata(metadata), organization_id, workspace_id),
     )
 
     generation_increment = 1 if event_name in GENERATION_EVENTS and status == "success" else 0
@@ -94,6 +109,8 @@ def record_analytics_event(
         UPDATE analytics_sessions
         SET
             user_id = COALESCE(user_id, ?),
+            organization_id = COALESCE(NULLIF(organization_id, 0), ?),
+            workspace_id = COALESCE(NULLIF(workspace_id, 0), ?),
             ended_at = CURRENT_TIMESTAMP,
             duration_seconds = CAST((JULIANDAY(CURRENT_TIMESTAMP) - JULIANDAY(started_at)) * 86400 AS INTEGER),
             generation_count = generation_count + ?,
@@ -102,30 +119,31 @@ def record_analytics_event(
             updated_at = CURRENT_TIMESTAMP
         WHERE session_key = ?
         """,
-        (user_id, generation_increment, download_increment, error_increment, session_key),
+        (user_id, organization_id, workspace_id, generation_increment, download_increment, error_increment, session_key),
     )
 
     if status == "failure":
         category = error_type or "unknown"
         source = feature_name or event_name
-        key = _error_key(category, event_name, source)
+        key = f"{organization_id}:{workspace_id}:{_error_key(category, event_name, source)}"
         db.execute(
             """
-            INSERT INTO analytics_errors (error_key, category, message, source)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO analytics_errors (error_key, category, message, source, organization_id, workspace_id)
+            VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(error_key) DO UPDATE SET
                 count = count + 1,
                 last_seen_at = CURRENT_TIMESTAMP
             """,
-            (key, category, event_name, source),
+            (key, category, event_name, source, organization_id, workspace_id),
         )
 
     return {"ok": True}
 
 
-def list_analytics_sessions(db: Connection, limit: int = 20, offset: int = 0) -> list[dict[str, Any]]:
+def list_analytics_sessions(db: Connection, limit: int = 20, offset: int = 0, scope: ScopeContext | None = None) -> list[dict[str, Any]]:
+    where_sql, params = _scope_clause(scope, "s")
     rows = db.execute(
-        """
+        f"""
         SELECT
             s.id,
             s.session_key,
@@ -140,24 +158,27 @@ def list_analytics_sessions(db: Connection, limit: int = 20, offset: int = 0) ->
             s.error_count
         FROM analytics_sessions s
         LEFT JOIN users u ON u.id = s.user_id
+        WHERE {where_sql}
         ORDER BY s.started_at DESC
         LIMIT ? OFFSET ?
         """,
-        (limit, offset),
+        (*params, limit, offset),
     ).fetchall()
     return [_row_to_dict(row) for row in rows]
 
 
-def list_error_ranking(db: Connection, limit: int = 10) -> list[dict[str, Any]]:
-    total = db.execute("SELECT COALESCE(SUM(count), 0) AS total FROM analytics_errors").fetchone()["total"]
+def list_error_ranking(db: Connection, limit: int = 10, scope: ScopeContext | None = None) -> list[dict[str, Any]]:
+    where_sql, params = _scope_clause(scope)
+    total = db.execute(f"SELECT COALESCE(SUM(count), 0) AS total FROM analytics_errors WHERE {where_sql}", params).fetchone()["total"]
     rows = db.execute(
-        """
+        f"""
         SELECT id, category, message, source, count, first_seen_at, last_seen_at, resolved
         FROM analytics_errors
+        WHERE {where_sql}
         ORDER BY count DESC, last_seen_at DESC
         LIMIT ?
         """,
-        (limit,),
+        (*params, limit),
     ).fetchall()
     result: list[dict[str, Any]] = []
     for row in rows:
@@ -168,11 +189,12 @@ def list_error_ranking(db: Connection, limit: int = 10) -> list[dict[str, Any]]:
     return result
 
 
-def update_error_resolved(db: Connection, error_id: int, resolved: bool) -> dict[str, Any] | None:
-    db.execute("UPDATE analytics_errors SET resolved = ? WHERE id = ?", (1 if resolved else 0, error_id))
+def update_error_resolved(db: Connection, error_id: int, resolved: bool, scope: ScopeContext | None = None) -> dict[str, Any] | None:
+    where_sql, params = _scope_clause(scope)
+    db.execute(f"UPDATE analytics_errors SET resolved = ? WHERE id = ? AND {where_sql}", (1 if resolved else 0, error_id, *params))
     row = db.execute(
-        "SELECT id, category, message, source, count, first_seen_at, last_seen_at, resolved FROM analytics_errors WHERE id = ?",
-        (error_id,),
+        f"SELECT id, category, message, source, count, first_seen_at, last_seen_at, resolved FROM analytics_errors WHERE id = ? AND {where_sql}",
+        (error_id, *params),
     ).fetchone()
     if not row:
         return None
@@ -181,16 +203,19 @@ def update_error_resolved(db: Connection, error_id: int, resolved: bool) -> dict
     return item
 
 
-def build_funnel_analytics(db: Connection) -> list[dict[str, Any]]:
-    sessions = db.execute("SELECT session_key, started_at FROM analytics_sessions").fetchall()
+def build_funnel_analytics(db: Connection, scope: ScopeContext | None = None) -> list[dict[str, Any]]:
+    where_sql, params = _scope_clause(scope)
+    sessions = db.execute(f"SELECT session_key, started_at FROM analytics_sessions WHERE {where_sql}", params).fetchall()
     total_sessions = len(sessions)
     session_start = {row["session_key"]: _parse_time(row["started_at"]) for row in sessions}
     event_rows = db.execute(
-        """
+        f"""
         SELECT session_key, event_name, MIN(created_at) AS first_seen
         FROM analytics_events
+        WHERE {where_sql}
         GROUP BY session_key, event_name
-        """
+        """,
+        params,
     ).fetchall()
 
     first_seen: dict[tuple[str, str], datetime] = {}
@@ -233,18 +258,22 @@ def build_funnel_analytics(db: Connection) -> list[dict[str, Any]]:
     return output
 
 
-def build_feature_usage(db: Connection) -> list[dict[str, Any]]:
-    total_sessions = db.execute("SELECT COUNT(*) AS count FROM analytics_sessions").fetchone()["count"]
+def build_feature_usage(db: Connection, scope: ScopeContext | None = None) -> list[dict[str, Any]]:
+    session_where, session_params = _scope_clause(scope)
+    event_where, event_params = _scope_clause(scope)
+    total_sessions = db.execute(f"SELECT COUNT(*) AS count FROM analytics_sessions WHERE {session_where}", session_params).fetchone()["count"]
     rows = db.execute(
-        """
+        f"""
         SELECT
             COALESCE(NULLIF(feature_name, ''), event_name) AS feature_key,
             COUNT(*) AS event_count,
             COUNT(DISTINCT session_key) AS session_count
         FROM analytics_events
+        WHERE {event_where}
         GROUP BY COALESCE(NULLIF(feature_name, ''), event_name)
         ORDER BY event_count DESC
-        """
+        """,
+        event_params,
     ).fetchall()
     return [
         {
@@ -256,6 +285,84 @@ def build_feature_usage(db: Connection) -> list[dict[str, Any]]:
         }
         for row in rows
     ]
+
+
+def build_organization_workspace_breakdown(db: Connection, scope: ScopeContext | None = None) -> dict[str, list[dict[str, Any]]]:
+    org_filter = ""
+    org_params: tuple[Any, ...] = ()
+    workspace_filter = ""
+    workspace_params: tuple[Any, ...] = ()
+    if scope and scope.scope == "organization":
+        org_filter = "WHERE o.id = ?"
+        org_params = (scope.organization_id,)
+        workspace_filter = "WHERE o.id = ?"
+        workspace_params = (scope.organization_id,)
+    elif scope and scope.scope == "workspace":
+        org_filter = "WHERE o.id = ?"
+        org_params = (scope.organization_id,)
+        workspace_filter = "WHERE o.id = ? AND w.id = ?"
+        workspace_params = (scope.organization_id, int(scope.workspace_id or 1))
+    organization_rows = db.execute(
+        f"""
+        SELECT
+            COALESCE(o.id, 1) AS organization_id,
+            COALESCE(o.name, 'Ready Crew') AS organization_name,
+            COUNT(DISTINCT s.session_key) AS usage_count,
+            COUNT(DISTINCT p.id) AS project_count,
+            COALESCE(AVG(NULLIF(p.win_probability, 0)), 0) AS win_probability
+        FROM organizations o
+        LEFT JOIN analytics_sessions s ON s.organization_id = o.id
+        LEFT JOIN projects p ON p.organization_id = o.id
+        {org_filter}
+        GROUP BY o.id, o.name
+        ORDER BY usage_count DESC, project_count DESC, o.id ASC
+        """,
+        org_params,
+    ).fetchall()
+    workspace_rows = db.execute(
+        f"""
+        SELECT
+            COALESCE(o.id, 1) AS organization_id,
+            COALESCE(o.name, 'Ready Crew') AS organization_name,
+            COALESCE(w.id, 1) AS workspace_id,
+            COALESCE(w.name, '営業部') AS workspace_name,
+            COUNT(DISTINCT s.session_key) AS usage_count,
+            COUNT(DISTINCT p.id) AS project_count,
+            COALESCE(AVG(NULLIF(p.win_probability, 0)), 0) AS win_probability
+        FROM workspaces w
+        INNER JOIN organizations o ON o.id = w.organization_id
+        LEFT JOIN analytics_sessions s ON s.organization_id = w.organization_id AND s.workspace_id = w.id
+        LEFT JOIN projects p ON p.organization_id = w.organization_id AND p.workspace_id = w.id
+        {workspace_filter}
+        GROUP BY o.id, o.name, w.id, w.name
+        ORDER BY usage_count DESC, project_count DESC, w.id ASC
+        """,
+        workspace_params,
+    ).fetchall()
+    return {
+        "organizations": [
+            {
+                "organization_id": int(row["organization_id"]),
+                "organization_name": row["organization_name"],
+                "usage_count": int(row["usage_count"] or 0),
+                "project_count": int(row["project_count"] or 0),
+                "win_rate": round(float(row["win_probability"] or 0), 1),
+            }
+            for row in organization_rows
+        ],
+        "workspaces": [
+            {
+                "organization_id": int(row["organization_id"]),
+                "organization_name": row["organization_name"],
+                "workspace_id": int(row["workspace_id"]),
+                "workspace_name": row["workspace_name"],
+                "usage_count": int(row["usage_count"] or 0),
+                "project_count": int(row["project_count"] or 0),
+                "win_rate": round(float(row["win_probability"] or 0), 1),
+            }
+            for row in workspace_rows
+        ],
+    }
 
 
 def build_improvement_candidates(funnel: list[dict[str, Any]], errors: list[dict[str, Any]], feature_usage: list[dict[str, Any]]) -> list[dict[str, str]]:
@@ -306,16 +413,20 @@ def build_improvement_candidates(funnel: list[dict[str, Any]], errors: list[dict
     return candidates[:6]
 
 
-def build_product_analytics_dashboard(db: Connection, limit: int = 20, offset: int = 0) -> dict[str, Any]:
-    total_sessions = db.execute("SELECT COUNT(*) AS count FROM analytics_sessions").fetchone()["count"]
-    total_events = db.execute("SELECT COUNT(*) AS count FROM analytics_events").fetchone()["count"]
-    total_errors = db.execute("SELECT COALESCE(SUM(count), 0) AS count FROM analytics_errors").fetchone()["count"]
-    avg_duration = db.execute("SELECT COALESCE(AVG(duration_seconds), 0) AS value FROM analytics_sessions").fetchone()["value"]
+def build_product_analytics_dashboard(db: Connection, limit: int = 20, offset: int = 0, scope: ScopeContext | None = None) -> dict[str, Any]:
+    session_where, session_params = _scope_clause(scope)
+    event_where, event_params = _scope_clause(scope)
+    error_where, error_params = _scope_clause(scope)
+    total_sessions = db.execute(f"SELECT COUNT(*) AS count FROM analytics_sessions WHERE {session_where}", session_params).fetchone()["count"]
+    total_events = db.execute(f"SELECT COUNT(*) AS count FROM analytics_events WHERE {event_where}", event_params).fetchone()["count"]
+    total_errors = db.execute(f"SELECT COALESCE(SUM(count), 0) AS count FROM analytics_errors WHERE {error_where}", error_params).fetchone()["count"]
+    avg_duration = db.execute(f"SELECT COALESCE(AVG(duration_seconds), 0) AS value FROM analytics_sessions WHERE {session_where}", session_params).fetchone()["value"]
 
-    funnel = build_funnel_analytics(db)
-    errors = list_error_ranking(db, 10)
-    feature_usage = build_feature_usage(db)
+    funnel = build_funnel_analytics(db, scope)
+    errors = list_error_ranking(db, 10, scope)
+    feature_usage = build_feature_usage(db, scope)
     return {
+        "scope": _scope_meta(scope),
         "summary": {
             "total_sessions": total_sessions,
             "total_events": total_events,
@@ -323,15 +434,18 @@ def build_product_analytics_dashboard(db: Connection, limit: int = 20, offset: i
             "average_session_seconds": round(float(avg_duration or 0), 1),
         },
         "funnel": funnel,
-        "sessions": list_analytics_sessions(db, limit, offset),
+        "sessions": list_analytics_sessions(db, limit, offset, scope),
         "errors": errors,
         "feature_usage": feature_usage,
+        "organization_workspace": build_organization_workspace_breakdown(db, scope),
         "improvement_candidates": build_improvement_candidates(funnel, errors, feature_usage),
-        "project_lifecycle": build_project_lifecycle_analytics(db),
+        "project_lifecycle": build_project_lifecycle_analytics(db, scope),
         "daily_briefing": build_daily_briefing_analytics(db),
-        "notification_center": build_notification_analytics(db),
+        "notification_center": build_notification_analytics(db, scope),
         "integrations": build_integration_analytics(db),
-        "orchestrator": build_orchestrator_analytics(db),
+        "orchestrator": build_orchestrator_analytics(db, None, scope),
+        "presentation": build_presentation_analytics(db, scope),
+        "proposal_optimization": build_optimization_dashboard(db, scope=scope),
         "learning": build_learning_analytics(db),
         "prompt_experiments": build_prompt_experiment_analytics(db),
     }

@@ -49,8 +49,11 @@ BEAUTIFUL_AI_MOCK=true
 - `POST /api/beautiful-ai/presentations`
 - `GET /api/beautiful-ai/presentations/{project_id}`
 - `POST /api/beautiful-ai/presentations/{presentation_id}/editor-opened`
+- `POST /api/presentation-review/revisions/{revision_id}/generate-beautiful-ai`
 
 作成APIは `Authorization: Bearer ...` のアプリログイントークンが必要です。Beautiful.ai APIキーはBackend内部でのみ利用します。
+
+Presentation ReviewのRevision再生成では、承認済みRevisionだけをBeautiful.aiへ送信します。既存Presentationは上書きせず、`Proposal v2` のように版番号付きの別Presentationとして作成します。
 
 ## Beautiful.aiへ送る内容
 
@@ -88,6 +91,8 @@ BEAUTIFUL_AI_MOCK=true
 - 生成本文全文
 - 個人情報
 - Beautiful.ai token
+
+Presentation Revisionでも同じ保存方針を適用します。保存するのはRevision番号、短い改善要約、Beautiful.ai presentation ID、editor/player URL、生成日時のみです。
 
 ## エラー時の扱い
 

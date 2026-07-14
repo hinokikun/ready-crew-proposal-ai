@@ -127,3 +127,20 @@ def test_project_lifecycle_analytics_and_permissions(client: TestClient, admin_h
     assert dashboard_response.status_code == 200
     assert "project_lifecycle" in dashboard_response.json()["dashboard"]
     assert viewer_status_response.status_code == 403
+
+
+def test_member_can_only_access_own_project(client: TestClient, admin_headers: dict[str, str]) -> None:
+    owner_headers = _create_user_and_login(client, admin_headers, "project-owner@example.com", "member")
+    other_headers = _create_user_and_login(client, admin_headers, "project-other@example.com", "member")
+    project_id = _create_project(client, owner_headers, "Owner only project")
+
+    owner_detail = client.get(f"/api/projects/{project_id}", headers=owner_headers)
+    other_detail = client.get(f"/api/projects/{project_id}", headers=other_headers)
+    admin_detail = client.get(f"/api/projects/{project_id}", headers=admin_headers)
+    other_crm = client.get("/api/projects/crm", headers=other_headers)
+
+    assert owner_detail.status_code == 200
+    assert other_detail.status_code == 403
+    assert admin_detail.status_code == 200
+    assert other_crm.status_code == 200
+    assert all(project["id"] != project_id for project in other_crm.json()["projects"])

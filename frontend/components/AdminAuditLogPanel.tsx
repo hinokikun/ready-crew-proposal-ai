@@ -34,6 +34,12 @@ export function AdminAuditLogPanel({ logs }: AdminAuditLogPanelProps) {
 function labelEvent(eventType: string) {
   const labels: Record<string, string> = {
     login: "ログイン",
+    login_success: "ログイン成功",
+    login_failure: "ログイン失敗",
+    role_mismatch: "ログイン入口不一致",
+    inactive_user_attempt: "無効ユーザーログイン試行",
+    rate_limit: "レート制限",
+    logout: "ログアウト",
     generate: "作成",
     save: "保存",
     delete: "削除",

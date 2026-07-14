@@ -136,3 +136,80 @@ GitHub Actionsで実行する場合は、`Test` workflowを `workflow_dispatch` 
 
 このSmoke Testは提案書生成、PPTX生成、PDF生成を実行しません。
 OpenAI費用や顧客データ保存を避けるため、ログイン、ヘルスチェック、保護API、viewerの生成拒否だけを確認します。
+# Version 22.1 Regression Lock
+
+Run these commands before production deployment.
+
+## Frontend
+
+```powershell
+cd frontend
+npm.cmd run typecheck
+npm.cmd run check:unused
+npm.cmd run build
+npm.cmd run test:e2e
+```
+
+Expected Version 22.1 local result:
+
+- typecheck: passed
+- unused import check: passed
+- build: passed
+- Playwright: 29 passed
+
+## Backend
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -m compileall app tests
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m pip check
+```
+
+Expected Version 22.1 local result:
+
+- compileall: passed
+- pytest: 139 passed
+- pip check: passed
+
+## Common
+
+```powershell
+git diff --check
+git status --short
+```
+
+`git diff --check` may print CRLF warnings for existing files on Windows. Treat whitespace errors as blockers.
+
+## PPTX Regression
+
+The current automated regression covers:
+
+- normal PowerPoint download endpoint
+- summary PowerPoint download endpoint
+- estimate PDF endpoint
+- authentication and role-protected generation paths
+
+For production acceptance, also open a generated PPTX manually and check slide count, title text, footer, page size, and nonblank slides.
+# Version 22.2 PPTX Regression Tests
+
+PPTX生成の内部分割後は、以下を必ず実行する。
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -m pytest tests\test_generation_outputs.py tests\test_pptx_structure_regression.py -q
+```
+
+構造snapshot:
+
+- `backend/tests/snapshots/detailed_pptx_structure.json`
+- `backend/tests/snapshots/summary_pptx_structure.json`
+
+任意の視覚確認:
+
+```powershell
+python scripts/render_pptx_preview.py path\to\proposal.pptx --out outputs\pptx-preview
+python scripts/compare_pptx_previews.py expected.pdf actual.pdf
+```
+
+LibreOffice / soffice がない環境では視覚比較は未実行として扱う。

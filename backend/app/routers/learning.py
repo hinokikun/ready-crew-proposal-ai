@@ -10,9 +10,9 @@ router = APIRouter(prefix="/api/learning", tags=["learning"])
 
 
 @router.get("/dashboard")
-async def get_dashboard(_: dict = Depends(require_roles("admin", "manager"))) -> dict:
+async def get_dashboard(user: dict = Depends(require_roles("admin", "manager"))) -> dict:
     with get_db() as db:
-        return {"dashboard": get_learning_dashboard(db)}
+        return {"dashboard": get_learning_dashboard(db, int(user["id"]))}
 
 
 @router.post("/run")

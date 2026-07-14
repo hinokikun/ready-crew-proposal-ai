@@ -27,6 +27,7 @@ def build_rule_improvements(metrics: dict[str, Any]) -> list[dict[str, Any]]:
     outcome = metrics.get("outcome", {})
     quality_gate = metrics.get("quality_gate", {})
     knowledge = metrics.get("knowledge", {})
+    presentation_review = metrics.get("presentation_review", {})
     lost_reasons = outcome.get("lost_reasons", {})
     improvements: list[dict[str, Any]] = []
 
@@ -75,6 +76,27 @@ def build_rule_improvements(metrics: dict[str, Any]) -> list[dict[str, Any]]:
                 "confidence": 88,
                 "priority": 92,
                 "simulation": {"win_rate_delta": 0, "review_count_delta": 0, "quality_gate_pass_delta": 6, "proposal_time_delta": 0},
+            }
+        )
+
+    if int(presentation_review.get("reviews") or 0) >= 1 and float(presentation_review.get("average_score") or 0) < 4.0:
+        improvements.append(
+            {
+                "improvement_type": "rule",
+                "agent": "AIディレクター",
+                "category": "Presentation Review",
+                "current_version": "19.0",
+                "suggested_prompt": "",
+                "recommendation": "提案書完成後にROI、競合比較、導入計画、CTAの不足を確認し、Beautiful.aiへ送る前にRevision候補を作ります。",
+                "expected_effect": "レビュー指摘数を減らし、社外提出前の修正回数を減らします。",
+                "confidence": 78,
+                "priority": 82,
+                "simulation": {
+                    "win_rate_delta": 3,
+                    "review_count_delta": -2,
+                    "quality_gate_pass_delta": 4,
+                    "proposal_time_delta": 1,
+                },
             }
         )
 

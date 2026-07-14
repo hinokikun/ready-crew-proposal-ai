@@ -1,0 +1,114 @@
+{
+  "slide_count": 11,
+  "slide_width": 12191695,
+  "slide_height": 6858000,
+  "total_shapes": 342,
+  "total_tables": 2,
+  "total_charts": 0,
+  "total_pictures": 0,
+  "font_names": [
+    "Yu Gothic"
+  ],
+  "broken_relationship_count": 0,
+  "slides": [
+    {
+      "index": 1,
+      "title": "UX",
+      "shape_count": 25,
+      "text_shape_count": 13,
+      "table_count": 0,
+      "chart_count": 0,
+      "picture_count": 0
+    },
+    {
+      "index": 2,
+      "title": "SUMMARY",
+      "shape_count": 32,
+      "text_shape_count": 18,
+      "table_count": 0,
+      "chart_count": 0,
+      "picture_count": 0
+    },
+    {
+      "index": 3,
+      "title": "顧客理解",
+      "shape_count": 31,
+      "text_shape_count": 16,
+      "table_count": 0,
+      "chart_count": 0,
+      "picture_count": 0
+    },
+    {
+      "index": 4,
+      "title": "課題整理",
+      "shape_count": 39,
+      "text_shape_count": 20,
+      "table_count": 0,
+      "chart_count": 0,
+      "picture_count": 0
+    },
+    {
+      "index": 5,
+      "title": "提案方針",
+      "shape_count": 29,
+      "text_shape_count": 16,
+      "table_count": 0,
+      "chart_count": 0,
+      "picture_count": 0
+    },
+    {
+      "index": 6,
+      "title": "STRATEGY",
+      "shape_count": 33,
+      "text_shape_count": 18,
+      "table_count": 0,
+      "chart_count": 0,
+      "picture_count": 0
+    },
+    {
+      "index": 7,
+      "title": "サイトマップ",
+      "shape_count": 49,
+      "text_shape_count": 21,
+      "table_count": 0,
+      "chart_count": 0,
+      "picture_count": 0
+    },
+    {
+      "index": 8,
+      "title": "成果設計",
+      "shape_count": 24,
+      "text_shape_count": 12,
+      "table_count": 1,
+      "chart_count": 0,
+      "picture_count": 0
+    },
+    {
+      "index": 9,
+      "title": "スケジュール",
+      "shape_count": 27,
+      "text_shape_count": 15,
+      "table_count": 0,
+      "chart_count": 0,
+      "picture_count": 0
+    },
+    {
+      "index": 10,
+      "title": "費用概算",
+      "shape_count": 11,
+      "text_shape_count": 6,
+      "table_count": 1,
+      "chart_count": 0,
+      "picture_count": 0
+    },
+    {
+      "index": 11,
+      "title": "NEXT STEP",
+      "shape_count": 42,
+      "text_shape_count": 20,
+      "table_count": 0,
+      "chart_count": 0,
+      "picture_count": 0
+    }
+  ]
+}
