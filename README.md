@@ -4,6 +4,8 @@ AI営業秘書は、案件メールや議事録を貼り付けるだけで、AI 
 
 Version 14.2では新機能を追加せず、正式リリース候補としてテスト、CI、運用手順、セキュリティ確認を安定化しています。
 
+Version 25.0 Phase 1では、正式公開を阻害する要因のうち、日本語文字化け、production CORS、Security Headers、UATゲート、運用Runbookを重点的に整理しています。
+
 ## 最初に使う画面
 
 一般ユーザーの初期画面は、日々の営業作業に必要な項目だけに絞っています。
@@ -96,6 +98,10 @@ APIキー、パスワード、DB接続文字列はコードへ書かず、`.env`
 - [Version 14.1 Production Release Audit](docs/RELEASE_AUDIT.md)
 - [ロール権限一覧](docs/ROLE_PERMISSIONS.md)
 - [ロール権限監査](docs/ROLE_PERMISSION_AUDIT.md)
+- [Version 25.0 Security Headers](docs/V25_0_SECURITY_HEADERS.md)
+- [Version 25.0 Release Gate](docs/V25_0_RELEASE_GATE.md)
+- [Version 25.0 Production UAT](docs/V25_0_PRODUCTION_UAT.md)
+- [Version 25.0 Runbook](docs/V25_0_RUNBOOK.md)
 
 ## Testing
 

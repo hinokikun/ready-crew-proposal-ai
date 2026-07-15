@@ -38,7 +38,7 @@ def _collect_user_usage(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if key not in users:
             users[key] = {
                 "user_id": user_id,
-                "user_name": row.get("user_name") or "譛ｪ逋ｻ骭ｲ繝ｦ繝ｼ繧ｶ繝ｼ",
+                "user_name": row.get("user_name") or "未登録ユーザー",
                 "user_role": user_role,
                 "usage_count": 0,
                 "last_used_at": "",
@@ -62,13 +62,13 @@ def summarize_usage_dashboard(db: Connection, scope: dict[str, Any] | None = Non
     auth_error_count = _count_rows_in_scope(db, "audit_logs", scope, "event_type = 'login' AND status != 'success'")
 
     proposal_condition = "(output_type IN ('markdown', 'markdown+pptx-data') OR feature_name LIKE ?)"
-    proposal_params = ("%謠先｡・",)
+    proposal_params = ("%提案%",)
     summary_ppt_condition = "output_type = 'summary-pptx'"
     detail_ppt_condition = "output_type = 'pptx'"
     ppt_condition = "output_type IN ('pptx', 'summary-pptx')"
     estimate_pdf_condition = "output_type = 'estimate-pdf'"
     sample_condition = "(output_type = 'sample' OR feature_name LIKE ?)"
-    sample_params = ("%繧ｵ繝ｳ繝励Ν%",)
+    sample_params = ("%サンプル%",)
 
     error_analysis = {
         "api_limit": 0,
@@ -99,7 +99,7 @@ def summarize_usage_dashboard(db: Connection, scope: dict[str, Any] | None = Non
             f"""
             SELECT
                 l.user_id,
-                COALESCE(u.email, '譛ｪ逋ｻ骭ｲ繝ｦ繝ｼ繧ｶ繝ｼ') AS user_name,
+                COALESCE(u.email, '未登録ユーザー') AS user_name,
                 COALESCE(u.role, 'unknown') AS user_role,
                 l.status,
                 l.created_at
@@ -118,7 +118,7 @@ def summarize_usage_dashboard(db: Connection, scope: dict[str, Any] | None = Non
             f"""
             SELECT
                 f.user_id,
-                COALESCE(u.email, '譛ｪ逋ｻ骭ｲ繝ｦ繝ｼ繧ｶ繝ｼ') AS user_name,
+                COALESCE(u.email, '未登録ユーザー') AS user_name,
                 COALESCE(NULLIF(f.user_role, ''), u.role, 'unknown') AS user_role,
                 'success' AS status,
                 f.created_at
@@ -154,28 +154,28 @@ def summarize_usage_dashboard(db: Connection, scope: dict[str, Any] | None = Non
         "features": [
             {
                 "feature_key": "proposal_generation",
-                "feature_name": "謠先｡域嶌菴懈・",
+                "feature_name": "提案書作成",
                 "usage_count": _count_rows_in_scope(db, "usage_logs", scope, proposal_condition, proposal_params),
                 "success_count": _count_rows_in_scope(db, "usage_logs", scope, f"{proposal_condition} AND status = 'success'", proposal_params),
                 "failure_count": _count_rows_in_scope(db, "usage_logs", scope, f"{proposal_condition} AND status != 'success'", proposal_params),
             },
             {
                 "feature_key": "summary_ppt",
-                "feature_name": "隕∫ｴПPT",
+                "feature_name": "要約PPT",
                 "usage_count": _count_rows_in_scope(db, "usage_logs", scope, summary_ppt_condition),
                 "success_count": _count_rows_in_scope(db, "usage_logs", scope, f"{summary_ppt_condition} AND status = 'success'"),
                 "failure_count": _count_rows_in_scope(db, "usage_logs", scope, f"{summary_ppt_condition} AND status != 'success'"),
             },
             {
                 "feature_key": "detail_ppt",
-                "feature_name": "隧ｳ邏ｰPPT",
+                "feature_name": "詳細PPT",
                 "usage_count": _count_rows_in_scope(db, "usage_logs", scope, detail_ppt_condition),
                 "success_count": _count_rows_in_scope(db, "usage_logs", scope, f"{detail_ppt_condition} AND status = 'success'"),
                 "failure_count": _count_rows_in_scope(db, "usage_logs", scope, f"{detail_ppt_condition} AND status != 'success'"),
             },
             {
                 "feature_key": "estimate_pdf",
-                "feature_name": "隕狗ｩ恒DF",
+                "feature_name": "見積PDF",
                 "usage_count": _count_rows_in_scope(db, "usage_logs", scope, estimate_pdf_condition),
                 "success_count": _count_rows_in_scope(db, "usage_logs", scope, f"{estimate_pdf_condition} AND status = 'success'"),
                 "failure_count": _count_rows_in_scope(db, "usage_logs", scope, f"{estimate_pdf_condition} AND status != 'success'"),
@@ -189,7 +189,7 @@ def summarize_usage_dashboard(db: Connection, scope: dict[str, Any] | None = Non
             },
             {
                 "feature_key": "feedback_submit",
-                "feature_name": "繝輔ぅ繝ｼ繝峨ヰ繝・け騾∽ｿ｡",
+                "feature_name": "フィードバック送信",
                 "usage_count": feedback_count,
                 "success_count": feedback_count,
                 "failure_count": 0,

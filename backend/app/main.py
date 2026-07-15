@@ -40,6 +40,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+PRODUCTION_ENVIRONMENTS = {"production", "prod"}
+LOCAL_ENVIRONMENTS = {"local", "development", "dev", "test", "testing"}
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
@@ -65,15 +69,66 @@ DEV_CORS_ORIGINS = {
     "http://127.0.0.1:3001",
 }
 
+
+def _is_local_environment() -> bool:
+    return settings.environment.strip().lower() in LOCAL_ENVIRONMENTS
+
+
+def _is_development_origin(origin: str) -> bool:
+    normalized = origin.strip().lower()
+    return normalized.startswith("http://localhost") or normalized.startswith("http://127.0.0.1")
+
+
+def _resolved_cors_origins() -> list[str]:
+    origins = {origin.strip() for origin in settings.cors_origins if origin.strip() and origin.strip() != "*"}
+    if _is_local_environment():
+        origins.update(DEV_CORS_ORIGINS)
+    else:
+        origins = {origin for origin in origins if not _is_development_origin(origin)}
+    return sorted(origins)
+
+
+def _resolved_cors_origin_regex() -> str | None:
+    regex = settings.cors_origin_regex
+    if not regex:
+        return None
+    if settings.environment.strip().lower() in PRODUCTION_ENVIRONMENTS and regex.strip() in {".*", "^.*$"}:
+        logger.warning("Ignoring unsafe wildcard CORS regex in production.")
+        return None
+    return regex
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=sorted({*settings.cors_origins, *DEV_CORS_ORIGINS}),
-    allow_origin_regex=settings.cors_origin_regex,
+    allow_origins=_resolved_cors_origins(),
+    allow_origin_regex=_resolved_cors_origin_regex(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Organization-ID", "X-Workspace-ID"],
     expose_headers=["Content-Disposition", "X-Request-ID"],
 )
+
+
+def _apply_security_headers(request: Request, response: Any) -> None:
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
+    if request.url.path not in {"/docs", "/redoc", "/openapi.json"}:
+        response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'"
+    if request.url.path.startswith(("/api", "/health")):
+        response.headers["Cache-Control"] = "no-store"
+    if settings.environment.strip().lower() in PRODUCTION_ENVIRONMENTS:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    response = await call_next(request)
+    _apply_security_headers(request, response)
+    return response
 
 
 @app.middleware("http")

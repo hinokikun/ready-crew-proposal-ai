@@ -1,5 +1,34 @@
 # Incident Response
 
+## Version 25.0 公開前インシデント対応
+
+重大障害の疑いがある場合は、機能追加や設定変更よりも証跡保全を優先します。
+
+### 初動
+
+1. 画面のエラー文と `request_id` を控えます。
+2. Role、Organization、Workspace、操作内容、発生日時を記録します。
+3. Render Logs、監査ログ、Beautiful.ai 診断履歴を確認します。
+4. 秘密情報、顧客本文、生成本文全文をチャットやチケットへ貼り付けないでください。
+5. 重大障害なら Maintenance Mode を有効化し、新規生成系操作を停止します。
+
+### 重大障害として扱うもの
+
+- ログイン不能
+- Backend 全体停止
+- DB 接続不能
+- Organization / Workspace 越境
+- 権限外ユーザーが管理機能へアクセス
+- PPTX / PDF / Beautiful.ai の連続失敗
+- 秘密情報がログへ保存された疑い
+
+### 復旧判定
+
+- `/health/ready` が `status: ok`
+- admin / manager / member / viewer の権限確認が完了
+- Quality Gate、要約PPTX、詳細PPTX、見積PDF、Beautiful.ai がテスト案件で確認済み
+- 監査ログに復旧操作が残っている
+
 AI営業秘書のクラウド運用で問題が発生した時の初動手順です。
 
 ## 1. まず確認すること

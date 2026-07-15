@@ -56,7 +56,7 @@ def get_or_create_project(
     organization_id: int | None = None,
     workspace_id: int | None = None,
 ) -> int:
-    project_name = name.strip() or "謠先｡域ｺ門ｙ譯井ｻｶ"
+    project_name = name.strip() or "提案準備案件"
     if organization_id and workspace_id:
         context_org_id, context_workspace_id = organization_id, workspace_id
     elif user_id:
@@ -120,7 +120,7 @@ def create_history_log(
         record_pilot_event(db, user_id, "proposal_generation", status, metadata=f"output_type={output_type};error_type={error_type}")
     elif output_type in {"pptx", "summary-pptx", "estimate-pdf"}:
         record_pilot_event(db, user_id, "download", status, metadata=f"output_type={output_type};error_type={error_type}")
-    if feature_name in {"謠先｡域嶌逕滓・", "PowerPoint", "隕∫ｴПowerPoint", "隕狗ｩ肴嶌PDF"}:
+    if feature_name in {"提案書生成", "PowerPoint", "要約PowerPoint", "見積書PDF"}:
         create_audit_log(db, user_id, "generate", feature_name, "", status, f"output_type={output_type};error_type={error_type}")
 
 

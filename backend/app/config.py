@@ -33,6 +33,13 @@ def _as_int(value: str | None, default: int) -> int:
         return default
 
 
+def _default_cors_origins() -> str:
+    environment = os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "local")).strip().lower()
+    if environment in {"production", "prod"}:
+        return ""
+    return "http://localhost:3000"
+
+
 @dataclass(frozen=True)
 class Settings:
     app_version: str = os.getenv("APP_VERSION", "17.1-rc1")
@@ -47,7 +54,7 @@ class Settings:
     use_mock_ai: bool = _as_bool(os.getenv("USE_MOCK_AI"), False)
     cors_origins: tuple[str, ...] = tuple(
         origin.strip()
-        for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+        for origin in os.getenv("CORS_ORIGINS", _default_cors_origins()).split(",")
         if origin.strip()
     )
     cors_origin_regex: str | None = os.getenv("CORS_ORIGIN_REGEX", "").strip() or None

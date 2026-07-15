@@ -1,5 +1,20 @@
 # OPERATIONS
 
+## Version 25.0 正式公開前運用ゲート
+
+公開前に以下を確認してください。
+
+1. GitHub Actions が最新 commit で成功していること。
+2. Vercel が Ready で、Production Deployment が最新 commit を指していること。
+3. Render が Live で、`/health` と `/health/ready` が確認できること。
+4. `APP_ENV=production` が設定され、`CORS_ORIGINS` に Vercel 本番 URL のみが設定されていること。
+5. API キー、Password、Token、DATABASE_URL が画面・ログ・DB に平文表示されないこと。
+6. admin / manager / member / viewer の権限確認を行うこと。
+7. Organization / Workspace 越境拒否を確認すること。
+8. Quality Gate、要約PPTX、詳細PPTX、見積PDF、Beautiful.ai を架空案件で確認すること。
+
+詳細は `docs/V25_0_RELEASE_GATE.md`、`docs/V25_0_PRODUCTION_UAT.md`、`docs/V25_0_RUNBOOK.md` を参照してください。
+
 ## Version 24.0 正式運用手順
 
 ### 毎日確認する項目
