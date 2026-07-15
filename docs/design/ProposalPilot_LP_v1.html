@@ -1,0 +1,1031 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProposalPilot | AI営業秘書</title>
+  <meta name="description" content="ProposalPilotは、案件入力から提案書作成、提出前チェック、PowerPoint、PDF、Beautiful.ai出力までを支援するAI営業秘書です。" />
+  <style>
+    :root {
+      --blue: #155eef;
+      --navy: #102a43;
+      --emerald: #12b76a;
+      --cyan: #2de2e6;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #1d2939;
+      --muted: #667085;
+      --border: #e4e7ec;
+      --line: rgba(21, 94, 239, 0.18);
+      --shadow: 0 24px 80px rgba(16, 42, 67, 0.12);
+      --radius: 24px;
+      --max: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans JP", "Inter", "Segoe UI", system-ui, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.75;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(45, 226, 230, 0.16), transparent 32%),
+        radial-gradient(circle at 88% 4%, rgba(21, 94, 239, 0.12), transparent 28%),
+        var(--bg);
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid rgba(228, 231, 236, 0.72);
+      background: rgba(255, 255, 255, 0.84);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -0.01em;
+    }
+
+    .mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #eaf2ff, #ffffff);
+      box-shadow: inset 0 0 0 1px rgba(21, 94, 239, 0.16);
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .mark::before,
+    .mark::after {
+      content: "";
+      position: absolute;
+      left: 9px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--blue);
+    }
+
+    .mark::before {
+      top: 9px;
+      width: 17px;
+    }
+
+    .mark::after {
+      top: 19px;
+      width: 12px;
+    }
+
+    .mark span {
+      position: absolute;
+      right: 7px;
+      bottom: 9px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 22px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .nav-links a:hover {
+      color: var(--blue);
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 20px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font-weight: 800;
+      font-size: 15px;
+      transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      white-space: nowrap;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .button.primary {
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 16px 34px rgba(21, 94, 239, 0.28);
+    }
+
+    .button.secondary {
+      color: var(--navy);
+      background: white;
+      border-color: var(--border);
+    }
+
+    .hero {
+      min-height: 760px;
+      position: relative;
+      color: white;
+      background:
+        linear-gradient(120deg, rgba(16, 42, 67, 0.97), rgba(10, 30, 54, 0.88)),
+        radial-gradient(circle at 78% 28%, rgba(45, 226, 230, 0.32), transparent 28%),
+        radial-gradient(circle at 46% 0%, rgba(21, 94, 239, 0.36), transparent 32%);
+      isolation: isolate;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.82), transparent 82%);
+      z-index: -2;
+    }
+
+    .hero-scene {
+      position: absolute;
+      inset: 96px max(24px, calc((100vw - var(--max)) / 2)) 80px auto;
+      width: min(560px, 46vw);
+      min-width: 360px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .browser-mock {
+      position: absolute;
+      inset: 42px 0 auto auto;
+      width: 520px;
+      min-height: 430px;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 42px 100px rgba(0, 0, 0, 0.34);
+      border: 1px solid rgba(255, 255, 255, 0.52);
+      padding: 18px;
+      color: var(--text);
+    }
+
+    .mock-topbar {
+      height: 42px;
+      border-radius: 14px;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .mock-tabs {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin: 24px 0;
+    }
+
+    .mock-tab {
+      height: 52px;
+      border-radius: 13px;
+      background: #eef4ff;
+      color: var(--blue);
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .mock-tab.active {
+      color: white;
+      background: var(--blue);
+    }
+
+    .mock-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+    }
+
+    .mock-card {
+      min-height: 118px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+      padding: 18px;
+    }
+
+    .mock-card h4 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      color: var(--navy);
+    }
+
+    .mock-line {
+      height: 8px;
+      border-radius: 999px;
+      background: #e7edf5;
+      margin: 9px 0;
+    }
+
+    .floating-card {
+      position: absolute;
+      width: 210px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.94);
+      color: var(--text);
+      border: 1px solid rgba(228, 231, 236, 0.84);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+      padding: 18px;
+    }
+
+    .floating-card.one {
+      left: -32px;
+      top: 310px;
+    }
+
+    .floating-card.two {
+      right: -16px;
+      top: 410px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--emerald);
+      display: inline-block;
+      margin-right: 8px;
+    }
+
+    .hero-content {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 124px 24px 96px;
+      min-height: 760px;
+      display: flex;
+      align-items: center;
+    }
+
+    .hero-copy {
+      max-width: 680px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.08);
+      color: #cfe4ff;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .hero h1 {
+      margin: 28px 0 20px;
+      font-size: clamp(48px, 7vw, 86px);
+      line-height: 0.98;
+      letter-spacing: -0.055em;
+    }
+
+    .hero .lead {
+      max-width: 640px;
+      color: #d7e4f5;
+      font-size: clamp(18px, 2.2vw, 22px);
+      line-height: 1.9;
+    }
+
+    .hero-ctas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 34px;
+    }
+
+    .hero .button.secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: white;
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .hero-note {
+      margin-top: 22px;
+      color: #b8c9dd;
+      font-size: 13px;
+    }
+
+    section {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 104px 24px;
+    }
+
+    .section-head {
+      max-width: 760px;
+      margin-bottom: 42px;
+    }
+
+    .section-kicker {
+      color: var(--blue);
+      font-weight: 900;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: clamp(34px, 4vw, 54px);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    .section-head p {
+      color: var(--muted);
+      font-size: 18px;
+      margin: 18px 0 0;
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.88);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 30px;
+    }
+
+    .panel.dark {
+      background: var(--navy);
+      color: white;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .panel h3 {
+      margin: 0 0 18px;
+      color: inherit;
+      font-size: 24px;
+      line-height: 1.35;
+      letter-spacing: -0.02em;
+    }
+
+    .check-list {
+      display: grid;
+      gap: 14px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .check-list li {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 12px;
+      color: var(--muted);
+    }
+
+    .dark .check-list li {
+      color: #d7e4f5;
+    }
+
+    .check {
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: #eafbf2;
+      color: var(--emerald);
+      font-weight: 900;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .feature-card {
+      min-height: 210px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: var(--surface);
+      box-shadow: 0 18px 44px rgba(16, 42, 67, 0.06);
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: var(--blue);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      margin-bottom: 18px;
+    }
+
+    .feature-card:nth-child(3n) .feature-icon {
+      background: var(--emerald);
+    }
+
+    .feature-card:nth-child(4n) .feature-icon {
+      background: var(--navy);
+    }
+
+    .feature-card h3 {
+      margin: 0 0 10px;
+      font-size: 19px;
+      color: var(--navy);
+    }
+
+    .feature-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .flow {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 12px;
+    }
+
+    .flow-step {
+      min-height: 136px;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 20px 14px;
+      box-shadow: 0 16px 38px rgba(16, 42, 67, 0.06);
+    }
+
+    .flow-step strong {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      color: white;
+      background: var(--blue);
+      margin-bottom: 14px;
+    }
+
+    .flow-step h3 {
+      margin: 0 0 8px;
+      color: var(--navy);
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    .flow-step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .screens {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .screen-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 18px 44px rgba(16, 42, 67, 0.07);
+    }
+
+    .screen-caption {
+      padding: 18px 20px;
+      border-top: 1px solid var(--border);
+      font-weight: 800;
+      color: var(--navy);
+    }
+
+    .screen-mock {
+      height: 226px;
+      padding: 18px;
+      background: linear-gradient(180deg, #f8fafc, #eef4ff);
+    }
+
+    .mock-window {
+      width: 100%;
+      height: 100%;
+      border-radius: 18px;
+      background: white;
+      border: 1px solid #dbe4ef;
+      padding: 14px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.76);
+    }
+
+    .mini-bars {
+      display: grid;
+      gap: 9px;
+      margin-top: 16px;
+    }
+
+    .mini-bars span {
+      display: block;
+      height: 10px;
+      border-radius: 999px;
+      background: #e7edf5;
+    }
+
+    .mini-bars span:nth-child(2) {
+      width: 72%;
+    }
+
+    .mini-bars span:nth-child(3) {
+      width: 84%;
+    }
+
+    .benefits {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .benefit {
+      padding: 26px;
+      border-radius: 24px;
+      background: var(--navy);
+      color: white;
+      min-height: 214px;
+    }
+
+    .benefit:nth-child(even) {
+      background: var(--blue);
+    }
+
+    .benefit h3 {
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    .benefit p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 15px;
+    }
+
+    .faq {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    details {
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 18px;
+      padding: 20px 22px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 900;
+      color: var(--navy);
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details p {
+      margin: 12px 0 0;
+      color: var(--muted);
+    }
+
+    .cta {
+      max-width: none;
+      margin: 0;
+      color: white;
+      background: var(--navy);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta::before {
+      content: "";
+      position: absolute;
+      inset: -10% -20% auto auto;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(45, 226, 230, 0.35), transparent 62%);
+    }
+
+    .cta-inner {
+      position: relative;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 104px 24px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 48px;
+    }
+
+    .cta h2 {
+      color: white;
+    }
+
+    .cta p {
+      max-width: 680px;
+      color: #d7e4f5;
+      font-size: 18px;
+    }
+
+    footer {
+      background: #081b2e;
+      color: #b8c9dd;
+      padding: 48px 24px;
+    }
+
+    .footer-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 32px;
+      align-items: flex-start;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      font-size: 14px;
+    }
+
+    .note {
+      margin-top: 16px;
+      font-size: 12px;
+      color: #8fa2b7;
+    }
+
+    @media (max-width: 980px) {
+      .hero-scene {
+        opacity: 0.38;
+        width: 520px;
+        right: -180px;
+      }
+
+      .problem-grid,
+      .screens,
+      .faq,
+      .cta-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-grid,
+      .benefits {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .flow {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav-inner {
+        padding: 14px 18px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        min-height: 680px;
+      }
+
+      .hero-content {
+        padding: 96px 18px 72px;
+        min-height: 680px;
+      }
+
+      .hero h1 {
+        font-size: 48px;
+      }
+
+      section {
+        padding: 72px 18px;
+      }
+
+      .feature-grid,
+      .benefits,
+      .flow {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-scene {
+        display: none;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+      }
+    }
+
+    @media print {
+      .nav {
+        position: static;
+      }
+
+      body {
+        background: white;
+      }
+
+      .button {
+        box-shadow: none;
+      }
+
+      section {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <nav class="nav" aria-label="メインナビゲーション">
+      <div class="nav-inner">
+        <a class="brand" href="#top" aria-label="ProposalPilot ホーム">
+          <span class="mark" aria-hidden="true"><span></span></span>
+          <span>ProposalPilot</span>
+        </a>
+        <div class="nav-links" aria-label="ページ内リンク">
+          <a href="#problem">課題</a>
+          <a href="#features">機能</a>
+          <a href="#flow">利用フロー</a>
+          <a href="#faq">FAQ</a>
+          <a class="button primary" href="#contact">無料デモを見る</a>
+        </div>
+      </div>
+    </nav>
+
+    <header id="top" class="hero">
+      <div class="hero-scene" aria-hidden="true">
+        <div class="browser-mock">
+          <div class="mock-topbar">
+            <span>ProposalPilot</span>
+            <span>Workspace: 営業部</span>
+          </div>
+          <div class="mock-tabs">
+            <div class="mock-tab active">案件入力</div>
+            <div class="mock-tab active">AI作成</div>
+            <div class="mock-tab active">内容確認</div>
+            <div class="mock-tab active">品質確認</div>
+            <div class="mock-tab">出力</div>
+            <div class="mock-tab">改善</div>
+            <div class="mock-tab">完了</div>
+          </div>
+          <div class="mock-grid">
+            <div class="mock-card">
+              <h4>提出前チェック</h4>
+              <div class="mock-line"></div>
+              <div class="mock-line"></div>
+              <div class="mock-line"></div>
+            </div>
+            <div class="mock-card">
+              <h4>出力</h4>
+              <div class="mock-line"></div>
+              <div class="mock-line"></div>
+            </div>
+          </div>
+        </div>
+        <div class="floating-card one">
+          <strong><span class="status-dot"></span>Quality Gate</strong>
+          <p>社外提出前の確認項目を画面上で整理。</p>
+        </div>
+        <div class="floating-card two">
+          <strong>Beautiful.ai</strong>
+          <p>構成をデザインされたプレゼンへ。</p>
+        </div>
+      </div>
+      <div class="hero-content">
+        <div class="hero-copy">
+          <span class="eyebrow">AI営業秘書 / Accelerate Every Proposal.</span>
+          <h1>営業提案をAIでもっと速く、もっと美しく。</h1>
+          <p class="lead">ProposalPilotは、案件情報入力から提案書作成、提出前チェック、PowerPoint、PDF、Beautiful.ai出力までを支援するAI営業秘書です。</p>
+          <div class="hero-ctas">
+            <a class="button primary" href="#contact">無料デモを見る</a>
+            <a class="button secondary" href="#download">製品資料ダウンロード</a>
+          </div>
+          <p class="hero-note">AIが作成した内容は、人が確認してから提出する運用を前提としています。</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="problem">
+        <div class="section-head">
+          <div class="section-kicker">Problem & Solution</div>
+          <h2>営業提案で発生する課題を、ひとつの流れで解決へ。</h2>
+          <p>案件情報整理、提案構成、提出前確認、資料出力まで。ProposalPilotは営業担当が迷いやすい工程を画面の案内で支援します。</p>
+        </div>
+        <div class="problem-grid">
+          <div class="panel">
+            <h3>営業提案で発生する課題</h3>
+            <ul class="check-list">
+              <li><span class="check">1</span><span>案件メールや議事録から要点を整理する負担が大きい。</span></li>
+              <li><span class="check">2</span><span>提案方針、見積、スケジュールの確認が担当者ごとにばらつく。</span></li>
+              <li><span class="check">3</span><span>PowerPoint、PDF、外部プレゼンツールへの出力が分断されやすい。</span></li>
+              <li><span class="check">4</span><span>作成履歴や確認履歴が残らず、チーム品質にしにくい。</span></li>
+            </ul>
+          </div>
+          <div class="panel dark">
+            <h3>ProposalPilotでどう解決するか</h3>
+            <ul class="check-list">
+              <li><span class="check">✓</span><span>7ステップのかんたん操作フローで、次に行う作業を明確にします。</span></li>
+              <li><span class="check">✓</span><span>AIが案件概要、課題、提案方針、注意事項の整理を支援します。</span></li>
+              <li><span class="check">✓</span><span>提出前チェックにより、社外提出前の確認を画面上で支援します。</span></li>
+              <li><span class="check">✓</span><span>PowerPoint、PDF、Beautiful.ai、作成履歴、監査ログを同じ流れで扱います。</span></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="features">
+        <div class="section-head">
+          <div class="section-kicker">Features</div>
+          <h2>提案作成に必要な機能をまとめて支援。</h2>
+          <p>AI生成だけで終わらせず、提出前チェック、成果物出力、レビュー、管理までを営業提案フローとして扱います。</p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card"><div class="feature-icon">AI</div><h3>案件分析</h3><p>案件メールやヒアリングメモから、概要・課題・注意事項の整理を支援します。</p></article>
+          <article class="feature-card"><div class="feature-icon">案</div><h3>AI生成</h3><p>提案方針、ストーリー、スケジュール、概算の下書き作成を支援します。</p></article>
+          <article class="feature-card"><div class="feature-icon">確</div><h3>提出前チェック</h3><p>会社名、金額、納期、AI推測項目など、人が確認すべき項目を整理します。</p></article>
+          <article class="feature-card"><div class="feature-icon">P</div><h3>PowerPoint</h3><p>短時間の説明向けの要約版と、本提案向けの詳細版の出力に対応します。</p></article>
+          <article class="feature-card"><div class="feature-icon">B</div><h3>Beautiful.ai</h3><p>提案構成から、外部サービスによるデザインされたプレゼン生成へつなげます。</p></article>
+          <article class="feature-card"><div class="feature-icon">PDF</div><h3>PDF</h3><p>見積PDFを出力し、金額や条件は人が最終確認する運用にできます。</p></article>
+          <article class="feature-card"><div class="feature-icon">改</div><h3>AIレビュー</h3><p>不足、重複、ROI、CTA、導入計画などの見直しを支援します。</p></article>
+          <article class="feature-card"><div class="feature-icon">管</div><h3>管理・履歴</h3><p>作成履歴、Role、Workspace、監査ログでチーム運用を支援します。</p></article>
+        </div>
+      </section>
+
+      <section id="flow">
+        <div class="section-head">
+          <div class="section-kicker">Workflow</div>
+          <h2>7ステップで提案作成を進める。</h2>
+          <p>案件入力から完了まで、一般利用者が次に行う操作を追いやすい構成です。</p>
+        </div>
+        <div class="flow" aria-label="ProposalPilotの7ステップ">
+          <div class="flow-step"><strong>1</strong><h3>案件情報入力</h3><p>案件メール、議事録、ヒアリングメモを入力。</p></div>
+          <div class="flow-step"><strong>2</strong><h3>AI作成</h3><p>AIが提案内容の整理と下書きを支援。</p></div>
+          <div class="flow-step"><strong>3</strong><h3>内容確認</h3><p>概要、課題、提案方針、注意事項を確認。</p></div>
+          <div class="flow-step"><strong>4</strong><h3>提出前チェック</h3><p>会社名、金額、納期、AI推測項目を確認。</p></div>
+          <div class="flow-step"><strong>5</strong><h3>出力</h3><p>PowerPoint、PDF、Beautiful.aiを選択。</p></div>
+          <div class="flow-step"><strong>6</strong><h3>AIレビュー</h3><p>改善候補を確認し、必要に応じて改訂。</p></div>
+          <div class="flow-step"><strong>7</strong><h3>完了</h3><p>作成履歴から成果物と状態を確認。</p></div>
+        </div>
+      </section>
+
+      <section id="screenshots">
+        <div class="section-head">
+          <div class="section-kicker">Screens</div>
+          <h2>主要画面をひと目で把握。</h2>
+          <p>実顧客情報を使わず、架空データの画面モックで利用イメージを表現しています。正式公開時は実画面スクリーンショットへ差し替え可能です。</p>
+        </div>
+        <div class="screens">
+          <article class="screen-card"><div class="screen-mock"><div class="mock-window"><strong>Home</strong><div class="mini-bars"><span></span><span></span><span></span></div></div></div><div class="screen-caption">ホーム</div></article>
+          <article class="screen-card"><div class="screen-mock"><div class="mock-window"><strong>Case input</strong><div class="mini-bars"><span></span><span></span><span></span></div></div></div><div class="screen-caption">案件入力</div></article>
+          <article class="screen-card"><div class="screen-mock"><div class="mock-window"><strong>AI proposal</strong><div class="mini-bars"><span></span><span></span><span></span></div></div></div><div class="screen-caption">提案生成</div></article>
+          <article class="screen-card"><div class="screen-mock"><div class="mock-window"><strong>Quality Gate</strong><div class="mini-bars"><span></span><span></span><span></span></div></div></div><div class="screen-caption">提出前チェック</div></article>
+          <article class="screen-card"><div class="screen-mock"><div class="mock-window"><strong>Outputs</strong><div class="mini-bars"><span></span><span></span><span></span></div></div></div><div class="screen-caption">出力</div></article>
+          <article class="screen-card"><div class="screen-mock"><div class="mock-window"><strong>Admin</strong><div class="mini-bars"><span></span><span></span><span></span></div></div></div><div class="screen-caption">管理画面</div></article>
+        </div>
+      </section>
+
+      <section id="benefits">
+        <div class="section-head">
+          <div class="section-kicker">Benefits</div>
+          <h2>営業品質、教育、標準化、ナレッジ化を支援。</h2>
+          <p>効果数値は導入後の実測に基づいて確認します。LP上では未検証の削減率や受注率向上を断定しません。</p>
+        </div>
+        <div class="benefits">
+          <article class="benefit"><h3>営業品質</h3><p>提出前チェックとAIレビューで、確認すべきポイントを揃えやすくします。</p></article>
+          <article class="benefit"><h3>教育</h3><p>7ステップの操作フローにより、新しい営業担当も提案準備の流れを追いやすくなります。</p></article>
+          <article class="benefit"><h3>標準化</h3><p>案件入力、内容確認、出力、履歴を同じ流れで扱い、チーム運用を支援します。</p></article>
+          <article class="benefit"><h3>ナレッジ</h3><p>作成履歴やレビューを通じて、提案活動の振り返りと再利用を支援します。</p></article>
+        </div>
+      </section>
+
+      <section id="faq">
+        <div class="section-head">
+          <div class="section-kicker">FAQ</div>
+          <h2>よくある質問</h2>
+          <p>導入前に確認されやすい項目をまとめています。料金やサポート範囲は確定後に差し替えてください。</p>
+        </div>
+        <div class="faq">
+          <details open><summary>AI生成結果はそのまま提出できますか。</summary><p>社外提出前に人が必ず確認してください。ProposalPilotは提出前チェックとAIレビューで確認を支援します。</p></details>
+          <details><summary>Beautiful.aiを使うには何が必要ですか。</summary><p>Beautiful.ai側のAPI設定と管理者設定が必要です。外部サービス側の状態に依存します。</p></details>
+          <details><summary>料金はいくらですか。</summary><p>料金は未確定です。正式な掲載前は「お問い合わせ」としてください。</p></details>
+          <details><summary>実顧客情報を入力してよいですか。</summary><p>UATやデモでは架空データを使用してください。本番運用時は社内ルールに従って入力範囲を確認してください。</p></details>
+          <details><summary>管理者は何を確認できますか。</summary><p>ユーザー、Role、Workspace、監査ログ、Beautiful.ai診断など、運用に必要な情報を確認できます。</p></details>
+          <details><summary>PowerPointとPDFの両方に対応しますか。</summary><p>要約PowerPoint、詳細PowerPoint、見積PDFの出力に対応しています。金額や条件は人が最終確認します。</p></details>
+        </div>
+      </section>
+
+      <section id="contact" class="cta">
+        <div class="cta-inner">
+          <div>
+            <div class="section-kicker" style="color: var(--cyan);">Contact</div>
+            <h2>まずはデモで操作フローをご確認ください。</h2>
+            <p>ProposalPilotの利用イメージ、出力例、管理者機能をデモでご案内します。現在の提案作成フローをお聞かせください。</p>
+          </div>
+          <div class="hero-ctas">
+            <a class="button primary" href="#top">無料デモを見る</a>
+            <a id="download" class="button secondary" href="#top">製品資料ダウンロード</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-inner">
+        <div>
+          <a class="brand" href="#top" style="color: white;">
+            <span class="mark" aria-hidden="true"><span></span></span>
+            <span>ProposalPilot</span>
+          </a>
+          <p class="note">AI営業秘書 / Accelerate Every Proposal.</p>
+          <p class="note">会社名、問い合わせ先、製品サイトURL、利用規約、プライバシーポリシーは要入力です。</p>
+        </div>
+        <div class="footer-links" aria-label="フッターリンク">
+          <a href="#problem">課題</a>
+          <a href="#features">機能</a>
+          <a href="#flow">利用フロー</a>
+          <a href="#faq">FAQ</a>
+          <a href="#contact">お問い合わせ</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
