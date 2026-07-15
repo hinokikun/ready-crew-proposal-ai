@@ -89,6 +89,7 @@ class BeautifulAiStoredListResponse(BaseModel):
 
 class BeautifulAiPayload(BaseModel):
     title: str
+    content: str = ""
     language: str = "ja"
     preserveExactText: bool = True
     themeId: str = ""
@@ -96,4 +97,5 @@ class BeautifulAiPayload(BaseModel):
     folderId: str = ""
     imageSource: str = "ai"
     imageStyle: str = "clean corporate proposal"
+    sections: list[dict[str, Any]] = Field(default_factory=list)
     slides: list[dict[str, Any]]

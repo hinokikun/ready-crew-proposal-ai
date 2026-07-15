@@ -298,6 +298,42 @@ def test_beautiful_ai_extracts_nested_data_response() -> None:
     }
 
 
+def test_beautiful_ai_payload_uses_sections_content_and_blocks(sample_pptx_payload: dict[str, Any]) -> None:
+    mapper = importlib.import_module("app.beautiful_ai.presentation_mapper")
+    schemas = importlib.import_module("app.beautiful_ai.schemas")
+    request = schemas.BeautifulAiPresentationRequest(**_beautiful_payload(sample_pptx_payload, "payload-shape-project"))
+
+    payload = mapper.map_to_beautiful_ai_payload(request).dict()
+
+    assert payload["title"]
+    assert payload["content"].startswith("#")
+    assert payload["sections"]
+    assert payload["sections"][0]["content"]["blocks"][0]["type"] == "paragraph"
+    assert payload["slides"]
+    assert payload["slides"][0]["sections"]
+    assert payload["slides"][0]["content"]["blocks"]
+    assert payload["slides"][0]["blocks"]
+    assert "body" not in payload["slides"][0]
+
+
+def test_beautiful_ai_clean_payload_removes_empty_optional_fields() -> None:
+    service = importlib.import_module("app.services.beautiful_ai_service")
+
+    payload = service._clean_payload(
+        {
+            "title": "Proposal",
+            "themeId": "",
+            "workspaceId": "",
+            "slides": [{"title": "Slide", "folderId": "", "blocks": [{"type": "heading", "content": "Slide"}]}],
+        }
+    )
+
+    assert "themeId" not in payload
+    assert "workspaceId" not in payload
+    assert "folderId" not in payload["slides"][0]
+    assert payload["slides"][0]["blocks"][0]["content"] == "Slide"
+
+
 @pytest.mark.anyio
 @pytest.mark.parametrize(
     ("external_status", "expected_error_type", "expected_service_status"),
@@ -312,15 +348,18 @@ def test_beautiful_ai_extracts_nested_data_response() -> None:
 )
 async def test_beautiful_ai_post_payload_maps_external_status(
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
     external_status: int,
     expected_error_type: str,
     expected_service_status: int,
 ) -> None:
     service = importlib.import_module("app.services.beautiful_ai_service")
+    caplog.set_level("ERROR")
 
     class FakeResponse:
         status_code = external_status
         headers = {"Retry-After": "30"} if external_status == 429 else {}
+        text = '{"error":"validation failed"}'
 
         def json(self) -> dict[str, Any]:
             return {}
@@ -345,6 +384,8 @@ async def test_beautiful_ai_post_payload_maps_external_status(
 
     assert exc_info.value.error_type == expected_error_type
     assert exc_info.value.status_code == expected_service_status
+    if external_status == 400:
+        assert "validation failed" in caplog.text
 
 
 def test_beautiful_ai_api_key_is_not_returned_or_stored(

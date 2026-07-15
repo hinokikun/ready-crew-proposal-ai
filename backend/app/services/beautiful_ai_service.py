@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 from datetime import datetime, timezone
 from sqlite3 import Connection
 from typing import Any
@@ -18,6 +19,9 @@ from app.beautiful_ai.schemas import (
 from app.config import settings
 from app.quality_gates import get_quality_gate
 from app.repositories import create_audit_log, get_user_context_ids
+
+
+logger = logging.getLogger(__name__)
 
 
 class BeautifulAiServiceError(Exception):
@@ -235,30 +239,64 @@ def _endpoint() -> str:
     return f"{base}/createPresentation"
 
 
+def _clean_payload(value: Any) -> Any:
+    if isinstance(value, dict):
+        cleaned: dict[str, Any] = {}
+        for key, item in value.items():
+            cleaned_item = _clean_payload(item)
+            if cleaned_item in ("", None, [], {}):
+                continue
+            cleaned[key] = cleaned_item
+        return cleaned
+    if isinstance(value, list):
+        return [item for item in (_clean_payload(item) for item in value) if item not in ("", None, [], {})]
+    return value
+
+
+def _response_text_for_log(response: httpx.Response) -> str:
+    text = response.text.strip()
+    return text[:4000] if text else "<empty response body>"
+
+
+def _log_beautiful_ai_error_response(response: httpx.Response) -> None:
+    logger.error(
+        "beautiful_ai_api_error status=%s endpoint=%s response_text=%s",
+        response.status_code,
+        _endpoint(),
+        _response_text_for_log(response),
+    )
+
+
 async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
     headers = {
         "Authorization": f"Bearer {settings.beautiful_ai_api_key}",
         "Content-Type": "application/json",
     }
+    clean_payload = _clean_payload(payload)
     async with httpx.AsyncClient(timeout=settings.beautiful_ai_timeout_seconds) as client:
-        response = await client.post(_endpoint(), headers=headers, json=payload)
+        response = await client.post(_endpoint(), headers=headers, json=clean_payload)
     if response.status_code == 400:
+        _log_beautiful_ai_error_response(response)
         raise BeautifulAiServiceError(
             status_code=400,
             error_type="beautiful_ai_bad_request",
             message="Beautiful.aiへ送信した内容を受け付けられませんでした。入力内容を確認してください。",
         )
     if response.status_code == 401:
+        _log_beautiful_ai_error_response(response)
         raise BeautifulAiServiceError(status_code=401, error_type="beautiful_ai_invalid_api_key", message="Beautiful.ai APIキーを確認してください。")
     if response.status_code == 403:
+        _log_beautiful_ai_error_response(response)
         raise BeautifulAiServiceError(status_code=403, error_type="beautiful_ai_access_not_enabled", message="Beautiful.ai APIの利用権限が有効になっていません。")
     if response.status_code == 404:
+        _log_beautiful_ai_error_response(response)
         raise BeautifulAiServiceError(
             status_code=502,
             error_type="beautiful_ai_endpoint_not_found",
             message="Beautiful.ai外部APIのエンドポイントが見つかりません。BackendのBeautiful.ai接続先を確認してください。",
         )
     if response.status_code == 429:
+        _log_beautiful_ai_error_response(response)
         retry_after = response.headers.get("Retry-After")
         raise BeautifulAiServiceError(
             status_code=429,
@@ -267,8 +305,10 @@ async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
             retry_after_seconds=int(retry_after) if retry_after and retry_after.isdigit() else None,
         )
     if response.status_code >= 500:
+        _log_beautiful_ai_error_response(response)
         raise BeautifulAiServiceError(status_code=502, error_type="beautiful_ai_service_error", message="Beautiful.ai側で処理に失敗しました。既存PPTXをご利用ください。")
     if response.status_code >= 400:
+        _log_beautiful_ai_error_response(response)
         raise BeautifulAiServiceError(status_code=502, error_type="beautiful_ai_service_error", message="Beautiful.ai連携で処理に失敗しました。既存PPTXをご利用ください。")
     try:
         parsed = response.json()

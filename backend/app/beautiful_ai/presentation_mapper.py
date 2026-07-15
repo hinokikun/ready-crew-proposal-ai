@@ -35,21 +35,21 @@ def _safe_lines(values: list[str], limit: int = MAX_BULLETS_PER_SLIDE) -> list[s
 
 def _layout_hint(title: str, original_layout: str) -> str:
     joined = f"{title} {original_layout}".lower()
-    if any(keyword in joined for keyword in ["表紙", "cover", "タイトル"]):
+    if any(keyword in joined for keyword in ["表紙", "cover", "タイトル", "title"]):
         return "full-bleed cover with strong title and subtle corporate accent"
-    if any(keyword in joined for keyword in ["summary", "サマリー", "まとめ"]):
+    if any(keyword in joined for keyword in ["summary", "overview", "サマリー", "まとめ"]):
         return "executive summary with three concise value cards"
-    if any(keyword in joined for keyword in ["課題", "issue", "risk"]):
+    if any(keyword in joined for keyword in ["課題", "issue", "risk", "problem"]):
         return "priority issue cards with muted accent labels"
-    if any(keyword in joined for keyword in ["競合", "比較"]):
+    if any(keyword in joined for keyword in ["競合", "比較", "competition", "competitor", "comparison"]):
         return "competitive comparison table with clear winning points"
-    if any(keyword in joined for keyword in ["schedule", "スケジュール", "工程"]):
+    if any(keyword in joined for keyword in ["schedule", "スケジュール", "工程", "timeline", "process"]):
         return "simple timeline or gantt style process"
-    if any(keyword in joined for keyword in ["費用", "見積", "budget"]):
+    if any(keyword in joined for keyword in ["費用", "見積", "estimate", "budget", "cost"]):
         return "estimate overview table with highlighted total range"
-    if any(keyword in joined for keyword in ["kpi", "効果", "roi"]):
+    if any(keyword in joined for keyword in ["kpi", "効果", "effect", "roi"]):
         return "KPI cards with measurable outcomes"
-    if any(keyword in joined for keyword in ["サイトマップ", "構成"]):
+    if any(keyword in joined for keyword in ["サイトマップ", "構成", "sitemap", "structure"]):
         return "sitemap diagram with hierarchy"
     return "clean two-column business proposal slide"
 
@@ -62,39 +62,65 @@ def _image_prompt(title: str, visual_suggestion: str, client_name: str) -> str:
 
 
 def _append_confirmation_marker(text: str) -> str:
-    if any(keyword in text for keyword in ["未定", "要確認", "不明", "未確認"]):
-        return f"{text}（要確認）" if "要確認" not in text else text
+    marker_words = ["未定", "要確認", "不明", "未確認", "unconfirmed", "needs confirmation", "tbd"]
+    if any(keyword in text.lower() for keyword in marker_words):
+        return f"{text} (needs confirmation)" if "needs confirmation" not in text.lower() else text
     return text
+
+
+def _blocks(title: str, bullets: list[str], notes: str = "") -> list[dict[str, Any]]:
+    blocks: list[dict[str, Any]] = [{"type": "heading", "content": _safe_text(title, 180)}]
+    if bullets:
+        blocks.append({"type": "bulleted_list", "items": bullets})
+    if notes:
+        blocks.append({"type": "paragraph", "content": _safe_text(notes, 500)})
+    return blocks
+
+
+def _build_slide_payload(title: str, bullets: list[str], notes: str = "") -> dict[str, Any]:
+    safe_title = _safe_text(title, 180)
+    blocks = _blocks(safe_title, bullets, notes)
+    return {
+        "title": safe_title,
+        "content": {"blocks": blocks},
+        "sections": [{"title": safe_title, "content": {"blocks": blocks}, "blocks": blocks}],
+        "blocks": blocks,
+    }
+
+
+def _deck_outline(title: str, slides: list[dict[str, Any]]) -> str:
+    lines = [f"# {_safe_text(title, 180)}"]
+    for index, slide in enumerate(slides, start=1):
+        lines.append(f"## {index}. {_safe_text(str(slide.get('title', '')), 180)}")
+        for block in slide.get("blocks", []):
+            if block.get("type") == "bulleted_list":
+                for item in block.get("items", []):
+                    lines.append(f"- {_safe_text(str(item), 240)}")
+            elif block.get("type") == "paragraph" and block.get("content"):
+                lines.append(_safe_text(str(block["content"]), 300))
+    return "\n".join(lines)
 
 
 def _build_context_slide(request: BeautifulAiPresentationRequest) -> dict[str, Any] | None:
     bullets = _safe_lines(
         [
-            f"案件概要: {_safe_text(request.project_brief, 220)}",
-            f"予算: {_append_confirmation_marker(_safe_text(request.budget_range or '未定', 120))}",
-            f"納期: {_append_confirmation_marker(_safe_text(request.desired_launch_timing or '要確認', 120))}",
-            f"CMS: {_append_confirmation_marker(_safe_text(request.cms_required or '要確認', 120))}",
-            f"競合: {_append_confirmation_marker(_safe_text(request.competitor_company_name or request.competitor_site_url or '未確認', 160))}",
+            f"Project summary: {_safe_text(request.project_brief, 220)}",
+            f"Budget: {_append_confirmation_marker(_safe_text(request.budget_range or 'TBD', 120))}",
+            f"Launch timing: {_append_confirmation_marker(_safe_text(request.desired_launch_timing or 'TBD', 120))}",
+            f"CMS: {_append_confirmation_marker(_safe_text(request.cms_required or 'TBD', 120))}",
+            f"Competitor: {_append_confirmation_marker(_safe_text(request.competitor_company_name or request.competitor_site_url or 'TBD', 160))}",
         ],
         5,
     )
     if not bullets:
         return None
-    return {
-        "title": "提案条件サマリー",
-        "body": "\n".join(bullets),
-        "content": bullets,
-        "presenterNotes": "入力情報をもとにした提案条件です。AI推測または未確定の項目は要確認として扱います。",
-        "layoutHint": "compact project condition cards",
-        "imagePrompt": "Minimal business dashboard cards for proposal conditions",
-        "sourceLabel": "AI営業秘書 / 入力情報",
-    }
+    return _build_slide_payload("Proposal conditions summary", bullets, "Use these conditions as source context for the proposal deck.")
 
 
 def map_to_beautiful_ai_payload(request: BeautifulAiPresentationRequest) -> BeautifulAiPayload:
     deck = request.powerpoint_generation_data
-    client_name = _safe_text(deck.client_name or request.client_company_info or "提案先企業", 160)
-    title = _safe_text(deck.deck_title or f"{client_name} Webサイト制作ご提案書", 180)
+    client_name = _safe_text(deck.client_name or request.client_company_info or "Client", 160)
+    title = _safe_text(deck.deck_title or f"{client_name} Web proposal", 180)
     slides: list[dict[str, Any]] = []
 
     context_slide = _build_context_slide(request)
@@ -106,35 +132,34 @@ def map_to_beautiful_ai_payload(request: BeautifulAiPresentationRequest) -> Beau
         if not bullets and not _safe_text(slide.title):
             continue
         title_text = _safe_text(slide.title or f"Slide {slide.slide_no}", 160)
-        slides.append(
-            {
-                "title": title_text,
-                "body": "\n".join(bullets),
-                "content": bullets,
-                "presenterNotes": _safe_text(slide.speaker_notes, 800),
-                "layoutHint": _layout_hint(title_text, slide.layout),
-                "imagePrompt": _image_prompt(title_text, slide.visual_suggestion, client_name),
-                "sourceLabel": f"AI営業秘書 / Slide {slide.slide_no}",
-            }
+        notes = " ".join(
+            part
+            for part in [
+                _safe_text(slide.speaker_notes, 500),
+                _layout_hint(title_text, slide.layout),
+                _image_prompt(title_text, slide.visual_suggestion, client_name),
+            ]
+            if part
         )
+        slides.append(_build_slide_payload(title_text, bullets, notes))
         if len(slides) >= MAX_SLIDES:
             break
 
     if not slides:
-        slides.append(
-            {
-                "title": title,
-                "body": "提案内容は既存PPTXで確認できます。",
-                "content": ["提案内容は既存PPTXで確認できます。"],
-                "presenterNotes": "Beautiful.ai連携用の最低限スライドです。",
-                "layoutHint": "simple title and body",
-                "imagePrompt": "Clean corporate proposal title slide",
-                "sourceLabel": "AI営業秘書",
-            }
-        )
+        slides.append(_build_slide_payload(title, ["Please review the generated proposal content in the existing PPTX output."], "Minimal Beautiful.ai fallback slide."))
+
+    outline = _deck_outline(title, slides)
+    top_level_sections = [
+        {
+            "title": "Proposal Outline",
+            "slides": slides,
+            "content": {"blocks": [{"type": "paragraph", "content": outline}]},
+        }
+    ]
 
     return BeautifulAiPayload(
         title=title,
+        content=outline,
         language=request.language or "ja",
         preserveExactText=request.preserve_exact_text,
         themeId=request.theme_id or settings.beautiful_ai_default_theme_id,
@@ -142,6 +167,7 @@ def map_to_beautiful_ai_payload(request: BeautifulAiPresentationRequest) -> Beau
         folderId=request.folder_id or settings.beautiful_ai_folder_id,
         imageSource=request.image_source or settings.beautiful_ai_image_source,
         imageStyle=request.image_style or settings.beautiful_ai_image_style,
+        sections=top_level_sections,
         slides=slides,
     )
 
