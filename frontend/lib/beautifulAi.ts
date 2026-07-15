@@ -27,6 +27,46 @@ export type BeautifulAiStatusProbe = {
   checkedAt: string;
 };
 
+export type BeautifulAiHistoryRecord = {
+  id: number;
+  project_id: string;
+  title: string;
+  status: string;
+  http_status: number;
+  error_type: string;
+  response_text: string;
+  endpoint: string;
+  api_mode: string;
+  theme_id: string;
+  workspace_config_id: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BeautifulAiDiagnostics = {
+  enabled: boolean;
+  configured: boolean;
+  mock: boolean;
+  api_mode: string;
+  resolved_endpoint: string;
+  workspace_id: string;
+  theme_id: string;
+  last_http_status: number;
+  last_error_type: string;
+  last_response_text: string;
+  last_run_at: string;
+  history: BeautifulAiHistoryRecord[];
+};
+
+export type BeautifulAiConnectionTestResult = {
+  ok: boolean;
+  http_status: number;
+  error_type: string;
+  message: string;
+  response_text: string;
+  checked_at: string;
+};
+
 export type BackendHealthProbe = {
   reachable: boolean;
   httpStatus: number | null;
@@ -77,6 +117,17 @@ export type BeautifulAiPresentationPayload = {
 
 export async function getBeautifulAiStatus() {
   return fetchJson<BeautifulAiStatus>("/api/beautiful-ai/status");
+}
+
+export async function getBeautifulAiDiagnostics() {
+  return fetchJson<BeautifulAiDiagnostics>("/api/beautiful-ai/diagnostics");
+}
+
+export async function runBeautifulAiConnectionTest() {
+  return fetchJson<BeautifulAiConnectionTestResult>("/api/beautiful-ai/diagnostics/test", {
+    method: "POST",
+    body: JSON.stringify({})
+  });
 }
 
 export async function getBeautifulAiStatusProbe(): Promise<BeautifulAiStatusProbe> {

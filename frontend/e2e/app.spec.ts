@@ -374,13 +374,13 @@ test("Beautiful.ai Status Cardは管理者の詳細モードでEnabledとMockを
   await page.getByRole("button", { name: "詳細モード" }).click();
   const card = page.getByTestId("beautiful-ai-status-card");
   await expect(card).toBeVisible();
-  await expect(card.getByText("Enabled")).toBeVisible();
-  await expect(card.getByText("有効")).toBeVisible();
+  await expect(card.getByText("Enabled", { exact: true })).toBeVisible();
+  await expect(card.getByText("有効", { exact: true }).first()).toBeVisible();
   await expect(card.getByText("Mock")).toBeVisible();
   await expect(card.getByText("ON", { exact: true })).toBeVisible();
-  await expect(card.getByText("API mode")).toBeVisible();
-  await expect(card.getByText("Prompt API")).toBeVisible();
-  await expect(card.getByText("https://www.beautiful.ai/api/v1/generatePresentation")).toBeVisible();
+  await expect(card.getByText("API mode", { exact: true })).toBeVisible();
+  await expect(card.getByText("Prompt API", { exact: true }).first()).toBeVisible();
+  await expect(card.getByText("https://www.beautiful.ai/api/v1/generatePresentation").first()).toBeVisible();
   await expect(card.getByText("API reachable")).toBeVisible();
   await expect(card.getByText("到達")).toBeVisible();
   await expect(card.getByText("Route found")).toBeVisible();
@@ -678,6 +678,19 @@ async function mockApi(page: Page, options: MockOptions = {}) {
         available: workspaceItems
       });
     }
+    if (path.endsWith("/api/beautiful-ai/diagnostics/test")) {
+      return json(route, {
+        ok: true,
+        http_status: 400,
+        error_type: "",
+        message: "Beautiful.aiへの通信と認証を確認できました。診断用にpromptなしで送信したため、プレゼンは作成されていません。",
+        response_text: "{\"error\":\"prompt is required\"}",
+        checked_at: new Date().toISOString()
+      });
+    }
+    if (path.endsWith("/api/beautiful-ai/diagnostics")) {
+      return json(route, beautifulDiagnosticsJson(options));
+    }
     if (path.endsWith("/api/beautiful-ai/status")) {
       return beautifulStatusJson(route, options);
     }
@@ -804,7 +817,56 @@ function beautifulStatusJson(route: Route, options: MockOptions) {
   });
 }
 
+function beautifulDiagnosticsJson(options: MockOptions) {
+  const enabled = options.beautifulEnabled ?? options.beautifulStatus !== "disabled";
+  return {
+    enabled,
+    configured: enabled,
+    mock: options.beautifulMock ?? true,
+    api_mode: "prompt",
+    resolved_endpoint: "https://www.beautiful.ai/api/v1/generatePresentation",
+    workspace_id: "workspace-e2e",
+    theme_id: "minimal",
+    last_http_status: enabled ? 400 : 0,
+    last_error_type: "",
+    last_response_text: enabled ? "{\"error\":\"prompt is required\"}" : "",
+    last_run_at: new Date().toISOString(),
+    history: enabled
+      ? [
+          {
+            id: 1,
+            project_id: "__diagnostic__",
+            title: "Beautiful.ai connection test",
+            status: "diagnostic_ok",
+            http_status: 400,
+            error_type: "",
+            response_text: "{\"error\":\"prompt is required\"}",
+            endpoint: "https://www.beautiful.ai/api/v1/generatePresentation",
+            api_mode: "prompt",
+            theme_id: "minimal",
+            workspace_config_id: "workspace-e2e",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+        ]
+      : []
+  };
+}
+
 function mockResponse(path: string, options: MockOptions = {}, presentationState = { status: "draft", approved: false, generated: false }) {
+  if (path.includes("/beautiful-ai/diagnostics/test")) {
+    return {
+      ok: true,
+      http_status: 400,
+      error_type: "",
+      message: "Beautiful.aiへの通信と認証を確認できました。診断用にpromptなしで送信したため、プレゼンは作成されていません。",
+      response_text: "{\"error\":\"prompt is required\"}",
+      checked_at: new Date().toISOString()
+    };
+  }
+  if (path.includes("/beautiful-ai/diagnostics")) {
+    return beautifulDiagnosticsJson(options);
+  }
   if (path.includes("/beautiful-ai/status")) {
     const enabled = options.beautifulEnabled ?? true;
     return {

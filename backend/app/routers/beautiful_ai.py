@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth import ensure_not_maintenance_mode, require_roles
 from app.beautiful_ai.schemas import (
+    BeautifulAiConnectionTestResponse,
+    BeautifulAiDiagnosticsResponse,
     BeautifulAiPresentationRequest,
     BeautifulAiSafeError,
     BeautifulAiStatusResponse,
@@ -15,9 +17,11 @@ from app.rate_limit.service import rate_limit_dependency
 from app.services.beautiful_ai_service import (
     BeautifulAiServiceError,
     create_beautiful_ai_presentation,
+    get_beautiful_ai_diagnostics,
     get_beautiful_ai_status,
     list_presentations_by_project,
     record_editor_opened,
+    run_beautiful_ai_connection_test,
 )
 
 router = APIRouter(prefix="/api/beautiful-ai", tags=["beautiful-ai"])
@@ -59,3 +63,16 @@ async def post_editor_opened(presentation_id: str, user: dict = Depends(require_
     with get_db() as db:
         record_editor_opened(db, presentation_id=presentation_id, user_id=int(user["id"]))
     return {"ok": True}
+
+
+@router.get("/diagnostics", response_model=BeautifulAiDiagnosticsResponse)
+async def get_diagnostics(user: dict = Depends(require_roles("admin", "manager"))) -> BeautifulAiDiagnosticsResponse:
+    with get_db() as db:
+        organization_id, workspace_id = get_user_context_ids(db, int(user["id"]))
+        return get_beautiful_ai_diagnostics(db, organization_id=organization_id, workspace_id=workspace_id)
+
+
+@router.post("/diagnostics/test", response_model=BeautifulAiConnectionTestResponse)
+async def post_connection_test(user: dict = Depends(require_roles("admin", "manager"))) -> BeautifulAiConnectionTestResponse:
+    with get_db() as db:
+        return await run_beautiful_ai_connection_test(db, user_id=int(user["id"]))

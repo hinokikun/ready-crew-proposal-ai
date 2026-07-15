@@ -77,6 +77,108 @@ def test_beautiful_ai_status_disabled(client: TestClient, admin_headers: dict[st
     assert "api_key" not in str(body).lower()
 
 
+def test_beautiful_ai_diagnostics_returns_settings_and_recent_history(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    sample_pptx_payload: dict[str, Any],
+) -> None:
+    with _client_with_env(
+        monkeypatch,
+        tmp_path,
+        BEAUTIFUL_AI_ENABLED="true",
+        BEAUTIFUL_AI_MOCK="true",
+        BEAUTIFUL_AI_DEFAULT_THEME_ID="minimal",
+        BEAUTIFUL_AI_WORKSPACE_ID="workspace-demo",
+    ) as client:
+        headers = _login(client)
+        project_id = "diagnostics-history-project"
+        _complete_quality_gate(client, headers, project_id)
+
+        create_response = client.post("/api/beautiful-ai/presentations", headers=headers, json=_beautiful_payload(sample_pptx_payload, project_id))
+        assert create_response.status_code == 200
+
+        diagnostics = client.get("/api/beautiful-ai/diagnostics", headers=headers)
+        assert diagnostics.status_code == 200
+        body = diagnostics.json()
+        assert body["enabled"] is True
+        assert body["api_mode"] == "prompt"
+        assert body["theme_id"] == "minimal"
+        assert body["workspace_id"] == "workspace-demo"
+        assert body["last_http_status"] == 200
+        assert body["history"]
+        assert body["history"][0]["project_id"] == project_id
+        assert "api_key" not in str(body).lower()
+
+
+def test_beautiful_ai_connection_test_uses_empty_payload_and_saves_history(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    with _client_with_env(
+        monkeypatch,
+        tmp_path,
+        BEAUTIFUL_AI_ENABLED="true",
+        BEAUTIFUL_AI_MOCK="false",
+        BEAUTIFUL_AI_API_KEY="dummy-beautiful-ai-key",
+    ) as client:
+        service = importlib.import_module("app.services.beautiful_ai_service")
+        captured: dict[str, Any] = {}
+
+        class FakeResponse:
+            status_code = 400
+            headers = {"Content-Type": "application/json"}
+            text = '{"error":"prompt is required"}'
+
+            def json(self) -> dict[str, Any]:
+                return {}
+
+        class FakeClient:
+            def __init__(self, *_: Any, **__: Any) -> None:
+                pass
+
+            async def __aenter__(self) -> "FakeClient":
+                return self
+
+            async def __aexit__(self, *_: Any) -> None:
+                return None
+
+            async def post(self, *_: Any, **kwargs: Any) -> FakeResponse:
+                captured["json"] = kwargs["json"]
+                captured["authorization"] = kwargs["headers"]["Authorization"]
+                return FakeResponse()
+
+        monkeypatch.setattr(service.httpx, "AsyncClient", FakeClient)
+        headers = _login(client)
+
+        response = client.post("/api/beautiful-ai/diagnostics/test", headers=headers)
+        assert response.status_code == 200
+        body = response.json()
+        assert body["ok"] is True
+        assert body["http_status"] == 400
+        assert body["response_text"].startswith('{"error"')
+        assert captured["json"] == {}
+        assert captured["authorization"] == "Bearer dummy-beautiful-ai-key"
+
+        diagnostics = client.get("/api/beautiful-ai/diagnostics", headers=headers)
+        assert diagnostics.status_code == 200
+        history = diagnostics.json()["history"]
+        assert history[0]["project_id"] == "__diagnostic__"
+        assert history[0]["status"] == "diagnostic_ok"
+        assert history[0]["http_status"] == 400
+        assert "dummy-beautiful-ai-key" not in str(diagnostics.json())
+
+
+def test_beautiful_ai_diagnostics_requires_admin_or_manager(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    with _client_with_env(monkeypatch, tmp_path, BEAUTIFUL_AI_ENABLED="true", BEAUTIFUL_AI_MOCK="true") as client:
+        admin_headers = _login(client)
+        member_headers = _create_user_and_login(client, admin_headers, "diagnostic-member@example.com", "member")
+        assert client.get("/api/beautiful-ai/diagnostics", headers=member_headers).status_code == 403
+        assert client.post("/api/beautiful-ai/diagnostics/test", headers=member_headers).status_code == 403
+
+
 def test_beautiful_ai_mock_success_and_duplicate_prevention(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

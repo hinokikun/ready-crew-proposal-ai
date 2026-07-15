@@ -77,6 +77,46 @@ class BeautifulAiStatusResponse(BaseModel):
     message: str
 
 
+class BeautifulAiHistoryRecord(BaseModel):
+    id: int
+    project_id: str
+    title: str
+    status: str
+    http_status: int = 0
+    error_type: str = ""
+    response_text: str = ""
+    endpoint: str = ""
+    api_mode: str = "prompt"
+    theme_id: str = ""
+    workspace_config_id: str = ""
+    created_at: str = ""
+    updated_at: str = ""
+
+
+class BeautifulAiDiagnosticsResponse(BaseModel):
+    enabled: bool
+    configured: bool
+    mock: bool
+    api_mode: str
+    resolved_endpoint: str
+    workspace_id: str = ""
+    theme_id: str = ""
+    last_http_status: int = 0
+    last_error_type: str = ""
+    last_response_text: str = ""
+    last_run_at: str = ""
+    history: list[BeautifulAiHistoryRecord] = Field(default_factory=list)
+
+
+class BeautifulAiConnectionTestResponse(BaseModel):
+    ok: bool
+    http_status: int = 0
+    error_type: str = ""
+    message: str
+    response_text: str = ""
+    checked_at: str = ""
+
+
 class BeautifulAiSafeError(BaseModel):
     error_type: str
     message: str

@@ -10,6 +10,54 @@ export function toFriendlyError(error: unknown): FriendlyError {
   const normalized = message.toLowerCase();
 
   if (/beautiful\.ai|beautiful_ai/.test(normalized)) {
+    if (/invalid_api_key|401|api key|apiキー/.test(normalized)) {
+      return {
+        category: "Beautiful.ai認証エラー",
+        title: "Beautiful.ai APIキーが無効です",
+        cause: "Beautiful.ai APIキーが未設定、無効、または期限切れの可能性があります。",
+        action: "管理者にRenderのBeautiful.ai APIキー設定を確認してもらってください。既存PPTXは利用できます。"
+      };
+    }
+    if (/access_not_enabled|403|workspace|forbidden/.test(normalized)) {
+      return {
+        category: "Beautiful.ai権限エラー",
+        title: "Beautiful.ai Workspaceにアクセスできません",
+        cause: "Beautiful.ai側のAPI権限、契約、またはWorkspace設定に問題がある可能性があります。",
+        action: "管理者にBeautiful.aiのWorkspace IDとAPI権限を確認してもらってください。"
+      };
+    }
+    if (/rate_limit|429|rate|limit/.test(normalized)) {
+      return {
+        category: "Beautiful.ai利用上限",
+        title: "Beautiful.aiの利用上限に達しました",
+        cause: "短時間の利用回数、またはBeautiful.ai側の処理制限に達した可能性があります。",
+        action: "時間を置いて再試行してください。急ぎの場合は既存PPTXをご利用ください。"
+      };
+    }
+    if (/redirect|endpoint_not_found|404/.test(normalized)) {
+      return {
+        category: "Beautiful.ai接続先エラー",
+        title: "Beautiful.ai APIの接続先を確認してください",
+        cause: "BackendのBeautiful.ai接続先URLがBeautiful.ai側の期待するURLと異なる可能性があります。",
+        action: "管理者にBeautiful.ai診断情報のResolved Endpointを確認してもらってください。"
+      };
+    }
+    if (/timeout|504|network|failed to fetch/.test(normalized)) {
+      return {
+        category: "Beautiful.ai通信エラー",
+        title: "Beautiful.aiへ接続できません",
+        cause: "ネットワーク、Render、Beautiful.ai側の一時的な通信問題が考えられます。",
+        action: "時間を置いて再試行してください。解決しない場合は管理者に通信履歴を確認してもらってください。"
+      };
+    }
+    if (/service_error|500|502|503/.test(normalized)) {
+      return {
+        category: "Beautiful.aiサーバーエラー",
+        title: "Beautiful.aiサーバー側でエラーが発生しました",
+        cause: "Beautiful.ai側の一時的な障害、またはAPI応答の形式が想定と異なる可能性があります。",
+        action: "既存PPTXを利用し、管理者にBeautiful.ai診断情報のHTTP StatusとResponse Textを確認してもらってください。"
+      };
+    }
     if (/400|bad_request/.test(normalized)) {
       return {
         category: "Beautiful.ai送信内容エラー",

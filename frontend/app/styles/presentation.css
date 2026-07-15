@@ -2381,6 +2381,36 @@
   font-weight: 700;
 }
 
+.beautiful-ai-diagnostics {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.beautiful-ai-history {
+  display: grid;
+  gap: 8px;
+}
+
+.beautiful-ai-history ul {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.beautiful-ai-history li {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.2fr) minmax(90px, 0.8fr) minmax(80px, 0.6fr) minmax(120px, 1fr) minmax(180px, 2fr);
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  background: #f8fafc;
+  overflow-wrap: anywhere;
+}
+
 .ppt-download-button.markdown {
   border: 1px solid var(--border);
   background: #fffdf8;

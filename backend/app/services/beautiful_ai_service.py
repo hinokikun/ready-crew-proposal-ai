@@ -15,6 +15,9 @@ from app.beautiful_ai.schemas import (
     BeautifulAiPresentationRecord,
     BeautifulAiPresentationRequest,
     BeautifulAiPresentationResponse,
+    BeautifulAiConnectionTestResponse,
+    BeautifulAiDiagnosticsResponse,
+    BeautifulAiHistoryRecord,
     BeautifulAiStatusResponse,
 )
 from app.config import settings
@@ -33,11 +36,15 @@ class BeautifulAiServiceError(Exception):
         error_type: str,
         message: str,
         retry_after_seconds: int | None = None,
+        http_status: int = 0,
+        response_text: str = "",
     ) -> None:
         self.status_code = status_code
         self.error_type = error_type
         self.message = message
         self.retry_after_seconds = retry_after_seconds
+        self.http_status = http_status
+        self.response_text = response_text
         super().__init__(message)
 
 
@@ -95,6 +102,41 @@ def get_beautiful_ai_status(db: Connection | None = None) -> BeautifulAiStatusRe
     )
 
 
+def get_beautiful_ai_diagnostics(
+    db: Connection,
+    *,
+    organization_id: int,
+    workspace_id: int,
+) -> BeautifulAiDiagnosticsResponse:
+    rows = db.execute(
+        """
+        SELECT id, project_id, title, status, theme_id, error_type, http_status, response_text, endpoint, api_mode,
+               workspace_config_id, created_at, updated_at
+        FROM beautiful_ai_presentations
+        WHERE organization_id = ? AND workspace_id = ?
+        ORDER BY updated_at DESC, id DESC
+        LIMIT 20
+        """,
+        (organization_id, workspace_id),
+    ).fetchall()
+    history = [_history_record_from_row(dict(row)) for row in rows]
+    last = history[0] if history else None
+    return BeautifulAiDiagnosticsResponse(
+        enabled=bool(settings.beautiful_ai_enabled),
+        configured=bool(settings.beautiful_ai_api_key or settings.beautiful_ai_mock),
+        mock=bool(settings.beautiful_ai_mock),
+        api_mode=_api_mode(),
+        resolved_endpoint=_endpoint(),
+        workspace_id=settings.beautiful_ai_workspace_id,
+        theme_id=settings.beautiful_ai_default_theme_id,
+        last_http_status=last.http_status if last else 0,
+        last_error_type=last.error_type if last else "",
+        last_response_text=last.response_text if last else "",
+        last_run_at=last.updated_at if last else "",
+        history=history,
+    )
+
+
 def list_presentations_by_project(
     db: Connection,
     project_id: str,
@@ -145,14 +187,19 @@ def _insert_presentation_record(
     provider: str = "beautiful.ai",
     request_summary: str = "",
     error_type: str = "",
+    http_status: int = 0,
+    response_text: str = "",
+    endpoint: str = "",
+    api_mode: str = "",
+    workspace_config_id: str = "",
     organization_id: int = 1,
     workspace_id: int = 1,
 ) -> dict[str, Any]:
     cursor = db.execute(
         """
         INSERT INTO beautiful_ai_presentations
-            (project_id, user_id, presentation_id, title, editor_url, player_url, status, theme_id, provider, request_summary, error_type, organization_id, workspace_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (project_id, user_id, presentation_id, title, editor_url, player_url, status, theme_id, provider, request_summary, error_type, http_status, response_text, endpoint, api_mode, workspace_config_id, organization_id, workspace_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             request.project_id[:120],
@@ -166,12 +213,56 @@ def _insert_presentation_record(
             provider[:80],
             request_summary[:500],
             error_type[:80],
+            int(http_status or 0),
+            _safe_log_text(response_text, 1000),
+            (endpoint or _endpoint())[:500],
+            (api_mode or _api_mode())[:40],
+            (workspace_config_id or settings.beautiful_ai_workspace_id)[:160],
             organization_id,
             workspace_id,
         ),
     )
     row = db.execute("SELECT * FROM beautiful_ai_presentations WHERE id = ?", (cursor.lastrowid,)).fetchone()
     return dict(row) if row else {}
+
+
+def _insert_diagnostic_record(
+    db: Connection,
+    *,
+    user_id: int,
+    title: str,
+    status: str,
+    error_type: str = "",
+    http_status: int = 0,
+    response_text: str = "",
+    organization_id: int = 1,
+    workspace_id: int = 1,
+) -> None:
+    db.execute(
+        """
+        INSERT INTO beautiful_ai_presentations
+            (project_id, user_id, presentation_id, title, editor_url, player_url, status, theme_id, provider,
+             request_summary, error_type, http_status, response_text, endpoint, api_mode, workspace_config_id,
+             organization_id, workspace_id)
+        VALUES (?, ?, '', ?, '', '', ?, ?, 'beautiful.ai', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            "__diagnostic__",
+            user_id,
+            title[:240],
+            status[:40],
+            settings.beautiful_ai_default_theme_id[:160],
+            "Beautiful.ai connection test",
+            error_type[:80],
+            int(http_status or 0),
+            _safe_log_text(response_text, 1000),
+            _endpoint()[:500],
+            _api_mode()[:40],
+            settings.beautiful_ai_workspace_id[:160],
+            organization_id,
+            workspace_id,
+        ),
+    )
 
 
 def _response_from_record(record: dict[str, Any]) -> BeautifulAiPresentationResponse:
@@ -187,6 +278,24 @@ def _response_from_record(record: dict[str, Any]) -> BeautifulAiPresentationResp
     )
 
 
+def _history_record_from_row(row: dict[str, Any]) -> BeautifulAiHistoryRecord:
+    return BeautifulAiHistoryRecord(
+        id=int(row.get("id") or 0),
+        project_id=str(row.get("project_id") or ""),
+        title=str(row.get("title") or ""),
+        status=str(row.get("status") or ""),
+        http_status=int(row.get("http_status") or 0),
+        error_type=str(row.get("error_type") or ""),
+        response_text=_safe_log_text(str(row.get("response_text") or ""), 300),
+        endpoint=str(row.get("endpoint") or ""),
+        api_mode=str(row.get("api_mode") or "prompt"),
+        theme_id=str(row.get("theme_id") or ""),
+        workspace_config_id=str(row.get("workspace_config_id") or ""),
+        created_at=str(row.get("created_at") or ""),
+        updated_at=str(row.get("updated_at") or ""),
+    )
+
+
 def _safe_url(value: str) -> str:
     raw = (value or "").strip()[:2000]
     if not raw:
@@ -195,6 +304,11 @@ def _safe_url(value: str) -> str:
     if parsed.scheme not in {"https", "http"} or not parsed.netloc:
         return ""
     return raw
+
+
+def _safe_log_text(value: str, limit: int = 1000) -> str:
+    text = (value or "").replace("\x00", "").strip()
+    return text[:limit]
 
 
 def _make_mock_response(project_id: str, title: str) -> dict[str, str]:
@@ -344,6 +458,160 @@ def _log_beautiful_ai_error_response(response: httpx.Response, request_payload: 
     )
 
 
+def _log_beautiful_ai_diagnostic_response(response: httpx.Response, request_payload: dict[str, Any], request_headers: dict[str, str], *, ok: bool) -> None:
+    log = logger.info if ok else logger.error
+    log(
+        "beautiful_ai_diagnostic_response ok=%s status=%s endpoint=%s content_type=%s request_json_safe=%s request_headers_safe=%s response_headers_safe=%s response_text=%s prompt_length=%s theme_id_present=%s",
+        ok,
+        response.status_code,
+        _endpoint(),
+        response.headers.get("Content-Type", ""),
+        json.dumps(_safe_request_payload_for_log(request_payload), ensure_ascii=False),
+        json.dumps(_safe_headers_for_log(request_headers), ensure_ascii=False),
+        json.dumps(_safe_headers_for_log(response.headers), ensure_ascii=False),
+        _response_text_for_log(response),
+        len(str(request_payload.get("prompt") or "")),
+        bool(request_payload.get("themeId")),
+    )
+
+
+def _external_service_error(
+    response: httpx.Response,
+    *,
+    status_code: int,
+    error_type: str,
+    message: str,
+    retry_after_seconds: int | None = None,
+) -> BeautifulAiServiceError:
+    return BeautifulAiServiceError(
+        status_code=status_code,
+        error_type=error_type,
+        message=message,
+        retry_after_seconds=retry_after_seconds,
+        http_status=response.status_code,
+        response_text=_response_text_for_log(response),
+    )
+
+
+def _diagnostic_message_for_status(status_code: int) -> tuple[bool, str, str]:
+    if status_code == 400:
+        return True, "", "Beautiful.aiへの通信と認証を確認できました。診断用にpromptなしで送信したため、プレゼンは作成されていません。"
+    if status_code == 401:
+        return False, "beautiful_ai_invalid_api_key", "Beautiful.ai APIキーが無効、または期限切れの可能性があります。"
+    if status_code == 403:
+        return False, "beautiful_ai_access_not_enabled", "Beautiful.aiのWorkspaceまたはAPI利用権限にアクセスできません。"
+    if status_code == 429:
+        return False, "beautiful_ai_rate_limit", "Beautiful.aiのRate Limitです。時間を置いて再確認してください。"
+    if 300 <= status_code < 400:
+        return False, "beautiful_ai_redirect", "Beautiful.ai APIがリダイレクトを返しました。接続先URLを確認してください。"
+    if status_code >= 500:
+        return False, "beautiful_ai_service_error", "Beautiful.aiサーバー側でエラーが発生しています。"
+    if 200 <= status_code < 300:
+        return True, "", "Beautiful.ai APIから成功応答が返りました。プレゼン作成は要求していません。"
+    return False, "beautiful_ai_service_error", "Beautiful.ai接続テストで予期しない応答が返りました。"
+
+
+async def run_beautiful_ai_connection_test(
+    db: Connection,
+    *,
+    user_id: int,
+) -> BeautifulAiConnectionTestResponse:
+    organization_id, workspace_id = get_user_context_ids(db, user_id)
+    checked_at = datetime.now(timezone.utc).isoformat()
+
+    if settings.beautiful_ai_mock:
+        _insert_diagnostic_record(
+            db,
+            user_id=user_id,
+            title="Beautiful.ai mock connection test",
+            status="diagnostic_ok",
+            http_status=200,
+            response_text="mock",
+            organization_id=organization_id,
+            workspace_id=workspace_id,
+        )
+        create_audit_log(db, user_id, "beautiful_ai_connection_test", "beautiful_ai", "__diagnostic__", "success", "mock=true")
+        return BeautifulAiConnectionTestResponse(ok=True, http_status=200, message="Beautiful.aiはモックモードで接続テスト済みです。", response_text="mock", checked_at=checked_at)
+
+    if not settings.beautiful_ai_enabled:
+        _insert_diagnostic_record(
+            db,
+            user_id=user_id,
+            title="Beautiful.ai connection test",
+            status="diagnostic_failed",
+            error_type="beautiful_ai_disabled",
+            organization_id=organization_id,
+            workspace_id=workspace_id,
+        )
+        return BeautifulAiConnectionTestResponse(ok=False, error_type="beautiful_ai_disabled", message="Beautiful.ai連携が無効です。RenderのBEAUTIFUL_AI_ENABLEDを確認してください。", checked_at=checked_at)
+
+    if not settings.beautiful_ai_api_key:
+        _insert_diagnostic_record(
+            db,
+            user_id=user_id,
+            title="Beautiful.ai connection test",
+            status="diagnostic_failed",
+            error_type="beautiful_ai_missing_api_key",
+            organization_id=organization_id,
+            workspace_id=workspace_id,
+        )
+        return BeautifulAiConnectionTestResponse(ok=False, error_type="beautiful_ai_missing_api_key", message="Beautiful.ai APIキーが未設定です。", checked_at=checked_at)
+
+    headers = {
+        "Authorization": f"Bearer {settings.beautiful_ai_api_key}",
+        "Content-Type": "application/json",
+    }
+    request_payload: dict[str, Any] = {}
+    try:
+        async with httpx.AsyncClient(timeout=settings.beautiful_ai_timeout_seconds) as client:
+            response = await client.post(_endpoint(), headers=headers, json=request_payload)
+    except httpx.TimeoutException:
+        _insert_diagnostic_record(
+            db,
+            user_id=user_id,
+            title="Beautiful.ai connection test",
+            status="diagnostic_failed",
+            error_type="beautiful_ai_timeout",
+            response_text="timeout",
+            organization_id=organization_id,
+            workspace_id=workspace_id,
+        )
+        create_audit_log(db, user_id, "beautiful_ai_connection_test", "beautiful_ai", "__diagnostic__", "failure", "error_type=beautiful_ai_timeout")
+        return BeautifulAiConnectionTestResponse(ok=False, error_type="beautiful_ai_timeout", message="Beautiful.aiへの通信がタイムアウトしました。", response_text="timeout", checked_at=checked_at)
+
+    ok, error_type, message = _diagnostic_message_for_status(response.status_code)
+    _log_beautiful_ai_diagnostic_response(response, request_payload, headers, ok=ok)
+    response_text = _response_text_for_log(response)
+    _insert_diagnostic_record(
+        db,
+        user_id=user_id,
+        title="Beautiful.ai connection test",
+        status="diagnostic_ok" if ok else "diagnostic_failed",
+        error_type=error_type,
+        http_status=response.status_code,
+        response_text=response_text,
+        organization_id=organization_id,
+        workspace_id=workspace_id,
+    )
+    create_audit_log(
+        db,
+        user_id,
+        "beautiful_ai_connection_test",
+        "beautiful_ai",
+        "__diagnostic__",
+        "success" if ok else "failure",
+        f"error_type={error_type or 'none'} http_status={response.status_code}",
+    )
+    return BeautifulAiConnectionTestResponse(
+        ok=ok,
+        http_status=response.status_code,
+        error_type=error_type,
+        message=message,
+        response_text=_safe_log_text(response_text, 300),
+        checked_at=checked_at,
+    )
+
+
 async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
     headers = {
         "Authorization": f"Bearer {settings.beautiful_ai_api_key}",
@@ -354,27 +622,30 @@ async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
         response = await client.post(_endpoint(), headers=headers, json=request_payload)
     if 300 <= response.status_code < 400:
         _log_beautiful_ai_error_response(response, request_payload, headers)
-        raise BeautifulAiServiceError(
+        raise _external_service_error(
+            response,
             status_code=502,
             error_type="beautiful_ai_redirect",
             message="Beautiful.ai APIがリダイレクトを返しました。BackendのBeautiful.ai接続先を確認してください。",
         )
     if response.status_code == 400:
         _log_beautiful_ai_error_response(response, request_payload, headers)
-        raise BeautifulAiServiceError(
+        raise _external_service_error(
+            response,
             status_code=400,
             error_type="beautiful_ai_bad_request",
-            message="Beautiful.aiへ送信した内容を受け付けられませんでした。入力内容を確認してください。",
+            message="Beautiful.aiへ送信した内容が受け付けられませんでした。管理者はBeautiful.ai診断情報でResponse Textを確認してください。",
         )
     if response.status_code == 401:
         _log_beautiful_ai_error_response(response, request_payload, headers)
-        raise BeautifulAiServiceError(status_code=401, error_type="beautiful_ai_invalid_api_key", message="Beautiful.ai APIキーを確認してください。")
+        raise _external_service_error(response, status_code=401, error_type="beautiful_ai_invalid_api_key", message="Beautiful.ai APIキーが無効、または期限切れの可能性があります。管理者に確認してください。")
     if response.status_code == 403:
         _log_beautiful_ai_error_response(response, request_payload, headers)
-        raise BeautifulAiServiceError(status_code=403, error_type="beautiful_ai_access_not_enabled", message="Beautiful.ai APIの利用権限が有効になっていません。")
+        raise _external_service_error(response, status_code=403, error_type="beautiful_ai_access_not_enabled", message="Beautiful.aiのWorkspaceまたはAPI利用権限にアクセスできません。管理者に確認してください。")
     if response.status_code == 404:
         _log_beautiful_ai_error_response(response, request_payload, headers)
-        raise BeautifulAiServiceError(
+        raise _external_service_error(
+            response,
             status_code=502,
             error_type="beautiful_ai_endpoint_not_found",
             message="Beautiful.ai外部APIのエンドポイントが見つかりません。BackendのBeautiful.ai接続先を確認してください。",
@@ -382,7 +653,8 @@ async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
     if response.status_code == 429:
         _log_beautiful_ai_error_response(response, request_payload, headers)
         retry_after = response.headers.get("Retry-After")
-        raise BeautifulAiServiceError(
+        raise _external_service_error(
+            response,
             status_code=429,
             error_type="beautiful_ai_rate_limit",
             message="Beautiful.aiの利用上限に達しました。時間を置くか既存PPTXをご利用ください",
@@ -390,15 +662,19 @@ async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
         )
     if response.status_code >= 500:
         _log_beautiful_ai_error_response(response, request_payload, headers)
-        raise BeautifulAiServiceError(status_code=502, error_type="beautiful_ai_service_error", message="Beautiful.ai側で処理に失敗しました。既存PPTXをご利用ください。")
+        raise _external_service_error(response, status_code=502, error_type="beautiful_ai_service_error", message="Beautiful.aiサーバー側でエラーが発生しました。時間を置くか既存PPTXをご利用ください。")
     if response.status_code >= 400:
         _log_beautiful_ai_error_response(response, request_payload, headers)
-        raise BeautifulAiServiceError(status_code=502, error_type="beautiful_ai_service_error", message="Beautiful.ai連携で処理に失敗しました。既存PPTXをご利用ください。")
+        raise _external_service_error(response, status_code=502, error_type="beautiful_ai_service_error", message="Beautiful.ai連携で通信エラーが発生しました。既存PPTXをご利用ください。")
     try:
         parsed = response.json()
     except ValueError as exc:
         raise BeautifulAiServiceError(status_code=502, error_type="beautiful_ai_service_error", message="Beautiful.ai APIの応答を解析できませんでした。") from exc
-    return parsed if isinstance(parsed, dict) else {}
+    if not isinstance(parsed, dict):
+        return {"__http_status": response.status_code, "__response_text": _response_text_for_log(response)}
+    parsed.setdefault("__http_status", response.status_code)
+    parsed.setdefault("__response_text", _response_text_for_log(response))
+    return parsed
 
 
 def _ensure_quality_gate_unlocked(db: Connection, project_id: str, user_id: int) -> None:
@@ -432,13 +708,18 @@ async def create_beautiful_ai_presentation(
     payload = payload_model.dict()
     request_summary = build_request_summary(request, len(payload_model.slides))
     title = payload_model.title
+    api_http_status = 200 if settings.beautiful_ai_mock else 0
+    api_response_text = "mock" if settings.beautiful_ai_mock else ""
 
     create_audit_log(db, user_id, "beautiful_ai_generation_started", "beautiful_ai", request.project_id, "success", "fallback_available=true")
     try:
         if settings.beautiful_ai_mock:
             api_result = _make_mock_response(request.project_id, title)
         else:
-            api_result = _extract_api_result(await _post_payload(payload), title)
+            api_data = await _post_payload(payload)
+            api_http_status = int(api_data.get("__http_status") or 0)
+            api_response_text = str(api_data.get("__response_text") or "")
+            api_result = _extract_api_result(api_data, title)
     except httpx.TimeoutException as exc:
         _insert_presentation_record(
             db,
@@ -449,6 +730,11 @@ async def create_beautiful_ai_presentation(
             theme_id=payload_model.themeId,
             request_summary=request_summary,
             error_type="beautiful_ai_timeout",
+            http_status=0,
+            response_text="timeout",
+            endpoint=_endpoint(),
+            api_mode=_api_mode(),
+            workspace_config_id=payload_model.workspaceId,
             organization_id=organization_id,
             workspace_id=workspace_id,
         )
@@ -468,6 +754,11 @@ async def create_beautiful_ai_presentation(
             theme_id=payload_model.themeId,
             request_summary=request_summary,
             error_type=exc.error_type,
+            http_status=exc.http_status,
+            response_text=exc.response_text,
+            endpoint=_endpoint(),
+            api_mode=_api_mode(),
+            workspace_config_id=payload_model.workspaceId,
             organization_id=organization_id,
             workspace_id=workspace_id,
         )
@@ -487,6 +778,11 @@ async def create_beautiful_ai_presentation(
         status=api_result.get("status") or "created",
         theme_id=payload_model.themeId,
         request_summary=request_summary,
+        http_status=api_http_status,
+        response_text=api_response_text,
+        endpoint=_endpoint(),
+        api_mode=_api_mode(),
+        workspace_config_id=payload_model.workspaceId,
         organization_id=organization_id,
         workspace_id=workspace_id,
     )
