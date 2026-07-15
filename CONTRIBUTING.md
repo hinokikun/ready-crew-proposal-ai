@@ -1,42 +1,63 @@
-# Contributing
+﻿# Contributing
 
-Ready Crew Proposal AI は社内試験導入を想定したAI業務支援アプリです。変更時は、既存の提案書生成、PPTX、PDF、認証、権限管理を壊さないことを最優先にしてください。
+Thank you for contributing to AI営業秘書.
 
-## 開発の流れ
+This project is currently prepared for controlled production rollout. Contributions should prioritize stability, security, maintainability, and operational clarity.
 
-1. Issueで目的と影響範囲を確認します。
-2. 小さなブランチで変更します。
-3. Frontend build、Backend構文チェック、pytestを実行します。
-4. PRテンプレートの確認項目を埋めます。
-5. APIキー、パスワード、顧客本文全文を含めていないことを確認します。
+## Basic rules
 
-## コーディング方針
+- Do not add new sales AI features without an approved requirement.
+- Do not change API contracts, DB schema, migrations, or permissions casually.
+- Do not commit secrets, API keys, passwords, tokens, customer body text, or generated full text.
+- Keep changes small and scoped.
+- Preserve existing PPTX, PDF, Beautiful.ai, Quality Gate, Organization, Workspace, and role behavior.
 
-- Routerには入口処理を置き、ビジネスロジックはservicesへ置きます。
-- DBアクセスはrepositoriesへ寄せます。
-- Frontendの型はtypesへ寄せます。
-- エラー文は利用者が次に何をすればよいか分かる日本語にします。
-- 監査ログには本文全文や機密情報を保存しません。
+## Development flow
 
-## テスト
+1. Confirm the issue and expected behavior.
+2. Create a focused change.
+3. Run Backend tests if Backend is affected.
+4. Run Frontend typecheck/build/E2E if Frontend is affected.
+5. Run `git diff --check`.
+6. Review staged diff before commit.
+7. Use a clear commit message.
+
+## Required checks
 
 Backend:
 
 ```powershell
 cd backend
-pytest
+.\.venv\Scripts\python.exe -m compileall app tests
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m pip check
 ```
 
 Frontend:
 
 ```powershell
 cd frontend
-npm run build
+npm.cmd run typecheck
+npm.cmd run check:unused
+npm.cmd run build
+npm.cmd run test:e2e
 ```
 
-## セキュリティ
+Common:
 
-- `.env` / `.env.local` はコミットしません。
-- OpenAI APIキーはBackendの環境変数だけに設定します。
-- Frontendへ管理者パスワードやAPIキーを渡しません。
-- 社外共有前に人が生成物を確認します。
+```powershell
+git diff --check
+```
+
+## Pull request checklist
+
+- [ ] Purpose and scope are clear
+- [ ] No secret values are included
+- [ ] No unrelated formatting churn
+- [ ] Tests are listed with results
+- [ ] UI/API/DB compatibility impact is described
+- [ ] Rollback notes are included when needed
+
+## Security
+
+If you find a vulnerability, do not open a public issue with exploit details. Follow `SECURITY.md`.
