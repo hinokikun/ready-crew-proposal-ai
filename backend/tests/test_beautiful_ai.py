@@ -273,7 +273,7 @@ def test_beautiful_ai_safe_error_mapping(
         serialized = str(body).lower()
         detail = body.get("detail") if isinstance(body.get("detail"), dict) else body
         assert detail["error_type"] == error_type
-        assert "test-beautiful-key" not in serialized
+        assert "dummy-beautiful-ai-key" not in serialized
         assert "authorization" not in serialized
 
 
@@ -343,9 +343,9 @@ def test_beautiful_ai_prompt_api_resolves_official_url() -> None:
     original_base = service.settings.beautiful_ai_base_url
     original_mode = service.settings.beautiful_ai_api_mode
     try:
-        object.__setattr__(service.settings, "beautiful_ai_base_url", "https://www.beautiful.ai/api/v1/")
+        object.__setattr__(service.settings, "beautiful_ai_base_url", "https://beautiful.ai/api/v1/")
         object.__setattr__(service.settings, "beautiful_ai_api_mode", "prompt")
-        assert service._endpoint() == "https://beautiful.ai/api/v1/generatePresentation"
+        assert service._endpoint() == "https://www.beautiful.ai/api/v1/generatePresentation"
     finally:
         object.__setattr__(service.settings, "beautiful_ai_base_url", original_base)
         object.__setattr__(service.settings, "beautiful_ai_api_mode", original_mode)
@@ -358,7 +358,7 @@ def test_beautiful_ai_structured_mode_uses_create_presentation() -> None:
     try:
         object.__setattr__(service.settings, "beautiful_ai_base_url", "https://beautiful.ai/api/v1/createPresentation")
         object.__setattr__(service.settings, "beautiful_ai_api_mode", "structured")
-        assert service._endpoint() == "https://beautiful.ai/api/v1/createPresentation"
+        assert service._endpoint() == "https://www.beautiful.ai/api/v1/createPresentation"
     finally:
         object.__setattr__(service.settings, "beautiful_ai_base_url", original_base)
         object.__setattr__(service.settings, "beautiful_ai_api_mode", original_mode)
@@ -501,6 +501,59 @@ async def test_beautiful_ai_post_payload_maps_external_status(
     assert exc_info.value.status_code == expected_service_status
     if external_status == 400:
         assert "validation failed" in caplog.text
+
+
+@pytest.mark.anyio
+async def test_beautiful_ai_post_payload_maps_redirect_and_logs_safe_diagnostics(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    service = importlib.import_module("app.services.beautiful_ai_service")
+    original_key = service.settings.beautiful_ai_api_key
+    caplog.set_level("ERROR")
+
+    class FakeResponse:
+        status_code = 301
+        headers = {
+            "Content-Type": "",
+            "Location": "https://www.beautiful.ai/api/v1/generatePresentation",
+            "Set-Cookie": "session=hidden",
+        }
+        text = ""
+
+        def json(self) -> dict[str, Any]:
+            return {}
+
+    class FakeClient:
+        def __init__(self, *_: Any, **__: Any) -> None:
+            pass
+
+        async def __aenter__(self) -> "FakeClient":
+            return self
+
+        async def __aexit__(self, *_: Any) -> None:
+            return None
+
+        async def post(self, *_: Any, **__: Any) -> FakeResponse:
+            return FakeResponse()
+
+    monkeypatch.setattr(service.httpx, "AsyncClient", FakeClient)
+    try:
+        object.__setattr__(service.settings, "beautiful_ai_api_key", "dummy-beautiful-ai-key")
+        with pytest.raises(service.BeautifulAiServiceError) as exc_info:
+            await service._post_payload({"prompt": "Secret proposal prompt", "themeId": "minimal"})
+    finally:
+        object.__setattr__(service.settings, "beautiful_ai_api_key", original_key)
+
+    assert exc_info.value.error_type == "beautiful_ai_redirect"
+    assert exc_info.value.status_code == 502
+    assert "request_json_safe" in caplog.text
+    assert "request_headers_safe" in caplog.text
+    assert "response_headers_safe" in caplog.text
+    assert "<empty response body>" in caplog.text
+    assert "Secret proposal prompt" not in caplog.text
+    assert "dummy-beautiful-ai-key" not in caplog.text
+    assert "session=hidden" not in caplog.text
 
 
 def test_beautiful_ai_api_key_is_not_returned_or_stored(

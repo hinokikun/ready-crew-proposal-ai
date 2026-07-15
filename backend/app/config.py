@@ -77,7 +77,7 @@ class Settings:
     beautiful_ai_enabled: bool = _as_bool(os.getenv("BEAUTIFUL_AI_ENABLED"), False)
     beautiful_ai_mock: bool = _as_bool(os.getenv("BEAUTIFUL_AI_MOCK"), False)
     beautiful_ai_api_mode: str = os.getenv("BEAUTIFUL_AI_API_MODE", "prompt").strip().lower()
-    beautiful_ai_base_url: str = os.getenv("BEAUTIFUL_AI_BASE_URL", "https://beautiful.ai/api/v1").rstrip("/")
+    beautiful_ai_base_url: str = os.getenv("BEAUTIFUL_AI_BASE_URL", "https://www.beautiful.ai/api/v1").rstrip("/")
     beautiful_ai_default_theme_id: str = os.getenv("BEAUTIFUL_AI_DEFAULT_THEME_ID", "")
     beautiful_ai_workspace_id: str = os.getenv("BEAUTIFUL_AI_WORKSPACE_ID", "")
     beautiful_ai_folder_id: str = os.getenv("BEAUTIFUL_AI_FOLDER_ID", "")
