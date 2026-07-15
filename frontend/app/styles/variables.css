@@ -1,20 +1,59 @@
 :root {
-  --background: #f6f7fb;
-  --surface: #ffffff;
-  --surface-muted: #eef2f7;
-  --text: #111827;
-  --muted: #667085;
-  --border: #d9e0ea;
-  --primary: #1e3a8a;
-  --primary-hover: #172554;
-  --accent: #2563eb;
-  --danger: #b42318;
+  /* ProposalPilot brand tokens */
+  --pp-brand-name: "ProposalPilot";
+  --pp-product-name: "AI営業秘書";
+  --pp-color-blue-600: #155eef;
+  --pp-color-blue-700: #0f49c8;
+  --pp-color-navy-900: #102a43;
+  --pp-color-emerald-500: #12b76a;
+  --pp-color-bg: #f8fafc;
+  --pp-color-surface: #ffffff;
+  --pp-color-text-primary: #1d2939;
+  --pp-color-text-secondary: #667085;
+  --pp-color-border: #e4e7ec;
+  --pp-color-error: #d92d20;
+  --pp-color-warning: #dc6803;
+  --pp-color-cyan: #06b6d4;
+
+  /* Semantic usage tokens */
+  --background: var(--pp-color-bg);
+  --surface: var(--pp-color-surface);
+  --surface-muted: #eef4ff;
+  --surface-subtle: #f2f4f7;
+  --text: var(--pp-color-text-primary);
+  --muted: var(--pp-color-text-secondary);
+  --border: var(--pp-color-border);
+  --primary: var(--pp-color-blue-600);
+  --primary-hover: var(--pp-color-blue-700);
+  --accent: var(--pp-color-cyan);
+  --success: var(--pp-color-emerald-500);
+  --danger: var(--pp-color-error);
   --danger-bg: #fff1f0;
-  --shadow: 0 20px 54px rgba(15, 23, 42, 0.1);
-  --cafe-cream: #f8fafc;
-  --cafe-paper: #ffffff;
-  --cafe-sage: #eaf1ff;
-  --cafe-terracotta: #2563eb;
+  --warning: var(--pp-color-warning);
+  --warning-bg: #fffaeb;
+  --focus-ring: 0 0 0 4px rgba(21, 94, 239, 0.18);
+  --shadow-xs: 0 1px 2px rgba(16, 42, 67, 0.06);
+  --shadow-sm: 0 8px 20px rgba(16, 42, 67, 0.08);
+  --shadow: 0 20px 54px rgba(16, 42, 67, 0.1);
+  --shadow-lg: 0 28px 70px rgba(16, 42, 67, 0.16);
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --control-height: 44px;
+  --transition-fast: 150ms ease;
+  --transition-base: 220ms ease;
+  --z-header: 50;
+  --z-drawer: 80;
+  --z-modal: 100;
+  --font-sans: Inter, "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+
+  /* Compatibility aliases for older styles */
+  --cafe-cream: var(--background);
+  --cafe-paper: var(--surface);
+  --cafe-sage: #eef4ff;
+  --cafe-terracotta: var(--primary);
 }
 
 .app-error-card,
@@ -30,7 +69,7 @@
 }
 
 .app-error-card svg {
-  color: #b42318;
+  color: var(--danger);
   margin-top: 4px;
 }
 
@@ -79,6 +118,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
   .skeleton-line {
     animation: none;
   }
@@ -86,4 +134,10 @@
 
 * {
   box-sizing: border-box;
+}
+
+*:focus-visible {
+  box-shadow: var(--focus-ring);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
 }

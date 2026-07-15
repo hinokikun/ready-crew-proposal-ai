@@ -13,7 +13,15 @@ type StepFooterProps = {
   primaryLabel: string;
 };
 
-function StepFooterBase({ backLabel = "戻る", disabled = false, helpText, isLoading = false, onBack, onNext, primaryLabel }: StepFooterProps) {
+function StepFooterBase({
+  backLabel = "戻る",
+  disabled = false,
+  helpText,
+  isLoading = false,
+  onBack,
+  onNext,
+  primaryLabel
+}: StepFooterProps) {
   return (
     <div className="guided-step-footer">
       {onBack ? (

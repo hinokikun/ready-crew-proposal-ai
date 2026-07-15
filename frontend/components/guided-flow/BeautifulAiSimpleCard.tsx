@@ -31,12 +31,12 @@ function BeautifulAiSimpleCardBase({
     <article className={`guided-output-option guided-beautiful-card ${canCreate ? "is-ready" : "is-blocked"}`}>
       <div>
         <span className="guided-option-label">Beautiful.ai</span>
-        <h3>{canCreate ? "Beautiful.aiでプレゼンを作成できます" : "Beautiful.aiを利用するには、次の確認が必要です"}</h3>
-        <p>デザインされたプレゼンを作成します。スライドの構成だけを送り、デザインはBeautiful.ai側で整えます。</p>
+        <h3>{canCreate ? "Beautiful.aiでプレゼンを作成できます" : "Beautiful.aiを利用するには確認が必要です"}</h3>
+        <p>スライドの構成をBeautiful.aiへ送り、デザインされた営業提案プレゼンを作成します。</p>
       </div>
 
       {!canCreate && (
-        <ul className="guided-requirement-list" aria-label="Beautiful.ai利用条件">
+        <ul className="guided-requirement-list" aria-label="Beautiful.aiの利用条件">
           {requirements.map((item) => (
             <li className={item.passed ? "is-passed" : "is-missing"} key={item.label}>
               <CheckCircle2 size={15} aria-hidden="true" />
@@ -46,7 +46,7 @@ function BeautifulAiSimpleCardBase({
         </ul>
       )}
 
-      {!canCreate && <p className="guided-disabled-reason">{disabledReason || `あと${remaining.length}項目です`}</p>}
+      {!canCreate && <p className="guided-disabled-reason">{disabledReason || `あと${remaining.length}項目の確認が必要です`}</p>}
 
       <button
         className="primary-button"

@@ -17,7 +17,7 @@ function SimpleErrorMessageBase({ message, onRetry }: SimpleErrorMessageProps) {
       <div>
         <strong>処理を完了できませんでした</strong>
         <p>{message}</p>
-        <small>解決しない場合は管理者へお問い合わせください。</small>
+        <small>時間をおいて再試行してください。解決しない場合は管理者へこの画面の内容をお知らせください。</small>
       </div>
       {onRetry && (
         <button className="secondary-button" onClick={onRetry} type="button">

@@ -76,6 +76,44 @@ export function AdminSection({
   usageDashboard,
   usageLogs
 }: AdminSectionProps) {
+  const readinessItems = [
+    {
+      label: "ログイン状態",
+      detail: currentUser ? `${currentUser.email} でログイン中` : "ログイン状態を確認してください",
+      ok: Boolean(currentUser)
+    },
+    {
+      label: "Backend接続",
+      detail: healthSnapshot?.backendOk ? "正常に接続しています" : "接続状態を確認してください",
+      ok: Boolean(healthSnapshot?.backendOk)
+    },
+    {
+      label: "DB接続",
+      detail: healthSnapshot?.dbStatus || "未確認",
+      ok: Boolean(healthSnapshot?.dbStatus && !healthSnapshot.dbStatus.includes("未"))
+    },
+    {
+      label: "OpenAI状態",
+      detail: healthSnapshot?.aiStatus || "未確認",
+      ok: Boolean(healthSnapshot?.aiStatus && !healthSnapshot.aiStatus.includes("未"))
+    },
+    {
+      label: "権限管理",
+      detail: `${managedUsers.length}件のユーザーを確認できます`,
+      ok: managedUsers.length > 0
+    },
+    {
+      label: "利用ログ",
+      detail: `${Math.max(dbLogCount, usageLogs.length)}件のログを確認できます`,
+      ok: dbLogCount > 0 || usageLogs.length > 0
+    },
+    {
+      label: "監査ログ",
+      detail: `${auditLogs.length}件の監査ログを確認できます`,
+      ok: auditLogs.length > 0
+    }
+  ];
+
   return (
     <details
       className="advanced-foldout admin-menu-foldout"
@@ -84,152 +122,122 @@ export function AdminSection({
       open={isAdminMenuOpen}
       onToggle={(event) => setIsAdminMenuOpen(event.currentTarget.open)}
     >
-      <summary>管理者メニュー・接続状態を開く</summary>
-    {isAdminMenuOpen && (
-      <>
-    <SecurityNotice />
-    <HealthStatus onChange={setHealthSnapshot} />
-    <SettingsPanel
-      health={healthSnapshot}
-      isAuthenticated
-      usageLogs={usageLogs}
-      currentUser={currentUser}
-      dbLogCount={dbLogCount}
-    />
-    <PermissionNotice role={currentUser?.role} />
-      <section className="trial-check-panel" aria-label="試験導入チェック">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">試験導入</p>
-            <h2>試験導入チェック</h2>
-          </div>
-          <span>管理者向け</span>
-        </div>
-        <div className="trial-check-grid">
-          {[
-            {
-              label: "ログイン設定",
-              detail: currentUser ? `${currentUser.email} でログイン中` : "ログイン状態を確認してください",
-              ok: Boolean(currentUser)
-            },
-            {
-              label: "Backend接続",
-              detail: healthSnapshot?.backendOk ? "正常に接続しています" : "接続状態を確認してください",
-              ok: Boolean(healthSnapshot?.backendOk)
-            },
-            {
-              label: "DB接続",
-              detail: healthSnapshot?.dbStatus || "未確認",
-              ok: healthSnapshot?.dbStatus === "接続済み"
-            },
-            {
-              label: "OpenAI API状態",
-              detail: healthSnapshot?.aiStatus || "未確認",
-              ok: healthSnapshot?.aiStatus === "利用可能"
-            },
-            {
-              label: "権限管理",
-              detail: `${managedUsers.length}件のユーザーを確認できます`,
-              ok: managedUsers.length > 0
-            },
-            {
-              label: "利用ログ",
-              detail: `${Math.max(dbLogCount, usageLogs.length)}件のログを確認できます`,
-              ok: dbLogCount > 0 || usageLogs.length > 0
-            },
-            {
-              label: "監査ログ",
-              detail: `${auditLogs.length}件の監査ログを確認できます`,
-              ok: auditLogs.length > 0
-            }
-          ].map((item) => (
-            <article className={item.ok ? "is-ok" : "is-alert"} key={item.label}>
-              {item.ok ? <CheckCircle2 size={18} aria-hidden="true" /> : <AlertCircle size={18} aria-hidden="true" />}
+      <summary>管理コンソールを開く</summary>
+      {isAdminMenuOpen && (
+        <>
+          <SecurityNotice />
+          <HealthStatus onChange={setHealthSnapshot} />
+          <SettingsPanel
+            health={healthSnapshot}
+            isAuthenticated
+            usageLogs={usageLogs}
+            currentUser={currentUser}
+            dbLogCount={dbLogCount}
+          />
+          <PermissionNotice role={currentUser?.role} />
+
+          <section className="trial-check-panel" aria-label="運用準備チェック">
+            <div className="section-heading">
               <div>
-                <strong>{item.label}</strong>
-                <p>{item.detail}</p>
+                <p className="eyebrow">Admin Console</p>
+                <h2>運用準備チェック</h2>
+                <p>正式運用に必要な接続、権限、ログの状態を確認します。秘密情報は表示しません。</p>
               </div>
-            </article>
-          ))}
-        </div>
-      </section>
-      <>
-        <p className="admin-menu-category-label">運用管理</p>
-        <details className="advanced-foldout">
-          <summary>運用準備チェックを開く</summary>
-          <AdminOperationReadinessPanel />
-        </details>
-        <details className="advanced-foldout" id="admin-users-panel">
-          <summary>ユーザー管理を開く</summary>
-          <AdminUsersPanel
-            users={managedUsers}
-            onCreateUser={handleCreateUser}
-            onDeleteUser={handleDeleteUser}
-            onToggleUser={handleToggleUser}
-            onTogglePilot={handleTogglePilot}
-            onUpdateUser={handleUpdateUser}
-          />
-        </details>
-        <details className="advanced-foldout" id="admin-pilot-dashboard-panel">
-          <summary>Pilot Dashboardを開く</summary>
-          <AdminPilotDashboardPanel />
-        </details>
-        <details className="advanced-foldout" id="admin-audit-log-panel">
-          <summary>監査ログを開く</summary>
-          <AdminAuditLogPanel logs={auditLogs} />
-        </details>
-        <details className="advanced-foldout">
-          <summary>フィードバック一覧を開く</summary>
-          <AdminFeedbackPanel feedback={feedbackEntries} summary={feedbackSummary} />
-        </details>
-        <p className="admin-menu-category-label">改善分析</p>
-        <details className="advanced-foldout">
-          <summary>改善提案ダッシュボードを開く</summary>
-          <AdminImprovementDashboardPanel />
-        </details>
-        <details className="advanced-foldout">
-          <summary>利用状況ダッシュボードを開く</summary>
-          <AdminUsageDashboardPanel
-            dashboard={usageDashboard}
-            isDownloadingCsv={isDownloadingUsageCsv}
-            onDownloadCsv={() => void handleDownloadUsageCsv()}
-          />
-        </details>
-        <details className="advanced-foldout" id="admin-product-analytics-panel">
-          <summary>Product Analyticsを開く</summary>
-          <AdminProductAnalyticsPanel />
-        </details>
-        <details className="advanced-foldout" id="admin-queue-monitor-panel">
-          <summary>AI Queue Monitorを開く</summary>
-          <QueueMonitor />
-        </details>
-        <details className="advanced-foldout" id="admin-learning-panel">
-          <summary>AI Learning Dashboardを開く</summary>
-          <LearningDashboard />
-        </details>
-        <p className="admin-menu-category-label">AI実験/Prompt管理</p>
-        <details className="advanced-foldout" id="admin-prompt-studio-panel">
-          <summary>Prompt Studioを開く</summary>
-          <PromptStudio />
-        </details>
-        <p className="admin-menu-category-label">外部連携</p>
-        <details className="advanced-foldout" id="admin-integration-panel">
-          <summary>外部連携を開く</summary>
-          <ExternalIntegrationsPanel currentRole={currentUser?.role} showSettings />
-        </details>
-        <p className="admin-menu-category-label">ナレッジ管理</p>
-        <details className="advanced-foldout" id="admin-knowledge-panel">
-          <summary>Knowledge Intelligenceを開く</summary>
-          <AdminKnowledgePanel />
-        </details>
-        <p className="admin-menu-category-label">社内展開・監査</p>
-        <details className="advanced-foldout">
-          <summary>試験導入レポート作成を開く</summary>
-          <AdminTrialReportPanel />
-        </details>
-      </>
-      </>
-    )}
+              <span>管理者向け</span>
+            </div>
+            <div className="trial-check-grid">
+              {readinessItems.map((item) => (
+                <article className={item.ok ? "is-ok" : "is-alert"} key={item.label}>
+                  {item.ok ? <CheckCircle2 size={18} aria-hidden="true" /> : <AlertCircle size={18} aria-hidden="true" />}
+                  <div>
+                    <strong>{item.label}</strong>
+                    <p>{item.detail}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <p className="admin-menu-category-label">運用管理</p>
+          <details className="advanced-foldout">
+            <summary>運用準備チェック</summary>
+            <AdminOperationReadinessPanel />
+          </details>
+          <details className="advanced-foldout" id="admin-users-panel">
+            <summary>ユーザー管理</summary>
+            <AdminUsersPanel
+              users={managedUsers}
+              onCreateUser={handleCreateUser}
+              onDeleteUser={handleDeleteUser}
+              onToggleUser={handleToggleUser}
+              onTogglePilot={handleTogglePilot}
+              onUpdateUser={handleUpdateUser}
+            />
+          </details>
+          <details className="advanced-foldout" id="admin-pilot-dashboard-panel">
+            <summary>Pilot Dashboard</summary>
+            <AdminPilotDashboardPanel />
+          </details>
+          <details className="advanced-foldout" id="admin-audit-log-panel">
+            <summary>監査ログ</summary>
+            <AdminAuditLogPanel logs={auditLogs} />
+          </details>
+          <details className="advanced-foldout">
+            <summary>フィードバック一覧</summary>
+            <AdminFeedbackPanel feedback={feedbackEntries} summary={feedbackSummary} />
+          </details>
+
+          <p className="admin-menu-category-label">改善分析</p>
+          <details className="advanced-foldout">
+            <summary>改善提案ダッシュボード</summary>
+            <AdminImprovementDashboardPanel />
+          </details>
+          <details className="advanced-foldout">
+            <summary>利用状況ダッシュボード</summary>
+            <AdminUsageDashboardPanel
+              dashboard={usageDashboard}
+              isDownloadingCsv={isDownloadingUsageCsv}
+              onDownloadCsv={() => void handleDownloadUsageCsv()}
+            />
+          </details>
+          <details className="advanced-foldout" id="admin-product-analytics-panel">
+            <summary>Product Analytics</summary>
+            <AdminProductAnalyticsPanel />
+          </details>
+          <details className="advanced-foldout" id="admin-queue-monitor-panel">
+            <summary>AI Queue Monitor</summary>
+            <QueueMonitor />
+          </details>
+          <details className="advanced-foldout" id="admin-learning-panel">
+            <summary>AI Learning Dashboard</summary>
+            <LearningDashboard />
+          </details>
+
+          <p className="admin-menu-category-label">AI実験 / Prompt管理</p>
+          <details className="advanced-foldout" id="admin-prompt-studio-panel">
+            <summary>Prompt Studio</summary>
+            <PromptStudio />
+          </details>
+
+          <p className="admin-menu-category-label">外部連携</p>
+          <details className="advanced-foldout" id="admin-integration-panel">
+            <summary>Integration / Dry Run</summary>
+            <ExternalIntegrationsPanel currentRole={currentUser?.role} showSettings />
+          </details>
+
+          <p className="admin-menu-category-label">ナレッジ管理</p>
+          <details className="advanced-foldout" id="admin-knowledge-panel">
+            <summary>Knowledge Intelligence</summary>
+            <AdminKnowledgePanel />
+          </details>
+
+          <p className="admin-menu-category-label">社内展開 / 監査</p>
+          <details className="advanced-foldout">
+            <summary>試験導入レポート</summary>
+            <AdminTrialReportPanel />
+          </details>
+        </>
+      )}
     </details>
   );
 }

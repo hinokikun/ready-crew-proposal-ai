@@ -15,6 +15,19 @@ Version 1.0は、社内利用・限定顧客提供・受託提案支援を想定
 - Organization / Workspace単位でデータを分離
 - admin / manager / member / viewerの権限管理
 - 作成履歴、監査ログ、Beautiful.ai診断、Maintenance Modeを搭載
+- ProposalPilot Design Systemに基づくBtoB SaaS UI
+
+## デザインシステム
+
+Version 28.0から、ProposalPilot / AI営業秘書の画面品質を揃えるためのデザインシステムを追加しています。
+
+- [Design System概要](docs/design-system/README.md)
+- [Design Tokens](docs/design-system/DESIGN_TOKENS.md)
+- [Components](docs/design-system/COMPONENTS.md)
+- [Layout](docs/design-system/LAYOUT.md)
+- [Accessibility](docs/design-system/ACCESSIBILITY.md)
+- [Responsive](docs/design-system/RESPONSIVE.md)
+- [Migration Guide](docs/design-system/MIGRATION_GUIDE.md)
 
 ## 主な機能
 

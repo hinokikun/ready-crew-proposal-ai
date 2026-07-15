@@ -66,21 +66,23 @@ type GuidedFlowProps = {
 
 const steps: GuidedStep[] = [
   { id: 1, shortLabel: "案件入力", title: "案件情報を入力" },
-  { id: 2, shortLabel: "AI作成", title: "AIで提案書を作成" },
+  { id: 2, shortLabel: "AI分析", title: "AIで提案書を作成" },
   { id: 3, shortLabel: "内容確認", title: "提案内容を確認" },
-  { id: 4, shortLabel: "品質確認", title: "提出前チェック" },
+  { id: 4, shortLabel: "提出前チェック", title: "提出前チェック" },
   { id: 5, shortLabel: "出力", title: "出力方法を選択" },
   { id: 6, shortLabel: "改善", title: "AIレビューと改善" },
   { id: 7, shortLabel: "完了", title: "完了" }
 ];
 
 const qualityItems = [
-  "会社名に誤りがない",
-  "金額が正しい",
-  "納期が現実的",
-  "提案内容に不足がない",
-  "AI推測の項目を確認した",
-  "社外提出前に上長確認した"
+  "会社名・担当者名に誤りがない",
+  "金額・見積条件を確認した",
+  "納期・スケジュールを確認した",
+  "AI推測ラベルの項目を確認した",
+  "実績・事例表記を確認した",
+  "法務・契約条件に問題がない",
+  "上司レビュー状態を確認した",
+  "社外提出前に人間が最終確認した"
 ];
 
 function truncate(value: string, max = 150) {
@@ -189,14 +191,15 @@ function GuidedFlowBase(props: GuidedFlowProps) {
 
   const outputDisabled =
     selectedOutput === "beautiful" ? !props.beautifulAiCanCreate || isOutputBusy : !props.canDownloadMainOutputs || isOutputBusy;
+  const currentStepTitle = steps.find((step) => step.id === activeStep)?.title || "案件入力";
 
   return (
-    <section className="guided-flow-shell" aria-label="AIウィザード" data-testid="guided-flow">
+    <section className="guided-flow-shell" aria-label="ProposalPilotかんたん操作フロー" data-testid="guided-flow">
       <div className="guided-top-bar">
         <div>
-          <p className="eyebrow">Simple Guided UI</p>
-          <h2>営業AIオペレーションセンター</h2>
-          <p>次へ進むだけで、提案書作成から提出前チェック、出力まで進められます。</p>
+          <p className="eyebrow">ProposalPilot / AI営業秘書</p>
+          <h2>お客様の案件について教えてください。ProposalPilotが提案づくりをお手伝いします。</h2>
+          <p>案件入力から提案書作成、提出前チェック、PowerPoint・PDF・Beautiful.ai出力まで、画面の案内に沿って進められます。</p>
         </div>
         <div className="guided-context">
           <span>Organization: {props.organizationName || "未設定"}</span>
@@ -212,8 +215,8 @@ function GuidedFlowBase(props: GuidedFlowProps) {
 
       <div className="guided-user-dashboard" aria-label="今日やること">
         <article data-testid={props.showSalesCopilotMarker ? "sales-copilot" : undefined} aria-label="Sales Copilot">
-          <span>Sales Copilot</span>
-          <strong>{props.hasProposal ? "提出前チェックと出力を進めます" : "新しい案件を始めます"}</strong>
+          <span>次にやること</span>
+          <strong>{props.hasProposal ? "提出前チェックと出力を進めましょう" : "新しい提案を作成しましょう"}</strong>
         </article>
         <article>
           <span>作業中の案件</span>
@@ -225,7 +228,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
         </article>
         <article>
           <span>進行中のステップ</span>
-          <strong>{steps.find((step) => step.id === activeStep)?.title}</strong>
+          <strong>{currentStepTitle}</strong>
         </article>
       </div>
 
@@ -238,7 +241,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
             <div>
               <p className="eyebrow">STEP 1</p>
               <h2>案件情報を貼り付けてください</h2>
-              <p>案件メール、議事録、ヒアリングメモをそのまま貼り付けられます。</p>
+              <p>案件メール、議事録、ヒアリングメモをそのまま貼り付けられます。実顧客の機密情報、パスワード、APIキーは入力しないでください。</p>
             </div>
           </div>
           <label className="field guided-source-field" htmlFor="guided-source-text">
@@ -250,7 +253,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
                 props.onSourceTextChange(event.target.value);
                 setLocalNotice("");
               }}
-              placeholder="Ready Crewの案件メール、議事録、ヒアリングメモをそのまま貼り付けてください"
+              placeholder="例: 株式会社サンプルがコーポレートサイトのリニューアルを検討しています。目的は問い合わせ増加と採用強化です。"
               rows={8}
               value={props.sourceText}
             />
@@ -276,7 +279,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
             <div>
               <p className="eyebrow">STEP 2</p>
               <h2>AIが提案書を作成しています</h2>
-              <p>内部ではAI社員が順番に確認します。通常モードでは作業工程だけを表示します。</p>
+              <p>案件整理、提案作成、品質確認、スケジュール確認、最終確認の順に進みます。時間がかかる場合も画面を閉じずにお待ちください。</p>
             </div>
           </div>
           <div className="guided-progress-list" aria-live="polite">
@@ -292,7 +295,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
             <summary>AI Workspaceの詳細を見る</summary>
             {props.panels.workspaceProgress}
           </details>
-          <StepFooter backLabel="案件入力へ戻る" disabled={!props.hasProposal} helpText={props.hasProposal ? "作成が完了しました" : "作成完了後に自動で次へ進めます"} onBack={() => setActiveStep(1)} onNext={() => setActiveStep(3)} primaryLabel="内容を確認する" />
+          <StepFooter backLabel="案件入力へ戻る" disabled={!props.hasProposal} helpText={props.hasProposal ? "作成が完了しました" : "作成完了後に次へ進めます"} onBack={() => setActiveStep(1)} onNext={() => setActiveStep(3)} primaryLabel="内容を確認する" />
         </article>
       )}
 
@@ -302,7 +305,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
             <div>
               <p className="eyebrow">STEP 3</p>
               <h2>提案内容を確認してください</h2>
-              <p>必要な情報だけを先に確認します。詳しい本文は詳細から見られます。</p>
+              <p>案件概要、課題、提案方針、スケジュール、見積概要、注意事項を確認します。AI推測の項目は提出前に人が確認してください。</p>
             </div>
           </div>
           <div className="guided-summary-grid">
@@ -314,12 +317,12 @@ function GuidedFlowBase(props: GuidedFlowProps) {
               </article>
             ))}
           </div>
-          <p className="guided-next-hint">次に、提出前チェックへ進んで内容を人が確認してください。</p>
+          <p className="guided-next-hint">次は提出前チェックです。会社名、金額、納期、AI推測項目を人の目で確認してください。</p>
           <details className="guided-detail-foldout">
             <summary>詳細を見る</summary>
-            <p>提案書本文や過去の詳細パネルは詳細モードで確認できます。通常モードでは次の操作だけを表示します。</p>
+            <p>提案書本文や詳細パネルは詳細モードで確認できます。通常モードでは、次に必要な操作だけを表示します。</p>
           </details>
-          <StepFooter backLabel="作成状況へ戻る" disabled={!props.hasProposal} onBack={() => setActiveStep(2)} onNext={() => setActiveStep(4)} primaryLabel="内容を確認しました。品質確認へ進む" />
+          <StepFooter backLabel="作成状況へ戻る" disabled={!props.hasProposal} onBack={() => setActiveStep(2)} onNext={() => setActiveStep(4)} primaryLabel="内容を確認しました。提出前チェックへ進む" />
         </article>
       )}
 
@@ -329,7 +332,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
             <div>
               <p className="eyebrow">STEP 4</p>
               <h2>提出前に内容を確認してください</h2>
-              <p>以下を確認し、問題がなければチェックしてください。</p>
+              <p>以下を確認し、問題がなければチェックしてください。完了するまで主要ダウンロードは利用できません。</p>
             </div>
             <span>{props.qualityGateComplete ? "完了" : uncheckedCount < qualityItems.length ? "確認中" : "未確認"}</span>
           </div>
@@ -376,7 +379,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
             <div>
               <p className="eyebrow">STEP 5</p>
               <h2>提案書を出力する</h2>
-              <p>最初は要約PowerPointをおすすめします。その他の形式も選べます。</p>
+              <p>用途に合わせて出力方法を選んでください。Beautiful.aiが使えない場合は、理由をこの画面で確認できます。</p>
             </div>
           </div>
           <div className="guided-output-grid">
@@ -429,13 +432,13 @@ function GuidedFlowBase(props: GuidedFlowProps) {
             <div>
               <p className="eyebrow">STEP 6</p>
               <h2>AIレビューと改善</h2>
-              <p>AIが提案書を確認します。スコアや内部根拠は折りたたみ内で確認できます。</p>
+              <p>AIが提案書を確認し、良い点、修正した方がよい点、おすすめ改善を整理します。最終判断は必ず人が行ってください。</p>
             </div>
           </div>
           <div className="guided-improvement-intro">
             <article><strong>良い点</strong><p>提案方針と構成を確認します。</p></article>
             <article><strong>修正した方がよい点</strong><p>ROI、競合比較、導入計画などを確認します。</p></article>
-            <article><strong>おすすめ改善TOP5</strong><p>AIによる推定です。最終判断は人が確認してください。</p></article>
+            <article><strong>おすすめ改善TOP5</strong><p>AIによる推定です。採用前に人が確認してください。</p></article>
           </div>
           <details className="guided-detail-foldout" open>
             <summary>AIレビューと改善を開く</summary>
@@ -449,12 +452,12 @@ function GuidedFlowBase(props: GuidedFlowProps) {
       )}
 
       {activeStep === 7 && (
-        <article className="guided-step-card">
+        <article className="guided-step-card guided-completion-step">
           <div className="section-heading">
             <div>
               <p className="eyebrow">STEP 7</p>
-              <h2>完了</h2>
-              <p>作成した提案書と確認状態をまとめます。</p>
+              <h2>提案準備が完了しました</h2>
+              <p>作成した提案書、出力状況、Beautiful.aiリンク、最終確認状態をまとめています。</p>
             </div>
           </div>
           <div className="guided-completion-grid">
@@ -465,7 +468,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
           </div>
           <StepFooter backLabel="改善へ戻る" onBack={() => setActiveStep(6)} onNext={props.onNewCase} primaryLabel="この案件を完了する" />
           <div className="guided-aux-actions">
-            <button className="secondary-button" onClick={props.onNewCase} type="button">最初から新しい案件を作る</button>
+            <button className="secondary-button" onClick={props.onNewCase} type="button">新しい案件を作る</button>
             <button className="secondary-button" onClick={props.onOpenCrm} type="button">CRMで案件を見る</button>
             <button className="text-button" onClick={() => setActiveStep(6)} type="button">改訂版を作る</button>
           </div>

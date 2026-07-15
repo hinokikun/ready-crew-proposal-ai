@@ -34,19 +34,22 @@ export const RealOperationsDashboard = memo(function RealOperationsDashboard(pro
   const hasAnyData = props.projects.length > 0 || props.history.length > 0 || props.usageLogs.length > 0;
 
   return (
-    <section className="real-operations-dashboard" data-testid="operations-dashboard" id="real-operations-dashboard" aria-label="営業AIオペレーションセンター">
+    <section className="real-operations-dashboard" data-testid="operations-dashboard" id="real-operations-dashboard" aria-label="ProposalPilotホーム">
       <div className="operations-dashboard-header">
         <div>
-          <p className="eyebrow">Real Operations Dashboard</p>
-          <h2>営業AIオペレーションセンター</h2>
-          <p>今日見るべき案件、レビュー、品質ゲート、AI稼働状況を一つにまとめました。</p>
-          <p className="dashboard-note">推定・デモ表示の値はラベルで区別しています。</p>
+          <p className="eyebrow">ProposalPilot</p>
+          <h2>お客様の案件について教えてください。ProposalPilotが提案づくりをお手伝いします。</h2>
+          <p>今日やること、作業中の案件、最近作成した提案書をひとつの画面で確認できます。</p>
+          <p className="dashboard-note">KPIには推定値を含みます。詳細な分析や管理機能は、管理者メニューまたは詳細モードで確認できます。</p>
         </div>
       </div>
 
       {!hasAnyData && (
         <div className="operations-empty-state">
-          <p>まだ案件がありません。案件メールを貼り付けて開始してください。</p>
+          <p>まだ案件がありません。案件メールや議事録を貼り付けて、新しい提案を作成してください。</p>
+          <button className="primary-button" onClick={props.onFocusNewCase} type="button">
+            新しい提案を作成
+          </button>
         </div>
       )}
 
@@ -105,16 +108,16 @@ function buildOperationsDashboard(input: RealOperationsDashboardProps): Operatio
   const executiveMetrics: ExecutiveMetric[] = hasAnyData
     ? [
         { label: "今日の案件数", value: `${todayProjects.length}件`, note: "本日更新された案件", tone: todayProjects.length ? "success" : "normal" },
-        { label: "レビュー待ち", value: `${reviewWaiting.length}件`, note: reviewWaiting.length ? "上司確認が必要" : "レビュー待ちの案件はありません", tone: reviewWaiting.length ? "warning" : "success" },
-        { label: "品質ゲート待ち", value: `${qualityGateWaiting}件`, note: qualityGateWaiting ? "提出前確認が必要" : "品質ゲート待ちはありません", tone: qualityGateWaiting ? "warning" : "success" },
-        { label: "停滞案件", value: `${stagnant.length}件`, note: stagnant.length ? "7日以上更新なし" : "停滞案件はありません", tone: stagnant.length ? "danger" : "success" },
-        { label: "期限超過", value: `${overdue.length}件`, note: overdue.length ? "至急確認候補" : "期限超過はありません", tone: overdue.length ? "danger" : "success" },
-        { label: "受注率", value: `${Number.isFinite(winRate) ? winRate : 0}%`, note: won + lost > 0 ? "受注/失注から算出" : "受注確率平均", tone: "normal" },
-        { label: "今週作成した提案数", value: `${weeklyProposals}件`, note: "履歴または利用ログから算出", tone: weeklyProposals ? "success" : "normal" },
-        { label: "AI稼働率", value: `${aiUtilization}%`, note: "成功利用 / 総利用", tone: aiUtilization >= 80 ? "success" : aiUtilization >= 50 ? "warning" : "normal" }
+        { label: "レビュー待ち", value: `${reviewWaiting.length}件`, note: reviewWaiting.length ? "上司確認が必要です" : "レビュー待ちはありません", tone: reviewWaiting.length ? "warning" : "success" },
+        { label: "提出前チェック待ち", value: `${qualityGateWaiting}件`, note: qualityGateWaiting ? "出力前の確認が必要です" : "チェック待ちはありません", tone: qualityGateWaiting ? "warning" : "success" },
+        { label: "停滞案件", value: `${stagnant.length}件`, note: stagnant.length ? "7日以上更新がありません" : "停滞案件はありません", tone: stagnant.length ? "danger" : "success" },
+        { label: "期限超過", value: `${overdue.length}件`, note: overdue.length ? "早めの確認が必要です" : "期限超過はありません", tone: overdue.length ? "danger" : "success" },
+        { label: "受注率", value: `${Number.isFinite(winRate) ? winRate : 0}%`, note: won + lost > 0 ? "受注/失注から計算" : "受注確率の平均", tone: "normal" },
+        { label: "今週の提案数", value: `${weeklyProposals}件`, note: "作成履歴または利用ログから計算", tone: weeklyProposals ? "success" : "normal" },
+        { label: "AI稼働率", value: `${aiUtilization}%`, note: "成功したAI処理の割合", tone: aiUtilization >= 80 ? "success" : aiUtilization >= 50 ? "warning" : "normal" }
       ]
     : [
-        { label: "案件なし", value: "開始前", note: "案件メールを貼り付けると表示されます", tone: "normal" },
+        { label: "案件", value: "未作成", note: "案件情報を貼り付けると表示されます", tone: "normal" },
         { label: "レビュー", value: "待ちなし", note: "レビュー待ちの案件はありません", tone: "success" },
         { label: "通知", value: "対応なし", note: "現在、対応が必要な通知はありません", tone: "success" },
         { label: "Analytics", value: "蓄積前", note: "利用データが蓄積されると表示されます", tone: "normal" }
@@ -124,13 +127,13 @@ function buildOperationsDashboard(input: RealOperationsDashboardProps): Operatio
   const activities = buildActivities(input).slice(0, 20);
   const kpiMetrics = buildKpiMetrics(input, winRate, aiUtilization, reviewWaiting.length, hasAnyData);
   const quickActions: QuickAction[] = [
-    { label: "＋新規案件", target: "new-case" },
-    { label: "＋案件検索", target: "operations-search" },
-    { label: "＋レビュー", target: "review-menu-panel" },
-    { label: "＋CRM", target: "dashboard-panel" },
-    { label: "＋Knowledge", target: "admin-knowledge-panel", adminOnly: true },
-    { label: "＋Analytics", target: "admin-product-analytics-panel", adminOnly: true },
-    { label: "＋Prompt Studio", target: "admin-prompt-studio-panel", adminOnly: true }
+    { label: "新規案件", target: "new-case" },
+    { label: "案件検索", target: "operations-search" },
+    { label: "レビュー", target: "review-menu-panel" },
+    { label: "CRM", target: "dashboard-panel" },
+    { label: "Knowledge", target: "admin-knowledge-panel", adminOnly: true },
+    { label: "Analytics", target: "admin-product-analytics-panel", adminOnly: true },
+    { label: "Prompt Studio", target: "admin-prompt-studio-panel", adminOnly: true }
   ];
 
   return { executiveMetrics, actionItems, activities, kpiMetrics, quickActions };
@@ -154,8 +157,8 @@ function buildActionItems(reviewWaiting: number, qualityGateWaiting: number, sta
       id: "quality-gate",
       priority: "high",
       stars: "★★★★☆",
-      title: "品質ゲートが未完了です",
-      detail: "提出前チェックを完了すると、PPT/PDFの確認に進めます。",
+      title: "提出前チェックが未完了です",
+      detail: "提出前チェックを完了すると、PPTX/PDFの確認へ進めます。",
       actionLabel: "確認する",
       targetPanelId: "result-sales-panel"
     });
@@ -166,7 +169,7 @@ function buildActionItems(reviewWaiting: number, qualityGateWaiting: number, sta
       priority: "high",
       stars: "★★★★☆",
       title: "期限超過の可能性があります",
-      detail: `${overdue}件の案件で期限・至急対応の記載があります。`,
+      detail: `${overdue}件の案件で期限や至急対応の記録があります。`,
       actionLabel: "案件を見る",
       targetPanelId: "dashboard-panel"
     });
@@ -186,9 +189,9 @@ function buildActionItems(reviewWaiting: number, qualityGateWaiting: number, sta
     actions.push({
       id: "new-proposal",
       priority: "low",
-      stars: "★★☆☆☆",
-      title: "案件メールを貼り付けて開始できます",
-      detail: "案件メールを貼ると、AI Workspaceが自動で整理します。",
+      stars: "★★★☆☆",
+      title: "案件情報を貼り付けて開始できます",
+      detail: "案件メールや議事録を貼り付けると、AI Workspaceが提案づくりを支援します。",
       actionLabel: "入力する",
       targetPanelId: "new-case"
     });
@@ -227,7 +230,7 @@ function buildKpiMetrics(input: OperationsDashboardInput, winRate: number, aiUti
       { label: "受注率", value: "-", note: "案件が登録されると表示されます" },
       { label: "平均提案時間", value: "-", note: "提案作成後に確認できます" },
       { label: "レビュー回数", value: "-", note: "レビュー依頼後に表示されます" },
-      { label: "品質ゲート通過率", value: "-", note: "提出前確認後に表示されます" }
+      { label: "提出前チェック通過率", value: "-", note: "提出前チェック後に表示されます" }
     ];
   }
   const totalUsage = input.usageDashboard?.summary.total_usage ?? input.usageLogs.length;
@@ -239,12 +242,12 @@ function buildKpiMetrics(input: OperationsDashboardInput, winRate: number, aiUti
     : 0;
   return [
     { label: "受注率", value: `${Number.isFinite(winRate) ? winRate : 0}%`, note: "CRM登録値から推定" },
-    { label: "平均提案時間", value: proposalCount ? "20〜30分" : "-", note: "デモ表示。実測Analytics蓄積後に更新" },
+    { label: "平均提案時間", value: proposalCount ? "20〜40分" : "-", note: "実測Analytics蓄積後に更新" },
     { label: "レビュー回数", value: `${reviewCount}件`, note: "レビュー待ちを含む" },
-    { label: "品質ゲート通過率", value: `${qualityGatePassRate}%`, note: "現在の提案書状態" },
-    { label: "AI自律率", value: `${aiUtilization}%`, note: "成功利用率から算出" },
+    { label: "提出前チェック通過率", value: `${qualityGatePassRate}%`, note: "現在の提案書状態" },
+    { label: "AI自律率", value: `${aiUtilization}%`, note: "成功したAI処理の割合" },
     { label: "人間介入率", value: `${Math.max(0, 100 - aiUtilization)}%`, note: "エラー・確認対応の目安" },
-    { label: "Learning改善採用率", value: `${learningAdoptionRate}%`, note: "フィードバック肯定率から推定" },
+    { label: "Learning改善採用率", value: `${learningAdoptionRate}%`, note: "フィードバック集計から推定" },
     { label: "総AI処理", value: `${totalUsage}件`, note: "利用ログ集計" }
   ];
 }
@@ -261,7 +264,7 @@ function formatAuditTitle(value: string) {
   if (!value) return "操作ログ";
   if (/login/i.test(value)) return "ログイン確認";
   if (/review/i.test(value)) return "レビュー処理";
-  if (/quality/i.test(value)) return "品質ゲート処理";
+  if (/quality/i.test(value)) return "提出前チェック処理";
   if (/release/i.test(value)) return "リリース確認";
   return value.replace(/_/g, " ");
 }

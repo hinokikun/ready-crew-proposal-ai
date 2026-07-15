@@ -260,6 +260,80 @@
   box-shadow: 0 20px 36px rgba(44, 37, 30, 0.12);
 }
 
+/* Version 28 ProposalPilot dashboard polish */
+.real-operations-dashboard {
+  max-width: 1180px;
+  border-color: rgba(21, 94, 239, 0.12);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at top right, rgba(21, 94, 239, 0.12), transparent 26rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+  box-shadow: var(--shadow-sm);
+}
+
+.operations-dashboard-header h2 {
+  color: var(--pp-color-navy-900);
+  font-size: clamp(24px, 3vw, 34px);
+  max-width: 780px;
+}
+
+.operations-dashboard-header p:not(.eyebrow) {
+  max-width: 760px;
+}
+
+.operations-empty-state {
+  align-items: center;
+  border: 1px solid rgba(21, 94, 239, 0.12);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #ffffff, #f5f9ff);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 18px;
+}
+
+.operations-empty-state p {
+  color: var(--pp-color-navy-900);
+  font-weight: 800;
+  margin: 0;
+}
+
+.operations-shortcut-button {
+  min-height: 40px;
+  border-color: rgba(21, 94, 239, 0.16);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--pp-color-navy-900);
+}
+
+.operations-shortcut-button:hover:not(:disabled) {
+  border-color: rgba(21, 94, 239, 0.38);
+  box-shadow: var(--shadow-xs);
+  color: var(--primary);
+}
+
+.operations-search-panel label {
+  border-color: rgba(21, 94, 239, 0.14);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.operations-dashboard-main,
+.operations-primary-column {
+  gap: 14px;
+}
+
+.dashboard-card,
+.operations-action-item,
+.operations-activity-feed,
+.operations-kpi-card {
+  border-color: rgba(21, 94, 239, 0.1);
+  background: #ffffff;
+  box-shadow: var(--shadow-xs);
+}
+
 .operations-search-results button {
   display: grid;
   gap: 3px;
