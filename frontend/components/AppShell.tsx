@@ -662,6 +662,13 @@ export default function Home() {
         note: isBeautifulAiMock ? "モックモードです。" : "実APIモードです。"
       },
       {
+        label: "API Mode",
+        value: beautifulAiStatus?.api_mode || beautifulAiHealthProbe?.beautifulAiApiMode || "unknown",
+        pass: true,
+        required: false,
+        note: (beautifulAiStatus?.api_mode || beautifulAiHealthProbe?.beautifulAiApiMode) === "structured" ? "Structured APIを使用します。" : "Prompt APIを使用します。"
+      },
+      {
         label: "Maintenance",
         value: isMaintenanceMode ? "true" : "false",
         pass: !isMaintenanceMode,
@@ -678,6 +685,8 @@ export default function Home() {
     ],
     [
       beautifulAiStatus?.message,
+      beautifulAiStatus?.api_mode,
+      beautifulAiHealthProbe?.beautifulAiApiMode,
       beautifulAiStatusProbe?.httpStatus,
       beautifulAiUnavailableMessage,
       beautifulAiQualityGate?.bypassed,

@@ -7,6 +7,8 @@ export type BeautifulAiStatus = {
   enabled: boolean;
   configured: boolean;
   mock: boolean;
+  api_mode?: string;
+  resolved_endpoint?: string;
   api_reachable?: boolean;
   route_found?: boolean;
   backend_version?: string;
@@ -35,6 +37,8 @@ export type BackendHealthProbe = {
   beautifulAiRouteRegistered: boolean | null;
   beautifulAiEnabled: boolean | null;
   beautifulAiMock: boolean | null;
+  beautifulAiApiMode: string;
+  beautifulAiResolvedEndpoint: string;
   message: string;
   checkedAt: string;
 };
@@ -131,6 +135,8 @@ export async function getBackendHealthProbe(): Promise<BackendHealthProbe> {
         beautifulAiRouteRegistered: null,
         beautifulAiEnabled: null,
         beautifulAiMock: null,
+        beautifulAiApiMode: "",
+        beautifulAiResolvedEndpoint: "",
         message: `Render /health が status=${response.status} を返しました。`,
         checkedAt
       };
@@ -139,7 +145,7 @@ export async function getBackendHealthProbe(): Promise<BackendHealthProbe> {
       app_version?: string;
       git?: { commit?: string; commit_short?: string; branch?: string };
       routes?: { beautiful_ai_status_registered?: boolean };
-      beautiful_ai?: { enabled?: boolean; mock?: boolean; route_registered?: boolean };
+      beautiful_ai?: { enabled?: boolean; mock?: boolean; route_registered?: boolean; api_mode?: string; resolved_endpoint?: string };
     };
     const routeRegistered = body.beautiful_ai?.route_registered ?? body.routes?.beautiful_ai_status_registered ?? null;
     return {
@@ -152,6 +158,8 @@ export async function getBackendHealthProbe(): Promise<BackendHealthProbe> {
       beautifulAiRouteRegistered: routeRegistered,
       beautifulAiEnabled: body.beautiful_ai?.enabled ?? null,
       beautifulAiMock: body.beautiful_ai?.mock ?? null,
+      beautifulAiApiMode: body.beautiful_ai?.api_mode || "",
+      beautifulAiResolvedEndpoint: body.beautiful_ai?.resolved_endpoint || "",
       message: "Render /health に接続できました。",
       checkedAt
     };
@@ -166,6 +174,8 @@ export async function getBackendHealthProbe(): Promise<BackendHealthProbe> {
       beautifulAiRouteRegistered: null,
       beautifulAiEnabled: null,
       beautifulAiMock: null,
+      beautifulAiApiMode: "",
+      beautifulAiResolvedEndpoint: "",
       message: "Render /health へ接続できません。Backend URLまたはRenderの起動状態を確認してください。",
       checkedAt
     };

@@ -69,6 +69,8 @@ def test_beautiful_ai_status_disabled(client: TestClient, admin_headers: dict[st
     assert body["enabled"] is False
     assert body["api_reachable"] is True
     assert body["route_found"] is True
+    assert body["api_mode"] == "prompt"
+    assert body["resolved_endpoint"].endswith("/generatePresentation")
     assert "backend_version" in body
     assert "last_success_at" in body
     assert "last_error_type" in body
@@ -152,7 +154,7 @@ def test_beautiful_ai_member_can_create_with_real_api_mode(
         tmp_path,
         BEAUTIFUL_AI_ENABLED="true",
         BEAUTIFUL_AI_MOCK="false",
-        BEAUTIFUL_AI_API_KEY="test-beautiful-key",
+        BEAUTIFUL_AI_API_KEY="dummy-beautiful-ai-key",
     ) as client:
         service = importlib.import_module("app.services.beautiful_ai_service")
 
@@ -254,7 +256,7 @@ def test_beautiful_ai_safe_error_mapping(
         tmp_path,
         BEAUTIFUL_AI_ENABLED="true",
         BEAUTIFUL_AI_MOCK="false",
-        BEAUTIFUL_AI_API_KEY="test-beautiful-key",
+        BEAUTIFUL_AI_API_KEY="dummy-beautiful-ai-key",
     ) as client:
         service = importlib.import_module("app.services.beautiful_ai_service")
 
@@ -306,6 +308,8 @@ def test_beautiful_ai_payload_uses_sections_content_and_blocks(sample_pptx_paylo
     payload = mapper.map_to_beautiful_ai_payload(request).dict()
 
     assert payload["title"]
+    assert "日本語" in payload["prompt"]
+    assert "入力されていない数値" in payload["prompt"]
     assert payload["content"].startswith("#")
     assert payload["sections"]
     assert payload["sections"][0]["content"]["blocks"][0]["type"] == "paragraph"
@@ -334,6 +338,117 @@ def test_beautiful_ai_clean_payload_removes_empty_optional_fields() -> None:
     assert payload["slides"][0]["blocks"][0]["content"] == "Slide"
 
 
+def test_beautiful_ai_prompt_api_resolves_official_url() -> None:
+    service = importlib.import_module("app.services.beautiful_ai_service")
+    original_base = service.settings.beautiful_ai_base_url
+    original_mode = service.settings.beautiful_ai_api_mode
+    try:
+        object.__setattr__(service.settings, "beautiful_ai_base_url", "https://www.beautiful.ai/api/v1/")
+        object.__setattr__(service.settings, "beautiful_ai_api_mode", "prompt")
+        assert service._endpoint() == "https://beautiful.ai/api/v1/generatePresentation"
+    finally:
+        object.__setattr__(service.settings, "beautiful_ai_base_url", original_base)
+        object.__setattr__(service.settings, "beautiful_ai_api_mode", original_mode)
+
+
+def test_beautiful_ai_structured_mode_uses_create_presentation() -> None:
+    service = importlib.import_module("app.services.beautiful_ai_service")
+    original_base = service.settings.beautiful_ai_base_url
+    original_mode = service.settings.beautiful_ai_api_mode
+    try:
+        object.__setattr__(service.settings, "beautiful_ai_base_url", "https://beautiful.ai/api/v1/createPresentation")
+        object.__setattr__(service.settings, "beautiful_ai_api_mode", "structured")
+        assert service._endpoint() == "https://beautiful.ai/api/v1/createPresentation"
+    finally:
+        object.__setattr__(service.settings, "beautiful_ai_base_url", original_base)
+        object.__setattr__(service.settings, "beautiful_ai_api_mode", original_mode)
+
+
+def test_beautiful_ai_prompt_request_uses_only_prompt_and_theme() -> None:
+    service = importlib.import_module("app.services.beautiful_ai_service")
+    original_mode = service.settings.beautiful_ai_api_mode
+    try:
+        object.__setattr__(service.settings, "beautiful_ai_api_mode", "prompt")
+        payload = service._api_request_payload(
+            {
+                "prompt": "Create a proposal deck",
+                "themeId": "minimal",
+                "workspaceId": "workspace-ignored",
+                "slides": [{"title": "Ignored"}],
+            }
+        )
+        assert payload == {"prompt": "Create a proposal deck", "themeId": "minimal"}
+    finally:
+        object.__setattr__(service.settings, "beautiful_ai_api_mode", original_mode)
+
+
+def test_beautiful_ai_prompt_request_omits_empty_theme() -> None:
+    service = importlib.import_module("app.services.beautiful_ai_service")
+    original_mode = service.settings.beautiful_ai_api_mode
+    try:
+        object.__setattr__(service.settings, "beautiful_ai_api_mode", "prompt")
+        payload = service._api_request_payload({"prompt": "Create a proposal deck", "themeId": ""})
+        assert payload == {"prompt": "Create a proposal deck"}
+    finally:
+        object.__setattr__(service.settings, "beautiful_ai_api_mode", original_mode)
+
+
+def test_beautiful_ai_prompt_request_requires_prompt() -> None:
+    service = importlib.import_module("app.services.beautiful_ai_service")
+    original_mode = service.settings.beautiful_ai_api_mode
+    try:
+        object.__setattr__(service.settings, "beautiful_ai_api_mode", "prompt")
+        with pytest.raises(service.BeautifulAiServiceError) as exc_info:
+            service._api_request_payload({"slides": [{"title": "Missing prompt"}]})
+    finally:
+        object.__setattr__(service.settings, "beautiful_ai_api_mode", original_mode)
+    assert exc_info.value.error_type == "beautiful_ai_prompt_required"
+
+
+@pytest.mark.anyio
+async def test_beautiful_ai_post_payload_sends_bearer_prompt_payload(monkeypatch: pytest.MonkeyPatch) -> None:
+    service = importlib.import_module("app.services.beautiful_ai_service")
+    captured: dict[str, Any] = {}
+    original_key = service.settings.beautiful_ai_api_key
+    original_mode = service.settings.beautiful_ai_api_mode
+
+    class FakeResponse:
+        status_code = 200
+        headers = {"Content-Type": "application/json"}
+        text = '{"presentationId":"prompt-created"}'
+
+        def json(self) -> dict[str, Any]:
+            return {"presentationId": "prompt-created", "status": "created"}
+
+    class FakeClient:
+        def __init__(self, *_: Any, **__: Any) -> None:
+            pass
+
+        async def __aenter__(self) -> "FakeClient":
+            return self
+
+        async def __aexit__(self, *_: Any) -> None:
+            return None
+
+        async def post(self, *_: Any, **kwargs: Any) -> FakeResponse:
+            captured["headers"] = kwargs["headers"]
+            captured["json"] = kwargs["json"]
+            return FakeResponse()
+
+    monkeypatch.setattr(service.httpx, "AsyncClient", FakeClient)
+    try:
+        object.__setattr__(service.settings, "beautiful_ai_api_key", "dummy-beautiful-ai-key")
+        object.__setattr__(service.settings, "beautiful_ai_api_mode", "prompt")
+        result = await service._post_payload({"prompt": "Create a proposal deck", "themeId": ""})
+    finally:
+        object.__setattr__(service.settings, "beautiful_ai_api_key", original_key)
+        object.__setattr__(service.settings, "beautiful_ai_api_mode", original_mode)
+
+    assert result["presentationId"] == "prompt-created"
+    assert captured["headers"]["Authorization"] == "Bearer dummy-beautiful-ai-key"
+    assert captured["json"] == {"prompt": "Create a proposal deck"}
+
+
 @pytest.mark.anyio
 @pytest.mark.parametrize(
     ("external_status", "expected_error_type", "expected_service_status"),
@@ -358,7 +473,7 @@ async def test_beautiful_ai_post_payload_maps_external_status(
 
     class FakeResponse:
         status_code = external_status
-        headers = {"Retry-After": "30"} if external_status == 429 else {}
+        headers = {"Retry-After": "30", "Content-Type": "application/json"} if external_status == 429 else {"Content-Type": "application/json"}
         text = '{"error":"validation failed"}'
 
         def json(self) -> dict[str, Any]:
@@ -380,7 +495,7 @@ async def test_beautiful_ai_post_payload_maps_external_status(
     monkeypatch.setattr(service.httpx, "AsyncClient", FakeClient)
 
     with pytest.raises(service.BeautifulAiServiceError) as exc_info:
-        await service._post_payload({"slides": []})
+        await service._post_payload({"prompt": "Create a proposal deck"})
 
     assert exc_info.value.error_type == expected_error_type
     assert exc_info.value.status_code == expected_service_status
@@ -393,13 +508,13 @@ def test_beautiful_ai_api_key_is_not_returned_or_stored(
     tmp_path: Path,
     sample_pptx_payload: dict[str, Any],
 ) -> None:
-    secret = "sk-beautiful-secret"
+    api_key_placeholder = "dummy-beautiful-ai-secret"
     with _client_with_env(
         monkeypatch,
         tmp_path,
         BEAUTIFUL_AI_ENABLED="true",
         BEAUTIFUL_AI_MOCK="true",
-        BEAUTIFUL_AI_API_KEY=secret,
+        BEAUTIFUL_AI_API_KEY="dummy-beautiful-ai-secret",
     ) as client:
         headers = _login(client)
         project_id = "secret-safety-project"
@@ -409,5 +524,5 @@ def test_beautiful_ai_api_key_is_not_returned_or_stored(
         audit_response = client.get("/api/logs/audit", headers=headers)
         combined = f"{create_response.text}\n{list_response.text}\n{audit_response.text}".lower()
         assert create_response.status_code == 200
-        assert secret.lower() not in combined
+        assert api_key_placeholder.lower() not in combined
         assert "authorization" not in combined

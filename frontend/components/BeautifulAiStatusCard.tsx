@@ -21,6 +21,9 @@ export function BeautifulAiStatusCard({ statusProbe, healthProbe, onRefresh }: B
         : "FrontendとBackendのコミット比較は未確認です。";
   const enabled = Boolean(statusProbe?.status?.enabled);
   const mock = Boolean(statusProbe?.status?.mock ?? healthProbe?.beautifulAiMock);
+  const apiMode = statusProbe?.status?.api_mode || healthProbe?.beautifulAiApiMode || "";
+  const apiModeLabel = apiMode === "structured" ? "Structured API" : apiMode === "prompt" ? "Prompt API" : "未確認";
+  const resolvedEndpoint = statusProbe?.status?.resolved_endpoint || healthProbe?.beautifulAiResolvedEndpoint || "未確認";
 
   return (
     <section className="beautiful-ai-status-card" data-testid="beautiful-ai-status-card" aria-label="Beautiful.ai接続確認">
@@ -38,6 +41,7 @@ export function BeautifulAiStatusCard({ statusProbe, healthProbe, onRefresh }: B
       <div className="beautiful-ai-status-grid">
         <StatusItem label="Enabled" ok={enabled} value={enabled ? "有効" : "無効"} />
         <StatusItem label="Mock" ok={mock} value={mock ? "ON" : "OFF"} neutral={!mock} />
+        <StatusItem label="API mode" ok={apiMode === "prompt"} value={apiModeLabel} neutral={apiMode === "structured"} />
         <StatusItem label="API reachable" ok={Boolean(statusProbe?.apiReachable)} value={statusProbe?.apiReachable ? "到達" : "要確認"} />
         <StatusItem label="Route found" ok={Boolean(routeFound)} value={routeFound ? "検出" : "未検出"} />
       </div>
@@ -54,6 +58,10 @@ export function BeautifulAiStatusCard({ statusProbe, healthProbe, onRefresh }: B
         <div>
           <span>Build Time</span>
           <strong>{FRONTEND_BUILD_INFO.buildTime || "未設定"}</strong>
+        </div>
+        <div>
+          <span>Beautiful.ai endpoint</span>
+          <strong>{resolvedEndpoint}</strong>
         </div>
         <div>
           <span>Last Beautiful.ai result</span>

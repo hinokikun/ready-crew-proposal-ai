@@ -6,6 +6,7 @@ from app.config import settings
 from app.db import get_db_health
 from app.deployment_info import get_git_metadata
 from app.observability import utc_timestamp
+from app.services.beautiful_ai_service import _api_mode, _endpoint
 
 
 def build_health_payload(app: FastAPI) -> dict[str, Any]:
@@ -34,6 +35,8 @@ def build_health_payload(app: FastAPI) -> dict[str, Any]:
             "enabled": bool(settings.beautiful_ai_enabled),
             "configured": bool(settings.beautiful_ai_api_key or settings.beautiful_ai_mock),
             "mock": bool(settings.beautiful_ai_mock),
+            "api_mode": _api_mode(),
+            "resolved_endpoint": _endpoint(),
             "route_registered": beautiful_ai_status_route_registered,
         },
         "auth_configured": auth_configured,

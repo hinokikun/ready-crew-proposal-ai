@@ -378,6 +378,9 @@ test("Beautiful.ai Status Cardは管理者の詳細モードでEnabledとMockを
   await expect(card.getByText("有効")).toBeVisible();
   await expect(card.getByText("Mock")).toBeVisible();
   await expect(card.getByText("ON", { exact: true })).toBeVisible();
+  await expect(card.getByText("API mode")).toBeVisible();
+  await expect(card.getByText("Prompt API")).toBeVisible();
+  await expect(card.getByText("https://beautiful.ai/api/v1/generatePresentation")).toBeVisible();
   await expect(card.getByText("API reachable")).toBeVisible();
   await expect(card.getByText("到達")).toBeVisible();
   await expect(card.getByText("Route found")).toBeVisible();
@@ -624,6 +627,8 @@ async function mockApi(page: Page, options: MockOptions = {}) {
         enabled: options.beautifulEnabled ?? options.beautifulStatus !== "disabled",
         configured: options.beautifulEnabled ?? options.beautifulStatus !== "disabled",
         mock: options.beautifulMock ?? true,
+        api_mode: "prompt",
+        resolved_endpoint: "https://beautiful.ai/api/v1/generatePresentation",
         route_registered: options.beautifulStatus !== "not_found"
       }
     })
@@ -792,6 +797,8 @@ function beautifulStatusJson(route: Route, options: MockOptions) {
     enabled,
     configured: enabled,
     mock: options.beautifulMock ?? true,
+    api_mode: "prompt",
+    resolved_endpoint: "https://beautiful.ai/api/v1/generatePresentation",
     provider: "beautiful.ai",
     message: enabled ? "Beautiful.ai連携は利用可能です。" : "Beautiful.ai連携は未設定です。"
   });
@@ -804,6 +811,8 @@ function mockResponse(path: string, options: MockOptions = {}, presentationState
       enabled,
       configured: enabled,
       mock: options.beautifulMock ?? true,
+      api_mode: "prompt",
+      resolved_endpoint: "https://beautiful.ai/api/v1/generatePresentation",
       provider: "beautiful.ai",
       message: enabled ? "Beautiful.ai連携は利用可能です。" : "Beautiful.ai連携は未設定です。"
     };

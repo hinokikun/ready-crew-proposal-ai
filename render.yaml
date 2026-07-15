@@ -17,8 +17,10 @@ services:
         sync: false
       - key: BEAUTIFUL_AI_ENABLED
         value: "false"
+      - key: BEAUTIFUL_AI_API_MODE
+        value: "prompt"
       - key: BEAUTIFUL_AI_BASE_URL
-        value: "https://www.beautiful.ai/api/v1"
+        value: "https://beautiful.ai/api/v1"
       - key: BEAUTIFUL_AI_TIMEOUT_SECONDS
         value: "120"
       - key: BEAUTIFUL_AI_MOCK

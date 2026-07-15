@@ -101,6 +101,55 @@ def _deck_outline(title: str, slides: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def _build_prompt(
+    request: BeautifulAiPresentationRequest,
+    *,
+    title: str,
+    client_name: str,
+    slides: list[dict[str, Any]],
+    outline: str,
+) -> str:
+    next_actions = request.win_probability.recommended_next_actions if request.win_probability else []
+    lines = [
+        "日本語で、法人向けの洗練された営業提案書プレゼンテーションを作成してください。",
+        "デザインは上品で信頼感があり、B2B提案に適した余白・見出し・図解を使ってください。",
+        "入力されていない数値、実績、契約条件、事実は勝手に作らないでください。不明な点は要確認として扱ってください。",
+        "",
+        f"提案書タイトル: {title}",
+        f"顧客名: {client_name}",
+        f"提案コンセプト: {_safe_text(slides[1]['title'] if len(slides) > 1 else title, 240)}",
+        f"提案目的: {_safe_text(request.project_brief, 900)}",
+        f"想定スケジュール: {_append_confirmation_marker(_safe_text(request.desired_launch_timing or 'TBD', 200))}",
+        f"費用概算: {_append_confirmation_marker(_safe_text(request.budget_range or 'TBD', 200))}",
+        "",
+        "スライドごとのタイトルと本文:",
+        outline,
+        "",
+        "次のアクション:",
+    ]
+    if next_actions:
+        lines.extend(f"- {_safe_text(action, 240)}" for action in next_actions[:5])
+    else:
+        lines.extend(
+            [
+                "- 提案内容を社内で確認する",
+                "- 金額、納期、AI推測項目を人が確認する",
+                "- 顧客へ提出する前に最終レビューを行う",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "出力条件:",
+            "- 1枚目は表紙",
+            "- 課題、提案方針、具体施策、スケジュール、費用概算、次のアクションを含める",
+            "- 各スライドは短い見出しと読みやすい箇条書きにする",
+            "- 架空の数値や顧客情報を追加しない",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def _build_context_slide(request: BeautifulAiPresentationRequest) -> dict[str, Any] | None:
     bullets = _safe_lines(
         [
@@ -159,6 +208,7 @@ def map_to_beautiful_ai_payload(request: BeautifulAiPresentationRequest) -> Beau
 
     return BeautifulAiPayload(
         title=title,
+        prompt=_build_prompt(request, title=title, client_name=client_name, slides=slides, outline=outline),
         content=outline,
         language=request.language or "ja",
         preserveExactText=request.preserve_exact_text,

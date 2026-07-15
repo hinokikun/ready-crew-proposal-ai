@@ -66,6 +66,8 @@ class BeautifulAiStatusResponse(BaseModel):
     enabled: bool
     configured: bool
     mock: bool
+    api_mode: str = "prompt"
+    resolved_endpoint: str = ""
     api_reachable: bool = True
     route_found: bool = True
     backend_version: str = ""
@@ -89,6 +91,7 @@ class BeautifulAiStoredListResponse(BaseModel):
 
 class BeautifulAiPayload(BaseModel):
     title: str
+    prompt: str = ""
     content: str = ""
     language: str = "ja"
     preserveExactText: bool = True
