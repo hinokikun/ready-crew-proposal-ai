@@ -105,8 +105,11 @@ def test_beautiful_ai_diagnostics_returns_settings_and_recent_history(
         assert body["theme_id"] == "minimal"
         assert body["workspace_id"] == "workspace-demo"
         assert body["last_http_status"] == 200
+        assert body["last_request_json_safe"]
         assert body["history"]
         assert body["history"][0]["project_id"] == project_id
+        assert body["history"][0]["request_json_safe"]
+        assert "prompt length=" in body["history"][0]["request_json_safe"]
         assert "api_key" not in str(body).lower()
 
 
@@ -165,6 +168,7 @@ def test_beautiful_ai_connection_test_uses_empty_payload_and_saves_history(
         assert history[0]["project_id"] == "__diagnostic__"
         assert history[0]["status"] == "diagnostic_ok"
         assert history[0]["http_status"] == 400
+        assert history[0]["request_json_safe"] == "{}"
         assert "dummy-beautiful-ai-key" not in str(diagnostics.json())
 
 
@@ -484,15 +488,18 @@ def test_beautiful_ai_prompt_request_uses_only_prompt_and_theme() -> None:
         object.__setattr__(service.settings, "beautiful_ai_api_mode", original_mode)
 
 
-def test_beautiful_ai_prompt_request_omits_empty_theme() -> None:
+def test_beautiful_ai_prompt_request_defaults_empty_theme_to_minimal() -> None:
     service = importlib.import_module("app.services.beautiful_ai_service")
     original_mode = service.settings.beautiful_ai_api_mode
+    original_theme = service.settings.beautiful_ai_default_theme_id
     try:
         object.__setattr__(service.settings, "beautiful_ai_api_mode", "prompt")
+        object.__setattr__(service.settings, "beautiful_ai_default_theme_id", "")
         payload = service._api_request_payload({"prompt": "Create a proposal deck", "themeId": ""})
-        assert payload == {"prompt": "Create a proposal deck"}
+        assert payload == {"prompt": "Create a proposal deck", "themeId": "minimal"}
     finally:
         object.__setattr__(service.settings, "beautiful_ai_api_mode", original_mode)
+        object.__setattr__(service.settings, "beautiful_ai_default_theme_id", original_theme)
 
 
 def test_beautiful_ai_prompt_request_requires_prompt() -> None:
@@ -513,6 +520,7 @@ async def test_beautiful_ai_post_payload_sends_bearer_prompt_payload(monkeypatch
     captured: dict[str, Any] = {}
     original_key = service.settings.beautiful_ai_api_key
     original_mode = service.settings.beautiful_ai_api_mode
+    original_theme = service.settings.beautiful_ai_default_theme_id
 
     class FakeResponse:
         status_code = 200
@@ -541,14 +549,17 @@ async def test_beautiful_ai_post_payload_sends_bearer_prompt_payload(monkeypatch
     try:
         object.__setattr__(service.settings, "beautiful_ai_api_key", "dummy-beautiful-ai-key")
         object.__setattr__(service.settings, "beautiful_ai_api_mode", "prompt")
+        object.__setattr__(service.settings, "beautiful_ai_default_theme_id", "")
         result = await service._post_payload({"prompt": "Create a proposal deck", "themeId": ""})
     finally:
         object.__setattr__(service.settings, "beautiful_ai_api_key", original_key)
         object.__setattr__(service.settings, "beautiful_ai_api_mode", original_mode)
+        object.__setattr__(service.settings, "beautiful_ai_default_theme_id", original_theme)
 
     assert result["presentationId"] == "prompt-created"
     assert captured["headers"]["Authorization"] == "Bearer dummy-beautiful-ai-key"
-    assert captured["json"] == {"prompt": "Create a proposal deck"}
+    assert captured["json"] == {"prompt": "Create a proposal deck", "themeId": "minimal"}
+    assert result["__request_json_safe"] == '{"prompt": "<redacted prompt length=22>", "themeId": "minimal"}'
 
 
 @pytest.mark.anyio
@@ -603,6 +614,9 @@ async def test_beautiful_ai_post_payload_maps_external_status(
     assert exc_info.value.status_code == expected_service_status
     if external_status == 400:
         assert "validation failed" in caplog.text
+        assert "request_json_safe" in caplog.text
+        assert '"themeId": "minimal"' in caplog.text
+        assert "Create a proposal deck" not in caplog.text
 
 
 @pytest.mark.anyio

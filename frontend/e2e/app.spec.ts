@@ -385,6 +385,8 @@ test("Beautiful.ai Status Cardは管理者の詳細モードでEnabledとMockを
   await expect(card.getByText("到達")).toBeVisible();
   await expect(card.getByText("Route found")).toBeVisible();
   await expect(card.getByText("検出")).toBeVisible();
+  await expect(card.getByText("最後のRequest JSON")).toBeVisible();
+  await expect(card.getByText(/themeId/).first()).toBeVisible();
 });
 
 test("Beautiful.ai Disabled時も状態と無効ボタンを確認できる", async ({ page }) => {
@@ -830,6 +832,7 @@ function beautifulDiagnosticsJson(options: MockOptions) {
     last_http_status: enabled ? 400 : 0,
     last_error_type: "",
     last_response_text: enabled ? "{\"error\":\"prompt is required\"}" : "",
+    last_request_json_safe: enabled ? "{\"prompt\":\"<redacted prompt length=120>\",\"themeId\":\"minimal\"}" : "",
     last_run_at: new Date().toISOString(),
     history: enabled
       ? [
@@ -841,6 +844,7 @@ function beautifulDiagnosticsJson(options: MockOptions) {
             http_status: 400,
             error_type: "",
             response_text: "{\"error\":\"prompt is required\"}",
+            request_json_safe: "{\"prompt\":\"<redacted prompt length=120>\",\"themeId\":\"minimal\"}",
             endpoint: "https://www.beautiful.ai/api/v1/generatePresentation",
             api_mode: "prompt",
             theme_id: "minimal",

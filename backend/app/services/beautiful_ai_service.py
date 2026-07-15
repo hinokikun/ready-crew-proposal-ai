@@ -38,6 +38,7 @@ class BeautifulAiServiceError(Exception):
         retry_after_seconds: int | None = None,
         http_status: int = 0,
         response_text: str = "",
+        request_json_safe: str = "",
     ) -> None:
         self.status_code = status_code
         self.error_type = error_type
@@ -45,6 +46,7 @@ class BeautifulAiServiceError(Exception):
         self.retry_after_seconds = retry_after_seconds
         self.http_status = http_status
         self.response_text = response_text
+        self.request_json_safe = request_json_safe
         super().__init__(message)
 
 
@@ -110,8 +112,8 @@ def get_beautiful_ai_diagnostics(
 ) -> BeautifulAiDiagnosticsResponse:
     rows = db.execute(
         """
-        SELECT id, project_id, title, status, theme_id, error_type, http_status, response_text, endpoint, api_mode,
-               workspace_config_id, created_at, updated_at
+        SELECT id, project_id, title, status, theme_id, error_type, http_status, response_text, request_json_safe,
+               endpoint, api_mode, workspace_config_id, created_at, updated_at
         FROM beautiful_ai_presentations
         WHERE organization_id = ? AND workspace_id = ?
         ORDER BY updated_at DESC, id DESC
@@ -128,10 +130,11 @@ def get_beautiful_ai_diagnostics(
         api_mode=_api_mode(),
         resolved_endpoint=_endpoint(),
         workspace_id=settings.beautiful_ai_workspace_id,
-        theme_id=settings.beautiful_ai_default_theme_id,
+        theme_id=_effective_theme_id(),
         last_http_status=last.http_status if last else 0,
         last_error_type=last.error_type if last else "",
         last_response_text=last.response_text if last else "",
+        last_request_json_safe=last.request_json_safe if last else "",
         last_run_at=last.updated_at if last else "",
         history=history,
     )
@@ -189,6 +192,7 @@ def _insert_presentation_record(
     error_type: str = "",
     http_status: int = 0,
     response_text: str = "",
+    request_json_safe: str = "",
     endpoint: str = "",
     api_mode: str = "",
     workspace_config_id: str = "",
@@ -198,8 +202,8 @@ def _insert_presentation_record(
     cursor = db.execute(
         """
         INSERT INTO beautiful_ai_presentations
-            (project_id, user_id, presentation_id, title, editor_url, player_url, status, theme_id, provider, request_summary, error_type, http_status, response_text, endpoint, api_mode, workspace_config_id, organization_id, workspace_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (project_id, user_id, presentation_id, title, editor_url, player_url, status, theme_id, provider, request_summary, error_type, http_status, response_text, request_json_safe, endpoint, api_mode, workspace_config_id, organization_id, workspace_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             request.project_id[:120],
@@ -215,6 +219,7 @@ def _insert_presentation_record(
             error_type[:80],
             int(http_status or 0),
             _safe_log_text(response_text, 1000),
+            _safe_log_text(request_json_safe, 1000),
             (endpoint or _endpoint())[:500],
             (api_mode or _api_mode())[:40],
             (workspace_config_id or settings.beautiful_ai_workspace_id)[:160],
@@ -235,6 +240,7 @@ def _insert_diagnostic_record(
     error_type: str = "",
     http_status: int = 0,
     response_text: str = "",
+    request_json_safe: str = "",
     organization_id: int = 1,
     workspace_id: int = 1,
 ) -> None:
@@ -242,9 +248,9 @@ def _insert_diagnostic_record(
         """
         INSERT INTO beautiful_ai_presentations
             (project_id, user_id, presentation_id, title, editor_url, player_url, status, theme_id, provider,
-             request_summary, error_type, http_status, response_text, endpoint, api_mode, workspace_config_id,
+             request_summary, error_type, http_status, response_text, request_json_safe, endpoint, api_mode, workspace_config_id,
              organization_id, workspace_id)
-        VALUES (?, ?, '', ?, '', '', ?, ?, 'beautiful.ai', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, '', ?, '', '', ?, ?, 'beautiful.ai', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             "__diagnostic__",
@@ -256,6 +262,7 @@ def _insert_diagnostic_record(
             error_type[:80],
             int(http_status or 0),
             _safe_log_text(response_text, 1000),
+            _safe_log_text(request_json_safe, 1000),
             _endpoint()[:500],
             _api_mode()[:40],
             settings.beautiful_ai_workspace_id[:160],
@@ -287,6 +294,7 @@ def _history_record_from_row(row: dict[str, Any]) -> BeautifulAiHistoryRecord:
         http_status=int(row.get("http_status") or 0),
         error_type=str(row.get("error_type") or ""),
         response_text=_safe_log_text(str(row.get("response_text") or ""), 300),
+        request_json_safe=_safe_log_text(str(row.get("request_json_safe") or ""), 500),
         endpoint=str(row.get("endpoint") or ""),
         api_mode=str(row.get("api_mode") or "prompt"),
         theme_id=str(row.get("theme_id") or ""),
@@ -425,6 +433,14 @@ def _safe_request_payload_for_log(payload: dict[str, Any]) -> dict[str, Any]:
     return safe
 
 
+def _request_json_safe_text(payload: dict[str, Any], limit: int = 1000) -> str:
+    return _safe_log_text(json.dumps(_safe_request_payload_for_log(payload), ensure_ascii=False), limit)
+
+
+def _effective_theme_id(value: str = "") -> str:
+    return (value or settings.beautiful_ai_default_theme_id or "minimal").strip()
+
+
 def _api_request_payload(payload: dict[str, Any]) -> dict[str, Any]:
     cleaned = _clean_payload(payload)
     if _api_mode() == "structured":
@@ -437,7 +453,7 @@ def _api_request_payload(payload: dict[str, Any]) -> dict[str, Any]:
             message="Beautiful.ai prompt APIに送信するpromptを作成できませんでした。",
         )
     prompt_payload: dict[str, Any] = {"prompt": prompt}
-    theme_id = str(cleaned.get("themeId") or "").strip()
+    theme_id = _effective_theme_id(str(cleaned.get("themeId") or ""))
     if theme_id:
         prompt_payload["themeId"] = theme_id
     return prompt_payload
@@ -481,6 +497,7 @@ def _external_service_error(
     status_code: int,
     error_type: str,
     message: str,
+    request_payload: dict[str, Any] | None = None,
     retry_after_seconds: int | None = None,
 ) -> BeautifulAiServiceError:
     return BeautifulAiServiceError(
@@ -490,6 +507,7 @@ def _external_service_error(
         retry_after_seconds=retry_after_seconds,
         http_status=response.status_code,
         response_text=_response_text_for_log(response),
+        request_json_safe=_request_json_safe_text(request_payload) if request_payload is not None else "",
     )
 
 
@@ -590,6 +608,7 @@ async def run_beautiful_ai_connection_test(
         error_type=error_type,
         http_status=response.status_code,
         response_text=response_text,
+        request_json_safe=_request_json_safe_text(request_payload),
         organization_id=organization_id,
         workspace_id=workspace_id,
     )
@@ -626,6 +645,7 @@ async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
             response,
             status_code=502,
             error_type="beautiful_ai_redirect",
+            request_payload=request_payload,
             message="Beautiful.ai APIがリダイレクトを返しました。BackendのBeautiful.ai接続先を確認してください。",
         )
     if response.status_code == 400:
@@ -634,6 +654,7 @@ async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
             response,
             status_code=400,
             error_type="beautiful_ai_bad_request",
+            request_payload=request_payload,
             message="Beautiful.aiへ送信した内容が受け付けられませんでした。管理者はBeautiful.ai診断情報でResponse Textを確認してください。",
         )
     if response.status_code == 401:
@@ -648,6 +669,7 @@ async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
             response,
             status_code=502,
             error_type="beautiful_ai_endpoint_not_found",
+            request_payload=request_payload,
             message="Beautiful.ai外部APIのエンドポイントが見つかりません。BackendのBeautiful.ai接続先を確認してください。",
         )
     if response.status_code == 429:
@@ -657,6 +679,7 @@ async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
             response,
             status_code=429,
             error_type="beautiful_ai_rate_limit",
+            request_payload=request_payload,
             message="Beautiful.aiの利用上限に達しました。時間を置くか既存PPTXをご利用ください",
             retry_after_seconds=int(retry_after) if retry_after and retry_after.isdigit() else None,
         )
@@ -671,9 +694,10 @@ async def _post_payload(payload: dict[str, Any]) -> dict[str, Any]:
     except ValueError as exc:
         raise BeautifulAiServiceError(status_code=502, error_type="beautiful_ai_service_error", message="Beautiful.ai APIの応答を解析できませんでした。") from exc
     if not isinstance(parsed, dict):
-        return {"__http_status": response.status_code, "__response_text": _response_text_for_log(response)}
+        return {"__http_status": response.status_code, "__response_text": _response_text_for_log(response), "__request_json_safe": _request_json_safe_text(request_payload)}
     parsed.setdefault("__http_status", response.status_code)
     parsed.setdefault("__response_text", _response_text_for_log(response))
+    parsed.setdefault("__request_json_safe", _request_json_safe_text(request_payload))
     return parsed
 
 
@@ -710,6 +734,7 @@ async def create_beautiful_ai_presentation(
     title = payload_model.title
     api_http_status = 200 if settings.beautiful_ai_mock else 0
     api_response_text = "mock" if settings.beautiful_ai_mock else ""
+    api_request_json_safe = _request_json_safe_text(_api_request_payload(payload))
 
     create_audit_log(db, user_id, "beautiful_ai_generation_started", "beautiful_ai", request.project_id, "success", "fallback_available=true")
     try:
@@ -719,6 +744,7 @@ async def create_beautiful_ai_presentation(
             api_data = await _post_payload(payload)
             api_http_status = int(api_data.get("__http_status") or 0)
             api_response_text = str(api_data.get("__response_text") or "")
+            api_request_json_safe = str(api_data.get("__request_json_safe") or api_request_json_safe)
             api_result = _extract_api_result(api_data, title)
     except httpx.TimeoutException as exc:
         _insert_presentation_record(
@@ -732,6 +758,7 @@ async def create_beautiful_ai_presentation(
             error_type="beautiful_ai_timeout",
             http_status=0,
             response_text="timeout",
+            request_json_safe=api_request_json_safe,
             endpoint=_endpoint(),
             api_mode=_api_mode(),
             workspace_config_id=payload_model.workspaceId,
@@ -756,6 +783,7 @@ async def create_beautiful_ai_presentation(
             error_type=exc.error_type,
             http_status=exc.http_status,
             response_text=exc.response_text,
+            request_json_safe=exc.request_json_safe or api_request_json_safe,
             endpoint=_endpoint(),
             api_mode=_api_mode(),
             workspace_config_id=payload_model.workspaceId,
@@ -780,6 +808,7 @@ async def create_beautiful_ai_presentation(
         request_summary=request_summary,
         http_status=api_http_status,
         response_text=api_response_text,
+        request_json_safe=api_request_json_safe,
         endpoint=_endpoint(),
         api_mode=_api_mode(),
         workspace_config_id=payload_model.workspaceId,

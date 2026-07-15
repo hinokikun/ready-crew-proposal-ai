@@ -697,6 +697,7 @@ def _schema_statements() -> list[str]:
             error_type TEXT NOT NULL DEFAULT '',
             http_status INTEGER NOT NULL DEFAULT 0,
             response_text TEXT NOT NULL DEFAULT '',
+            request_json_safe TEXT NOT NULL DEFAULT '',
             endpoint TEXT NOT NULL DEFAULT '',
             api_mode TEXT NOT NULL DEFAULT 'prompt',
             workspace_config_id TEXT NOT NULL DEFAULT '',

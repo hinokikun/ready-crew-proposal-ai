@@ -136,6 +136,7 @@ def add_missing_columns() -> None:
         _ensure_column(db, "beautiful_ai_presentations", "error_type", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(db, "beautiful_ai_presentations", "http_status", "INTEGER NOT NULL DEFAULT 0")
         _ensure_column(db, "beautiful_ai_presentations", "response_text", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(db, "beautiful_ai_presentations", "request_json_safe", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(db, "beautiful_ai_presentations", "endpoint", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(db, "beautiful_ai_presentations", "api_mode", "TEXT NOT NULL DEFAULT 'prompt'")
         _ensure_column(db, "beautiful_ai_presentations", "workspace_config_id", "TEXT NOT NULL DEFAULT ''")

@@ -85,6 +85,7 @@ class BeautifulAiHistoryRecord(BaseModel):
     http_status: int = 0
     error_type: str = ""
     response_text: str = ""
+    request_json_safe: str = ""
     endpoint: str = ""
     api_mode: str = "prompt"
     theme_id: str = ""
@@ -104,6 +105,7 @@ class BeautifulAiDiagnosticsResponse(BaseModel):
     last_http_status: int = 0
     last_error_type: str = ""
     last_response_text: str = ""
+    last_request_json_safe: str = ""
     last_run_at: str = ""
     history: list[BeautifulAiHistoryRecord] = Field(default_factory=list)
 

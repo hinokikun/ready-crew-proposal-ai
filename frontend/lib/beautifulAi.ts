@@ -35,6 +35,7 @@ export type BeautifulAiHistoryRecord = {
   http_status: number;
   error_type: string;
   response_text: string;
+  request_json_safe: string;
   endpoint: string;
   api_mode: string;
   theme_id: string;
@@ -54,6 +55,7 @@ export type BeautifulAiDiagnostics = {
   last_http_status: number;
   last_error_type: string;
   last_response_text: string;
+  last_request_json_safe: string;
   last_run_at: string;
   history: BeautifulAiHistoryRecord[];
 };

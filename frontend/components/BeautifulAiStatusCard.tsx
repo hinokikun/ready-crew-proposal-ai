@@ -144,6 +144,7 @@ export function BeautifulAiStatusCard({ statusProbe, healthProbe, onRefresh, can
             <DiagnosticItem label="最後のError Type" value={diagnostics?.last_error_type || "なし"} />
             <DiagnosticItem label="最後の実行日時" value={diagnostics?.last_run_at || "未取得"} />
             <DiagnosticItem label="最後のResponse Text" value={diagnostics?.last_response_text || "なし"} />
+            <DiagnosticItem label="最後のRequest JSON" value={diagnostics?.last_request_json_safe || "なし"} />
           </div>
           {isDiagnosticsLoading && <p className="beautiful-ai-status-message">Beautiful.ai診断情報を取得中です。</p>}
           {testResult && (
@@ -162,6 +163,7 @@ export function BeautifulAiStatusCard({ statusProbe, healthProbe, onRefresh, can
                     <span>{item.status}</span>
                     <span>HTTP {item.http_status || "-"}</span>
                     <span>{item.error_type || "errorなし"}</span>
+                    <span>{item.request_json_safe || "requestなし"}</span>
                     <span>{item.response_text || "responseなし"}</span>
                   </li>
                 ))}

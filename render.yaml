@@ -21,6 +21,8 @@ services:
         value: "prompt"
       - key: BEAUTIFUL_AI_BASE_URL
         value: "https://www.beautiful.ai/api/v1"
+      - key: BEAUTIFUL_AI_DEFAULT_THEME_ID
+        value: "minimal"
       - key: BEAUTIFUL_AI_TIMEOUT_SECONDS
         value: "120"
       - key: BEAUTIFUL_AI_MOCK

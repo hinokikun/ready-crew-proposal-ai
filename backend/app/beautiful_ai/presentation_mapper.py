@@ -212,7 +212,7 @@ def map_to_beautiful_ai_payload(request: BeautifulAiPresentationRequest) -> Beau
         content=outline,
         language=request.language or "ja",
         preserveExactText=request.preserve_exact_text,
-        themeId=request.theme_id or settings.beautiful_ai_default_theme_id,
+        themeId=request.theme_id or settings.beautiful_ai_default_theme_id or "minimal",
         workspaceId=request.workspace_id or settings.beautiful_ai_workspace_id,
         folderId=request.folder_id or settings.beautiful_ai_folder_id,
         imageSource=request.image_source or settings.beautiful_ai_image_source,
@@ -229,6 +229,6 @@ def build_request_summary(request: BeautifulAiPresentationRequest, slide_count: 
         f"client={_safe_text(deck.client_name, 80)}",
         f"project_id={_safe_text(request.project_id, 80)}",
         f"slides={slide_count}",
-        f"theme={_safe_text(request.theme_id or settings.beautiful_ai_default_theme_id, 80)}",
+        f"theme={_safe_text(request.theme_id or settings.beautiful_ai_default_theme_id or 'minimal', 80)}",
     ]
     return ";".join(part for part in parts if part.split("=", 1)[1])
