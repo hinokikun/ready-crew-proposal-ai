@@ -214,6 +214,26 @@ test("adminに管理者メニューが表示される", async ({ page }) => {
   await expect(page.getByTestId("admin-menu")).toBeVisible();
 });
 
+test("adminはユーザー管理で正式運用項目を確認できる", async ({ page }) => {
+  await login(page, adminEmail);
+  await page.getByRole("button", { name: "詳細モード" }).click();
+  await page.getByTestId("admin-menu").locator("summary").click();
+  await page.locator("#admin-users-panel summary").click();
+  const userPanel = page.locator("#admin-users-panel");
+  await expect(userPanel.getByText("ユーザー管理").first()).toBeVisible();
+  await expect(userPanel.getByRole("textbox", { name: "氏名", exact: true })).toBeVisible();
+  await expect(userPanel.getByText("最終ログイン")).toBeVisible();
+  await expect(userPanel.getByText("パスワード再設定")).toBeVisible();
+});
+
+test("作成履歴は検索とBeautiful.aiリンクを表示できる", async ({ page }) => {
+  await login(page, memberEmail);
+  await page.locator("#creation-history-panel summary").click();
+  await expect(page.getByRole("heading", { name: "作成履歴" })).toBeVisible();
+  await expect(page.getByText("株式会社サンプル")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Beautiful.aiを開く" })).toBeVisible();
+});
+
 test("ブラウザ確認モードでUAT状態を確認できる", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await login(page, adminEmail);
@@ -494,6 +514,7 @@ async function login(page: Page, email: string) {
     page.getByLabel("メールアドレス").waitFor({ state: "visible", timeout: 8000 }).then(() => "login").catch(() => "none")
   ]);
   if (firstVisible === "dashboard") {
+    await dismissPilotChecklist(page);
     await expect(page.getByTestId("sales-copilot")).toBeVisible();
     return;
   }
@@ -503,16 +524,15 @@ async function login(page: Page, email: string) {
   await page.getByLabel("アクセスパスワード").fill("test-password");
   await page.getByTestId("login-submit").click();
   await expect(page.getByRole("heading", { name: "営業AIオペレーションセンター" })).toBeVisible();
-  const pilotConfirm = page.getByRole("button", { name: "確認して開始する" });
-  if (await pilotConfirm.waitFor({ state: "visible", timeout: 1500 }).then(() => true).catch(() => false)) {
-    await pilotConfirm.click();
-  }
-  const pilotConfirmByTestId = page.getByTestId("pilot-checklist-confirm");
-  if (await pilotConfirmByTestId.waitFor({ state: "visible", timeout: 5000 }).then(() => true).catch(() => false)) {
-    await pilotConfirmByTestId.click();
-    await expect(pilotConfirmByTestId).toHaveCount(0);
-  }
+  await dismissPilotChecklist(page);
   await expect(page.getByTestId("sales-copilot")).toBeVisible();
+}
+
+async function dismissPilotChecklist(page: Page) {
+  const pilotConfirmByTestId = page.getByTestId("pilot-checklist-confirm");
+  if (!(await pilotConfirmByTestId.waitFor({ state: "visible", timeout: 8000 }).then(() => true).catch(() => false))) return;
+  await pilotConfirmByTestId.click({ timeout: 8000 });
+  await page.locator(".pilot-checklist-overlay").waitFor({ state: "detached", timeout: 8000 });
 }
 
 async function openAdminPilotDashboard(page: Page) {
@@ -915,6 +935,34 @@ function mockResponse(path: string, options: MockOptions = {}, presentationState
     };
   }
   if (path.includes("/projects/crm")) return { customers: [], projects: [] };
+  if (path.includes("/logs/creation-history")) {
+    return {
+      items: [
+        {
+          id: 1,
+          user_id: 2,
+          created_by_email: memberEmail,
+          created_by_name: "テスト利用者",
+          customer_id: 1,
+          customer_name: "株式会社サンプル",
+          project_id: 1,
+          project_name: "Webサイトリニューアル提案",
+          feature_name: "提案書生成",
+          output_type: "beautiful-ai",
+          output_formats: "markdown,pptx,summary-pptx,estimate-pdf,beautiful-ai",
+          status: "success",
+          error_type: "",
+          organization_id: 1,
+          workspace_id: 101,
+          organization_name: "Ready Crew",
+          workspace_name: "営業部",
+          beautiful_ai_url: "https://www.beautiful.ai/editor/mock-beautiful-e2e",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ]
+    };
+  }
   if (path.includes("/logs/usage-dashboard")) {
     return {
       dashboard: {
@@ -937,7 +985,28 @@ function mockResponse(path: string, options: MockOptions = {}, presentationState
   if (path.includes("/logs/audit")) return { logs: [] };
   if (path.includes("/logs")) return { logs: [] };
   if (path.includes("/releases")) return { releases: [] };
-  if (path.includes("/users")) return { users: [] };
+  if (path.includes("/users")) {
+    const user = {
+      id: 2,
+      display_name: "テスト利用者",
+      email: memberEmail,
+      role: "member",
+      role_label: "一般利用者",
+      is_active: true,
+      pilot_enabled: true,
+      pilot_completed: false,
+      current_organization_id: 1,
+      current_workspace_id: 101,
+      organization_name: "Ready Crew",
+      workspace_name: "営業部",
+      last_login_at: new Date().toISOString(),
+      password_change_required: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    if (path.includes("/me/password")) return { ok: true, message: "パスワードを変更しました。再ログインしてください。", user };
+    return { users: [user] };
+  }
   if (path.includes("/pilot/issues/from-feedback")) {
     return {
       issue: pilotIssue(),

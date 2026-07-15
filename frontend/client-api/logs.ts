@@ -1,6 +1,7 @@
 ﻿import { fetchBlob, fetchJson } from "@/client-api/client";
 import type {
   AuditLog,
+  CreationHistoryItem,
   ImprovementDashboardData,
   OperationReadinessData,
   TrialReportData,
@@ -17,6 +18,23 @@ export function getAuditLogs(): Promise<{ logs: AuditLog[] }> {
 
 export function getUsageDashboard(): Promise<{ dashboard: UsageDashboardData }> {
   return fetchJson("/api/logs/usage-dashboard");
+}
+
+export function getCreationHistory(params: {
+  q?: string;
+  status?: string;
+  date_from?: string;
+  date_to?: string;
+  limit?: number;
+} = {}): Promise<{ items: CreationHistoryItem[] }> {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== "") {
+      search.set(key, String(value));
+    }
+  });
+  const suffix = search.toString() ? `?${search.toString()}` : "";
+  return fetchJson(`/api/logs/creation-history${suffix}`);
 }
 
 export function downloadUsageDashboardCsv(): Promise<Blob> {

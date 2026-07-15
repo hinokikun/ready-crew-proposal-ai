@@ -13,6 +13,7 @@ from app.repositories import (
     build_trial_report,
     create_audit_log,
     create_history_log,
+    list_creation_history,
     list_audit_logs,
     list_usage_logs_scoped,
     summarize_usage_dashboard,
@@ -54,6 +55,29 @@ async def get_usage_dashboard(
     with get_db() as db:
         resolved_scope = resolve_scope(db, user, scope)
         return {"dashboard": summarize_usage_dashboard(db, resolved_scope)}
+
+
+@router.get("/creation-history")
+async def get_creation_history(
+    user: dict = Depends(require_roles("admin", "manager", "member", "viewer")),
+    q: str = "",
+    status: str = "",
+    date_from: str = "",
+    date_to: str = "",
+    limit: int = 100,
+) -> dict:
+    with get_db() as db:
+        items = list_creation_history(
+            db,
+            user,
+            limit=limit,
+            query=q,
+            status=status,
+            date_from=date_from,
+            date_to=date_to,
+        )
+        create_audit_log(db, int(user["id"]), "view_creation_history", "proposal_histories", "", "success", "sanitized=true")
+    return {"items": items}
 
 
 @router.get("/usage-dashboard.csv")

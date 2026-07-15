@@ -235,3 +235,10 @@ Key records:
 - `docs/GUIDED_FLOW.md`
 - `docs/QUALITY_GATE_UI.md`
 - `docs/BEAUTIFUL_AI_USER_FLOW.md`
+# Version 24.0 正式運用メモ
+
+- 管理者は管理者メニューのユーザー管理から、氏名、メール、Role、有効/無効、Pilot対象、仮パスワード、論理削除を管理できます。
+- 利用者はアカウント設定から自分のパスワードを変更できます。変更後は再ログインが必要です。
+- 作成履歴ではAI生成、PPTX/PDF、Beautiful.aiの作成履歴をOrganization / Workspace単位で確認できます。
+- 監査ログにはログイン、ユーザー管理、生成、出力、Quality Gate、Beautiful.ai、エラーを記録します。Password、Token、APIキー、顧客本文全文は保存しません。
+- 本番前に `docs/V24_0_UAT.md`、`docs/BACKUP_RESTORE.md`、`docs/PRODUCTION_CHECKLIST.md` を確認してください。

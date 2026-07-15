@@ -149,3 +149,15 @@ Production??:
 - Beautiful.ai status ???Backend??????
 - Organization / Workspace?????Workspace????????
 - Backup / Restore ?????????????
+# Version 24.0 Release Procedure
+
+1. 変更ファイルに秘密情報が含まれていないことを確認します。
+2. Backend: `compileall`、全pytest、`pip check` を実行します。
+3. Frontend: `typecheck`、`check:unused`、`build`、E2Eを実行します。
+4. `git diff --check` を確認します。
+5. Migration `20260715_2400` が非破壊列追加のみであることを確認します。
+6. commit後、GitHub Actionsが最新commitで成功していることを確認します。
+7. Vercel ProductionがReadyで、commitがGitHub最新commitと一致することを確認します。
+8. RenderがLiveで、`/health` と `/health/ready` が正常であることを確認します。
+9. `docs/V24_0_UAT.md` に沿ってブラウザ確認を実施します。
+10. 問題があれば `docs/V24_0_ROLLBACK.md` に沿ってRollback判断を行います。

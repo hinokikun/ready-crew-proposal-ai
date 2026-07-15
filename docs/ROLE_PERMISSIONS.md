@@ -1,5 +1,19 @@
 # Role Permissions
 
+## Version 24.0 正式運用ロール
+
+| Role | 権限範囲 | 主な許可 | 主な禁止 |
+| --- | --- | --- | --- |
+| `admin` | 全Organization / Workspaceの管理範囲 | ユーザー管理、監査ログ、診断、UAT、Organization / Workspace管理、全業務機能 | 最後の有効adminの無効化・削除 |
+| `manager` | 所属Organization / Workspaceの管理範囲 | 案件、提案書、レビュー、作成履歴、運用状況の閲覧と管理 | ユーザー作成・削除、秘密設定閲覧、システム診断設定変更 |
+| `member` / `user`互換 | 所属Workspaceの通常利用範囲 | 案件作成、AI生成、PPTX/PDF/Beautiful.ai出力、自分または許可範囲の履歴閲覧 | 管理機能、ユーザー管理、監査ログ閲覧 |
+| `viewer` | 所属Workspaceの閲覧範囲 | 案件、履歴、状態の閲覧 | 案件作成、AI生成、出力、編集、承認、管理操作 |
+
+- APIで `role: "user"` を受け取った場合は、後方互換のため内部保存時に `member` へ正規化します。
+- 管理者機能はFrontendの非表示だけでなく、Backendの `require_roles` で必ず拒否します。
+- ロール変更、無効化、パスワード変更、論理削除では `auth_version` を更新し、古いTokenを拒否します。
+- `admin` 自身の無効化・削除、および最後の有効adminの無効化・削除は禁止します。
+
 ## Version 23.1 ログイン入口と表示名
 
 | ログイン入口 | 許可ロール | 表示名 |

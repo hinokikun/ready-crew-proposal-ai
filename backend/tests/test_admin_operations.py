@@ -37,6 +37,43 @@ def test_admin_member_viewer_permissions(
     assert viewer_generate.status_code == 403
 
 
+def test_admin_user_management_profile_password_and_delete(client: TestClient, admin_headers: dict[str, str]) -> None:
+    create_response = client.post(
+        "/api/users",
+        headers=admin_headers,
+        json={"email": "managed-user@example.com", "password": "member-password", "role": "member", "display_name": "Managed User"},
+    )
+    assert create_response.status_code == 200
+    user = create_response.json()["user"]
+    assert user["display_name"] == "Managed User"
+    assert user["role"] == "member"
+    assert "password_hash" not in user
+
+    update_response = client.patch(
+        f"/api/users/{user['id']}",
+        headers=admin_headers,
+        json={"display_name": "Managed User Updated", "password": "temporary-password", "password_change_required": True},
+    )
+    assert update_response.status_code == 200
+    updated = update_response.json()["user"]
+    assert updated["display_name"] == "Managed User Updated"
+    assert bool(updated["password_change_required"]) is True
+
+    login_response = client.post("/api/auth/login", json={"email": "managed-user@example.com", "password": "temporary-password"})
+    assert login_response.status_code == 200
+    assert login_response.json()["user"]["password_change_required"] is True
+
+    delete_response = client.delete(f"/api/users/{user['id']}", headers=admin_headers)
+    assert delete_response.status_code == 200
+    assert client.post("/api/auth/login", json={"email": "managed-user@example.com", "password": "temporary-password"}).status_code == 403
+
+
+def test_member_cannot_manage_users(client: TestClient, admin_headers: dict[str, str]) -> None:
+    member_headers = _create_user_and_login(client, admin_headers, "no-admin@example.com", "member")
+    assert client.patch("/api/users/1", headers=member_headers, json={"role": "viewer"}).status_code == 403
+    assert client.delete("/api/users/1", headers=member_headers).status_code == 403
+
+
 def test_feedback_api_permissions_and_summary(client: TestClient, admin_headers: dict[str, str]) -> None:
     member_headers = _create_user_and_login(client, admin_headers, "feedback-member@example.com", "member")
 
@@ -79,6 +116,24 @@ def test_usage_dashboard_api_and_csv_are_admin_only(client: TestClient, admin_he
 
     assert client.get("/api/logs/usage-dashboard", headers=member_headers).status_code == 403
     assert client.get("/api/logs/usage-dashboard.csv", headers=member_headers).status_code == 403
+
+
+def test_creation_history_is_scoped_and_readable(client: TestClient, admin_headers: dict[str, str]) -> None:
+    member_headers = _create_user_and_login(client, admin_headers, "history-member@example.com", "member")
+    log_response = client.post(
+        "/api/logs",
+        headers=member_headers,
+        json={"feature_name": "proposal_generation", "input_length": 120, "output_type": "markdown", "status": "success"},
+    )
+    assert log_response.status_code == 200
+
+    member_history = client.get("/api/logs/creation-history", headers=member_headers)
+    assert member_history.status_code == 200
+    assert member_history.json()["items"]
+
+    admin_history = client.get("/api/logs/creation-history", headers=admin_headers)
+    assert admin_history.status_code == 200
+    assert any(item["created_by_email"] == "history-member@example.com" for item in admin_history.json()["items"])
 
 
 def test_trial_report_operation_readiness_and_improvement_dashboard_are_admin_only(

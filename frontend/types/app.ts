@@ -3,6 +3,7 @@ export type LoginMode = "user" | "admin";
 
 export type AuthUser = {
   id: number;
+  display_name?: string;
   email: string;
   role: UserRole;
   role_group?: "admin" | "user";
@@ -15,6 +16,8 @@ export type AuthUser = {
   pilot_last_used_at?: string;
   pilot_completed?: boolean;
   pilot_note?: string;
+  last_login_at?: string;
+  password_change_required?: boolean;
 };
 
 export type LoginResult = {
@@ -28,6 +31,7 @@ export type LoginResult = {
 
 export type ManagedUser = {
   id: number;
+  display_name?: string;
   email: string;
   role: UserRole;
   role_group?: "admin" | "user";
@@ -38,6 +42,36 @@ export type ManagedUser = {
   pilot_last_used_at?: string;
   pilot_completed?: number | boolean;
   pilot_note?: string;
+  current_organization_id?: number;
+  current_workspace_id?: number;
+  organization_name?: string;
+  workspace_name?: string;
+  last_login_at?: string;
+  password_change_required?: number | boolean;
+  deleted_at?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CreationHistoryItem = {
+  id: number;
+  user_id: number | null;
+  created_by_email: string;
+  created_by_name: string;
+  customer_id: number | null;
+  customer_name: string;
+  project_id: number | null;
+  project_name: string;
+  feature_name: string;
+  output_type: string;
+  output_formats: string;
+  status: string;
+  error_type: string;
+  organization_id: number;
+  workspace_id: number;
+  organization_name: string;
+  workspace_name: string;
+  beautiful_ai_url?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -314,6 +348,9 @@ export type AuditLog = {
   target_id: string;
   status: "success" | "failure" | string;
   metadata: string;
+  request_id?: string;
+  error_type?: string;
+  http_status?: number;
   created_at: string;
 };
 

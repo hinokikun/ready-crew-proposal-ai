@@ -57,7 +57,7 @@ def get_current_user(authorization: str | None = Header(default=None)) -> dict:
         raise HTTPException(status_code=401, detail="ログイン期限が切れています。再ログインしてください。")
     with get_db() as db:
         user = get_user_by_id(db, int(payload["id"]))
-    if not user or not user["is_active"]:
+    if not user or not user["is_active"] or user.get("deleted_at"):
         raise HTTPException(status_code=401, detail="ユーザーが無効です。管理者へ確認してください。")
     if int(payload.get("auth_version", 0)) != int(user.get("auth_version", 1)):
         raise HTTPException(status_code=401, detail="ログイン状態が更新されました。再ログインしてください。")

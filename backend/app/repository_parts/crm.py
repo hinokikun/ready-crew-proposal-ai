@@ -124,6 +124,83 @@ def create_history_log(
         create_audit_log(db, user_id, "generate", feature_name, "", status, f"output_type={output_type};error_type={error_type}")
 
 
+def list_creation_history(
+    db: Connection,
+    user: dict[str, Any],
+    limit: int = 100,
+    query: str = "",
+    status: str = "",
+    date_from: str = "",
+    date_to: str = "",
+) -> list[dict[str, Any]]:
+    organization_id, workspace_id = get_user_context_ids(db, int(user.get("id") or 0))
+    role = str(user.get("role") or "")
+    clauses = ["h.organization_id = ?", "h.workspace_id = ?"]
+    params: list[Any] = [organization_id, workspace_id]
+    if role not in {"admin", "manager"}:
+        clauses.append("h.user_id = ?")
+        params.append(int(user.get("id") or 0))
+    if status:
+        clauses.append("h.status = ?")
+        params.append(status[:40])
+    if date_from:
+        clauses.append("h.created_at >= ?")
+        params.append(date_from[:30])
+    if date_to:
+        clauses.append("h.created_at <= ?")
+        params.append(date_to[:30])
+    if query:
+        like_query = f"%{query[:120]}%"
+        clauses.append(
+            "(COALESCE(p.name, '') LIKE ? OR COALESCE(c.company_name, '') LIKE ? OR COALESCE(u.email, '') LIKE ?)"
+        )
+        params.extend([like_query, like_query, like_query])
+    rows = db.execute(
+        f"""
+        SELECT
+            h.id,
+            h.user_id,
+            COALESCE(u.email, '') AS created_by_email,
+            COALESCE(u.display_name, '') AS created_by_name,
+            h.customer_id,
+            COALESCE(c.company_name, '') AS customer_name,
+            h.project_id,
+            COALESCE(p.name, '') AS project_name,
+            h.feature_name,
+            h.output_type,
+            h.status,
+            h.error_type,
+            h.organization_id,
+            h.workspace_id,
+            COALESCE(o.name, '') AS organization_name,
+            COALESCE(w.name, '') AS workspace_name,
+            h.created_at,
+            h.created_at AS updated_at,
+            h.output_type AS output_formats,
+            (
+                SELECT editor_url
+                FROM beautiful_ai_presentations b
+                WHERE b.organization_id = h.organization_id
+                  AND b.workspace_id = h.workspace_id
+                  AND COALESCE(b.project_id, '') = COALESCE(CAST(h.project_id AS TEXT), '')
+                ORDER BY b.created_at DESC
+                LIMIT 1
+            ) AS beautiful_ai_url
+        FROM proposal_histories h
+        LEFT JOIN users u ON u.id = h.user_id
+        LEFT JOIN customers c ON c.id = h.customer_id
+        LEFT JOIN projects p ON p.id = h.project_id
+        LEFT JOIN organizations o ON o.id = h.organization_id
+        LEFT JOIN workspaces w ON w.id = h.workspace_id
+        WHERE {" AND ".join(clauses)}
+        ORDER BY h.created_at DESC, h.id DESC
+        LIMIT ?
+        """,
+        (*params, max(1, min(int(limit), 200))),
+    ).fetchall()
+    return [dict(row) for row in rows]
+
+
 def list_crm(
     db: Connection,
     user_id: int | None = None,

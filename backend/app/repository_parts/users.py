@@ -22,13 +22,16 @@ def ensure_initial_admin(db: Connection) -> None:
     if existing:
         return
     db.execute(
-        "INSERT INTO users (email, password_hash, role, is_active) VALUES (?, ?, 'admin', 1)",
-        (settings.initial_admin_email, hash_password(settings.initial_admin_password)),
+        "INSERT INTO users (display_name, email, password_hash, role, is_active) VALUES (?, ?, ?, 'admin', 1)",
+        ("Initial Admin", settings.initial_admin_email, hash_password(settings.initial_admin_password)),
     )
 
 
 def authenticate_user(db: Connection, email: str, password: str) -> dict[str, Any] | None:
-    user = db.execute("SELECT * FROM users WHERE email = ? AND is_active = 1", (email.strip().lower(),)).fetchone()
+    user = db.execute(
+        "SELECT * FROM users WHERE email = ? AND is_active = 1 AND deleted_at IS NULL",
+        (email.strip().lower(),),
+    ).fetchone()
     if not user or not verify_password(password, user["password_hash"]):
         return None
     return row_to_dict(user)
@@ -38,10 +41,31 @@ def get_user_by_id(db: Connection, user_id: int) -> dict[str, Any] | None:
     return add_role_display_fields(row_to_dict(
         db.execute(
             """
-            SELECT id, email, role, current_organization_id, current_workspace_id, is_active, auth_version, pilot_enabled, pilot_started_at, pilot_last_used_at,
-                   pilot_completed, pilot_note, created_at, updated_at
-            FROM users
-            WHERE id = ?
+            SELECT
+                u.id,
+                u.display_name,
+                u.email,
+                u.role,
+                u.current_organization_id,
+                u.current_workspace_id,
+                COALESCE(o.name, '') AS organization_name,
+                COALESCE(w.name, '') AS workspace_name,
+                u.is_active,
+                u.auth_version,
+                u.pilot_enabled,
+                u.pilot_started_at,
+                u.pilot_last_used_at,
+                u.pilot_completed,
+                u.pilot_note,
+                u.last_login_at,
+                u.password_change_required,
+                u.deleted_at,
+                u.created_at,
+                u.updated_at
+            FROM users u
+            LEFT JOIN organizations o ON o.id = u.current_organization_id
+            LEFT JOIN workspaces w ON w.id = u.current_workspace_id
+            WHERE u.id = ?
             """,
             (user_id,),
         ).fetchone()
@@ -51,13 +75,35 @@ def get_user_by_id(db: Connection, user_id: int) -> dict[str, Any] | None:
 def list_users(db: Connection) -> list[dict[str, Any]]:
     rows = db.execute(
         """
-        SELECT id, email, role, current_organization_id, current_workspace_id, is_active, auth_version, pilot_enabled, pilot_started_at, pilot_last_used_at,
-               pilot_completed, pilot_note, created_at, updated_at
-        FROM users
-        ORDER BY id DESC
+        SELECT
+            u.id,
+            u.display_name,
+            u.email,
+            u.role,
+            u.current_organization_id,
+            u.current_workspace_id,
+            COALESCE(o.name, '') AS organization_name,
+            COALESCE(w.name, '') AS workspace_name,
+            u.is_active,
+            u.auth_version,
+            u.pilot_enabled,
+            u.pilot_started_at,
+            u.pilot_last_used_at,
+            u.pilot_completed,
+            u.pilot_note,
+            u.last_login_at,
+            u.password_change_required,
+            u.deleted_at,
+            u.created_at,
+            u.updated_at
+        FROM users u
+        LEFT JOIN organizations o ON o.id = u.current_organization_id
+        LEFT JOIN workspaces w ON w.id = u.current_workspace_id
+        WHERE u.deleted_at IS NULL
+        ORDER BY u.id DESC
         """
     ).fetchall()
-    return [dict(row) for row in rows]
+    return [add_role_display_fields(dict(row)) for row in rows]
 
 
 def _pilot_days_remaining() -> int | None:
@@ -290,22 +336,21 @@ def build_pilot_end_report(db: Connection, admin_comment: str = "", scope: Any |
     }
 
 
-def create_user(db: Connection, email: str, password: str, role: str) -> dict[str, Any]:
+def create_user(db: Connection, email: str, password: str, role: str, display_name: str = "") -> dict[str, Any]:
     storage_role = normalize_role_for_storage(role)
     db.execute(
-        "INSERT INTO users (email, password_hash, role, is_active, auth_version) VALUES (?, ?, ?, 1, 1)",
-        (email.strip().lower(), hash_password(password), storage_role),
+        "INSERT INTO users (display_name, email, password_hash, role, is_active, auth_version) VALUES (?, ?, ?, ?, 1, 1)",
+        (display_name.strip()[:160], email.strip().lower(), hash_password(password), storage_role),
     )
     user = db.execute(
         """
-        SELECT id, email, role, current_organization_id, current_workspace_id, is_active, auth_version, pilot_enabled, pilot_started_at, pilot_last_used_at,
-               pilot_completed, pilot_note, created_at, updated_at
+        SELECT id
         FROM users
         WHERE email = ?
         """,
         (email.strip().lower(),),
     ).fetchone()
-    result = add_role_display_fields(dict(user))
+    result = get_user_by_id(db, int(user["id"])) if user else None
     if result:
         db.execute(
             """
@@ -314,7 +359,15 @@ def create_user(db: Connection, email: str, password: str, role: str) -> dict[st
             """,
             (int(result["id"]), "organization_admin" if result["role"] in {"admin", "manager"} else "member"),
         )
-    return result
+    return result or {}
+
+
+def set_user_display_name(db: Connection, user_id: int, display_name: str) -> dict[str, Any] | None:
+    db.execute(
+        "UPDATE users SET display_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        (display_name.strip()[:160], user_id),
+    )
+    return get_user_by_id(db, user_id)
 
 
 def set_user_active(db: Connection, user_id: int, is_active: bool) -> dict[str, Any] | None:
@@ -334,16 +387,59 @@ def set_user_role(db: Connection, user_id: int, role: str) -> dict[str, Any] | N
     return get_user_by_id(db, user_id)
 
 
-def set_user_password(db: Connection, user_id: int, password: str) -> dict[str, Any] | None:
+def set_user_password(db: Connection, user_id: int, password: str, password_change_required: bool = False) -> dict[str, Any] | None:
     db.execute(
-        "UPDATE users SET password_hash = ?, auth_version = auth_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        (hash_password(password), user_id),
+        """
+        UPDATE users
+        SET password_hash = ?,
+            password_change_required = ?,
+            auth_version = auth_version + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (hash_password(password), 1 if password_change_required else 0, user_id),
     )
     return get_user_by_id(db, user_id)
 
 
+def set_user_password_change_required(db: Connection, user_id: int, required: bool) -> dict[str, Any] | None:
+    db.execute(
+        """
+        UPDATE users
+        SET password_change_required = ?,
+            auth_version = auth_version + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (1 if required else 0, user_id),
+    )
+    return get_user_by_id(db, user_id)
+
+
+def soft_delete_user(db: Connection, user_id: int) -> dict[str, Any] | None:
+    db.execute(
+        """
+        UPDATE users
+        SET is_active = 0,
+            deleted_at = CURRENT_TIMESTAMP,
+            auth_version = auth_version + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (user_id,),
+    )
+    return get_user_by_id(db, user_id)
+
+
+def mark_user_login(db: Connection, user_id: int) -> None:
+    db.execute(
+        "UPDATE users SET last_login_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        (user_id,),
+    )
+
+
 def count_active_admin_users(db: Connection) -> int:
-    row = db.execute("SELECT COUNT(*) AS count FROM users WHERE role = 'admin' AND is_active = 1").fetchone()
+    row = db.execute("SELECT COUNT(*) AS count FROM users WHERE role = 'admin' AND is_active = 1 AND deleted_at IS NULL").fetchone()
     return int(row["count"] if row else 0)
 
 

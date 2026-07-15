@@ -28,15 +28,24 @@ class UserCreateRequest(BaseModel):
     email: str
     password: str = Field(..., min_length=8)
     role: Literal["admin", "user", "manager", "member", "viewer"]
+    display_name: str = Field("", max_length=160)
 
 
 class UserUpdateRequest(BaseModel):
+    display_name: str | None = Field(None, max_length=160)
     is_active: bool | None = None
     role: Literal["admin", "user", "manager", "member", "viewer"] | None = None
     password: str | None = Field(None, min_length=8, max_length=200)
+    password_change_required: bool | None = None
     pilot_enabled: bool | None = None
     pilot_completed: bool | None = None
     pilot_note: str = Field("", max_length=500)
+
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str = Field(..., min_length=1, max_length=200)
+    new_password: str = Field(..., min_length=8, max_length=200)
+    new_password_confirm: str = Field(..., min_length=8, max_length=200)
 
 
 class OrganizationCreateRequest(BaseModel):

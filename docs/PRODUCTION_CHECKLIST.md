@@ -84,3 +84,18 @@
 - [ ] ??????????????
 - [ ] API?????????
 - [ ] DATABASE_URL???????
+# Version 24.0 Production Completion Checklist
+
+□ admin / manager / member / viewerでログイン確認
+□ 新規member作成、Role変更、有効/無効、Pilot対象切替を確認
+□ 管理者Password再設定と次回変更必須フラグを確認
+□ 利用者自身のPassword変更と再ログインを確認
+□ 最後の有効adminを削除・無効化できないことを確認
+□ 作成履歴がOrganization / Workspace / Roleで分離されることを確認
+□ 監査ログにログイン、ユーザー管理、生成、出力、エラーが残ることを確認
+□ 監査ログにPassword、Token、APIキー、顧客本文全文が保存されていないことを確認
+□ `/health` と `/health/ready` が正常であることを確認
+□ SQLiteまたはPostgreSQLのバックアップ取得手順を確認
+□ 復旧リハーサル手順を確認
+□ Quality Gate、要約PPTX、詳細PPTX、見積PDF、Beautiful.aiを安全なテスト案件で確認
+□ Vercel / Render / GitHub Actionsのcommit一致を確認

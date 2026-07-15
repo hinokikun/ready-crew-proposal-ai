@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.auth import require_roles
+from app.auth import get_current_user, require_roles
 from app.config import settings
 from app.db import get_db
-from app.models import UserCreateRequest, UserUpdateRequest
+from app.models import PasswordChangeRequest, UserCreateRequest, UserUpdateRequest
 from app.rate_limit import rate_limit_dependency
 from app.repositories import (
     count_active_admin_users,
@@ -13,11 +13,15 @@ from app.repositories import (
     get_user_by_id,
     list_users,
     set_user_active,
+    set_user_display_name,
     set_user_password,
+    set_user_password_change_required,
     set_user_pilot_settings,
     set_user_role,
+    soft_delete_user,
 )
 from app.role_permissions import normalize_role_for_storage, role_label
+from app.security import verify_password
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -36,7 +40,7 @@ async def post_user(
 ) -> dict:
     try:
         with get_db() as db:
-            user = create_user(db, payload.email, payload.password, payload.role)
+            user = create_user(db, payload.email, payload.password, payload.role, payload.display_name)
             create_audit_log(
                 db,
                 int(current_user["id"]),
@@ -44,7 +48,7 @@ async def post_user(
                 "user",
                 str(user["id"]),
                 "success",
-                f"role={user['role']};role_label={role_label(str(user['role']))}",
+                f"role={user['role']};role_label={role_label(str(user['role']))};display_name_set={bool(payload.display_name)}",
             )
         return {"user": user}
     except Exception as exc:
@@ -91,6 +95,18 @@ async def patch_user(
                 f"previous_active={previous_active};new_active={bool(payload.is_active)}",
             )
 
+        if payload.display_name is not None:
+            user = set_user_display_name(db, user_id, payload.display_name)
+            create_audit_log(
+                db,
+                int(current_user["id"]),
+                "user_display_name_updated",
+                "user",
+                str(user_id),
+                "success",
+                "sanitized=true",
+            )
+
         if payload.role is not None:
             previous_role = str(user.get("role")) if user else ""
             next_role = normalize_role_for_storage(payload.role)
@@ -107,7 +123,7 @@ async def patch_user(
                 )
 
         if payload.password:
-            user = set_user_password(db, user_id, payload.password)
+            user = set_user_password(db, user_id, payload.password, bool(payload.password_change_required))
             create_audit_log(
                 db,
                 int(current_user["id"]),
@@ -115,7 +131,18 @@ async def patch_user(
                 "user",
                 str(user_id),
                 "success",
-                "password_stored=false",
+                f"password_stored=false;change_required={bool(payload.password_change_required)}",
+            )
+        elif payload.password_change_required is not None:
+            user = set_user_password_change_required(db, user_id, payload.password_change_required)
+            create_audit_log(
+                db,
+                int(current_user["id"]),
+                "password_change_required_updated",
+                "user",
+                str(user_id),
+                "success",
+                f"required={bool(payload.password_change_required)}",
             )
 
         if payload.pilot_enabled is not None:
@@ -160,7 +187,52 @@ async def patch_user(
             (
                 f"is_active={payload.is_active};role_changed={payload.role is not None};"
                 f"password_reset={bool(payload.password)};pilot_enabled={payload.pilot_enabled};"
-                f"pilot_completed={payload.pilot_completed}"
+                f"pilot_completed={payload.pilot_completed};display_name_updated={payload.display_name is not None}"
             ),
         )
     return {"user": user}
+
+
+@router.patch("/me/password")
+async def change_my_password(
+    payload: PasswordChangeRequest,
+    current_user: dict = Depends(get_current_user),
+    _: None = Depends(rate_limit_dependency("auth")),
+) -> dict:
+    if payload.new_password != payload.new_password_confirm:
+        raise HTTPException(status_code=400, detail="新しいパスワードが一致しません。")
+    with get_db() as db:
+        row = db.execute("SELECT password_hash FROM users WHERE id = ? AND deleted_at IS NULL", (int(current_user["id"]),)).fetchone()
+        if not row or not verify_password(payload.current_password, row["password_hash"]):
+            create_audit_log(db, int(current_user["id"]), "password_change_failed", "user", str(current_user["id"]), "failure", "reason=current_password")
+            raise HTTPException(status_code=400, detail="現在のパスワードが正しくありません。")
+        user = set_user_password(db, int(current_user["id"]), payload.new_password, False)
+        create_audit_log(db, int(current_user["id"]), "password_changed", "user", str(current_user["id"]), "success", "password_stored=false")
+    return {"ok": True, "user": user, "message": "パスワードを変更しました。再ログインしてください。"}
+
+
+@router.delete("/{user_id}")
+async def delete_user(
+    user_id: int,
+    current_user: dict = Depends(require_roles("admin")),
+    _: None = Depends(rate_limit_dependency("admin")),
+) -> dict:
+    with get_db() as db:
+        user = get_user_by_id(db, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="ユーザーが見つかりません。")
+        if user_id == int(current_user["id"]):
+            raise HTTPException(status_code=400, detail="自分自身のアカウントは削除できません。")
+        if user["role"] == "admin" and count_active_admin_users(db) <= 1:
+            raise HTTPException(status_code=400, detail="最後の有効な管理者は削除できません。")
+        deleted_user = soft_delete_user(db, user_id)
+        create_audit_log(
+            db,
+            int(current_user["id"]),
+            "user_deleted",
+            "user",
+            str(user_id),
+            "success",
+            "logical_delete=true",
+        )
+    return {"user": deleted_user}

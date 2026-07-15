@@ -54,13 +54,21 @@ def create_audit_log(
     match = re.search(r"request_id=([^;]+)", metadata or "")
     if match:
         request_id = match.group(1)[:80]
+    error_type = ""
+    error_match = re.search(r"error_type=([^;]+)", metadata or "")
+    if error_match:
+        error_type = error_match.group(1)[:80]
+    http_status = 0
+    status_match = re.search(r"(?:http_status|status_code)=([0-9]{3})", metadata or "")
+    if status_match:
+        http_status = int(status_match.group(1))
     try:
         db.execute(
             """
-            INSERT INTO audit_logs (user_id, actor_role, event_type, target_type, target_id, status, metadata, organization_id, workspace_id, request_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO audit_logs (user_id, actor_role, event_type, target_type, target_id, status, metadata, organization_id, workspace_id, request_id, error_type, http_status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (user_id, actor_role, event_type, target_type, target_id, status, metadata[:300], organization_id, workspace_id, request_id),
+            (user_id, actor_role, event_type, target_type, target_id, status, metadata[:300], organization_id, workspace_id, request_id, error_type, http_status),
         )
     except Exception:
         db.execute(

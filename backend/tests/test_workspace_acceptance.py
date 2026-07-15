@@ -99,8 +99,10 @@ def test_alembic_upgrade_empty_sqlite_creates_workspace_schema(monkeypatch, tmp_
     with sqlite3.connect(db_path) as db:
         columns = {row[1] for row in db.execute("PRAGMA table_info(projects)").fetchall()}
         assert {"organization_id", "workspace_id"}.issubset(columns)
+        user_columns = {row[1] for row in db.execute("PRAGMA table_info(users)").fetchall()}
+        assert {"display_name", "last_login_at", "password_change_required", "deleted_at"}.issubset(user_columns)
         version = db.execute("SELECT version_num FROM alembic_version").fetchone()[0]
-        assert version == "20260713_2010"
+        assert version == "20260715_2400"
 
 
 def test_alembic_migrates_legacy_quality_gate_unique(monkeypatch, tmp_path: Path) -> None:

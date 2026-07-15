@@ -182,6 +182,33 @@ def test_role_change_and_password_reset_invalidate_old_token(client: TestClient,
     assert new_login.status_code == 200
 
 
+def test_user_can_change_own_password_and_old_token_is_rejected(client: TestClient, admin_headers: dict[str, str]) -> None:
+    create_response = client.post(
+        "/api/users",
+        headers=admin_headers,
+        json={"email": "self-password@example.com", "password": "old-password", "role": "member"},
+    )
+    assert create_response.status_code == 200
+    old_headers = _login(client, "self-password@example.com", "old-password")
+
+    mismatch = client.patch(
+        "/api/users/me/password",
+        headers=old_headers,
+        json={"current_password": "old-password", "new_password": "new-password", "new_password_confirm": "different-password"},
+    )
+    assert mismatch.status_code == 400
+
+    change_response = client.patch(
+        "/api/users/me/password",
+        headers=old_headers,
+        json={"current_password": "old-password", "new_password": "new-password", "new_password_confirm": "new-password"},
+    )
+    assert change_response.status_code == 200
+    assert client.get("/api/auth/status", headers=old_headers).status_code == 401
+    assert client.post("/api/auth/login", json={"email": "self-password@example.com", "password": "old-password"}).status_code == 401
+    assert client.post("/api/auth/login", json={"email": "self-password@example.com", "password": "new-password"}).status_code == 200
+
+
 def test_admin_cannot_remove_last_admin(client: TestClient, admin_headers: dict[str, str]) -> None:
     users = client.get("/api/users", headers=admin_headers).json()["users"]
     admin_user = next(user for user in users if user["role"] == "admin")

@@ -8,6 +8,7 @@
   AiNotificationSummary,
   ActionQueueItem,
   ActionQueueStatus,
+  CreationHistoryItem,
   CrmCustomer,
   CrmProject,
   DailyBriefingAnalytics,
@@ -108,7 +109,7 @@ export {
   markAiNotificationRead,
   runAiWatchEngine
 } from "@/client-api/notifications";
-export { createUser, listUsers, updateUserActive, updateUserPilot } from "@/client-api/users";
+export { changeOwnPassword, createUser, deleteUser, listUsers, updateUser, updateUserActive, updateUserPilot } from "@/client-api/users";
 export {
   completeProject,
   createProject,
@@ -126,6 +127,7 @@ export {
   createTrialReport,
   downloadUsageDashboardCsv,
   getAuditLogs,
+  getCreationHistory,
   getDbLogs,
   getImprovementDashboard,
   getOperationReadiness,

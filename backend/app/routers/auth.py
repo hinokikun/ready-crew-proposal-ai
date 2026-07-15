@@ -6,7 +6,7 @@ from app.auth import ensure_pilot_user_allowed, get_current_user
 from app.config import settings
 from app.db import get_db
 from app.models import AuthLoginRequest, AuthResponse, AuthStatusResponse
-from app.repositories import authenticate_user, create_audit_log, create_user, get_user_by_id, mark_pilot_login
+from app.repositories import authenticate_user, create_audit_log, create_user, get_user_by_id, mark_pilot_login, mark_user_login
 from app.role_permissions import normalize_role_for_storage, role_group, role_label
 from app.rate_limit import rate_limit_dependency
 from app.security import create_auth_token, verify_password
@@ -67,6 +67,7 @@ def _inactive_user_matches_password(db, email: str, password: str) -> dict | Non
 def _public_user(user: dict) -> dict:
     return {
         "id": user["id"],
+        "display_name": user.get("display_name") or "",
         "email": user["email"],
         "role": user["role"],
         "role_group": role_group(str(user["role"])),
@@ -80,6 +81,8 @@ def _public_user(user: dict) -> dict:
         "pilot_last_used_at": user.get("pilot_last_used_at") or "",
         "pilot_completed": bool(user.get("pilot_completed", False)),
         "pilot_note": user.get("pilot_note") or "",
+        "last_login_at": user.get("last_login_at") or "",
+        "password_change_required": bool(user.get("password_change_required", False)),
     }
 
 
@@ -115,6 +118,7 @@ def _login_with_mode(payload: AuthLoginRequest) -> AuthResponse:
         except HTTPException:
             _audit_login(db, int(user["id"]), "login_failure", email, "pilot_denied", login_mode)
             raise HTTPException(status_code=403, detail=PILOT_DENIED_ERROR)
+        mark_user_login(db, int(user["id"]))
         mark_pilot_login(db, int(user["id"]))
         current = get_user_by_id(db, int(user["id"])) or user
         _audit_login(db, int(user["id"]), "login_success", email, "success", login_mode)

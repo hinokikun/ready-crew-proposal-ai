@@ -239,3 +239,30 @@ Resolution criteria:
 - admin aggregate defaults to `scope=workspace`
 - system aggregate requires explicit `scope=system` and admin role
 - cloud smoke test passes with forbidden workspace and other-project IDOR checks
+# Version 24.0 Incident Response
+
+## 重大障害候補
+
+- ログイン不能
+- Backend全体停止
+- DB接続不能
+- AI生成、PPTX、PDF、Beautiful.aiが連続失敗
+- 権限外ユーザーが管理機能へアクセスできた
+- Organization / Workspaceを跨いだデータ参照
+- 監査ログまたはアプリログへ秘密情報が保存された疑い
+
+## 初動
+
+1. 新規生成を止める必要がある場合はMaintenance Modeを有効化します。
+2. 発生日時、Role、Organization、Workspace、操作、`request_id`、画面幅、ブラウザを記録します。
+3. Backendログ、監査ログ、Beautiful.ai診断履歴を確認します。
+4. APIキー、Password、Token、顧客本文全文は障害報告へ貼り付けないでください。
+5. 影響範囲を `admin`、`manager`、`member`、`viewer`、Organization、Workspace単位で切り分けます。
+
+## 復旧後確認
+
+1. `/health` と `/health/ready` を確認します。
+2. admin/member/viewerでログイン確認します。
+3. Quality Gate、要約PPTX、詳細PPTX、見積PDF、Beautiful.aiを安全なテスト案件で確認します。
+4. 監査ログに復旧操作が残っていることを確認します。
+5. 必要に応じてVercel Rollback、Render Manual Deploy、DB Restoreを実施します。

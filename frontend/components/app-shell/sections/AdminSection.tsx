@@ -27,8 +27,22 @@ export type AdminSectionProps = {
   dbLogCount: number;
   feedbackEntries: any[];
   feedbackSummary: any;
-  handleCreateUser: (payload: { email: string; password: string; role: CreatableUserRole }) => Promise<void>;
+  handleCreateUser: (payload: { email: string; password: string; role: CreatableUserRole; display_name?: string }) => Promise<void>;
+  handleDeleteUser: (userId: number) => Promise<void>;
   handleDownloadUsageCsv: () => Promise<void> | void;
+  handleUpdateUser: (
+    userId: number,
+    payload: Partial<{
+      display_name: string;
+      role: CreatableUserRole;
+      password: string;
+      password_change_required: boolean;
+      is_active: boolean;
+      pilot_enabled: boolean;
+      pilot_completed: boolean;
+      pilot_note: string;
+    }>
+  ) => Promise<void>;
   handleTogglePilot: (userId: number, enabled: boolean) => Promise<void>;
   handleToggleUser: (userId: number, isActive: boolean) => Promise<void>;
   healthSnapshot: HealthSnapshot | null;
@@ -48,7 +62,9 @@ export function AdminSection({
   feedbackEntries,
   feedbackSummary,
   handleCreateUser,
+  handleDeleteUser,
   handleDownloadUsageCsv,
+  handleUpdateUser,
   handleTogglePilot,
   handleToggleUser,
   healthSnapshot,
@@ -145,7 +161,14 @@ export function AdminSection({
         </details>
         <details className="advanced-foldout" id="admin-users-panel">
           <summary>ユーザー管理を開く</summary>
-          <AdminUsersPanel users={managedUsers} onCreateUser={handleCreateUser} onToggleUser={handleToggleUser} onTogglePilot={handleTogglePilot} />
+          <AdminUsersPanel
+            users={managedUsers}
+            onCreateUser={handleCreateUser}
+            onDeleteUser={handleDeleteUser}
+            onToggleUser={handleToggleUser}
+            onTogglePilot={handleTogglePilot}
+            onUpdateUser={handleUpdateUser}
+          />
         </details>
         <details className="advanced-foldout" id="admin-pilot-dashboard-panel">
           <summary>Pilot Dashboardを開く</summary>

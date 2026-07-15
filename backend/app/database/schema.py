@@ -48,6 +48,7 @@ def _schema_statements() -> list[str]:
         f"""
         CREATE TABLE IF NOT EXISTS users (
             id {id_column},
+            display_name TEXT NOT NULL DEFAULT '',
             email TEXT NOT NULL UNIQUE,
             password_hash TEXT NOT NULL,
             role TEXT NOT NULL CHECK(role IN ('admin', 'manager', 'member', 'viewer')),
@@ -60,6 +61,9 @@ def _schema_statements() -> list[str]:
             pilot_last_used_at TEXT,
             pilot_completed INTEGER NOT NULL DEFAULT 0,
             pilot_note TEXT NOT NULL DEFAULT '',
+            last_login_at TEXT,
+            password_change_required INTEGER NOT NULL DEFAULT 0,
+            deleted_at TEXT,
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
@@ -195,6 +199,8 @@ def _schema_statements() -> list[str]:
             target_id TEXT NOT NULL DEFAULT '',
             status TEXT NOT NULL DEFAULT 'success',
             metadata TEXT NOT NULL DEFAULT '',
+            error_type TEXT NOT NULL DEFAULT '',
+            http_status INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(user_id) REFERENCES users(id)
         )

@@ -12,7 +12,7 @@ from app.beautiful_ai.schemas import (
     BeautifulAiStoredListResponse,
 )
 from app.db import get_db
-from app.repositories import get_user_context_ids
+from app.repositories import create_history_log, get_user_context_ids
 from app.rate_limit.service import rate_limit_dependency
 from app.services.beautiful_ai_service import (
     BeautifulAiServiceError,
@@ -27,6 +27,12 @@ from app.services.beautiful_ai_service import (
 router = APIRouter(prefix="/api/beautiful-ai", tags=["beautiful-ai"])
 
 
+def _beautiful_ai_input_length(payload: BeautifulAiPresentationRequest) -> int:
+    slides = getattr(payload.powerpoint_generation_data, "slides", []) or []
+    slide_text = "".join(f"{getattr(slide, 'title', '')}{getattr(slide, 'body', '')}" for slide in slides)
+    return len(payload.project_brief or "") + len(payload.client_company_info or "") + len(slide_text)
+
+
 @router.get("/status", response_model=BeautifulAiStatusResponse)
 async def get_status(_: dict = Depends(require_roles("admin", "manager", "member", "viewer"))) -> BeautifulAiStatusResponse:
     with get_db() as db:
@@ -39,8 +45,29 @@ async def create_presentation(payload: BeautifulAiPresentationRequest, user: dic
     with get_db() as db:
         try:
             response = await create_beautiful_ai_presentation(db, request=payload, user_id=int(user["id"]))
+            create_history_log(
+                db,
+                int(user["id"]),
+                None,
+                None,
+                "Beautiful.ai",
+                _beautiful_ai_input_length(payload),
+                "beautiful-ai",
+                "success",
+            )
             return response.dict()
         except BeautifulAiServiceError as exc:
+            create_history_log(
+                db,
+                int(user["id"]),
+                None,
+                None,
+                "Beautiful.ai",
+                _beautiful_ai_input_length(payload),
+                "beautiful-ai",
+                "failure",
+                exc.error_type,
+            )
             error = BeautifulAiSafeError(
                 error_type=exc.error_type,
                 message=exc.message,

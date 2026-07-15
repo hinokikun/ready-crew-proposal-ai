@@ -101,3 +101,27 @@ SELECT COUNT(*) FROM audit_logs;
 5. Confirm the Quality Gate unique index is scoped by `(organization_id, workspace_id, project_id)`.
 
 If counts differ unexpectedly, stop the rollout, keep Maintenance Mode enabled, and restore from the verified backup.
+# Version 24.0 Backup / Restore
+
+## SQLite利用時
+
+1. Backendを停止、またはMaintenance Modeで新規生成を止めます。
+2. `backend/app.db` を日付付きファイル名でコピーします。
+3. コピー後、元DBとバックアップDBのファイルサイズを確認します。
+4. 復旧時は現在の `app.db` を退避してから、バックアップファイルを `app.db` として戻します。
+5. 復旧後に `/health`、`/health/ready`、ログイン、作成履歴、PPTX/PDF出力を確認します。
+
+Render無料環境ではファイル永続化が保証されない場合があります。正式運用ではRender PostgreSQL、Supabase、NeonなどのPostgreSQL利用を推奨します。
+
+## PostgreSQL利用時
+
+1. Render PostgreSQL、Supabase、Neonなどの管理画面で手動バックアップまたはスナップショットを取得します。
+2. 復旧前に対象環境、Database URL、バックアップ時刻を確認します。
+3. 本番DBへ直接復旧する前に、検証環境へRestoreしてスキーマ整合性を確認します。
+4. `alembic current` と `alembic upgrade head` の結果を確認します。
+5. 復旧後にOrganization / Workspace分離、ログイン、作成履歴、Beautiful.ai履歴を確認します。
+
+## 成果物データ
+
+- PPTX/PDFは再生成可能なため、DBバックアップ対象は履歴、監査、設定、レビュー状態を優先します。
+- Beautiful.aiの外部URLは期限切れや権限変更で開けなくなる場合があります。期限切れ時は再生成を案内してください。
