@@ -1,9 +1,9 @@
 # ProposalPilot Premium Design Guideline v1
 
-Version: 38.0 Presentation Design Research  
-Status: Design specification only. No production implementation.  
-Created: 2026-07-17  
-Product: ProposalPilot / AI営業秘書  
+Version: 38.0 Presentation Design Research
+Status: Design specification only. No production implementation.
+Created: 2026-07-17
+Product: ProposalPilot / AI営業秘書
 Purpose: Upgrade the PPTX output standard from "PowerPoint generation" to "executive sales proposal generation."
 
 ---
@@ -31,43 +31,43 @@ ProposalPilotのPPTX生成エンジンは、単に文章をスライドへ配置
 
 ### Primary public sources reviewed
 
-- Microsoft Copilot in PowerPoint: Copilot can add slides from a prompt or file, and Microsoft recommends starting from an organization template to preserve theme and design.  
+- Microsoft Copilot in PowerPoint: Copilot can add slides from a prompt or file, and Microsoft recommends starting from an organization template to preserve theme and design.
   Source: [Microsoft Support - Create a new presentation with Copilot in PowerPoint](https://support.microsoft.com/en-gb/copilot-powerpoint)
 
-- Microsoft Learn: Copilot is positioned as a way to create professional, engaging, cohesive presentations quickly.  
+- Microsoft Learn: Copilot is positioned as a way to create professional, engaging, cohesive presentations quickly.
   Source: [Microsoft Learn - Build effective presentations with AI](https://learn.microsoft.com/en-us/training/modules/present-copilot-microsoft-powerpoint/)
 
-- Gamma: Gamma emphasizes turning prompts, notes, docs, PDFs, and URLs into polished, structured presentations, with adaptive layouts, themes, media, web sharing, and analytics.  
+- Gamma: Gamma emphasizes turning prompts, notes, docs, PDFs, and URLs into polished, structured presentations, with adaptive layouts, themes, media, web sharing, and analytics.
   Source: [Gamma - AI PowerPoint Generator](https://gamma.app/ai-powerpoint)
 
-- Beautiful.ai: Beautiful.ai separates prompt, outline, visual preferences, and generation. It emphasizes shaping the story before slide design, then applying polished design.  
+- Beautiful.ai: Beautiful.ai separates prompt, outline, visual preferences, and generation. It emphasizes shaping the story before slide design, then applying polished design.
   Source: [Beautiful.ai - Creating a presentation with AI](https://support.beautiful.ai/hc/en-us/articles/12885226948109-Creating-a-presentation-with-AI)
 
-- Beautiful.ai Smart Slides: Smart Slides include title, image, icon-with-text, text boxes, tables, charts, and structural layouts.  
+- Beautiful.ai Smart Slides: Smart Slides include title, image, icon-with-text, text boxes, tables, charts, and structural layouts.
   Source: [Beautiful.ai - Smart Slide Layouts](https://support.beautiful.ai/hc/en-us/categories/40157039009933-Smart-Slide-Layouts)
 
-- Canva: Canva Magic Design creates on-brand presentations from a prompt, then supports editing, brand application, photos, graphics, collaboration, and offline presentation.  
+- Canva: Canva Magic Design creates on-brand presentations from a prompt, then supports editing, brand application, photos, graphics, collaboration, and offline presentation.
   Source: [Canva - AI Presentation Maker](https://www.canva.com/create/ai-presentations/)
 
-- McKinsey / Minto Pyramid Principle: McKinsey alumni material and Barbara Minto's own site emphasize structure, clarity, MECE grouping, and ideas organized under a single point.  
+- McKinsey / Minto Pyramid Principle: McKinsey alumni material and Barbara Minto's own site emphasize structure, clarity, MECE grouping, and ideas organized under a single point.
   Sources: [McKinsey Alumni - Barbara Minto](https://www.mckinsey.com/alumni/news-and-events/global-news/alumni-news/barbara-minto-mece-i-invented-it-so-i-get-to-say-how-to-pronounce-it), [Barbara Minto](https://www.barbaraminto.com/)
 
-- McKinsey Insights: McKinsey publishes articles, reports, white papers, videos, podcasts, and exhibits for executive audiences.  
+- McKinsey Insights: McKinsey publishes articles, reports, white papers, videos, podcasts, and exhibits for executive audiences.
   Source: [McKinsey - Our Insights FAQ](https://www.mckinsey.com/frequently-asked-questions/our-insights/en)
 
-- BCG: BCG's public materials show structured methods built around purpose, target behaviors, design levers, and implementation.  
+- BCG: BCG's public materials show structured methods built around purpose, target behaviors, design levers, and implementation.
   Source: [BCG - Organization Design](https://www.bcg.com/capabilities/organization-strategy/organization-design)
 
-- Deloitte Insights: Deloitte frames research as proprietary analysis that helps leaders navigate what is next and turn aspiration into action.  
+- Deloitte Insights: Deloitte frames research as proprietary analysis that helps leaders navigate what is next and turn aspiration into action.
   Source: [Deloitte Insights - About](https://www.deloitte.com/us/en/insights/about/about-deloitte-insights.html)
 
-- Accenture Research: Accenture positions research as data-driven thought leadership for leaders anticipating trends and transformation.  
+- Accenture Research: Accenture positions research as data-driven thought leadership for leaders anticipating trends and transformation.
   Source: [Accenture Research](https://www.accenture.com/us-en/about/accenture-research-index)
 
-- IBM Institute for Business Value: IBM emphasizes trusted, technology-based insights to help leaders make better decisions and investments.  
+- IBM Institute for Business Value: IBM emphasizes trusted, technology-based insights to help leaders make better decisions and investments.
   Source: [IBM Institute for Business Value](https://www.ibm.com/thought-leadership/institute-business-value)
 
-- Amazon Working Backwards / PRFAQ: Amazon starts from the customer experience and works backward to the solution; PRFAQ captures value, assumptions, economics, and hard questions before execution.  
+- Amazon Working Backwards / PRFAQ: Amazon starts from the customer experience and works backward to the solution; PRFAQ captures value, assumptions, economics, and hard questions before execution.
   Sources: [AWS - Prioritize customer needs](https://docs.aws.amazon.com/wellarchitected/latest/devops-guidance/oa.ti.6-prioritize-customer-needs-to-deliver-optimal-business-outcomes.html), [About Amazon - Working Backwards](https://www.aboutamazon.com/news/workplace/an-insider-look-at-amazons-culture-and-processes)
 
 ### Interpretation policy
@@ -261,12 +261,12 @@ Hero pages decide whether the proposal feels premium within the first 5 seconds.
 
 For AI-OCR:
 
-Title: "AI-OCRで書類確認を短縮し、入力品質を標準化する"  
+Title: "AI-OCRで書類確認を短縮し、入力品質を標準化する"
 Key visual: document image placeholder + OCR scan frame + AI candidate chip
 
 For manufacturing:
 
-Title: "検査工程のばらつきをAIで見える化し、現場判断を揃える"  
+Title: "検査工程のばらつきをAIで見える化し、現場判断を揃える"
 Key visual: camera / product / anomaly detection overlay
 
 ---
@@ -1065,4 +1065,3 @@ No changes were made to:
 - Authorization
 
 No commit or push is required for the research phase unless separately approved.
-
