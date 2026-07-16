@@ -728,9 +728,9 @@ def add_estimate_slide(prs: Presentation, slide_data: PowerPointSlide, context: 
     slide = blank_slide(prs)
     set_background(slide)
     add_header(slide, slide_data.title or "概算見積", "ESTIMATE", accent=COLORS["teal"])
-    add_text(slide, f"合計概算 {context.estimate.total_label}", 0.9, 1.1, 5.8, 0.35, size=20, color=COLORS["teal"], bold=True)
     estimate_scope = context.estimate.scope_label
-    add_text(slide, f"{estimate_scope} / 予算感: {context.estimate.budget_label}", 7.1, 1.16, 5.0, 0.24, size=12, color=COLORS["muted"], bold=True, align=PP_ALIGN.RIGHT)
+    add_text(slide, f"合計概算 {context.estimate.total_label}", 3.35, 0.98, 3.15, 0.28, size=16, color=COLORS["teal"], bold=True, align=PP_ALIGN.RIGHT)
+    add_text(slide, f"{estimate_scope} / 予算感: {context.estimate.budget_label}", 6.72, 0.98, 5.5, 0.28, size=12, color=COLORS["muted"], bold=True, align=PP_ALIGN.RIGHT)
     rows = [
         [
             str(line["name"]),

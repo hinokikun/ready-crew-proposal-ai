@@ -16,11 +16,11 @@ def add_metric_card(slide, label: str, value: str, x: float, y: float, w: float,
 
 
 def add_process_step(slide, index: int, title: str, body: str, x: float, y: float, w: float, accent: str) -> None:
-    add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, 1.28, fill=COLORS["white"], line=COLORS["line"])
+    add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, 1.52, fill=COLORS["white"], line=COLORS["line"])
     add_shape(slide, MSO_SHAPE.OVAL, x + 0.22, y + 0.28, 0.48, 0.48, fill=accent, line=accent)
     add_text(slide, str(index), x + 0.22, y + 0.39, 0.48, 0.14, size=11, color=COLORS["white"], bold=True, align=PP_ALIGN.CENTER)
     add_text(slide, _trim(title, 20), x + 0.86, y + 0.26, w - 1.05, 0.24, size=16, color=COLORS["navy"], bold=True)
-    add_text(slide, _trim(body, 42), x + 0.86, y + 0.72, w - 1.05, 0.34, size=14, color=COLORS["text"])
+    add_text(slide, _trim(body, 42), x + 0.86, y + 0.7, w - 1.05, 0.58, size=13, color=COLORS["text"])
 
 
 def add_architecture_diagram(slide, nodes: list[str], x: float, y: float, w: float, h: float) -> None:
