@@ -13,6 +13,7 @@ from app.prompts import BASIC_PROPOSAL_STRUCTURE, SYSTEM_PROMPT, build_user_prom
 from app.proposal_profiles import (
     ProposalProfile,
     detect_proposal_category,
+    extract_project_specifics,
     get_proposal_profile,
 )
 from app.schemas.proposal import PROPOSAL_ANALYSIS_SCHEMA
@@ -149,6 +150,7 @@ def _extract_input_signals(payload: ProposalRequest) -> dict[str, Any]:
     )
     project_category = _detect_project_category(full_text)
     profile = get_proposal_profile(project_category)
+    specifics = extract_project_specifics(full_text, profile)
     needs = _unique_texts(
         [
             "問い合わせ導線・CTA改善" if _contains_any(full_text, ["問い合わせ", "問合せ", "CV", "コンバージョン"]) else "",
@@ -169,14 +171,14 @@ def _extract_input_signals(payload: ProposalRequest) -> dict[str, Any]:
         services = profile.services[:4]
 
     if project_category != "web":
-        needs = profile.needs[:4]
-        services = _unique_texts(services + profile.services, 4)
+        needs = _unique_texts(specifics.facts + specifics.needs + needs, 6)
+        services = _unique_texts(services + specifics.services + profile.services, 8)
 
     cases = _extract_text_items(payload.case_studies, 3)
     if not cases:
         cases = ["近しい課題の成功事例を提案時に差し替え", "成果につながった進め方を紹介"]
 
-    confirmations = profile.confirmations if project_category != "web" else _build_confirmation_items(full_text)
+    confirmations = specifics.confirmations if project_category != "web" else _build_confirmation_items(full_text)
     template_sections = [section for section in profile.sections if section in payload.past_proposal_template]
 
     has_budget_detail = "予算" in full_text and not _contains_any(full_text, ["予算は未定", "予算未定", "予算感未定"])
@@ -197,14 +199,18 @@ def _extract_input_signals(payload: ProposalRequest) -> dict[str, Any]:
         "business_issue": business_issue,
         "opportunity": opportunity,
         "target_state": target_state,
-        "journey": profile.journey if project_category != "web" else _derive_journey(concept),
-        "sitemap": profile.structure_items if project_category != "web" else _derive_sitemap(full_text),
-        "kpi": profile.kpis if project_category != "web" else _derive_kpi(concept, full_text),
+        "journey": specifics.journey if project_category != "web" else _derive_journey(concept),
+        "sitemap": specifics.structure_items if project_category != "web" else _derive_sitemap(full_text),
+        "kpi": specifics.kpis if project_category != "web" else _derive_kpi(concept, full_text),
         "competitor": _derive_competitor_analysis(full_text),
         "winning_strategy": profile.winning_strategy if project_category != "web" else _derive_winning_strategy(full_text),
-        "targets": profile.targets if project_category != "web" else _derive_target_users(full_text, concept),
-        "content": profile.content_items if project_category != "web" else _derive_content_plan(full_text, concept),
-        "web_strategy": profile.strategy_items if project_category != "web" else _derive_web_strategy(concept, needs),
+        "targets": specifics.targets if project_category != "web" else _derive_target_users(full_text, concept),
+        "content": specifics.content_items if project_category != "web" else _derive_content_plan(full_text, concept),
+        "web_strategy": specifics.strategy_items if project_category != "web" else _derive_web_strategy(concept, needs),
+        "specific_facts": specifics.facts,
+        "premise_items": specifics.premise_items,
+        "schedule": specifics.schedule,
+        "team": specifics.team,
         "estimate": estimate,
         "budget_fit": estimate["budget_fit"],
         "has_budget": has_budget_detail,
@@ -348,6 +354,7 @@ def _derive_winning_strategy(text: str) -> str:
 def _derive_estimate_summary(payload: ProposalRequest, text: str) -> dict[str, Any]:
     profile = get_proposal_profile(_detect_project_category(text))
     if profile.category != "web":
+        specifics = extract_project_specifics(text, profile)
         lines = [
             {
                 "name": line.name,
@@ -356,7 +363,7 @@ def _derive_estimate_summary(payload: ProposalRequest, text: str) -> dict[str, A
                 "priority": line.priority,
                 "enabled": not line.optional or _contains_any(text, ["運用", "保守", "改善", "支援", "継続", line.name]),
             }
-            for line in profile.estimate_lines
+            for line in specifics.estimate_lines
         ]
         enabled_lines = [line for line in lines if line["enabled"]]
         total_min = sum(int(line["min"]) for line in enabled_lines)
@@ -371,7 +378,10 @@ def _derive_estimate_summary(payload: ProposalRequest, text: str) -> dict[str, A
         else:
             budget_fit = "予算超過の可能性あり"
         return {
-            "page_count": max(1, len(profile.structure_items)),
+            "page_count": max(1, len(specifics.structure_items)),
+            "scope_label": specifics.scope_label,
+            "premise_items": specifics.premise_items,
+            "notes": specifics.notes,
             "lines": lines,
             "total_min": total_min,
             "total_max": total_max,
@@ -420,6 +430,14 @@ def _derive_estimate_summary(payload: ProposalRequest, text: str) -> dict[str, A
 
     return {
         "page_count": page_count,
+        "scope_label": f"想定ページ数: {page_count}ページ",
+        "premise_items": [
+            f"想定ページ数: {page_count}ページ",
+            f"公開希望時期: {payload.desired_launch_timing or '次回確認'}",
+            f"CMS: {payload.cms_required or '要確認'}",
+            f"問い合わせフォーム: {payload.contact_form_required or '要確認'}",
+        ],
+        "notes": ["外部サービス利用料、撮影費、広告費、サーバー費用は別途確認します。"],
         "lines": lines,
         "total_min": total_min,
         "total_max": total_max,
@@ -1150,14 +1168,22 @@ def _mock_profile_slide_body(
     services = list(signals["services"])  # type: ignore[arg-type]
     confirmations = list(signals["confirmations"])  # type: ignore[arg-type]
     competitor = list(signals["competitor"])
+    specific_facts = list(signals.get("specific_facts", []))
+    journey = list(signals.get("journey", profile.journey))
+    structure_items = list(signals.get("sitemap", profile.structure_items))
+    kpis = list(signals.get("kpi", profile.kpis))
+    targets = list(signals.get("targets", profile.targets))
+    content_items = list(signals.get("content", profile.content_items))
+    strategy_items = list(signals.get("web_strategy", profile.strategy_items))
+    premise_items = list(signals.get("premise_items", []))
     bodies = {
         "表紙": [f"{client_name}様向けの{profile.label}提案", f"提案コンセプト: {profile.concept}", profile.summary],
         "提案サマリー": _unique_texts(
             [
                 f"提案コンセプト: {profile.concept}",
                 f"解決する課題: {_join_for_sentence(needs)}",
-                f"主要施策: {_join_for_sentence(profile.strategy_items)}",
-                f"期待成果: {_join_for_sentence(profile.kpis)}",
+                f"主要施策: {_join_for_sentence(strategy_items)}",
+                f"期待成果: {_join_for_sentence(kpis)}",
             ],
             4,
         ),
@@ -1173,15 +1199,15 @@ def _mock_profile_slide_body(
         "想定される課題": [issue["issue"] for issue in issues[:4]],
         "市場・競合分析": competitor,
         "競合比較分析": _unique_texts([f"勝ち筋: {profile.winning_strategy}", *competitor], 4),
-        "ターゲット分析": profile.targets,
-        "業務フロー": profile.journey,
-        "導入戦略": profile.strategy_items,
-        "導入構成": profile.structure_items,
-        "施策設計": profile.content_items,
-        "KPI設計": profile.kpis,
-        "実行方針": _unique_texts(services + profile.services, 4),
-        "スケジュール": profile.schedule,
-        "体制": profile.team,
+        "ターゲット分析": targets,
+        "業務フロー": journey,
+        "導入戦略": strategy_items,
+        "導入構成": structure_items,
+        "施策設計": content_items,
+        "KPI設計": kpis,
+        "実行方針": _unique_texts(services + content_items, 6),
+        "スケジュール": list(signals.get("schedule", profile.schedule)),
+        "体制": list(signals.get("team", profile.team)),
         "費用概算": _unique_texts(
             [
                 f"合計概算: {estimate['total_label']}",

@@ -296,6 +296,7 @@ export type EstimateLine = {
 
 export type EstimateSummary = {
   pageCount: number;
+  scopeLabel: string;
   totalMin: number;
   totalMax: number;
   totalLabel: string;

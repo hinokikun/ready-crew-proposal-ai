@@ -8,6 +8,7 @@ from app.models import WinProbability
 @dataclass(frozen=True)
 class EstimateSummary:
     page_count: int
+    scope_label: str
     total_min: int
     total_max: int
     total_label: str
@@ -17,6 +18,8 @@ class EstimateSummary:
     required: list[str]
     recommended: list[str]
     optional: list[str]
+    premise_items: list[str]
+    notes: list[str]
 
 
 @dataclass(frozen=True)

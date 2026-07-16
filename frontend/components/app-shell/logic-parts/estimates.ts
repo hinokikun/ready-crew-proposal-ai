@@ -167,6 +167,7 @@ export function deriveEstimateSummary(form: ProposalRequest): EstimateSummary {
 
     return {
       pageCount: profile.estimatePageCount,
+      scopeLabel: `対象範囲: ${profile.structureLabel}`,
       totalMin,
       totalMax,
       totalLabel: `${totalMin}万〜${totalMax}万円`,
@@ -221,6 +222,7 @@ export function deriveEstimateSummary(form: ProposalRequest): EstimateSummary {
 
   return {
     pageCount: normalizedPageCount,
+    scopeLabel: `${normalizedPageCount}ページ想定`,
     totalMin,
     totalMax,
     totalLabel: `${totalMin}万〜${totalMax}万円`,

@@ -5,7 +5,7 @@ from typing import Any
 
 from app.beautiful_ai.schemas import BeautifulAiPayload, BeautifulAiPresentationRequest
 from app.config import settings
-from app.proposal_profiles import proposal_profile_for_text
+from app.proposal_profiles import extract_project_specifics, proposal_profile_for_text
 
 
 MAX_SLIDES = 12
@@ -122,6 +122,17 @@ def _build_prompt(
             ]
         )
     )
+    specifics = extract_project_specifics(
+        "\n".join(
+            [
+                request.project_brief,
+                request.client_company_info,
+                request.special_function_required,
+                request.own_service_info,
+            ]
+        ),
+        profile,
+    )
     lines = [
         "日本語で、法人向けの洗練された営業提案書プレゼンテーションを作成してください。",
         "デザインは上品で信頼感があり、B2B提案に適した余白・見出し・図解を使ってください。",
@@ -132,6 +143,8 @@ def _build_prompt(
         f"案件カテゴリ: {profile.label}",
         f"提案コンセプト: {_safe_text(slides[1]['title'] if len(slides) > 1 else title, 240)}",
         f"提案目的: {_safe_text(request.project_brief, 900)}",
+        "案件固有情報:",
+        *[f"- {_safe_text(fact, 240)}" for fact in specifics.facts[:8]],
         f"想定スケジュール: {_append_confirmation_marker(_safe_text(request.desired_launch_timing or 'TBD', 200))}",
         f"費用概算: {_append_confirmation_marker(_safe_text(request.budget_range or 'TBD', 200))}",
         "",

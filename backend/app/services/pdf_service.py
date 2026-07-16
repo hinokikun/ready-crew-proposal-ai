@@ -145,9 +145,9 @@ def build_estimate_pdf_story(payload: PptxDownloadRequest, page_width: float) ->
             [
                 f"案件名: {project_name}",
                 f"提案コンセプト: {concept}",
-                f"想定ページ数: {estimate.page_count}ページ",
+                estimate.scope_label,
                 f"予算感: {estimate.budget_label}",
-                f"公開希望時期: {payload.desired_launch_timing or '次回確認'}",
+                *(estimate.premise_items[:5] or [f"公開希望時期: {payload.desired_launch_timing or '次回確認'}"]),
                 "金額は税別の概算レンジです。",
             ],
             page_width,
@@ -163,7 +163,7 @@ def build_estimate_pdf_story(payload: PptxDownloadRequest, page_width: float) ->
                 "本見積は概算です。",
                 "正式見積は要件確定後に提示します。",
                 "金額は税別です。税込金額は消費税率に応じて別途算出します。",
-                "外部サービス利用料、撮影費、広告費、サーバー費用は別途確認します。",
+                *estimate.notes,
             ],
             page_width,
             styles,
@@ -412,6 +412,6 @@ def draw_footer(canvas, doc) -> None:
     canvas.saveState()
     canvas.setFont(FONT_GOTHIC, 8)
     canvas.setFillColor(MUTED)
-    canvas.drawString(doc.leftMargin, 10 * mm, "Ready Crew Proposal AI")
+    canvas.drawString(doc.leftMargin, 10 * mm, "ProposalPilot / AI営業秘書")
     canvas.drawRightString(A4[0] - doc.rightMargin, 10 * mm, f"{doc.page}")
     canvas.restoreState()

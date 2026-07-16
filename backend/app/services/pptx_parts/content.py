@@ -4,7 +4,13 @@ from datetime import date
 import re
 
 from app.models import PowerPointData, PowerPointSlide, PptxDownloadRequest
-from app.proposal_profiles import ProposalProfile, get_proposal_profile, proposal_profile_for_text, score_rows_for_axes
+from app.proposal_profiles import (
+    ProposalProfile,
+    extract_project_specifics,
+    get_proposal_profile,
+    proposal_profile_for_text,
+    score_rows_for_axes,
+)
 from app.services.pptx_theme import COLORS
 from app.services.pptx_parts.models import EstimateSummary
 
@@ -66,13 +72,14 @@ def derive_concept(text: str) -> str:
 def derive_current_understanding(project_brief: str, concept: str) -> dict[str, str]:
     profile = proposal_profile_for_text(project_brief)
     if profile.category != "web":
-        points = extract_project_points(project_brief)
+        specifics = extract_project_specifics(project_brief, profile)
+        points = unique_items(specifics.facts + specifics.needs, 6)
         issue = points[0] if points else profile.needs[0]
         return {
-            "現状": f"{profile.label}の導入目的、対象業務、運用条件を整理する局面です。",
+            "現状": points[1] if len(points) > 1 else f"{profile.label}の導入目的、対象業務、運用条件を整理する局面です。",
             "課題": issue,
-            "機会": profile.summary,
-            "目指す状態": f"{profile.concept}を軸に、導入範囲、効果測定、運用定着までを明確にします。",
+            "機会": points[2] if len(points) > 2 else profile.summary,
+            "目指す状態": points[3] if len(points) > 3 else f"{profile.concept}を軸に、導入範囲、効果測定、運用定着までを明確にします。",
         }
 
     points = extract_project_points(project_brief)
@@ -156,7 +163,7 @@ def journey_action(stage: str, concept: str) -> str:
 def derive_sitemap_items(text: str) -> list[str]:
     profile = proposal_profile_for_text(text)
     if profile.category != "web":
-        return profile.structure_items
+        return extract_project_specifics(text, profile).structure_items
     items = ["トップ", "会社案内", "サービス", "実績", "お知らせ", "お問い合わせ"]
     if _contains_any(text, ["採用", "求人", "応募"]):
         items.insert(-1, "採用情報")
@@ -207,7 +214,7 @@ def sitemap_note(item: str) -> str:
 def derive_kpi_rows(text: str, concept: str) -> list[tuple[str, str]]:
     profile = proposal_profile_for_text(text)
     if profile.category != "web":
-        return [_split_label_body(item) for item in profile.kpis[:4]]
+        return [_split_label_body(item) for item in extract_project_specifics(text, profile).kpis[:4]]
     targets = derive_kpi_targets(text, concept)
     if concept == "採用強化":
         return [("問い合わせ数", f"月{int(targets['inquiries'])}件"), ("CV率", f"{targets['cv_rate']}%"), ("自然検索流入", f"月{int(targets['organic'])}セッション"), ("資料DL数", f"月{int(targets['downloads'])}件")]
@@ -269,7 +276,7 @@ def has_competitor_context(context: PptxContext) -> bool:
 def derive_target_user_rows(text: str, concept: str) -> list[tuple[str, str]]:
     profile = proposal_profile_for_text(text)
     if profile.category != "web":
-        return [_split_label_body(item) for item in profile.targets[:4]]
+        return [_split_label_body(item) for item in extract_project_specifics(text, profile).targets[:6]]
     if concept == "採用強化":
         return [("主要ターゲット", "応募を検討する求職者"), ("ニーズ", "仕事内容、働く環境、成長機会を知りたい"), ("不安", "社風や選考後の働き方が見えにくい"), ("必要コンテンツ", "社員紹介、募集要項、FAQ、応募導線")]
     if concept == "物件検索強化":
@@ -282,7 +289,7 @@ def derive_target_user_rows(text: str, concept: str) -> list[tuple[str, str]]:
 def derive_content_items(text: str, concept: str) -> list[str]:
     profile = proposal_profile_for_text(text)
     if profile.category != "web":
-        return profile.content_items[:4]
+        return extract_project_specifics(text, profile).content_items[:6]
     items = ["サービス詳細: 強み、対象課題、提供範囲を明確化", "実績・事例: 成果とプロセスを見せて比較検討を後押し", "FAQ: 費用、納期、運用、CMSの不安を先回りして解消", "お問い合わせ: CTAとフォーム項目を最短化"]
     if concept == "採用強化":
         items[0] = "採用情報: 募集職種、働き方、社員の声を整理"
@@ -294,7 +301,7 @@ def derive_content_items(text: str, concept: str) -> list[str]:
 def derive_web_strategy_items(text: str, concept: str) -> list[str]:
     profile = proposal_profile_for_text(text)
     if profile.category != "web":
-        return profile.strategy_items[:4]
+        return extract_project_specifics(text, profile).strategy_items[:5]
     return unique_items(
         [
             "集客: SEO・広告・紹介流入の受け皿を整備",
@@ -484,7 +491,8 @@ def extract_project_points(project_brief: str) -> list[str]:
     text = project_brief.strip()
     profile = proposal_profile_for_text(text)
     if profile.category != "web":
-        return profile.needs[:4]
+        specifics = extract_project_specifics(text, profile)
+        return unique_items(specifics.facts + specifics.needs, 6)
     points = [
         "問い合わせ導線・CTAの改善" if _contains_any(text, ["問い合わせ", "問合せ", "CV", "コンバージョン"]) else "",
         "採用情報・応募導線の強化" if "採用" in text else "",
@@ -499,7 +507,7 @@ def extract_project_points(project_brief: str) -> list[str]:
 def extract_solution_points(text: str) -> list[str]:
     profile = proposal_profile_for_text(text)
     if profile.category != "web":
-        return profile.strategy_items[:4]
+        return extract_project_specifics(text, profile).strategy_items[:5]
     points = [
         "問い合わせ導線を起点にCTAとページ遷移を再設計" if _contains_any(text, ["問い合わせ", "問合せ", "CV"]) else "",
         "採用候補者向けの情報整理と応募導線を強化" if "採用" in text else "",
@@ -515,7 +523,7 @@ def extract_service_points(own_service_info: str) -> list[str]:
     extracted = extract_text_items(own_service_info, 3)
     profile = proposal_profile_for_text(own_service_info)
     if profile.category != "web":
-        return unique_items(extracted + profile.services, 4)
+        return unique_items(extracted + extract_project_specifics(own_service_info, profile).services, 6)
     points = extracted + [
         "CMS構築・更新しやすい管理設計" if _contains_any(own_service_info, ["CMS", "更新"]) else "",
         "SEOを考慮した情報設計" if _contains_any(own_service_info, ["SEO", "検索"]) else "",
@@ -527,7 +535,7 @@ def extract_service_points(own_service_info: str) -> list[str]:
 def extract_schedule_points(text: str) -> list[str]:
     profile = proposal_profile_for_text(text)
     if profile.category != "web":
-        return profile.schedule[:4]
+        return extract_project_specifics(text, profile).schedule[:5]
     points = [
         "初回ヒアリング・要件整理",
         "情報設計・ワイヤーフレーム",
@@ -542,7 +550,7 @@ def extract_schedule_points(text: str) -> list[str]:
 def extract_team_points(own_service_info: str) -> list[str]:
     profile = proposal_profile_for_text(own_service_info)
     if profile.category != "web":
-        return profile.team[:4]
+        return extract_project_specifics(own_service_info, profile).team[:5]
     points = [
         "進行管理・要件整理",
         "情報設計・UI/ビジュアル設計",
@@ -555,7 +563,7 @@ def extract_team_points(own_service_info: str) -> list[str]:
 def extract_cost_points(text: str) -> list[str]:
     profile = proposal_profile_for_text(text)
     if profile.category != "web":
-        return profile.cost_points[:4]
+        return extract_project_specifics(text, profile).cost_points[:5]
     has_budget_detail = "予算" in text and not _contains_any(text, ["予算は未定", "予算未定", "予算感未定"])
     points = [
         "予算に合わせて必須範囲を優先" if has_budget_detail else "予算確認後に必須範囲を確定",
@@ -569,6 +577,7 @@ def extract_cost_points(text: str) -> list[str]:
 def derive_estimate_summary(payload: PptxDownloadRequest, text: str) -> EstimateSummary:
     profile = proposal_profile_for_text(text)
     if profile.category != "web":
+        specifics = extract_project_specifics(text, profile)
         lines: list[dict[str, object]] = [
             {
                 "name": line.name,
@@ -577,7 +586,7 @@ def derive_estimate_summary(payload: PptxDownloadRequest, text: str) -> Estimate
                 "priority": line.priority,
                 "enabled": not line.optional or _contains_any(text, ["運用", "保守", "改善", "支援", "継続", line.name]),
             }
-            for line in profile.estimate_lines
+            for line in specifics.estimate_lines
         ]
         enabled_lines = [line for line in lines if bool(line["enabled"])]
         total_min = sum(int(line["min"]) for line in enabled_lines)
@@ -596,7 +605,8 @@ def derive_estimate_summary(payload: PptxDownloadRequest, text: str) -> Estimate
             budget_fit = "予算超過の可能性あり"
             budget_label = f"{budget}万円"
         return EstimateSummary(
-            page_count=max(1, len(profile.structure_items)),
+            page_count=max(1, len(specifics.structure_items)),
+            scope_label=specifics.scope_label,
             total_min=total_min,
             total_max=total_max,
             total_label=f"{total_min}万〜{total_max}万円",
@@ -606,6 +616,8 @@ def derive_estimate_summary(payload: PptxDownloadRequest, text: str) -> Estimate
             required=[str(line["name"]) for line in enabled_lines if line["priority"] == "必須対応"],
             recommended=[str(line["name"]) for line in enabled_lines if line["priority"] == "推奨対応"],
             optional=[str(line["name"]) for line in enabled_lines if line["priority"] == "オプション対応"],
+            premise_items=specifics.premise_items,
+            notes=specifics.notes,
         )
 
     page_count = extract_page_count(payload.estimated_page_count, text)
@@ -648,6 +660,7 @@ def derive_estimate_summary(payload: PptxDownloadRequest, text: str) -> Estimate
 
     return EstimateSummary(
         page_count=page_count,
+        scope_label=f"想定ページ数: {page_count}ページ",
         total_min=total_min,
         total_max=total_max,
         total_label=f"{total_min}万〜{total_max}万円",
@@ -657,6 +670,13 @@ def derive_estimate_summary(payload: PptxDownloadRequest, text: str) -> Estimate
         required=[str(line["name"]) for line in enabled_lines if line["priority"] == "必須対応"],
         recommended=[str(line["name"]) for line in enabled_lines if line["priority"] == "推奨対応"],
         optional=[str(line["name"]) for line in enabled_lines if line["priority"] == "オプション対応"],
+        premise_items=[
+            f"想定ページ数: {page_count}ページ",
+            f"公開希望時期: {payload.desired_launch_timing or '次回確認'}",
+            f"CMS: {payload.cms_required or '要確認'}",
+            f"問い合わせフォーム: {payload.contact_form_required or '要確認'}",
+        ],
+        notes=["外部サービス利用料、撮影費、広告費、サーバー費用は別途確認します。"],
     )
 
 

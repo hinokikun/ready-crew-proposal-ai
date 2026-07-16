@@ -235,7 +235,7 @@ def add_cover_slide(prs: Presentation, slide_data: PowerPointSlide, data: PowerP
         bold=True,
     )
     add_text(slide, f"提案日 {date.today().strftime('%Y.%m.%d')}", 0.92, 5.95, 3.5, 0.26, size=12, color=COLORS["teal_light"])
-    add_text(slide, "Ready Crew Proposal AI", 0.92, 6.58, 4.0, 0.24, size=11, color=COLORS["teal_light"])
+    add_text(slide, "ProposalPilot / AI営業秘書", 0.92, 6.58, 4.0, 0.24, size=11, color=COLORS["teal_light"])
     add_text(slide, f"{slide_data.slide_no:02}", 11.58, 6.86, 0.76, 0.22, size=10, color=COLORS["muted"], align=PP_ALIGN.RIGHT)
 
     add_text(slide, "Strategy", 9.45, 1.0, 2.6, 0.32, size=16, color=COLORS["navy"], bold=True, align=PP_ALIGN.CENTER)
@@ -679,7 +679,7 @@ def add_cost_slide(prs: Presentation, slide_data: PowerPointSlide, context: Pptx
         ["必須範囲とオプションを分離", "規模と機能要件に応じて調整", "詳細見積はヒアリング後に提示"],
         4,
     )
-    scope_label = f"想定{context.estimate.page_count}ページ" if context.proposal_category == "web" else f"想定{context.estimate.page_count}項目相当"
+    scope_label = context.estimate.scope_label
     required_detail = "要件整理・設計・制作・検証" if context.proposal_category == "web" else "要件整理・設計・実装・検証"
     adjustable_detail = "CMS・SEO・特殊機能・撮影原稿" if context.proposal_category == "web" else "連携・学習・運用支援・追加検証"
     rows = [
@@ -707,7 +707,7 @@ def add_estimate_slide(prs: Presentation, slide_data: PowerPointSlide, context: 
     set_background(slide)
     add_header(slide, slide_data.title or "概算見積", "ESTIMATE", accent=COLORS["teal"])
     add_text(slide, f"合計概算 {context.estimate.total_label}", 0.9, 1.1, 5.8, 0.35, size=20, color=COLORS["teal"], bold=True)
-    estimate_scope = f"想定ページ数: {context.estimate.page_count}ページ" if context.proposal_category == "web" else f"想定範囲: {context.estimate.page_count}項目相当"
+    estimate_scope = context.estimate.scope_label
     add_text(slide, f"{estimate_scope} / 予算感: {context.estimate.budget_label}", 7.1, 1.16, 5.0, 0.24, size=12, color=COLORS["muted"], bold=True, align=PP_ALIGN.RIGHT)
     rows = [
         [

@@ -295,7 +295,7 @@ def insert_estimate_slides(slides: list[PowerPointSlide], context: PptxContext) 
                 title="概算見積",
                 bullets=[
                     f"合計概算: {context.estimate.total_label}",
-                    f"想定ページ数: {context.estimate.page_count}ページ",
+                    context.estimate.scope_label,
                     "固定金額ではなく、要件確定前のレンジとして提示",
                 ],
                 speaker_notes="案件条件から概算見積レンジを整理します。",

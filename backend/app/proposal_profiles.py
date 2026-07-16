@@ -39,6 +39,28 @@ class ProposalProfile:
     cost_points: list[str]
 
 
+@dataclass(frozen=True)
+class ProjectSpecifics:
+    facts: list[str]
+    needs: list[str]
+    services: list[str]
+    journey: list[str]
+    structure_items: list[str]
+    kpis: list[str]
+    targets: list[str]
+    content_items: list[str]
+    strategy_items: list[str]
+    estimate_lines: list[EstimateLineTemplate]
+    confirmations: list[str]
+    quality_items: list[str]
+    schedule: list[str]
+    team: list[str]
+    cost_points: list[str]
+    scope_label: str
+    premise_items: list[str]
+    notes: list[str]
+
+
 COMMON_SECTIONS = [
     "表紙",
     "提案サマリー",
@@ -266,6 +288,66 @@ CATEGORY_KEYWORDS = {
 }
 
 
+PROFILES["image_recognition"] = ProposalProfile(
+    category="image_recognition",
+    label="画像認識",
+    deck_suffix="画像認識AI提案書",
+    concept="画像認識による業務判定支援",
+    summary="商品画像や現場画像から必要な判定項目を抽出し、人の確認と既存システム連携を前提に段階導入する提案です。",
+    sections=COMMON_SECTIONS,
+    needs=["対象画像と判定対象の整理", "学習データと評価基準の整備", "人による確認フローの設計", "既存システムとのAPI/CSV連携"],
+    services=["PoC設計", "画像データ調査", "学習データ準備", "画像認識モデル開発", "精度評価・チューニング", "API/CSV連携", "人手確認画面", "本番導入・再学習支援"],
+    journey=["画像受付: 商品画像を対象業務から取り込む", "AI判定: 種類・色・等級・状態などの判定候補を提示する", "人手確認: 担当者が誤判定を確認し補正する", "連携: 商品管理システムへAPIまたはCSVで反映する"],
+    structure_items=["対象画像", "判定カテゴリ", "学習データ", "画像認識モデル", "人手確認フロー", "API/CSV連携", "商品管理システム", "運用・再学習"],
+    kpis=["認識精度", "誤判定率", "人手確認時間", "商品登録処理時間"],
+    competitor_axes=["認識精度", "学習データ設計", "人手確認フロー", "既存システム連携", "運用・再学習", "セキュリティ"],
+    winning_strategy="対象画像・判定カテゴリ・人手確認・既存連携を一体で設計して勝つ",
+    targets=["主な対象: 商品画像を扱う業務担当者", "ニーズ: 画像から判定項目を速く正確に整理したい", "不安: 誤判定時の確認方法と精度改善の継続性", "必要情報: 対象画像、判定カテゴリ、学習データ、連携先、運用体制"],
+    content_items=["対象画像定義: 商品画像と商品データの対応関係を整理", "判定カテゴリ設計: 種類・色・等級・状態などを定義", "人手確認設計: AI判定結果を担当者が確認できる流れを設計", "連携設計: APIまたはCSVで商品管理システムへ渡す"],
+    strategy_items=["PoC: 代表画像と判定カテゴリで認識精度を検証", "学習データ: アノテーション基準と件数を整理", "連携: API/CSV出力を段階的に設計", "運用: 誤判定の蓄積と再学習で改善する"],
+    estimate_lines=_lines(
+        ("業務・要件整理", 60, 100, "必須対応"),
+        ("PoC設計", 80, 140, "必須対応"),
+        ("画像データ調査", 50, 100, "必須対応"),
+        ("アノテーション設計", 60, 120, "必須対応"),
+        ("学習データ準備", 80, 160, "必須対応"),
+        ("画像認識モデル開発", 160, 280, "必須対応"),
+        ("精度評価・チューニング", 80, 160, "必須対応"),
+        ("推論APIまたはバッチ処理", 80, 160, "推奨対応"),
+        ("API/CSV連携", 70, 140, "推奨対応"),
+        ("人手確認画面", 80, 160, "推奨対応"),
+        ("総合テスト・受入支援", 50, 100, "推奨対応"),
+        ("本番導入", 80, 140, "オプション対応", True),
+        ("運用監視", 30, 80, "オプション対応", True),
+        ("再学習支援", 40, 100, "オプション対応", True),
+    ),
+    confirmations=["対象画像の種類と件数", "判定カテゴリと正解データ", "学習データの準備状況", "目標認識精度と評価方法", "人手確認フロー", "商品管理システムとの連携方式", "PoC範囲と本番範囲"],
+    quality_items=["対象画像と判定カテゴリを確認した", "学習データとアノテーション方針を確認した", "目標認識精度と評価方法を確認した", "人による確認フローを確認した", "API/CSV連携先を確認した", "PoC範囲と本番導入条件を確認した"],
+    schedule=["業務・要件整理", "画像データ調査・PoC設計", "学習データ準備・モデル検証", "精度評価・連携設計", "本番導入・運用改善"],
+    team=["PM/業務設計", "画像認識エンジニア", "データ整備・アノテーション担当", "連携エンジニア", "運用支援"],
+    cost_points=["PoC範囲を先に確定", "対象画像数と判定カテゴリ数で調整", "学習データ準備と精度評価を必須化", "API/CSV連携と人手確認画面は段階提案"],
+)
+
+CATEGORY_KEYWORDS["image_recognition"].extend(
+    [
+        "AI画像認識",
+        "画像認識",
+        "画像判定",
+        "画像分類",
+        "商品画像",
+        "商品データ",
+        "生花",
+        "オークション",
+        "花の種類",
+        "等級",
+        "状態",
+        "色",
+        "認識精度",
+        "アノテーション",
+    ]
+)
+
+
 def detect_proposal_category(text: str) -> str:
     normalized = text.lower()
     for category, keywords in CATEGORY_KEYWORDS.items():
@@ -282,6 +364,239 @@ def get_proposal_profile(category: str) -> ProposalProfile:
 
 def proposal_profile_for_text(text: str) -> ProposalProfile:
     return get_proposal_profile(detect_proposal_category(text))
+
+
+def extract_project_specifics(text: str, profile: ProposalProfile | None = None) -> ProjectSpecifics:
+    profile = profile or proposal_profile_for_text(text)
+    if profile.category == "image_recognition":
+        return _extract_image_recognition_specifics(text, profile)
+    return ProjectSpecifics(
+        facts=[],
+        needs=profile.needs[:4],
+        services=profile.services[:6],
+        journey=profile.journey[:4],
+        structure_items=profile.structure_items[:8],
+        kpis=profile.kpis[:4],
+        targets=profile.targets[:4],
+        content_items=profile.content_items[:4],
+        strategy_items=profile.strategy_items[:4],
+        estimate_lines=profile.estimate_lines,
+        confirmations=profile.confirmations[:6],
+        quality_items=profile.quality_items[:6],
+        schedule=profile.schedule[:5],
+        team=profile.team[:5],
+        cost_points=profile.cost_points[:4],
+        scope_label=f"対象範囲: {profile.label}導入範囲",
+        premise_items=profile.confirmations[:5],
+        notes=["外部サービス利用料、追加開発、運用支援は要件確定後に調整します。"],
+    )
+
+
+def _extract_image_recognition_specifics(text: str, profile: ProposalProfile) -> ProjectSpecifics:
+    compact = re.sub(r"\s+", "", text)
+    targets = _collect_present(
+        text,
+        [
+            ("花の種類", ["花の種類", "種類"]),
+            ("色", ["色"]),
+            ("等級", ["等級", "グレード"]),
+            ("状態", ["状態", "品質状態"]),
+        ],
+    )
+    facts = _unique_texts(
+        [
+            "対象業務: 生花オークション" if _contains_any_text(text, ["生花", "オークション"]) else "",
+            "対象画像: 商品画像" if _contains_any_text(text, ["商品画像", "画像"]) else "",
+            f"認識対象: {'・'.join(targets)}" if targets else "",
+            "現行作業: 商品画像と商品データの対応確認・品質チェック・カテゴリ分類を人手で実施" if _contains_any_text(text, ["商品データ", "品質チェック", "カテゴリ分類", "人手", "人による確認"]) else "",
+            "確認フロー: AI判定結果を人による確認で補正" if _contains_any_text(text, ["人による確認", "人手", "確認"]) else "",
+            "連携先: 商品管理システム" if "商品管理システム" in text else "",
+            "連携方式: APIまたはCSV" if _contains_any_text(text, ["API", "CSV"]) else "",
+            "導入方式: PoC後に本番導入" if _contains_any_text(text, ["PoC", "本番"]) else "",
+            "学習データ: 準備・整備が必要" if _contains_any_text(text, ["学習データ", "教師データ", "アノテーション"]) else "",
+            "評価指標: 認識精度" if _contains_any_text(text, ["認識精度", "精度"]) else "",
+            _budget_fact(text),
+            _timing_fact(text),
+        ],
+        14,
+    )
+    recognition_target = "・".join(targets) if targets else "判定カテゴリ"
+    needs = _unique_texts(
+        [
+            f"商品画像から{recognition_target}をAIで判定する",
+            "商品画像と商品データの対応確認を効率化する" if _contains_any_text(text, ["商品データ", "対応確認"]) else "",
+            "人による確認フローを残して誤判定を抑える" if _contains_any_text(text, ["人", "確認"]) else "",
+            "商品管理システムへAPIまたはCSVで連携する" if _contains_any_text(text, ["商品管理システム", "API", "CSV"]) else "",
+            "商品管理システム連携を前提にPoCから本番導入へ進める" if "商品管理システム" in text else "",
+            "PoCで認識精度と運用可否を検証する" if _contains_any_text(text, ["PoC", "精度"]) else "",
+        ],
+        5,
+    )
+    services = _unique_texts(
+        [
+            "業務・要件整理",
+            "PoC設計",
+            "画像データ調査",
+            "アノテーション設計",
+            "学習データ準備",
+            "画像認識モデル開発",
+            "精度評価・チューニング",
+            "推論APIまたはバッチ処理",
+            "API/CSV連携",
+            "人手確認画面",
+            "商品管理システム連携",
+            "本番導入・再学習支援",
+        ],
+        12,
+    )
+    structure_items = _unique_texts(
+        [
+            "生花オークション業務" if _contains_any_text(text, ["生花", "オークション"]) else "",
+            "商品画像",
+            "商品管理システム連携" if "商品管理システム" in text else "",
+            f"認識カテゴリ: {recognition_target}",
+            "学習データ",
+            "画像認識モデル",
+            "認識精度評価",
+            "人による確認",
+            "API/CSV連携",
+            "再学習・運用改善",
+        ],
+        10,
+    )
+    kpis = _unique_texts(["認識精度", "誤判定率", "人手確認時間", "商品登録処理時間", "再学習後の改善率"], 5)
+    confirmations = _unique_texts(
+        [
+            "対象画像数",
+            f"認識カテゴリ: {recognition_target}",
+            "学習データ件数",
+            "撮影条件・画像品質",
+            "目標認識精度",
+            "誤判定時の人手確認フロー",
+            "商品管理システムの連携仕様",
+            "APIまたはCSVのどちらで連携するか",
+            "PoC範囲と本番範囲",
+            "運用後の再学習方法",
+        ],
+        10,
+    )
+    premise_items = _unique_texts(
+        [
+            "対象画像数: 要確認",
+            f"認識カテゴリ: {recognition_target}",
+            "学習データ件数: 要確認",
+            "目標認識精度: 要確認",
+            "PoC対象範囲: 要確認",
+            "連携先: 商品管理システム" if "商品管理システム" in text else "",
+            "連携方式: APIまたはCSV" if _contains_any_text(text, ["API", "CSV"]) else "",
+            _budget_fact(text).replace("予算:", "予算感:"),
+            _timing_fact(text).replace("希望時期:", "希望時期:"),
+        ],
+        9,
+    )
+    return ProjectSpecifics(
+        facts=facts,
+        needs=needs or profile.needs[:4],
+        services=services,
+        journey=_unique_texts(
+            [
+                "商品画像を取り込む",
+                f"AIが{recognition_target}を判定する",
+                "担当者がAI判定結果を確認する",
+                "APIまたはCSVで商品管理システムへ連携する",
+                "誤判定を蓄積し再学習に回す",
+            ],
+            5,
+        ),
+        structure_items=structure_items,
+        kpis=kpis,
+        targets=_unique_texts(facts + profile.targets, 6),
+        content_items=services[:6],
+        strategy_items=_unique_texts(
+            [
+                "PoCで対象画像と判定カテゴリを絞って検証",
+                "学習データとアノテーション基準を先に整備",
+                "認識精度を測定し誤判定パターンを改善",
+                "人による確認を残して本番リスクを抑制",
+                "商品管理システム連携はAPI/CSVで段階実装",
+            ],
+            5,
+        ),
+        estimate_lines=profile.estimate_lines,
+        confirmations=confirmations,
+        quality_items=_unique_texts(profile.quality_items + confirmations, 8),
+        schedule=_unique_texts(
+            [
+                "業務・要件整理",
+                "画像データ調査・PoC設計",
+                "学習データ準備・モデル検証",
+                "認識精度評価・チューニング",
+                "API/CSV連携・人手確認画面",
+                "本番導入・再学習支援",
+            ],
+            6,
+        ),
+        team=profile.team,
+        cost_points=_unique_texts(
+            [
+                "PoC範囲を先に確定",
+                "対象画像数・認識カテゴリ数・学習データ件数で調整",
+                "画像認識モデル開発と精度評価を必須化",
+                "API/CSV連携と人手確認画面は段階提案",
+                "撮影費は新規撮影を含む場合のみ別途確認",
+            ],
+            5,
+        ),
+        scope_label="対象範囲: 商品画像・認識カテゴリ・PoC/連携条件",
+        premise_items=premise_items,
+        notes=[
+            "外部AI基盤、クラウド利用料、追加データ購入費は要件確定後に確認します。",
+            "撮影費は新規の学習用画像撮影を含む場合のみ別途確認します。",
+            "API/CSV連携は商品管理システム側の仕様確認後に確定します。",
+        ],
+    )
+
+
+def _collect_present(text: str, items: list[tuple[str, list[str]]]) -> list[str]:
+    return [label for label, patterns in items if _contains_any_text(text, patterns)]
+
+
+def _contains_any_text(text: str, patterns: list[str]) -> bool:
+    return any(pattern and pattern.lower() in text.lower() for pattern in patterns)
+
+
+def _unique_texts(items: list[str], max_count: int) -> list[str]:
+    values: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        value = re.sub(r"\s+", " ", str(item or "")).strip()
+        if not value:
+            continue
+        key = value.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        values.append(value)
+        if len(values) >= max_count:
+            break
+    return values
+
+
+def _budget_fact(text: str) -> str:
+    normalized = text.translate(str.maketrans("０１２３４５６７８９，", "0123456789,")).replace(",", "")
+    match = re.search(r"(\d+(?:\.\d+)?)\s*万円", normalized)
+    if match:
+        return f"予算: 最大{match.group(1)}万円"
+    match = re.search(r"予算[^\d]*(\d+(?:\.\d+)?)", normalized)
+    return f"予算: {match.group(1)}万円" if match else ""
+
+
+def _timing_fact(text: str) -> str:
+    match = re.search(r"(20\d{2}年\s*\d{1,2}月(?:頃|ごろ)?)", text)
+    if match:
+        return f"希望時期: {match.group(1).replace(' ', '')}"
+    match = re.search(r"(\d{1,2}か月後|\d{1,2}ヶ月後|\d{1,2}カ月後)", text)
+    return f"希望時期: {match.group(1)}" if match else ""
 
 
 def score_rows_for_axes(axes: list[str], text: str) -> list[list[str]]:

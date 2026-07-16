@@ -35,7 +35,7 @@ export function buildInputSummary(form: ProposalRequest) {
     { label: "提案先", value: extractClientName(form) },
     { label: "競合企業", value: form.competitor_company_name.trim() || "未入力" },
     { label: "競合サイトURL", value: form.competitor_site_url.trim() || "未入力" },
-    { label: "想定ページ数", value: form.estimated_page_count.trim() || "未入力" },
+    { label: "規模・範囲", value: form.estimated_page_count.trim() || "未入力" },
     { label: "予算感", value: form.budget_range.trim() || "未入力" },
     { label: "公開希望時期", value: form.desired_launch_timing.trim() || "未入力" },
     { label: "案件概要", value: brief ? `${brief.slice(0, 96)}${brief.length > 96 ? "..." : ""}` : "未入力" },

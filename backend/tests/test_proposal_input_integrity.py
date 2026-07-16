@@ -48,6 +48,49 @@ WEB_FORBIDDEN_TERMS = [
     "問い合わせ導線",
 ]
 
+FLOWER_IMAGE_RECOGNITION_BRIEF = (
+    "生花オークションで、商品画像から花の種類、色、等級、状態をAI画像認識で判定したい。"
+    "現在は担当者が商品画像と商品データの対応確認、品質チェック、カテゴリ分類を人手で行っている。"
+    "AI判定後も人による確認を残し、商品管理システムへAPIまたはCSV連携したい。"
+    "まずPoCで学習データを準備し、認識精度を評価してから本番導入を検討する。"
+    "予算上限は1,000万円、希望時期は2027年5月頃。"
+)
+
+IMAGE_RECOGNITION_REQUIRED_TERMS = [
+    "生花",
+    "商品画像",
+    "花の種類",
+    "色",
+    "等級",
+    "状態",
+    "PoC",
+    "学習データ",
+    "認識精度",
+    "人による確認",
+    "API",
+    "CSV",
+    "商品管理システム",
+]
+
+IMAGE_RECOGNITION_ESTIMATE_TERMS = [
+    "PoC設計",
+    "学習データ",
+    "画像認識モデル",
+    "精度評価",
+    "API/CSV連携",
+]
+
+IMAGE_RECOGNITION_FORBIDDEN_TERMS = [
+    "想定ページ数",
+    "Webページ数",
+    "CMS",
+    "SEO",
+    "広告費",
+    "ワイヤーフレーム",
+    "フロントエンド実装",
+    "受注確率0%",
+]
+
 
 def _pptx_text(blob: bytes) -> str:
     fragments: list[str] = []
@@ -163,6 +206,68 @@ def test_ai_ocr_beautiful_ai_prompt_is_category_specific(client: TestClient, adm
     assert "請求書" in prompt or "帳票" in prompt
     assert "AIモデル学習" in prompt or "API/CSV" in prompt or "例外確認" in prompt
     for term in WEB_FORBIDDEN_TERMS:
+        assert term not in prompt
+
+
+def test_flower_image_recognition_keeps_project_specific_terms(
+    client: TestClient,
+    admin_headers: dict[str, str],
+) -> None:
+    payload = _base_payload(FLOWER_IMAGE_RECOGNITION_BRIEF)
+    data = _analyze(client, admin_headers, payload)
+    combined = json.dumps(data["analysis"], ensure_ascii=False)
+
+    for term in IMAGE_RECOGNITION_REQUIRED_TERMS:
+        assert term in combined
+    for term in IMAGE_RECOGNITION_FORBIDDEN_TERMS:
+        assert term not in combined
+
+
+def test_flower_image_recognition_pptx_pdf_and_beautiful_ai_are_not_web_templates(
+    client: TestClient,
+    admin_headers: dict[str, str],
+) -> None:
+    from app.beautiful_ai.presentation_mapper import map_to_beautiful_ai_payload
+    from app.beautiful_ai.schemas import BeautifulAiPresentationRequest
+    from app.models import PptxDownloadRequest
+    from app.services.pdf_service import build_estimate_pdf_story, register_japanese_fonts
+    from app.services.pptx_service import build_pptx_bytes, build_pptx_context
+
+    payload = _base_payload(FLOWER_IMAGE_RECOGNITION_BRIEF)
+    data = _analyze(client, admin_headers, payload)
+    request = PptxDownloadRequest(
+        **payload,
+        powerpoint_generation_data=data["powerpoint_generation_data"],
+        win_probability=data["analysis"]["win_probability"],
+    )
+
+    context = build_pptx_context(request)
+    assert context.proposal_category == "image_recognition"
+    assert "商品画像" in "\n".join(context.project_points + context.solution_points + context.confirmation_items)
+
+    deck_text = _pptx_text(build_pptx_bytes(request))
+    for term in IMAGE_RECOGNITION_REQUIRED_TERMS:
+        assert term in deck_text
+    for term in IMAGE_RECOGNITION_FORBIDDEN_TERMS:
+        assert term not in deck_text
+
+    register_japanese_fonts()
+    pdf_story = _story_text(build_estimate_pdf_story(request, 520))
+    for term in IMAGE_RECOGNITION_ESTIMATE_TERMS:
+        assert term in pdf_story
+    for term in IMAGE_RECOGNITION_FORBIDDEN_TERMS:
+        assert term not in pdf_story
+
+    beautiful_request = BeautifulAiPresentationRequest(
+        **payload,
+        project_id="flower-image-recognition-integrity",
+        powerpoint_generation_data=data["powerpoint_generation_data"],
+        win_probability=data["analysis"]["win_probability"],
+    )
+    prompt = map_to_beautiful_ai_payload(beautiful_request).prompt
+    for term in IMAGE_RECOGNITION_REQUIRED_TERMS:
+        assert term in prompt
+    for term in IMAGE_RECOGNITION_FORBIDDEN_TERMS:
         assert term not in prompt
 
 

@@ -1,6 +1,6 @@
 import type { EstimateLine } from "@/components/app-shell/types";
 
-export type ProposalCategory = "ai_ocr" | "rpa" | "crm_sfa" | "web" | "generic";
+export type ProposalCategory = "ai_ocr" | "image_recognition" | "rpa" | "crm_sfa" | "web" | "generic";
 
 export type FrontProposalProfile = {
   category: ProposalCategory;
@@ -19,6 +19,37 @@ export type FrontProposalProfile = {
 const webTerms = /Webサイト|サイトリニューアル|コーポレートサイト|ホームページ|LP|ランディングページ|CMS|SEO|WordPress|問い合わせフォーム|サイトマップ/i;
 
 const profiles: Record<ProposalCategory, FrontProposalProfile> = {
+  image_recognition: {
+    category: "image_recognition",
+    label: "画像認識AI提案",
+    requirementLabel: "対象画像・判定カテゴリ・連携条件",
+    structureLabel: "画像認識PoC/本番導入範囲",
+    winningStrategy: "対象画像・判定カテゴリ・人手確認・既存連携を一体で設計して勝つ",
+    competitorNameFallback: "比較対象画像認識サービス",
+    competitorPoints: [
+      { label: "認識精度", point: "花の種類・色・等級・状態など、案件固有の判定カテゴリで精度評価を行う" },
+      { label: "学習データ設計", point: "商品画像と正解データの対応を整理し、アノテーション基準を明確化する" },
+      { label: "人手確認", point: "AI判定結果を担当者が確認できる流れを残し、誤判定リスクを抑える" },
+      { label: "連携性", point: "商品管理システムへAPIまたはCSVで反映できる前提を確認する" }
+    ],
+    estimatePageCount: 10,
+    estimateLines: [
+      { name: "業務・要件整理", min: 60, max: 100, priority: "必須対応", enabled: true },
+      { name: "PoC設計", min: 80, max: 140, priority: "必須対応", enabled: true },
+      { name: "画像データ調査", min: 50, max: 100, priority: "必須対応", enabled: true },
+      { name: "アノテーション設計", min: 60, max: 120, priority: "必須対応", enabled: true },
+      { name: "学習データ準備", min: 80, max: 160, priority: "必須対応", enabled: true },
+      { name: "画像認識モデル開発", min: 160, max: 280, priority: "必須対応", enabled: true },
+      { name: "精度評価・チューニング", min: 80, max: 160, priority: "必須対応", enabled: true },
+      { name: "推論APIまたはバッチ処理", min: 80, max: 160, priority: "推奨対応", enabled: true },
+      { name: "API/CSV連携", min: 70, max: 140, priority: "推奨対応", enabled: true },
+      { name: "人手確認画面", min: 80, max: 160, priority: "推奨対応", enabled: true },
+      { name: "総合テスト・受入支援", min: 50, max: 100, priority: "推奨対応", enabled: true },
+      { name: "本番導入・再学習支援", min: 80, max: 180, priority: "オプション対応", enabled: true }
+    ],
+    positiveKeywords: ["画像認識", "AI画像認識", "商品画像", "生花", "花の種類", "色", "等級", "状態", "PoC", "学習データ", "認識精度", "API", "CSV"],
+    qualityHints: ["対象画像", "判定カテゴリ", "学習データ", "認識精度", "人手確認", "API/CSV連携"]
+  },
   ai_ocr: {
     category: "ai_ocr",
     label: "AI-OCR提案",
@@ -138,6 +169,9 @@ const profiles: Record<ProposalCategory, FrontProposalProfile> = {
 };
 
 export function detectProposalCategory(text: string): ProposalCategory {
+  if (/AI画像認識|画像認識|画像判定|画像分類|商品画像|商品データ|生花|オークション|花の種類|等級|認識精度|アノテーション/i.test(text)) {
+    return "image_recognition";
+  }
   if (/AI[-\s]?OCR|OCR|文書認識|帳票|請求書|領収書|納品書|注文書|スキャン|読み取り|読取|項目抽出/i.test(text)) {
     return "ai_ocr";
   }
