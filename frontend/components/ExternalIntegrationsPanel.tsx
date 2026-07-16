@@ -96,8 +96,8 @@ export const ExternalIntegrationsPanel = memo(function ExternalIntegrationsPanel
   const [statusMessage, setStatusMessage] = useState("");
   const [testProvider, setTestProvider] = useState("gmail");
   const [testSourceType, setTestSourceType] = useState<ExternalIntakeSourceType>("email");
-  const [testTitle, setTestTitle] = useState("Webサイトリニューアル相談");
-  const [testSummary, setTestSummary] = useState("問い合わせ導線とCMS更新性を改善したいという案件相談。予算と納期は要確認。");
+  const [testTitle, setTestTitle] = useState("AI-OCR導入相談");
+  const [testSummary, setTestSummary] = useState("請求書処理の読み取り精度と会計システム連携を改善したいという案件相談。予算と納期は要確認。");
   const [dryRunProvider, setDryRunProvider] = useState<(typeof dryRunProviders)[number]>("gmail");
   const [dryRunTemplate, setDryRunTemplate] = useState<IntegrationDryRunTemplate>("case_email");
   const canManageSettings = currentRole === "admin";

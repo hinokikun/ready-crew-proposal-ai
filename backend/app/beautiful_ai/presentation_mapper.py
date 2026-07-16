@@ -5,6 +5,7 @@ from typing import Any
 
 from app.beautiful_ai.schemas import BeautifulAiPayload, BeautifulAiPresentationRequest
 from app.config import settings
+from app.proposal_profiles import proposal_profile_for_text
 
 
 MAX_SLIDES = 12
@@ -58,7 +59,7 @@ def _image_prompt(title: str, visual_suggestion: str, client_name: str) -> str:
     visual = _safe_text(visual_suggestion, 200)
     if visual:
         return visual
-    return f"Clean corporate web production proposal visual for {client_name or 'client'}, section: {title}"
+    return f"Clean corporate business proposal visual for {client_name or 'client'}, section: {title}"
 
 
 def _append_confirmation_marker(text: str) -> str:
@@ -110,6 +111,17 @@ def _build_prompt(
     outline: str,
 ) -> str:
     next_actions = request.win_probability.recommended_next_actions if request.win_probability else []
+    profile = proposal_profile_for_text(
+        "\n".join(
+            [
+                request.project_brief,
+                request.client_company_info,
+                request.special_function_required,
+                request.own_service_info,
+                request.past_proposal_template,
+            ]
+        )
+    )
     lines = [
         "日本語で、法人向けの洗練された営業提案書プレゼンテーションを作成してください。",
         "デザインは上品で信頼感があり、B2B提案に適した余白・見出し・図解を使ってください。",
@@ -117,6 +129,7 @@ def _build_prompt(
         "",
         f"提案書タイトル: {title}",
         f"顧客名: {client_name}",
+        f"案件カテゴリ: {profile.label}",
         f"提案コンセプト: {_safe_text(slides[1]['title'] if len(slides) > 1 else title, 240)}",
         f"提案目的: {_safe_text(request.project_brief, 900)}",
         f"想定スケジュール: {_append_confirmation_marker(_safe_text(request.desired_launch_timing or 'TBD', 200))}",
@@ -156,7 +169,7 @@ def _build_context_slide(request: BeautifulAiPresentationRequest) -> dict[str, A
             f"Project summary: {_safe_text(request.project_brief, 220)}",
             f"Budget: {_append_confirmation_marker(_safe_text(request.budget_range or 'TBD', 120))}",
             f"Launch timing: {_append_confirmation_marker(_safe_text(request.desired_launch_timing or 'TBD', 120))}",
-            f"CMS: {_append_confirmation_marker(_safe_text(request.cms_required or 'TBD', 120))}",
+            f"Key requirement: {_append_confirmation_marker(_safe_text(request.special_function_required or request.cms_required or 'TBD', 120))}",
             f"Competitor: {_append_confirmation_marker(_safe_text(request.competitor_company_name or request.competitor_site_url or 'TBD', 160))}",
         ],
         5,
@@ -169,7 +182,10 @@ def _build_context_slide(request: BeautifulAiPresentationRequest) -> dict[str, A
 def map_to_beautiful_ai_payload(request: BeautifulAiPresentationRequest) -> BeautifulAiPayload:
     deck = request.powerpoint_generation_data
     client_name = _safe_text(deck.client_name or request.client_company_info or "Client", 160)
-    title = _safe_text(deck.deck_title or f"{client_name} Web proposal", 180)
+    profile = proposal_profile_for_text(
+        "\n".join([request.project_brief, request.client_company_info, request.special_function_required, request.own_service_info])
+    )
+    title = _safe_text(deck.deck_title or f"{client_name} {profile.label} proposal", 180)
     slides: list[dict[str, Any]] = []
 
     context_slide = _build_context_slide(request)

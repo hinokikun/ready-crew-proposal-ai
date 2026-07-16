@@ -16,7 +16,7 @@ export function SalesInfoSection() {
           </article>
           <article>
             <strong>不足情報をAIがチェック</strong>
-            <p>予算、納期、決裁者、競合、CMS、SEOなど、次回確認すべき情報を整理します。</p>
+            <p>予算、納期、決裁者、比較対象、導入要件、成果指標など、次回確認すべき情報を整理します。</p>
           </article>
           <article>
             <strong>PowerPoint・PDFを自動作成</strong>
@@ -50,7 +50,7 @@ export function SalesInfoSection() {
           <span>2</span>
           <div>
             <strong>AIが整理する</strong>
-            <p>会社名、案件内容、目的、予算、納期、競合、CMSを自動抽出します。</p>
+            <p>会社名、案件内容、目的、予算、納期、比較対象、導入要件を自動抽出します。</p>
           </div>
         </article>
         <article>

@@ -18,7 +18,7 @@ ACTION_PLAN: list[dict[str, Any]] = [
         "agent": "AI営業",
         "priority": 90,
         "reason": "案件受付が完了したため、AI営業へ競合分析を依頼します。",
-        "result": "競合比較、CTA、SEO、導線設計の確認観点を整理しました。",
+        "result": "比較観点、導入効果、KPI、運用設計の確認観点を整理しました。",
     },
     {
         "action_type": "proposal_story",

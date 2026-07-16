@@ -57,7 +57,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Ready Crew Proposal AI Agent",
-    description="Ready Crew の案件概要からWeb制作提案書の初稿を生成するMVP APIです。",
+    description="Ready Crew の案件概要から業種を問わない営業提案書の初稿を生成するAPIです。",
     version=settings.app_version,
     lifespan=lifespan,
 )

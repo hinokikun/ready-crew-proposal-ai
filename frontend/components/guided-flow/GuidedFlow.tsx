@@ -74,7 +74,7 @@ const steps: GuidedStep[] = [
   { id: 7, shortLabel: "完了", title: "完了" }
 ];
 
-const qualityItems = [
+const baseQualityItems = [
   "会社名・担当者名に誤りがない",
   "金額・見積条件を確認した",
   "納期・スケジュールを確認した",
@@ -84,6 +84,48 @@ const qualityItems = [
   "上司レビュー状態を確認した",
   "社外提出前に人間が最終確認した"
 ];
+
+const categoryQualityItems: Record<string, string[]> = {
+  ai_ocr: [
+    "対象帳票と抽出項目に誤りがない",
+    "読取精度目標を確認した",
+    "連携先と出力形式を確認した",
+    "例外処理と人手確認フローを確認した",
+    "個人情報・機密情報の扱いを確認した",
+    "PoC範囲と本導入条件を確認した",
+    "社外提出前に人間が最終確認した"
+  ],
+  rpa: [
+    "対象業務と手順を確認した",
+    "例外処理を確認した",
+    "利用システムの権限を確認した",
+    "停止時の対応を確認した",
+    "効果測定方法を確認した",
+    "社外提出前に人間が最終確認した"
+  ],
+  crm: [
+    "顧客・商談項目を確認した",
+    "権限設計を確認した",
+    "データ移行範囲を確認した",
+    "レポート指標を確認した",
+    "運用定着方法を確認した",
+    "社外提出前に人間が最終確認した"
+  ]
+};
+
+function detectGuidedCategory(sourceText: string) {
+  const text = sourceText.toLowerCase();
+  if (/(ai-ocr|aiocr|ocr|帳票|請求書|納品書|スキャン|読み取り|読取|項目抽出)/i.test(sourceText)) return "ai_ocr";
+  if (/(rpa|定型業務|ロボット|入力作業|自動化)/i.test(sourceText)) return "rpa";
+  if (/(crm|sfa|顧客管理|商談管理|営業管理|salesforce|hubspot)/i.test(sourceText)) return "crm";
+  if (/(webサイト|サイトリニューアル|コーポレートサイト|ホームページ|cms|seo|wordpress|問い合わせフォーム)/i.test(sourceText)) return "web";
+  return text ? "business" : "web";
+}
+
+function qualityItemsForSource(sourceText: string) {
+  const category = detectGuidedCategory(sourceText);
+  return categoryQualityItems[category] || baseQualityItems.map((item) => item.replace("実績・事例表記", "提案根拠と実績表記"));
+}
 
 function truncate(value: string, max = 150) {
   const trimmed = value.trim();
@@ -113,6 +155,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
   const [localNotice, setLocalNotice] = useState("");
   const hasInput = props.sourceText.trim().length > 0;
   const isOutputBusy = props.isDownloadingSummary || props.isDownloadingDetail || props.isDownloadingPdf || props.beautifulAiIsCreating;
+  const qualityItems = useMemo(() => qualityItemsForSource(props.sourceText), [props.sourceText]);
   const uncheckedCount = qualityItems.filter((item) => !checkedItems[item]).length;
   const allQualityChecked = uncheckedCount === 0;
 
@@ -128,7 +171,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
     if (props.qualityGateComplete) {
       setCheckedItems(Object.fromEntries(qualityItems.map((item) => [item, true])));
     }
-  }, [props.qualityGateComplete]);
+  }, [props.qualityGateComplete, qualityItems]);
 
   const completedSteps = useMemo(() => {
     const done = new Set<GuidedStepId>();
@@ -253,7 +296,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
                 props.onSourceTextChange(event.target.value);
                 setLocalNotice("");
               }}
-              placeholder="例: 株式会社サンプルがコーポレートサイトのリニューアルを検討しています。目的は問い合わせ増加と採用強化です。"
+              placeholder="例: 株式会社サンプルが請求書処理のAI-OCR化を検討しています。目的は手入力削減と確認作業の効率化です。"
               rows={8}
               value={props.sourceText}
             />

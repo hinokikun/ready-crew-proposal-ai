@@ -22,6 +22,8 @@ class EstimateSummary:
 @dataclass(frozen=True)
 class PptxContext:
     client_name: str
+    proposal_category: str
+    proposal_label: str
     concept: str
     current_understanding: dict[str, str]
     journey_points: list[tuple[str, str]]

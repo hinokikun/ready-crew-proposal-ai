@@ -10,6 +10,11 @@ from pydantic import ValidationError
 from app.config import settings
 from app.models import AnalysisResponse, ProposalAnalysis, ProposalRequest
 from app.prompts import BASIC_PROPOSAL_STRUCTURE, SYSTEM_PROMPT, build_user_prompt
+from app.proposal_profiles import (
+    ProposalProfile,
+    detect_proposal_category,
+    get_proposal_profile,
+)
 from app.schemas.proposal import PROPOSAL_ANALYSIS_SCHEMA
 from app.utils.markdown import build_markdown
 
@@ -102,56 +107,23 @@ def _extract_output_text(response: Any) -> str:
     raise OpenAIServiceError("AIの応答テキストを取得できませんでした。")
 
 
-AI_OCR_KEYWORDS = [
-    "AI-OCR",
-    "AIOCR",
-    "OCR",
-    "文書認識",
-    "帳票",
-    "請求書",
-    "納品書",
-    "注文書",
-    "申込書",
-    "PDF",
-    "スキャン",
-    "読み取り",
-    "項目抽出",
-    "CSV",
-    "会計システム",
-    "RPA",
-    "データ入力自動化",
-]
-
-WEB_PROJECT_KEYWORDS = [
-    "Webサイト",
-    "サイトリニューアル",
-    "コーポレートサイト",
-    "ホームページ",
-    "LP",
-    "CMS",
-    "SEO",
-    "WordPress",
-    "問い合わせ",
-    "採用サイト",
-]
-
-
 def _detect_project_category(text: str) -> str:
-    if _contains_any(text, AI_OCR_KEYWORDS):
-        return "ai_ocr"
-    if _contains_any(text, WEB_PROJECT_KEYWORDS):
-        return "web"
-    return "generic"
+    return detect_proposal_category(text)
 
 
 def _input_based_project_label(payload: ProposalRequest, signals: dict[str, Any]) -> str:
-    category = str(signals.get("project_category") or "generic")
-    if category == "ai_ocr":
-        return "AI-OCR導入支援提案"
-    if category == "web":
-        return "Webサイト制作・改善提案"
+    profile = _profile_from_signals(signals)
+    if profile.category != "other":
+        return profile.deck_suffix.replace("ご提案書", "提案")
     brief = re.sub(r"\s+", " ", payload.project_brief.strip())[:40].strip("、。,. ")
     return f"{brief} 提案" if brief else "入力案件にもとづく提案"
+
+
+def _profile_from_signals(signals: dict[str, Any]) -> ProposalProfile:
+    profile = signals.get("profile")
+    if isinstance(profile, ProposalProfile):
+        return profile
+    return get_proposal_profile(str(signals.get("project_category") or "other"))
 
 
 def _extract_input_signals(payload: ProposalRequest) -> dict[str, Any]:
@@ -176,6 +148,7 @@ def _extract_input_signals(payload: ProposalRequest) -> dict[str, Any]:
         ]
     )
     project_category = _detect_project_category(full_text)
+    profile = get_proposal_profile(project_category)
     needs = _unique_texts(
         [
             "問い合わせ導線・CTA改善" if _contains_any(full_text, ["問い合わせ", "問合せ", "CV", "コンバージョン"]) else "",
@@ -189,33 +162,31 @@ def _extract_input_signals(payload: ProposalRequest) -> dict[str, Any]:
         4,
     )
     if not needs:
-        needs = ["Webサイトの役割整理", "成果につながる導線設計", "公開後の改善方針整理"]
+        needs = profile.needs[:4]
 
     services = _extract_text_items(payload.own_service_info, 4)
     if not services:
-        services = ["情報設計", "Webサイト制作", "公開後の改善運用支援"]
+        services = profile.services[:4]
 
-    if project_category == "ai_ocr":
-        needs = ["AI-OCRでの帳票読み取り", "請求書・文書認識の項目抽出", "CSVまたは業務システム連携"]
-        services = ["AI-OCR導入設計", "帳票項目抽出設計", "CSV出力・システム連携支援"]
-    elif project_category == "generic":
-        needs = ["入力案件の目的整理", "業務課題と改善方針の整理", "実行手順と効果測定の整理"]
-        services = ["要件整理", "改善施策設計", "導入・運用支援"]
+    if project_category != "web":
+        needs = profile.needs[:4]
+        services = _unique_texts(services + profile.services, 4)
 
     cases = _extract_text_items(payload.case_studies, 3)
     if not cases:
         cases = ["近しい課題の成功事例を提案時に差し替え", "成果につながった進め方を紹介"]
 
-    confirmations = _build_confirmation_items(full_text)
-    template_sections = [section for section in BASIC_PROPOSAL_STRUCTURE if section in payload.past_proposal_template]
+    confirmations = profile.confirmations if project_category != "web" else _build_confirmation_items(full_text)
+    template_sections = [section for section in profile.sections if section in payload.past_proposal_template]
 
     has_budget_detail = "予算" in full_text and not _contains_any(full_text, ["予算は未定", "予算未定", "予算感未定"])
-    concept = _derive_concept(full_text)
+    concept = profile.concept if project_category != "web" else _derive_concept(full_text)
     current_state, business_issue, opportunity, target_state = _derive_understanding(full_text, needs, concept)
     estimate = _derive_estimate_summary(payload, full_text)
 
     return {
         "project_category": project_category,
+        "profile": profile,
         "needs": needs,
         "services": services,
         "cases": cases,
@@ -226,14 +197,14 @@ def _extract_input_signals(payload: ProposalRequest) -> dict[str, Any]:
         "business_issue": business_issue,
         "opportunity": opportunity,
         "target_state": target_state,
-        "journey": _derive_journey(concept),
-        "sitemap": _derive_sitemap(full_text),
-        "kpi": _derive_kpi(concept, full_text),
+        "journey": profile.journey if project_category != "web" else _derive_journey(concept),
+        "sitemap": profile.structure_items if project_category != "web" else _derive_sitemap(full_text),
+        "kpi": profile.kpis if project_category != "web" else _derive_kpi(concept, full_text),
         "competitor": _derive_competitor_analysis(full_text),
-        "winning_strategy": _derive_winning_strategy(full_text),
-        "targets": _derive_target_users(full_text, concept),
-        "content": _derive_content_plan(full_text, concept),
-        "web_strategy": _derive_web_strategy(concept, needs),
+        "winning_strategy": profile.winning_strategy if project_category != "web" else _derive_winning_strategy(full_text),
+        "targets": profile.targets if project_category != "web" else _derive_target_users(full_text, concept),
+        "content": profile.content_items if project_category != "web" else _derive_content_plan(full_text, concept),
+        "web_strategy": profile.strategy_items if project_category != "web" else _derive_web_strategy(concept, needs),
         "estimate": estimate,
         "budget_fit": estimate["budget_fit"],
         "has_budget": has_budget_detail,
@@ -266,6 +237,14 @@ def _derive_concept(text: str) -> str:
 
 
 def _derive_understanding(text: str, needs: list[str], concept: str) -> tuple[str, str, str, str]:
+    profile = get_proposal_profile(_detect_project_category(text))
+    if profile.category != "web":
+        current_state = f"{profile.label}の導入目的、対象業務、運用条件を整理する局面です。"
+        business_issue = _issue_from_need(needs[0]) if needs else profile.needs[0]
+        opportunity = profile.summary
+        target_state = f"{concept}を軸に、導入範囲、効果測定、運用定着までを明確にします。"
+        return current_state, business_issue, opportunity, target_state
+
     current_state = "現行サイトの役割を見直し、営業・採用・広報の成果接点として再設計する局面です。"
     if _contains_any(text, ["古", "リニューアル", "刷新", "改修"]):
         current_state = "現行サイトの情報鮮度と見せ方が、現在の事業内容や営業活動に追いついていない状態です。"
@@ -334,6 +313,10 @@ def _derive_kpi_targets(concept: str, text: str) -> dict[str, int | float]:
 
 
 def _derive_competitor_analysis(text: str) -> list[str]:
+    profile = get_proposal_profile(_detect_project_category(text))
+    if profile.category != "web":
+        return [f"{axis}: 現状3/5、競合標準3/5、提案後{5 if index < 3 else 4}/5" for index, axis in enumerate(profile.competitor_axes[:6])]
+
     design = 2 if _contains_any(text, ["古", "リニューアル", "刷新"]) else 3
     search = 2 if _contains_any(text, ["SEO", "検索", "流入"]) else 3
     conversion = 2 if _contains_any(text, ["問い合わせ", "問合せ", "CV"]) else 3
@@ -363,6 +346,44 @@ def _derive_winning_strategy(text: str) -> str:
 
 
 def _derive_estimate_summary(payload: ProposalRequest, text: str) -> dict[str, Any]:
+    profile = get_proposal_profile(_detect_project_category(text))
+    if profile.category != "web":
+        lines = [
+            {
+                "name": line.name,
+                "min": line.min,
+                "max": line.max,
+                "priority": line.priority,
+                "enabled": not line.optional or _contains_any(text, ["運用", "保守", "改善", "支援", "継続", line.name]),
+            }
+            for line in profile.estimate_lines
+        ]
+        enabled_lines = [line for line in lines if line["enabled"]]
+        total_min = sum(int(line["min"]) for line in enabled_lines)
+        total_max = sum(int(line["max"]) for line in enabled_lines)
+        budget = _extract_budget_amount(f"{payload.budget_range}\n{text}")
+        if budget is None:
+            budget_fit = "予算未入力"
+        elif budget >= total_max:
+            budget_fit = "予算内"
+        elif budget >= total_min * 0.85:
+            budget_fit = "やや調整必要"
+        else:
+            budget_fit = "予算超過の可能性あり"
+        return {
+            "page_count": max(1, len(profile.structure_items)),
+            "lines": lines,
+            "total_min": total_min,
+            "total_max": total_max,
+            "total_label": f"{total_min}万〜{total_max}万円",
+            "budget": budget,
+            "budget_label": "未入力" if budget is None else f"{budget}万円",
+            "budget_fit": budget_fit,
+            "required": [line["name"] for line in enabled_lines if line["priority"] == "必須対応"],
+            "recommended": [line["name"] for line in enabled_lines if line["priority"] == "推奨対応"],
+            "optional": [line["name"] for line in enabled_lines if line["priority"] == "オプション対応"],
+        }
+
     page_count = _extract_page_count(payload.estimated_page_count, text)
     page_base = max(8, page_count)
     has_cms = _flag_enabled(payload.cms_required, text, ["CMS", "WordPress", "更新"])
@@ -479,6 +500,7 @@ def _derive_web_strategy(concept: str, needs: list[str]) -> list[str]:
 def _build_mock_issues(payload: ProposalRequest, signals: dict[str, Any]) -> list[dict[str, str]]:
     brief_head = payload.project_brief.strip().replace("\n", " ")[:90]
     needs = list(signals["needs"])  # type: ignore[arg-type]
+    profile = _profile_from_signals(signals)
     issues: list[dict[str, str]] = []
     for need in needs[:3]:
         issues.append(
@@ -510,6 +532,27 @@ def _build_mock_issues(payload: ProposalRequest, signals: dict[str, Any]) -> lis
             "confidence": "低から中。運用希望の有無を次回確認事項にします。",
         },
     ]
+    if profile.category != "web":
+        fallback_issues = [
+            {
+                "issue": _issue_from_need(profile.needs[0]),
+                "background": f"{profile.label}の導入範囲と成果指標を初回設計で明確にします。",
+                "evidence": f"案件概要の冒頭情報: {brief_head}",
+                "confidence": "中。次回ヒアリングで目的と指標を合意します。",
+            },
+            {
+                "issue": "運用担当、例外処理、連携条件が未確定な状態",
+                "background": "導入後に現場で使い続けられるよう、運用条件を先に整理します。",
+                "evidence": "入力情報から、運用設計を提案価値として扱います。",
+                "confidence": "中。対象業務と運用体制の確認で精度を高めます。",
+            },
+            {
+                "issue": "効果測定と改善サイクルが具体化されていない状態",
+                "background": f"{profile.label}は導入後のKPI確認と改善で成果を高めます。",
+                "evidence": "案件概要に効果測定方法の記載が少ない場合、提案時に補足すると有効です。",
+                "confidence": "低から中。測定指標を次回確認事項にします。",
+            },
+        ]
     existing = [issue["issue"] for issue in issues]
     for issue in fallback_issues:
         if len(issues) >= 3:
@@ -586,11 +629,11 @@ def _mock_win_probability(signals: dict[str, Any]) -> dict[str, Any]:
         "risk_label": _risk_label(risk_score),
         "positive_factors": _unique_texts(
             [
-                "Webサイト改善の目的が見え始めている",
+                "案件の目的が見え始めている",
                 f"{needs[0]}に接続した提案ができる" if needs else "",
                 "競合比較をもとに勝ち筋を提示できる" if has_competitor else "",
                 "概算見積が予算感に収まる" if budget_fit == "予算内" else "",
-                "自社サービス情報を制作方針に反映できる",
+                "自社サービス情報を実行方針に反映できる",
             ],
             3,
         ),
@@ -672,6 +715,12 @@ def _projected_probability(probability: int, risk_score: int, action_count: int)
 
 
 def _issue_from_need(need: str) -> str:
+    if "AI-OCR" in need or "帳票" in need or "読" in need or "OCR" in need:
+        return "帳票読み取り精度、抽出項目、連携先が具体化されていない状態"
+    if "RPA" in need or "定型" in need or "自動化" in need:
+        return "自動化対象業務、例外処理、運用ルールが整理されていない状態"
+    if "CRM" in need or "SFA" in need or "商談" in need or "顧客" in need:
+        return "顧客・商談情報の管理項目と運用ルールが具体化されていない状態"
     if "問い合わせ" in need:
         return "問い合わせにつながる導線やCTAが弱い状態"
     if "採用" in need:
@@ -684,7 +733,7 @@ def _issue_from_need(need: str) -> str:
         return "SEOを見据えた情報設計やコンテンツ設計が不足している状態"
     if "運用" in need:
         return "公開後の運用保守・改善サイクルが未整備な状態"
-    return "Webサイトの役割と優先課題が具体化されていない状態"
+    return "案件の目的、導入範囲、優先課題が具体化されていない状態"
 
 
 def _build_confirmation_items(full_text: str) -> list[str]:
@@ -750,19 +799,21 @@ def _build_mock_analysis(payload: ProposalRequest) -> ProposalAnalysis:
     client_name = _guess_client_name(payload.client_company_info)
     brief_head = payload.project_brief.strip().replace("\n", " ")[:90]
     signals = _extract_input_signals(payload)
+    profile = _profile_from_signals(signals)
     project_label = _input_based_project_label(payload, signals)
     issues = _build_mock_issues(payload, signals)
+    sections = profile.sections
 
     slides = []
-    for index, section in enumerate(BASIC_PROPOSAL_STRUCTURE, start=1):
+    for index, section in enumerate(sections, start=1):
         slides.append(
             {
                 "slide_no": index,
                 "section": section,
-                "title": _mock_slide_title(section),
+                "title": _mock_slide_title(section, signals),
                 "body": _mock_slide_body(section, payload, issues, signals),
                 "speaker_notes": _mock_speaker_notes(section),
-                "visual_suggestion": _mock_visual(section),
+                "visual_suggestion": _mock_visual(section, signals),
             }
         )
 
@@ -809,10 +860,10 @@ def _build_mock_analysis(payload: ProposalRequest) -> ProposalAnalysis:
         "proposal_structure": [
             {
                 "section": section,
-                "objective": _mock_section_objective(section),
-                "key_message": _mock_section_key_message(section),
+                "objective": _mock_section_objective(section, signals),
+                "key_message": _mock_section_key_message(section, signals),
             }
-            for section in BASIC_PROPOSAL_STRUCTURE
+            for section in sections
         ],
         "slide_scripts": slides,
         "expected_questions_and_answers": [
@@ -869,6 +920,46 @@ def _build_mock_analysis(payload: ProposalRequest) -> ProposalAnalysis:
             "最後に費用・スケジュール・次のアクションを示し、人が確認すべき項目を残します。"
         )
         data["powerpoint_generation_data"]["deck_title"] = f"{client_name} {project_label}"
+        data["quality_check"]["proposal_coverage"] = (
+            f"提案サマリー、現状理解、競合分析、ターゲット分析、導入戦略、導入構成、KPI、体制、費用まで、"
+            f"{profile.label}提案に必要な範囲を網羅しています。"
+        )
+        data["quality_check"]["alignment_with_customer_issues"] = "案件概要から抽出した課題と、解決策、実行方針、KPIが対応しています。"
+        data["quality_check"]["logical_consistency"] = "提案ストーリーは、現状理解、提案方針、KPI、実行方針の順で整合しています。最終提出前に固有名詞を照合してください。"
+        data["issue_priorities"] = [
+            {
+                "rank": 1,
+                "issue": issues[0]["issue"],
+                "reason": "提案全体の軸になり、導入範囲と成果指標の合意に直結するためです。",
+                "proposed_response": f"{_join_for_sentence(profile.strategy_items)}を中心に、初回ヒアリングで目的、KPI、対象範囲を整理します。",
+            },
+            {
+                "rank": 2,
+                "issue": issues[1]["issue"],
+                "reason": "導入構成、運用体制、見積に影響するためです。",
+                "proposed_response": "対象業務、データ、連携、運用担当を分けて提案方針に含めます。",
+            },
+            {
+                "rank": 3,
+                "issue": issues[2]["issue"],
+                "reason": "導入後の成果改善に関わるものの、初回提案では確認後に段階化しやすいためです。",
+                "proposed_response": "運用支援、改善レポート、追加検証をオプション提案として整理します。",
+            },
+        ]
+        data["expected_questions_and_answers"] = [
+            {
+                "question": "費用はどの程度変動しますか。",
+                "answer": "対象範囲、連携先、検証条件、運用支援の有無で変動します。初回ヒアリング後に優先度を合意し、必須範囲とオプションを分けて提示します。",
+            },
+            {
+                "question": "導入後の運用も依頼できますか。",
+                "answer": "運用設計、改善レポート、軽微な調整、追加検証を支援範囲として設計できます。必要な支援範囲は現行体制を確認し、体制紹介と費用概算へ反映します。",
+            },
+            {
+                "question": "他社と比較した強みは何ですか。",
+                "answer": f"単なる初期導入ではなく、課題整理、導入設計、運用定着まで一貫して提案します。入力された自社サービス情報では、{_join_for_sentence(signals['services'])}を差別化材料として提示します。",
+            },
+        ]
 
     return ProposalAnalysis.parse_obj(data)
 
@@ -885,7 +976,12 @@ def _guess_client_name(client_company_info: str) -> str:
     return "提案先企業"
 
 
-def _mock_slide_title(section: str) -> str:
+def _mock_slide_title(section: str, signals: dict[str, Any] | None = None) -> str:
+    profile = _profile_from_signals(signals or {})
+    if profile.category != "web":
+        if section == "表紙":
+            return profile.deck_suffix
+        return section
     titles = {
         "表紙": "Webサイト制作ご提案書",
         "提案サマリー": "提案サマリー",
@@ -936,6 +1032,10 @@ def _mock_slide_body(
         f"{line['name']}: {line['min']}万〜{line['max']}万円" if line["enabled"] else f"{line['name']}: 対象外"
         for line in estimate["lines"]
     ]
+
+    profile = _profile_from_signals(signals)
+    if profile.category != "web":
+        return _mock_profile_slide_body(section, client_name, profile, issues, signals, estimate, estimate_lines)
 
     bodies = {
         "表紙": [f"{client_name}様向けのWebサイト制作提案", f"提案コンセプト: {signals['concept']}", "成果につながるWebサイト改善提案"],
@@ -1037,6 +1137,92 @@ def _mock_slide_body(
     return bodies.get(section, ["次回確認事項を整理します"])
 
 
+def _mock_profile_slide_body(
+    section: str,
+    client_name: str,
+    profile: ProposalProfile,
+    issues: list[dict[str, str]],
+    signals: dict[str, Any],
+    estimate: dict[str, Any],
+    estimate_lines: list[str],
+) -> list[str]:
+    needs = list(signals["needs"])  # type: ignore[arg-type]
+    services = list(signals["services"])  # type: ignore[arg-type]
+    confirmations = list(signals["confirmations"])  # type: ignore[arg-type]
+    competitor = list(signals["competitor"])
+    bodies = {
+        "表紙": [f"{client_name}様向けの{profile.label}提案", f"提案コンセプト: {profile.concept}", profile.summary],
+        "提案サマリー": _unique_texts(
+            [
+                f"提案コンセプト: {profile.concept}",
+                f"解決する課題: {_join_for_sentence(needs)}",
+                f"主要施策: {_join_for_sentence(profile.strategy_items)}",
+                f"期待成果: {_join_for_sentence(profile.kpis)}",
+            ],
+            4,
+        ),
+        "現状理解": _unique_texts(
+            [
+                f"現状: {signals['current_state']}",
+                f"課題: {signals['business_issue']}",
+                f"機会: {signals['opportunity']}",
+                f"目指す状態: {signals['target_state']}",
+            ],
+            4,
+        ),
+        "想定される課題": [issue["issue"] for issue in issues[:4]],
+        "市場・競合分析": competitor,
+        "競合比較分析": _unique_texts([f"勝ち筋: {profile.winning_strategy}", *competitor], 4),
+        "ターゲット分析": profile.targets,
+        "業務フロー": profile.journey,
+        "導入戦略": profile.strategy_items,
+        "導入構成": profile.structure_items,
+        "施策設計": profile.content_items,
+        "KPI設計": profile.kpis,
+        "実行方針": _unique_texts(services + profile.services, 4),
+        "スケジュール": profile.schedule,
+        "体制": profile.team,
+        "費用概算": _unique_texts(
+            [
+                f"合計概算: {estimate['total_label']}",
+                f"予算適合: {estimate['budget_fit']}（予算感: {estimate['budget_label']}）",
+                "必須範囲とオプションを分離",
+                "入力されていない前提は次回確認事項として残す",
+            ],
+            4,
+        ),
+        "概算見積": _unique_texts([*estimate_lines, f"合計概算: {estimate['total_label']}"], 4),
+        "予算適合判定": _unique_texts(
+            [
+                f"判定: {estimate['budget_fit']}",
+                f"入力予算: {estimate['budget_label']}",
+                f"概算見積: {estimate['total_label']}",
+                "優先範囲を決め、推奨・オプションは段階提案にする",
+            ],
+            4,
+        ),
+        "必須・推奨・オプション対応": _unique_texts(
+            [
+                f"必須対応: {_join_for_sentence(estimate['required'])}",
+                f"推奨対応: {_join_for_sentence(estimate['recommended'])}",
+                f"オプション対応: {_join_for_sentence(estimate['optional'])}",
+                "予算と納期に応じて段階的に追加",
+            ],
+            4,
+        ),
+        "今後の進め方": _unique_texts(
+            [
+                f"次回確認事項: {_join_for_sentence(confirmations)}",
+                "対象範囲、データ、連携条件を確認",
+                "見積とスケジュールの前提を合意",
+                "PoCまたは初期導入の開始条件を整理",
+            ],
+            4,
+        ),
+    }
+    return bodies.get(section, ["次回確認事項を整理します"])
+
+
 def _solution_copy(issue: str) -> str:
     if "問い合わせ" in issue:
         return "主要CTAと問い合わせ導線を再設計"
@@ -1057,7 +1243,33 @@ def _mock_speaker_notes(section: str) -> str:
     return f"{section}について、現時点では仮説として整理していることを伝え、詳細ヒアリングで精度を高める前提を補足します。"
 
 
-def _mock_visual(section: str) -> str:
+def _mock_visual(section: str, signals: dict[str, Any] | None = None) -> str:
+    profile = _profile_from_signals(signals or {})
+    if profile.category != "web":
+        visuals = {
+            "表紙": f"{profile.label}導入提案の表紙、提案先名、提案コンセプト",
+            "提案サマリー": "課題、施策、期待効果を3点で整理したサマリーカード",
+            "現状理解": "現状、課題、機会、目指す状態の4象限カード",
+            "想定される課題": "課題を優先度順に並べたカード",
+            "市場・競合分析": "カテゴリ別比較軸の競合比較表",
+            "競合比較分析": "比較ポイントと勝ち筋を整理した分析表",
+            "ターゲット分析": "利用者、意思決定者、運用担当のカード",
+            "業務フロー": "導入前後の業務フロー",
+            "導入戦略": "PoC、設計、実装、運用の戦略カード",
+            "導入構成": "対象業務、データ、連携先、運用体制の構成図",
+            "施策設計": "施策群と役割を示すカード",
+            "KPI設計": "効果指標のKPIカード",
+            "実行方針": "実行プロセス図",
+            "スケジュール": "週次ガントチャート",
+            "体制": "役割別の体制図",
+            "費用概算": "必須範囲とオプションの表",
+            "概算見積": "見積内訳と合計レンジの表",
+            "予算適合判定": "予算感と概算見積を比較する判定カード",
+            "必須・推奨・オプション対応": "対応範囲の優先順位を3列で整理",
+            "今後の進め方": "次回アクションのタイムライン",
+        }
+        return visuals.get(section, "提案内容を補足する図表")
+
     visuals = {
         "表紙": "フルビジュアル表紙、提案先名、提案コンセプト",
         "提案サマリー": "提案価値を3点で整理したサマリーカード",
@@ -1083,7 +1295,33 @@ def _mock_visual(section: str) -> str:
     return visuals.get(section, "提案内容を補足する図表")
 
 
-def _mock_section_objective(section: str) -> str:
+def _mock_section_objective(section: str, signals: dict[str, Any] | None = None) -> str:
+    profile = _profile_from_signals(signals or {})
+    if profile.category != "web":
+        objectives = {
+            "表紙": "提案書の前提と対象を示す",
+            "提案サマリー": "提案全体の価値と実施範囲を短時間で伝える",
+            "現状理解": "案件概要から読み取れる現状、課題、機会、目指す状態を共有する",
+            "想定される課題": "優先して解決すべき課題を絞り込む",
+            "市場・競合分析": "カテゴリに合う比較軸で改善余地を可視化する",
+            "競合比較分析": "比較結果から提案の勝ち筋を定義する",
+            "ターゲット分析": "誰が使い、誰が判断し、誰が運用するかを定義する",
+            "業務フロー": "導入前後の業務の流れを可視化する",
+            "導入戦略": "成果に向けた導入順序と重点施策を示す",
+            "導入構成": "対象業務、データ、連携、運用の構成を示す",
+            "施策設計": "必要施策と役割を定義する",
+            "KPI設計": "成果判断に使う指標と目標を提示する",
+            "実行方針": "実行の進め方と品質担保の考え方を示す",
+            "スケジュール": "プロジェクトの進行イメージを共有する",
+            "体制": "安心して依頼できる進行体制を示す",
+            "費用概算": "予算検討の土台を提示する",
+            "概算見積": "作業項目ごとの金額レンジを提示する",
+            "予算適合判定": "予算感と概算見積の差分を判断し、調整方針を示す",
+            "必須・推奨・オプション対応": "予算内で優先すべき対応範囲を分類する",
+            "今後の進め方": "次回アクションと意思決定ポイントを示す",
+        }
+        return objectives.get(section, "提案内容を整理する")
+
     objectives = {
         "表紙": "提案書の前提と対象を示す",
         "提案サマリー": "提案全体の価値と実施範囲を短時間で伝える",
@@ -1109,7 +1347,33 @@ def _mock_section_objective(section: str) -> str:
     return objectives.get(section, "提案内容を整理する")
 
 
-def _mock_section_key_message(section: str) -> str:
+def _mock_section_key_message(section: str, signals: dict[str, Any] | None = None) -> str:
+    profile = _profile_from_signals(signals or {})
+    if profile.category != "web":
+        messages = {
+            "表紙": f"案件概要をもとに、{profile.label}の導入方針を提案します。",
+            "提案サマリー": f"{profile.concept}を軸に、課題、導入範囲、期待効果を一体で示します。",
+            "現状理解": "現状、課題、機会、目指す状態を揃え、提案の前提を明確にします。",
+            "想定される課題": "成果に直結する課題を優先度順に解決します。",
+            "市場・競合分析": "カテゴリに合う比較軸で、提案後の改善余地を示します。",
+            "競合比較分析": "競合比較から勝ち筋を明確化し、提案の差別化ポイントとして示します。",
+            "ターゲット分析": "利用者と意思決定者の不安を解消し、導入判断を後押しします。",
+            "業務フロー": "導入前後の流れを整理し、運用時の迷いを減らします。",
+            "導入戦略": "検証、設計、実装、運用を段階化し、定着しやすい進め方にします。",
+            "導入構成": "対象業務、データ、連携、運用体制を整理します。",
+            "施策設計": "必要施策を整理し、導入効果につながる順序で進めます。",
+            "KPI設計": "カテゴリに合う効果指標を目標化します。",
+            "実行方針": "確認しやすく、導入後も改善しやすい実行計画を示します。",
+            "スケジュール": "要件整理から運用開始まで段階的に進行します。",
+            "体制": "進行管理と専門職の連携により品質を担保します。",
+            "費用概算": "スコープに応じて必須範囲とオプションを分けます。",
+            "概算見積": "案件条件から概算見積レンジを提示し、費用判断の土台を作ります。",
+            "予算適合判定": "予算感とのズレを明確にし、調整すべき範囲を提示します。",
+            "必須・推奨・オプション対応": "予算内で成果を出すため、対応範囲の優先順位を明確にします。",
+            "今後の進め方": "次回確認事項を合意し、導入開始に向けた準備を進めます。",
+        }
+        return messages.get(section, "次回確認事項を整理します。")
+
     messages = {
         "表紙": "案件概要をもとに、成果につながるWebサイト制作方針を提案します。",
         "提案サマリー": "戦略、設計、制作、運用を一体化し、Webサイトを成果創出の基盤にします。",

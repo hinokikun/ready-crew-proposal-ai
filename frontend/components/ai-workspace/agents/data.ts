@@ -29,7 +29,7 @@ export const agentContent: Record<AiWorkspaceAgentKey, AgentContent> = {
     headline: "提案方針を作成しています",
     task: "課題、競合、KPI、勝ち筋を整理し、営業提案の骨子を作ります。",
     comment: "顧客に刺さる提案コンセプトを組み立てます。",
-    activeComment: "競合サイトを比較中。問い合わせ導線とSEOの勝ち筋を見ています。",
+    activeComment: "比較対象を確認中。導入効果と運用定着の勝ち筋を見ています。",
     doneComment: "提案方針と勝ち筋を作成しました。",
     chatMessage: "競合を調査しています。検索導線と実績訴求で勝てる構成にします。",
     activeLog: "AI営業が競合分析と提案作成を開始",
@@ -94,8 +94,8 @@ export const progressByAgent: Record<AiWorkspaceAgentKey, number> = {
 };
 
 export const thinkingMessages: Record<AiWorkspaceAgentKey, string[]> = {
-  secretary: ["案件メールを読み取り中...", "CMS希望を推定中...", "不足情報を確認中..."],
-  sales: ["競合サイトを比較中...", "問い合わせ導線を設計中...", "SEOの勝ち筋を整理中..."],
+  secretary: ["案件情報を読み取り中...", "導入要件を推定中...", "不足情報を確認中..."],
+  sales: ["比較対象を確認中...", "導入効果を設計中...", "勝ち筋を整理中..."],
   director: ["提案ストーリーを確認中...", "テンプレート感を減らしています...", "課題と解決策のつながりを確認中..."],
   pm: ["ROIを計算中...", "見積範囲を確認中...", "納期リスクを確認中..."],
   president: ["品質確認中...", "提出前リスクを確認中...", "提案理由を3行で整理中..."]

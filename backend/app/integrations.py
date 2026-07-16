@@ -86,13 +86,13 @@ def _dry_run_template_payload(provider: str, template_type: str) -> dict[str, An
         "source_type": source_type,
         "title": f"Dry Run: {label}",
         "summary": (
-            "Webサイトリニューアルの相談。問い合わせ導線、CMS運用、SEO改善が主な論点。"
+            "AI-OCR導入の相談。請求書処理、読み取り精度、会計システム連携、運用確認フローが主な論点。"
             "連絡先 sample@example.com と参考URL https://example.com はセキュリティスキャン確認用。"
         ),
         "received_at": "",
         "metadata": {
             "company_name": "Dry Run サンプル株式会社",
-            "industry": "Web制作テスト",
+            "industry": "AI-OCR導入テスト",
             "source_url": "https://example.com/dry-run",
             "provider_item_id": f"dry-run-{provider}-{template_type}",
             "channel": "dry-run",

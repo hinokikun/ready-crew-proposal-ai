@@ -87,7 +87,7 @@ def build_rule_improvements(metrics: dict[str, Any]) -> list[dict[str, Any]]:
                 "category": "Presentation Review",
                 "current_version": "19.0",
                 "suggested_prompt": "",
-                "recommendation": "提案書完成後にROI、競合比較、導入計画、CTAの不足を確認し、Beautiful.aiへ送る前にRevision候補を作ります。",
+                "recommendation": "提案書完成後にROI、比較分析、導入計画、次アクションの不足を確認し、Beautiful.aiへ送る前にRevision候補を作ります。",
                 "expected_effect": "レビュー指摘数を減らし、社外提出前の修正回数を減らします。",
                 "confidence": 78,
                 "priority": 82,

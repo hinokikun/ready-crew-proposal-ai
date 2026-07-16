@@ -215,7 +215,7 @@ function buildChatMessages(
       agentKey: "secretary",
       speaker: "AI秘書",
       time: nowLabel(0),
-      message: "案件メールを受付しました。会社名、目的、予算、納期、競合、CMS希望を整理します。",
+      message: "案件情報を受付しました。会社名、目的、予算、納期、比較対象、導入要件を整理します。",
       tone: "done"
     },
     {
@@ -236,7 +236,7 @@ function buildChatMessages(
         agentKey: "sales",
         speaker: "AI営業",
         time: nowLabel(1),
-        message: activeAgent === "sales" ? thinkingText : "提案方針を作成しました。競合比較、問い合わせ導線、SEOの勝ち筋を入れています。",
+        message: activeAgent === "sales" ? thinkingText : "提案方針を作成しました。比較観点、導入効果、運用定着の勝ち筋を入れています。",
         tone: activeAgent === "sales" ? "thinking" : "done"
       },
       {
@@ -332,7 +332,7 @@ function buildChatMessages(
         agentKey: "president",
         speaker: "AI社長",
         time: nowLabel(5),
-        message: "なぜこの提案にしたか：顧客課題に直結する導線改善を優先しました。予算と納期に合わせて必須範囲を絞りました。競合との差別化は実績訴求とSEO導線で作ります。",
+        message: "なぜこの提案にしたか：顧客課題に直結する改善テーマを優先しました。予算と納期に合わせて必須範囲を絞りました。比較対象との差別化は導入効果と運用支援で作ります。",
         tone: "explanation"
       }
     );
@@ -518,9 +518,9 @@ function AiWorkspacePanelBase({
   const reviewWarning = hasResult && proposalReview?.status !== "approved";
   const explanation = useMemo(
     () => [
-      "顧客課題に直結する問い合わせ導線とSEO改善を優先しました。",
+      "顧客課題に直結する改善テーマと導入効果を優先しました。",
       "予算・納期に合わせて必須範囲とオプションを分けました。",
-      "競合との差別化は実績訴求、CMS運用、KPI設計で作ります。"
+      "比較対象との差別化は実績訴求、運用設計、KPI設計で作ります。"
     ],
     []
   );

@@ -81,7 +81,7 @@ def create_project_record(
     project_id = get_or_create_project(
         db,
         customer_id,
-        _safe(project_name, 160) or "新規Web制作案件",
+        _safe(project_name, 160) or "新規提案案件",
         _safe(summary, 800),
         max(0, min(int(win_probability or 0), 100)),
         _safe(next_action, 500),
@@ -213,7 +213,7 @@ def build_production_handoff(
             f"- 納期: {_safe(payload.get('deadline') or '要確認', 120)}",
             f"- 担当: {_safe(payload.get('owner') or '要確認', 120)}",
             f"- 特殊機能: {_safe(payload.get('special_functions') or '要確認', 400)}",
-            f"- CMS: {_safe(payload.get('cms') or '要確認', 120)}",
+            f"- 導入要件: {_safe(payload.get('cms') or payload.get('requirement') or '要確認', 120)}",
         ]
     )
     existing = db.execute("SELECT id FROM project_handoffs WHERE project_id = ?", (project_id,)).fetchone()

@@ -8,6 +8,7 @@ from pptx import Presentation
 from pptx.util import Inches
 
 from app.models import PowerPointData, PowerPointSlide, PptxDownloadRequest
+from app.proposal_profiles import proposal_profile_for_text
 from app.services.pptx_parts.models import PptxContext
 from app.services.pptx_parts.content import (
     _fallback_slide,
@@ -164,10 +165,13 @@ def build_pptx_context(payload: PptxDownloadRequest) -> PptxContext:
             payload.case_studies,
         ]
     )
+    profile = proposal_profile_for_text(all_input)
     concept = derive_concept(all_input)
     estimate = derive_estimate_summary(payload, all_input)
     return PptxContext(
         client_name=extract_client_name(payload.client_company_info, data.client_name),
+        proposal_category=profile.category,
+        proposal_label=profile.label,
         concept=concept,
         current_understanding=derive_current_understanding(payload.project_brief, concept),
         journey_points=derive_journey_points(concept),
@@ -239,13 +243,18 @@ def insert_competitor_analysis_slide(slides: list[PowerPointSlide], context: Ppt
     if any("競合比較分析" in slide.title for slide in slides):
         return slides
 
-    competitor_name = context.competitor_company_name or "競合サイト"
+    competitor_name = context.competitor_company_name or ("競合サイト" if context.proposal_category == "web" else "比較対象")
+    comparison_note = (
+        "デザイン、SEO、導線設計、コンテンツ量、更新性、CTAの6観点で比較"
+        if context.proposal_category == "web"
+        else f"{context.proposal_label}に必要な比較軸で改善優先度を整理"
+    )
     bullets = ensure_items(
         [
             f"比較対象: {competitor_name}",
-            f"競合サイト: {context.competitor_site_url}" if context.competitor_site_url else "",
+            f"参考URL: {context.competitor_site_url}" if context.competitor_site_url else "",
             f"勝ち筋: {context.winning_strategy}",
-            "デザイン、SEO、導線設計、コンテンツ量、更新性、CTAの6観点で比較",
+            comparison_note,
         ],
         ["競合比較をもとに、勝てる訴求軸と改善優先度を明確化"],
         4,
@@ -256,7 +265,7 @@ def insert_competitor_analysis_slide(slides: list[PowerPointSlide], context: Ppt
         layout="content",
         title="競合比較分析",
         bullets=bullets,
-        speaker_notes="競合サイトの比較観点と勝ち筋を提示し、提案内容の優先順位に反映します。",
+        speaker_notes="比較観点と勝ち筋を提示し、提案内容の優先順位に反映します。",
         visual_suggestion="6観点の競合比較表と勝ち筋の強調表示",
     )
 
@@ -384,6 +393,24 @@ def build_summary_slides(slides: list[PowerPointSlide], context: PptxContext) ->
         )
 
     cover_bullets = slides[0].bullets if slides else []
+    strategy_title = "Web戦略" if context.proposal_category == "web" else "導入戦略"
+    structure_title = "サイトマップ" if context.proposal_category == "web" else "導入構成"
+    strategy_fallback = (
+        ["集客から問い合わせまでの流れを設計", "比較検討に必要な情報を整備", "公開後の改善運用を前提に構築"]
+        if context.proposal_category == "web"
+        else ["現状整理から導入までの流れを設計", "必要データと連携条件を整理", "運用改善を前提に構築"]
+    )
+    structure_fallback = ["トップ", "サービス", "お問い合わせ"] if context.proposal_category == "web" else context.sitemap_items[:3]
+    kpi_fallback = (
+        ["問い合わせ数: 月20件", "CV率: 2.8%", "自然検索流入: 月3,500セッション"]
+        if context.proposal_category == "web"
+        else [f"{name}: {value}" for name, value in context.kpi_rows[:3]]
+    )
+    concept_fallback = (
+        ["サイトの目的を1つの提案軸に集約", "成果導線を中心に設計", "運用改善まで含めて推進"]
+        if context.proposal_category == "web"
+        else ["案件目的を1つの提案軸に集約", "導入範囲と効果測定を中心に設計", "運用改善まで含めて推進"]
+    )
     selected = [
         PowerPointSlide(
             slide_no=1,
@@ -400,19 +427,19 @@ def build_summary_slides(slides: list[PowerPointSlide], context: PptxContext) ->
         summary_slide(
             "提案サマリー",
             [*existing_bullets("提案サマリー"), concept_statement(context.concept), *(context.project_points[:2] or context.solution_points[:2])],
-            ["提案の狙いを端的に共有", "成果につながる導線と情報設計を改善", "公開後の運用改善まで見据えて設計"],
+            ["提案の狙いを端的に共有", "成果につながる導入範囲と施策を整理", "導入後の運用改善まで見据えて設計"],
             "提案価値を3点で示すサマリーカード",
         ),
         summary_slide(
             "現状理解",
             [*existing_bullets("現状理解"), *list(context.current_understanding.values())],
-            ["現行サイトの情報整理と導線に改善余地", "ターゲットに伝えるべき強みを再整理", "問い合わせ・応募につながる導線を強化"],
+            ["現状業務と導入条件に改善余地", "利用者と意思決定者の論点を再整理", "効果測定につながる運用を強化"],
             "現状・課題・機会を並べるカード",
         ),
         summary_slide(
             "主要課題",
             [*existing_bullets("課題"), *context.project_points, *context.solution_points],
-            ["問い合わせ導線を分かりやすく再設計", "サービス・実績の訴求を整理", "CMS運用と改善サイクルを設計"],
+            ["対象範囲を分かりやすく再整理", "施策と実行条件を整理", "運用と改善サイクルを設計"],
             "優先度順の課題カード",
         ),
         summary_slide(
@@ -420,33 +447,33 @@ def build_summary_slides(slides: list[PowerPointSlide], context: PptxContext) ->
             [
                 f"提案コンセプト: {context.concept}",
                 concept_statement(context.concept),
-                "情報設計、導線改善、コンテンツ、運用改善を一体で実施",
+                "導入範囲、施策設計、効果測定、運用改善を一体で実施",
             ],
-            ["サイトの目的を1つの提案軸に集約", "成果導線を中心に設計", "運用改善まで含めて推進"],
+            concept_fallback,
             "提案コンセプトを中心にしたメッセージボード",
         ),
         summary_slide(
-            "Web戦略",
-            [*existing_bullets("Web戦略"), *context.web_strategy_items],
-            ["集客から問い合わせまでの流れを設計", "比較検討に必要な情報を整備", "公開後の改善運用を前提に構築"],
-            "集客・比較検討・問い合わせをつなぐ戦略図",
+            strategy_title,
+            [*existing_bullets(strategy_title), *context.web_strategy_items],
+            strategy_fallback,
+            "導入ステップと改善サイクルをつなぐ戦略図",
         ),
         summary_slide(
-            "サイトマップ",
-            [*existing_bullets("サイトマップ"), *context.sitemap_items],
-            ["トップ", "サービス", "お問い合わせ"],
-            "主要ページを階層で示すサイトマップ図",
+            structure_title,
+            [*existing_bullets(structure_title), *context.sitemap_items],
+            structure_fallback,
+            "主要構成を階層で示す構成図",
         ),
         summary_slide(
             "KPI設計",
             [*existing_bullets("KPI"), *[f"{name}: {value}" for name, value in context.kpi_rows]],
-            ["問い合わせ数: 月20件", "CV率: 2.8%", "自然検索流入: 月3,500セッション"],
-            "問い合わせ数・CV率・自然検索流入のKPIグラフ",
+            kpi_fallback,
+            "主要KPIを比較しやすいカードで表示",
         ),
         summary_slide(
             "スケジュール",
             [*existing_bullets("スケジュール"), *context.schedule_points],
-            ["要件整理・設計", "デザイン・実装", "検証・公開"],
+            ["要件整理・設計", "実装・検証", "運用開始"],
             "短期共有向けの簡易タイムライン",
         ),
         summary_slide(
@@ -458,13 +485,13 @@ def build_summary_slides(slides: list[PowerPointSlide], context: PptxContext) ->
                 *existing_bullets("費用"),
                 *context.cost_points,
             ],
-            ["必須範囲とオプションを分けて提示", "CMS・SEO・運用保守の範囲を整理", "次回確認後に見積精度を更新"],
+            ["必須範囲とオプションを分けて提示", "導入範囲と運用支援の範囲を整理", "次回確認後に見積精度を更新"],
             "必須範囲とオプションを分けた費用表",
         ),
         summary_slide(
             "今後の進め方",
             [*existing_bullets("今後"), *context.confirmation_items],
-            ["次回ヒアリングで要件を確定", "制作範囲と優先順位を合意", "概算費用とスケジュールを更新"],
+            ["次回ヒアリングで要件を確定", "提案範囲と優先順位を合意", "概算費用とスケジュールを更新"],
             "次回アクションのステップカード",
         ),
     ]

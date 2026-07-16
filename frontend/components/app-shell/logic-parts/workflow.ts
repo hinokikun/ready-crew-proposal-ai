@@ -126,9 +126,9 @@ export const mcpConnectorCards = [
 
 export const initialAgentSteps: DigitalAgentStep[] = [
   { label: "会社調査", detail: "会社URLと案件情報から概要・採用・ニュース・SNS確認観点を整理", status: "waiting" },
-  { label: "競合調査", detail: "競合、導線、SEO、CTA、コンテンツ量を比較する観点を作成", status: "waiting" },
+  { label: "競合調査", detail: "比較対象、導入効果、運用性、成果指標を整理", status: "waiting" },
   { label: "提案書作成", detail: "提案コンセプト、構成、初稿生成に進む準備", status: "waiting" },
-  { label: "見積", detail: "ページ数、CMS、特殊機能、予算感から概算レンジを確認", status: "waiting" },
+  { label: "見積", detail: "導入範囲、連携、検証、運用支援から概算レンジを確認", status: "waiting" },
   { label: "メール", detail: "提案書送付や次回確認依頼のメール文を準備", status: "waiting" }
 ];
 
@@ -165,58 +165,60 @@ export const purposeOptions = [
   "問い合わせを増やしたい",
   "採用を強化したい",
   "会社の信頼感を上げたい",
-  "更新しやすくしたい",
-  "SEOを強化したい"
+  "業務を効率化したい",
+  "精度や品質を上げたい",
+  "運用しやすくしたい",
+  "検索・集客を強化したい"
 ];
 
 export const budgetOptions = ["未定", "100万円未満", "100〜300万円", "300〜500万円", "500万円以上"];
 export const deadlineOptions = ["未定", "1か月以内", "2〜3か月", "3か月以上"];
-export const cmsOptions = ["未定", "WordPress", "Movable Type", "独自CMS", "不要"];
+export const cmsOptions = ["未定", "AI-OCR", "API/CSV連携", "RPA", "CRM/SFA", "Web/CMS", "不要"];
 
 export const easySamples: Record<SampleKind, EasyInput> = {
   renewal: {
-    projectType: "コーポレートサイトのリニューアル",
-    trouble: "現行サイトの情報が古く、スマホで物件情報を探しにくい。問い合わせ導線も弱く、地域名検索からの流入を増やしたい。",
+    projectType: "AI-OCRによる請求書読み取り自動化",
+    trouble: "請求書の確認と会計システムへの転記に時間がかかり、入力ミスも発生している。会社名、日付、金額、請求書番号を抽出したい。",
     budget: "300〜500万円",
     deadline: "2〜3か月",
-    competitorSiteUrl: "https://area-rival-realty.example.jp",
-    currentSiteUrl: "https://sample-realty.example.jp",
-    cms: "WordPress",
-    decisionMakers: "代表取締役、営業企画部",
-    purposes: ["問い合わせを増やしたい", "会社の信頼感を上げたい", "更新しやすくしたい", "SEOを強化したい"]
+    competitorSiteUrl: "比較対象：AI-OCRクラウドサービス",
+    currentSiteUrl: "請求書PDF、CSV出力、会計システム",
+    cms: "AI-OCR",
+    decisionMakers: "経理責任者、情報システム部",
+    purposes: ["業務を効率化したい", "精度や品質を上げたい", "運用しやすくしたい"]
   },
   recruit: {
-    projectType: "採用サイト制作",
-    trouble: "求人媒体に依存しており、自社の雰囲気や働く魅力が伝わっていない。応募数と応募者の質を改善したい。",
+    projectType: "RPAによる定型入力作業の自動化",
+    trouble: "毎日同じ内容を複数システムへ転記しており、作業時間と確認漏れが増えている。",
     budget: "100〜300万円",
     deadline: "3か月以上",
-    competitorSiteUrl: "https://recruit-rival.example.jp",
-    currentSiteUrl: "https://sample-company.example.jp",
-    cms: "WordPress",
-    decisionMakers: "人事責任者、代表取締役",
-    purposes: ["採用を強化したい", "会社の信頼感を上げたい", "更新しやすくしたい"]
+    competitorSiteUrl: "比較対象：既存RPAツール",
+    currentSiteUrl: "受注管理システム、Excel台帳",
+    cms: "RPA",
+    decisionMakers: "業務部長、情報システム部",
+    purposes: ["業務を効率化したい", "運用しやすくしたい"]
   },
   lp: {
-    projectType: "新サービスのLP制作",
-    trouble: "新サービスの特徴がまだ整理されておらず、広告流入後の問い合わせ率を高めるLPが必要。",
+    projectType: "CRM/SFA導入による案件管理の標準化",
+    trouble: "営業ごとに案件管理方法が異なり、進捗、失注理由、次アクションが見えにくい。",
     budget: "100〜300万円",
     deadline: "1か月以内",
-    competitorSiteUrl: "https://lp-rival.example.jp",
-    currentSiteUrl: "https://sample-service.example.jp",
-    cms: "不要",
-    decisionMakers: "マーケティング責任者、事業責任者",
-    purposes: ["問い合わせを増やしたい", "会社の信頼感を上げたい"]
+    competitorSiteUrl: "比較対象：既存CRM/SFA",
+    currentSiteUrl: "Excel案件台帳、顧客リスト",
+    cms: "CRM/SFA",
+    decisionMakers: "営業責任者、管理部",
+    purposes: ["業務を効率化したい", "運用しやすくしたい"]
   },
   seo: {
-    projectType: "SEO改善・コンテンツ改善",
-    trouble: "自然検索からの流入が伸びておらず、問い合わせにつながる検索キーワードやコンテンツ設計を見直したい。",
+    projectType: "コーポレートサイト改善",
+    trouble: "サービス内容が伝わりにくく、問い合わせにつながる導線と更新体制を見直したい。",
     budget: "100〜300万円",
     deadline: "2〜3か月",
-    competitorSiteUrl: "https://seo-rival.example.jp",
-    currentSiteUrl: "https://sample-seo.example.jp",
-    cms: "WordPress",
+    competitorSiteUrl: "https://web-rival.example.jp",
+    currentSiteUrl: "https://sample-web.example.jp",
+    cms: "Web/CMS",
     decisionMakers: "マーケティング責任者、営業責任者",
-    purposes: ["SEOを強化したい", "問い合わせを増やしたい", "更新しやすくしたい"]
+    purposes: ["検索・集客を強化したい", "問い合わせを増やしたい", "運用しやすくしたい"]
   }
 };
 
@@ -224,8 +226,8 @@ export const chatQuestionFlow: ChatQuestion[] = [
   {
     key: "project",
     label: "案件内容",
-    question: "どんな案件ですか？例：コーポレートサイトのリニューアル、採用サイト制作、LP制作など",
-    placeholder: "例：不動産会社のWebサイトリニューアルです"
+    question: "どんな案件ですか？例：AI-OCR、RPA、CRM導入、Web改善など",
+    placeholder: "例：請求書をAI-OCRで読み取り、会計システムへ連携したい案件です"
   },
   {
     key: "company",
@@ -236,8 +238,8 @@ export const chatQuestionFlow: ChatQuestion[] = [
   {
     key: "trouble",
     label: "困りごと",
-    question: "お客様は何に困っていますか？問い合わせ、採用、SEO、更新性など、営業で聞いた内容をそのまま書いてください。",
-    placeholder: "例：サイトが古く、問い合わせにつながっていません"
+    question: "お客様は何に困っていますか？作業時間、入力ミス、管理方法、問い合わせなど、営業で聞いた内容をそのまま書いてください。",
+    placeholder: "例：帳票確認と転記に時間がかかり、入力ミスもあります"
   },
   {
     key: "budget",
@@ -254,8 +256,8 @@ export const chatQuestionFlow: ChatQuestion[] = [
   {
     key: "competitor",
     label: "競合",
-    question: "競合サイトや比較されそうな会社はありますか？URLがあれば貼ってください。",
-    placeholder: "例：https://example.co.jp、または競合未確認"
+    question: "比較されそうな会社・サービス・URLはありますか？分からなければ未確認で大丈夫です。",
+    placeholder: "例：既存OCRサービス、または競合未確認"
   }
 ];
 
@@ -269,29 +271,27 @@ export const initialChatMessages: ChatMessage[] = [
 
 export const sourceTemplates: Record<SourceTemplateKind, string> = {
   readyCrew: `Ready Crew案件メールを貼る例：
-株式会社サンプル不動産様よりWebサイトリニューアルの相談。
-現行サイトが古く、スマホで物件情報を探しにくい。問い合わせ件数を増やしたい。
-予算感は300万〜500万円。公開希望は10月末。
-CMSはWordPress希望。お知らせ、実績、FAQを更新したい。
-競合サイト：https://area-rival-realty.example.jp
-既存サイト：https://sample-realty.example.jp
-決裁者は代表取締役、窓口は営業企画部。初回提案では概算費用とスケジュールを知りたい。`,
+株式会社サンプル経理様よりAI-OCR導入の相談。
+請求書PDFを読み取り、会社名、日付、金額、請求書番号を抽出したい。
+予算感は300万〜500万円。PoCは2〜3か月で検討。
+CSVまたは会計システムAPIへ連携したい。
+比較対象：AI-OCRクラウドサービス
+決裁者は管理部長、窓口は経理責任者。初回提案では概算費用とスケジュールを知りたい。`,
   hearing: `ヒアリングメモを貼る例：
 商談メモ
-お客様：株式会社サンプル製作所、人事責任者様
-相談内容：採用サイトを新しく作りたい。
-課題：求人媒体に依存しており、自社の雰囲気や働く魅力が伝わっていない。応募数と応募者の質を改善したい。
-目的：採用強化、会社の信頼感向上、更新しやすい採用情報の発信。
+お客様：株式会社サンプル物流、業務部長様
+相談内容：RPAで定型入力作業を自動化したい。
+課題：受注情報をExcelと基幹システムへ二重入力しており、作業時間と確認漏れが増えている。
+目的：業務効率化、入力ミス削減、例外処理の標準化。
 予算：100万〜300万円
 納期：3か月以上で検討
-CMS：WordPress希望
-競合：採用競合企業のサイトを参考にしたい。`,
+導入要件：RPA、監視、運用マニュアル
+競合：既存RPAツールと比較したい。`,
   slack: `Slack相談文を貼る例：
-営業相談です。新サービスLP制作の引き合いがありました。
-広告流入後の問い合わせ率を上げたいそうです。予算はまだざっくり100〜300万円くらい。
-公開はできれば1か月以内。CMSは不要で、問い合わせフォームとCTAを重視。
-競合LP：https://lp-rival.example.jp
-  原稿作成も相談したいとのこと。`
+営業相談です。CRM/SFA導入の引き合いがありました。
+案件ステータスや次アクションが営業担当ごとにばらばらで、管理者が進捗を見にくいそうです。
+予算はまだざっくり100〜300万円くらい。1か月以内に初期設計を始めたい。
+既存のExcel案件台帳から移行したいとのこと。`
 };
 
 export const roleplayScenarios: Record<RoleplayScenario, { label: string; customer: string; firstMessage: string }> = {

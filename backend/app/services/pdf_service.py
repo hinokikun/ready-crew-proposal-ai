@@ -126,7 +126,7 @@ def build_estimate_pdf_story(payload: PptxDownloadRequest, page_width: float) ->
     concept = derive_concept(all_input)
     estimate = derive_estimate_summary(payload, all_input)
     confirmations = extract_confirmation_items(all_input)
-    project_name = data.deck_title or f"{client_name} Webサイト制作ご提案"
+    project_name = data.deck_title or f"{client_name} 業務改善ご提案"
 
     styles = build_styles()
     story: list[object] = [

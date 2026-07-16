@@ -27,6 +27,7 @@ import { aiEmployeeRoles } from "@/components/app-shell/logic-parts/workflow";
 import { allInputText } from "@/components/app-shell/logic-parts/intake";
 import { uniqueTextItems } from "@/components/app-shell/logic-parts/hearing";
 import { buildRiskLabel, deriveProjectedProbability, deriveRiskScore, extractClientName } from "@/components/app-shell/logic-parts/estimates";
+import { getProposalProfile } from "@/components/app-shell/logic-parts/profiles";
 
 export function buildInputSummary(form: ProposalRequest) {
   const brief = form.project_brief.trim().replace(/\s+/g, " ");
@@ -382,6 +383,7 @@ export function extractDomainLabel(url: string) {
 export function buildCompanyResearch(url: string, form: ProposalRequest, extractedInfo: ExtractedInfo | null): CompanyResearch {
   const domain = extractDomainLabel(url);
   const allText = allInputText(form);
+  const profile = getProposalProfile(allText);
   const clientName = extractClientName(form);
   const competitor = form.competitor_company_name.trim() || extractedInfo?.competitor || "同業・地域競合";
   const hasRecruit = /採用|求人|人材|応募|社員/i.test(allText);
@@ -389,16 +391,16 @@ export function buildCompanyResearch(url: string, form: ProposalRequest, extract
   const hasCms = /CMS|WordPress|更新|お知らせ/i.test(allText);
 
   return {
-    overview: `${clientName === "提案先企業" ? domain : clientName}の公開情報、案件概要、既存サイトURLをもとに、事業内容・顧客接点・改善余地を確認します。`,
-    competitors: uniqueTextItems([competitor, form.competitor_site_url.trim(), "検索結果上位の同業サイト", "採用・サービス訴求で比較される企業"]).slice(0, 4),
+    overview: `${clientName === "提案先企業" ? domain : clientName}の公開情報、案件概要、既存情報をもとに、事業内容・顧客接点・改善余地を確認します。`,
+    competitors: uniqueTextItems([competitor, form.competitor_site_url.trim(), "比較対象サービス", "導入効果・運用性で比較される企業"]).slice(0, 4),
     recruitment: hasRecruit ? "採用情報の訴求、社員紹介、応募導線を重点確認します。" : "採用情報は未入力です。会社理解と信頼形成の補助情報として確認します。",
     news: uniqueTextItems([
       "直近のお知らせ更新頻度",
       "新サービス・店舗・採用に関する発信",
-      hasCms ? "CMSで継続更新できるニュース設計" : "更新停止がないか確認"
+      hasCms ? "継続更新できる運用設計" : "更新停止がないか確認"
     ]).slice(0, 4),
     services: uniqueTextItems([
-      form.project_brief.includes("物件") ? "物件検索・問い合わせ導線" : "主力サービスの見せ方",
+      form.project_brief.includes("物件") ? "物件検索・問い合わせ導線" : profile.requirementLabel,
       form.project_brief.includes("採用") ? "採用コンテンツ" : "サービス紹介",
       hasSeo ? "SEO記事・FAQ・地域ページ" : "FAQ・実績・導入事例"
     ]),
@@ -411,7 +413,7 @@ export function buildRoleGuidance(role: AiEmployeeRole, form: ProposalRequest, e
   const base = {
     secretary: ["次回確認事項、日程、送付メールを先に整えます。", "未入力項目を確認リスト化し、営業担当の抜け漏れを減らします。"],
     sales: ["受注確率、競合差別化、提案ストーリーを強化します。", "顧客が社内説明しやすい要約PowerPointを優先します。"],
-    director: ["要件、サイトマップ、制作範囲、体制を具体化します。", "CMS、SEO、運用保守の前提条件を提案に反映します。"],
+    director: ["要件、導入構成、提案範囲、体制を具体化します。", "導入要件、成果指標、運用保守の前提条件を提案に反映します。"],
     writer: ["提案サマリー、メール、顧客課題の言葉を磨きます。", "AIっぽい曖昧表現を減らし、営業が話しやすい表現に整えます。"],
     designer: ["PowerPointの見せ方、導線図、KPI、比較表の視認性を確認します。", "顧客の信頼感が伝わる清潔な資料構成に寄せます。"],
     pm: ["見積、スケジュール、リスク、担当者を整理します。", `概算見積は${estimate.totalLabel}を前提に、必須・推奨・オプションを分けます。`]

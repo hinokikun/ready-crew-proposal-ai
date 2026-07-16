@@ -10,6 +10,7 @@ import type {
 import type { AnalysisResponse, ProposalRequest } from "@/types/proposal";
 import { allInputText } from "@/components/app-shell/logic-parts/intake";
 import { hasAny } from "@/components/app-shell/logic-parts/hearing";
+import { getProposalProfile } from "@/components/app-shell/logic-parts/profiles";
 
 export function deriveSalesIndicators(form: ProposalRequest): SalesIndicator[] {
   const text = allInputText(form);
@@ -40,8 +41,9 @@ export function deriveBudgetRank(text: string): Omit<SalesIndicator, "title"> {
 }
 
 export function deriveMaturityRank(text: string): Omit<SalesIndicator, "title"> {
+  const profile = getProposalProfile(text);
   const checks = [
-    /問い合わせ|問合せ|CV|採用|SEO|CMS|リニューアル/.test(text),
+    profile.positiveKeywords.some((keyword) => text.includes(keyword)) || /問い合わせ|問合せ|採用|導入|改善|効率化|自動化/.test(text),
     /予算|[0-9０-９]+\s*(万|万円)/.test(text),
     /納期|公開時期|公開希望|急ぎ|早め|リリース/.test(text),
     /決裁|代表|社長|責任者|稟議/.test(text),
@@ -56,7 +58,15 @@ export function deriveMaturityRank(text: string): Omit<SalesIndicator, "title"> 
 
 export function deriveCompetitorPoints(form: ProposalRequest): CompetitorPoint[] {
   const text = allInputText(form);
-  const competitorName = form.competitor_company_name.trim() || "競合サイト";
+  const profile = getProposalProfile(text);
+  const competitorName = form.competitor_company_name.trim() || profile.competitorNameFallback;
+
+  if (profile.category !== "web") {
+    return profile.competitorPoints.map((item) => ({
+      label: item.label,
+      point: `${competitorName}と比較し、${item.point}`
+    }));
+  }
 
   return [
     {
@@ -92,6 +102,10 @@ export function deriveCompetitorPoints(form: ProposalRequest): CompetitorPoint[]
 
 export function deriveWinningStrategy(form: ProposalRequest) {
   const text = allInputText(form);
+  const profile = getProposalProfile(text);
+  if (profile.category !== "web") {
+    return profile.winningStrategy;
+  }
   if (hasAny(text, ["物件", "不動産", "賃貸", "売買"])) return "物件検索で勝つ";
   if (hasAny(text, ["SEO", "検索", "自然検索", "流入"])) return "SEOで勝つ";
   if (hasAny(text, ["実績", "事例", "導入"])) return "実績訴求で勝つ";
@@ -135,6 +149,36 @@ export function formatEstimateRange(line: EstimateLine) {
 
 export function deriveEstimateSummary(form: ProposalRequest): EstimateSummary {
   const text = allInputText(form);
+  const profile = getProposalProfile(text);
+  if (profile.category !== "web") {
+    const lines = profile.estimateLines;
+    const enabledLines = lines.filter((line) => line.enabled);
+    const totalMin = enabledLines.reduce((sum, line) => sum + line.min, 0);
+    const totalMax = enabledLines.reduce((sum, line) => sum + line.max, 0);
+    const budgetAmount = extractBudgetAmount(`${form.budget_range}\n${text}`);
+    const budgetFit =
+      budgetAmount === null
+        ? "予算未入力"
+        : budgetAmount >= totalMax
+          ? "予算内"
+          : budgetAmount >= totalMin * 0.85
+            ? "やや調整必要"
+            : "予算超過の可能性あり";
+
+    return {
+      pageCount: profile.estimatePageCount,
+      totalMin,
+      totalMax,
+      totalLabel: `${totalMin}万〜${totalMax}万円`,
+      budgetAmount,
+      budgetLabel: budgetAmount === null ? "未入力" : `${budgetAmount}万円`,
+      budgetFit,
+      lines,
+      required: enabledLines.filter((line) => line.priority === "必須対応").map((line) => line.name),
+      recommended: enabledLines.filter((line) => line.priority === "推奨対応").map((line) => line.name),
+      optional: enabledLines.filter((line) => line.priority === "オプション対応").map((line) => line.name)
+    };
+  }
   const pageCount =
     extractNumber(form.estimated_page_count) ??
     extractNumber(text.match(/\d+[ 　]*(ページ|頁|p)/i)?.[0] ?? "") ??
@@ -192,14 +236,15 @@ export function deriveEstimateSummary(form: ProposalRequest): EstimateSummary {
 
 export function deriveDealEvaluation(form: ProposalRequest, checks: InfoCheck[], estimate: EstimateSummary): DealEvaluation {
   const text = allInputText(form);
+  const profile = getProposalProfile(text);
   const foundCount = checks.filter((item) => item.found).length;
   let probability = 35 + foundCount * 7;
   const hasCompetitorInfo = Boolean(form.competitor_site_url.trim() || form.competitor_company_name.trim());
 
   const positives = [
-    hasAny(text, ["問い合わせ", "問合せ", "CV"]) ? "成果目的が明確" : "",
-    hasAny(text, ["リニューアル", "刷新", "改修"]) ? "制作ニーズが顕在化" : "",
-    hasAny(text, ["CMS", "SEO", "採用"]) ? "提案余地が複数ある" : "",
+    hasAny(text, ["問い合わせ", "問合せ", "CV", "削減", "効率化", "精度", "定着"]) ? "成果目的が明確" : "",
+    hasAny(text, ["リニューアル", "刷新", "改修", "導入", "自動化", "連携"]) ? "実行ニーズが顕在化" : "",
+    profile.positiveKeywords.some((keyword) => text.includes(keyword)) ? `${profile.label}として提案テーマが具体的` : "",
     hasCompetitorInfo ? "競合比較を前提に勝ち筋を提示できる" : "",
     estimate.budgetFit === "予算内" ? "概算見積と予算感が合っている" : "",
     form.client_company_info.trim() ? "提案先情報あり" : "",

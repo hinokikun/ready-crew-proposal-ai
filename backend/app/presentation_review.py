@@ -72,11 +72,11 @@ REVIEW_CATEGORIES: tuple[dict[str, Any], ...] = (
         "instruction": "前提条件、確認事項、リスク、よくある質問をまとめる。",
     },
     {
-        "key": "cta",
-        "label": "CTA",
-        "keywords": ("CTA", "問い合わせ", "次回", "アクション", "contact"),
-        "action_type": "revise_cta",
-        "action_title": "CTAを明確化",
+        "key": "next_action",
+        "label": "次アクション",
+        "keywords": ("次回", "アクション", "next", "contact"),
+        "action_type": "revise_next_action",
+        "action_title": "次アクションを明確化",
         "instruction": "提案後に顧客が取るべき次アクションを短く明確にする。",
     },
     {
@@ -110,7 +110,7 @@ ACTION_CHANGE_TYPE = {
     "add_competitor_comparison": "競合比較追加",
     "add_roadmap": "ロードマップ追加",
     "add_faq": "FAQ追加",
-    "revise_cta": "CTA修正",
+    "revise_next_action": "次アクション修正",
 }
 
 VALID_REVISION_STATUSES = {

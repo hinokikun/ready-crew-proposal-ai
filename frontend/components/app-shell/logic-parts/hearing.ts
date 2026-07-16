@@ -5,6 +5,7 @@ import type {
 } from "@/components/app-shell/types";
 import type { ProposalRequest } from "@/types/proposal";
 import { allInputText } from "@/components/app-shell/logic-parts/intake";
+import { getProposalProfile } from "@/components/app-shell/logic-parts/profiles";
 
 export function hasAny(text: string, patterns: (RegExp | string)[]) {
   return patterns.some((pattern) => (typeof pattern === "string" ? text.includes(pattern) : pattern.test(text)));
@@ -12,6 +13,8 @@ export function hasAny(text: string, patterns: (RegExp | string)[]) {
 
 export function buildInfoChecks(form: ProposalRequest): InfoCheck[] {
   const text = allInputText(form);
+  const profile = getProposalProfile(text);
+  const webProject = profile.category === "web";
   const budgetIsClear = hasAny(text, [/予算\s*[:：]?\s*[0-9０-９]+/, /[0-9０-９]+\s*(万|万円)/]) && !/予算.*未定|未定.*予算/.test(text);
 
   return [
@@ -38,24 +41,28 @@ export function buildInfoChecks(form: ProposalRequest): InfoCheck[] {
     },
     {
       key: "current-site",
-      label: "既存サイトURL",
-      found: hasAny(text, [/https?:\/\/\S+/, "既存サイトURL", "URL"]),
+      label: webProject ? "既存サイトURL" : "既存情報",
+      found: hasAny(text, [/https?:\/\/\S+/, "既存サイトURL", "既存資料", "対象業務", "URL", "PDF", "CSV", "Excel"]),
       targetField: "提案先企業情報",
-      nextQuestion: "既存サイトURL、アクセス状況、改善したいページ"
+      nextQuestion: webProject ? "既存サイトURL、アクセス状況、改善したいページ" : "対象業務、既存データ、連携先、利用中ツール"
     },
     {
       key: "cms",
-      label: "CMS希望",
-      found: hasAny(text, ["CMS", "WordPress", "ワードプレス", "更新", "運用"]),
-      targetField: "見積条件 > CMS有無",
-      nextQuestion: "CMS要否、更新担当者、更新頻度、承認フロー"
+      label: profile.requirementLabel,
+      found: webProject
+        ? hasAny(text, ["CMS", "WordPress", "ワードプレス", "更新", "運用"])
+        : profile.qualityHints.some((keyword) => text.includes(keyword)) || Boolean(form.special_function_required.trim()),
+      targetField: webProject ? "見積条件 > CMS有無" : "見積条件 > 導入要件",
+      nextQuestion: webProject ? "CMS要否、更新担当者、更新頻度、承認フロー" : profile.qualityHints.join("、")
     },
     {
       key: "seo",
-      label: "SEO希望",
-      found: hasAny(text, ["SEO", "検索", "自然検索", "流入", "記事", "コンテンツマーケティング"]),
-      targetField: "見積条件 > SEO対策有無",
-      nextQuestion: "狙いたい検索キーワード、現状流入、SEO対象ページ"
+      label: webProject ? "SEO希望" : "成果指標",
+      found: webProject
+        ? hasAny(text, ["SEO", "検索", "自然検索", "流入", "記事", "コンテンツマーケティング"])
+        : hasAny(text, ["KPI", "削減", "精度", "時間", "件数", "成功率", "エラー率", "入力ミス"]),
+      targetField: webProject ? "見積条件 > SEO対策有無" : "提案条件 > KPI",
+      nextQuestion: webProject ? "狙いたい検索キーワード、現状流入、SEO対象ページ" : "削減時間、精度目標、処理件数、成功条件"
     },
     {
       key: "competitor",
@@ -69,13 +76,17 @@ export function buildInfoChecks(form: ProposalRequest): InfoCheck[] {
 
 export function buildHearingSheet(form: ProposalRequest): HearingSheetCategory[] {
   const text = allInputText(form);
+  const profile = getProposalProfile(text);
+  const webProject = profile.category === "web";
   const hasBusiness = hasAny(text, ["事業", "業種", "サービス", "商品", "商材", "不動産", "採用", "BtoB", "BtoC"]) || form.client_company_info.trim().length >= 20;
   const hasTarget = hasAny(text, ["ターゲット", "顧客", "ユーザー", "求職者", "法人", "個人", "購入者", "検討者", "ペルソナ"]);
   const hasCompetitor = Boolean(form.competitor_site_url.trim() || form.competitor_company_name.trim()) || hasAny(text, ["競合", "他社", "比較", "ベンチマーク", "差別化"]);
   const hasBudget = hasAny(text, [/予算\s*[:：]?\s*[0-9０-９]+/, /[0-9０-９]+\s*(万|万円)/]) && !/予算.*未定|未定.*予算/.test(text);
   const hasDeadline = hasAny(text, ["納期", "公開希望", "公開時期", "リリース", "9月", "10月", "急ぎ", "早め"]) && !/納期.*未定|公開.*未定/.test(text);
-  const hasKpi = hasAny(text, ["KPI", "問い合わせ目標", "問合せ目標", "CV率", "コンバージョン", "アクセス数", "資料DL", "自然検索流入", "目標件数"]);
-  const hasCms = hasAny(text, ["CMS", "WordPress", "ワードプレス", "更新機能"]) || Boolean(form.cms_required.trim());
+  const hasKpi = hasAny(text, ["KPI", "問い合わせ目標", "問合せ目標", "CV率", "コンバージョン", "アクセス数", "資料DL", "自然検索流入", "目標件数", "削減時間", "精度", "処理件数", "入力ミス"]);
+  const hasCms = webProject
+    ? hasAny(text, ["CMS", "WordPress", "ワードプレス", "更新機能"]) || Boolean(form.cms_required.trim())
+    : profile.qualityHints.some((keyword) => text.includes(keyword)) || Boolean(form.special_function_required.trim());
   const hasOperation = hasAny(text, ["運用体制", "更新担当", "担当者", "保守", "月次", "レポート", "改善運用", "更新頻度"]);
 
   return [
@@ -86,25 +97,25 @@ export function buildHearingSheet(form: ProposalRequest): HearingSheetCategory[]
       summary: hasBusiness ? "事業・サービスの前提情報あり" : "事業内容、主力サービス、収益モデルが不足",
       questions: hasBusiness
         ? []
-        : ["主力事業・主要サービスは何ですか？", "今回のWebサイトで最も訴求したい強みは何ですか？"]
+        : ["主力事業・主要サービスは何ですか？", "今回の提案で最も改善したい業務や成果は何ですか？"]
     },
     {
       key: "target",
       category: "ターゲット",
       found: hasTarget,
-      summary: hasTarget ? "想定ユーザーの記載あり" : "誰に向けたサイトかが不足",
+      summary: hasTarget ? "想定ユーザーの記載あり" : "誰に向けた提案かが不足",
       questions: hasTarget
         ? []
-        : ["主なターゲットユーザーは誰ですか？", "問い合わせしてほしい顧客層や優先したい属性はありますか？"]
+        : ["主な利用者や関係部門は誰ですか？", "優先したい対象顧客や業務範囲はありますか？"]
     },
     {
       key: "competitor",
       category: "競合",
       found: hasCompetitor,
-      summary: hasCompetitor ? "競合・比較対象の情報あり" : "競合サイト・比較対象が不足",
+      summary: hasCompetitor ? "競合・比較対象の情報あり" : "競合・比較対象が不足",
       questions: hasCompetitor
         ? []
-        : ["競合サイトはありますか？", "提案時に比較されやすい企業・サービスはありますか？"]
+        : ["比較対象の企業・サービスはありますか？", "提案時に比較されやすい選定軸はありますか？"]
     },
     {
       key: "budget",
@@ -128,19 +139,23 @@ export function buildHearingSheet(form: ProposalRequest): HearingSheetCategory[]
       key: "kpi",
       category: "KPI",
       found: hasKpi,
-      summary: hasKpi ? "成果指標の記載あり" : "問い合わせ数・CV率などの目標値が不足",
+      summary: hasKpi ? "成果指標の記載あり" : "成果指標や目標値が不足",
       questions: hasKpi
         ? []
-        : ["年間の問い合わせ目標は？", "CV率、アクセス数、自然検索流入など重視するKPIは何ですか？"]
+        : webProject
+          ? ["年間の問い合わせ目標は？", "CV率、アクセス数、自然検索流入など重視するKPIは何ですか？"]
+          : ["削減したい作業時間や件数は？", "精度、成功率、エラー率など重視するKPIは何ですか？"]
     },
     {
       key: "cms",
-      category: "CMS",
+      category: profile.requirementLabel,
       found: hasCms,
-      summary: hasCms ? "CMS要否の記載あり" : "CMS要否・更新範囲が不足",
+      summary: hasCms ? `${profile.requirementLabel}の記載あり` : `${profile.requirementLabel}が不足`,
       questions: hasCms
         ? []
-        : ["CMSは必要ですか？", "自社で更新したいページやコンテンツは何ですか？"]
+        : webProject
+          ? ["CMSは必要ですか？", "自社で更新したいページやコンテンツは何ですか？"]
+          : profile.qualityHints.map((hint) => `${hint}を確認してください`)
     },
     {
       key: "operation",

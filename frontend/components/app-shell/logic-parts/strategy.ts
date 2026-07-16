@@ -25,6 +25,7 @@ import { chatQuestionFlow } from "@/components/app-shell/logic-parts/workflow";
 import { allInputText, buildProjectBriefFromChatAnswers, extractFirstUrl, isUnknownAnswer, withoutUrl } from "@/components/app-shell/logic-parts/intake";
 import { buildInfoChecks, uniqueTextItems } from "@/components/app-shell/logic-parts/hearing";
 import { deriveDealEvaluation, deriveEstimateSummary, extractClientName } from "@/components/app-shell/logic-parts/estimates";
+import { getProposalProfile } from "@/components/app-shell/logic-parts/profiles";
 
 export function findNextMissingQuestionIndex(answers: ChatAnswers) {
   return chatQuestionFlow.findIndex((question) => !answers[question.key]?.trim());
@@ -165,22 +166,33 @@ export function buildSalesOpportunityScore(form: ProposalRequest, checks: InfoCh
 
 export function buildAiRecommendations(form: ProposalRequest, insight: UrlInsight | null) {
   const text = allInputText(form);
+  const profile = getProposalProfile(text);
+  const webProject = profile.category === "web";
   const recommendations: string[] = [];
 
+  if (profile.category === "ai_ocr") {
+    recommendations.push("AI-OCR提案：帳票項目定義、読取精度、例外確認フロー、API/CSV連携を先に整理します。");
+  }
+  if (profile.category === "rpa") {
+    recommendations.push("RPA提案：自動化対象、例外処理、監視、運用マニュアルを分けて提案します。");
+  }
+  if (profile.category === "crm_sfa") {
+    recommendations.push("CRM/SFA提案：管理項目、営業プロセス、入力定着、レポート設計を中心に整理します。");
+  }
   if (/問い合わせ|資料請求|CV|コンバージョン|来店予約/.test(text)) {
-    recommendations.push("問い合わせ最大化提案：ファーストビュー、CTA、フォーム導線、FAQを改善してCVまでの迷いを減らします。");
+    recommendations.push(webProject ? "問い合わせ最大化提案：ファーストビュー、CTA、フォーム導線、FAQを改善してCVまでの迷いを減らします。" : "成果最大化提案：問い合わせや確認作業の流れを整理し、次アクションまでの迷いを減らします。");
   }
   if (/採用|求人|応募|人材/.test(text)) {
     recommendations.push("採用強化提案：職種理解、社員紹介、働く環境、応募導線を整えて応募前の不安を減らします。");
   }
-  if (/SEO|検索|自然流入|流入|地域名/.test(text)) {
+  if (webProject && /SEO|検索|自然流入|流入|地域名/.test(text)) {
     recommendations.push("SEO強化提案：サービス別・課題別・FAQ・実績コンテンツを増やし、検索流入から問い合わせへつなげます。");
   }
-  if (/CMS|更新|お知らせ|ブログ|運用/.test(text)) {
+  if (webProject && /CMS|更新|お知らせ|ブログ|運用/.test(text)) {
     recommendations.push("CMS運用提案：更新しやすい管理画面と投稿ルールを設計し、公開後の改善運用を回せる状態にします。");
   }
   if (/競合|比較|他社/.test(text) || form.competitor_site_url.trim()) {
-    recommendations.push("競合差別化提案：競合より分かりやすい導線、実績訴求、CTA配置で選ばれる理由を明確にします。");
+    recommendations.push(webProject ? "競合差別化提案：競合より分かりやすい導線、実績訴求、CTA配置で選ばれる理由を明確にします。" : "競合差別化提案：比較対象より導入しやすい範囲、効果、運用支援を明確にします。");
   }
   if (insight) {
     recommendations.push(`URL改善提案：${insight.improvementPoints[0]}し、既存サイトの強みを提案ストーリーへ反映します。`);
@@ -190,25 +202,35 @@ export function buildAiRecommendations(form: ProposalRequest, insight: UrlInsigh
     ? uniqueTextItems(recommendations).slice(0, 3)
     : [
         "現状理解提案：事業内容と顧客課題を整理し、提案サマリーで意思決定しやすくします。",
-        "導線改善提案：主要CTAと問い合わせフォームまでの流れを短くし、成果につながる構成にします。",
-        "運用改善提案：CMSと改善レポートを前提に、公開後も成果を伸ばす提案にします。"
+        "導入改善提案：対象業務と次アクションまでの流れを短くし、成果につながる構成にします。",
+        "運用改善提案：運用ルールと改善レポートを前提に、導入後も成果を伸ばす提案にします。"
       ];
 }
 
 export function buildStrategyCards(form: ProposalRequest, recommendations: string[]): StrategyCard[] {
   const text = allInputText(form);
+  const profile = getProposalProfile(text);
   const cards: StrategyCard[] = [];
 
   if (/デザイン|古い|信頼|ブランド|ブランディング|見た目/.test(text)) {
     cards.push({ title: "デザイン重視", reason: "信頼感や第一印象の改善が成果に直結するため、ファーストビューと実績訴求を強化します。" });
   }
-  if (/SEO|検索|自然流入|流入|地域名/.test(text)) {
+  if (profile.category === "ai_ocr") {
+    cards.push({ title: "精度重視", reason: "読取精度と例外確認フローが運用定着に直結するため、PoCで評価軸を明確にします。" });
+  }
+  if (profile.category === "rpa") {
+    cards.push({ title: "自動化範囲重視", reason: "自動化する作業と人が確認する作業を分けることで、運用リスクを抑えます。" });
+  }
+  if (profile.category === "crm_sfa") {
+    cards.push({ title: "定着重視", reason: "営業現場が入力し続けられる項目設計と運用ルールが成果に直結します。" });
+  }
+  if (profile.category === "web" && /SEO|検索|自然流入|流入|地域名/.test(text)) {
     cards.push({ title: "SEO重視", reason: "検索流入が課題に含まれるため、サービス別・FAQ・事例コンテンツで入口を増やします。" });
   }
   if (/採用|求人|応募|人材/.test(text)) {
     cards.push({ title: "採用強化", reason: "応募前の不安を減らすため、社員紹介・職種紹介・働く環境を分かりやすくします。" });
   }
-  if (/問い合わせ|資料請求|CV|CTA|来店予約/.test(text)) {
+  if (profile.category === "web" && /問い合わせ|資料請求|CV|CTA|来店予約/.test(text)) {
     cards.push({ title: "問い合わせ最大化", reason: "問い合わせ導線が成果に直結するため、CTA配置とフォーム到達までの流れを短縮します。" });
   }
   if (/競合|比較|他社/.test(text)) {
@@ -227,14 +249,20 @@ export function buildStrategyCards(form: ProposalRequest, recommendations: strin
 
 export function buildPreviewSlides(form: ProposalRequest, strategies: StrategyCard[], estimate: EstimateSummary): PreviewSlide[] {
   const client = extractClientName(form);
+  const profile = getProposalProfile(allInputText(form));
+  const strategyTitle = profile.category === "web" ? "競合・SEO方針" : "比較・導入方針";
+  const strategyBody =
+    profile.category === "web"
+      ? `競合: ${form.competitor_site_url || form.competitor_company_name || "競合未確認"}\nSEO: ${form.seo_required || "要確認"}`
+      : `比較対象: ${form.competitor_company_name || form.competitor_site_url || "未確認"}\n${profile.requirementLabel}: ${form.special_function_required || "要確認"}`;
   return [
-    { title: `${client} Webサイト制作ご提案`, body: "現状理解から課題、戦略、制作方針、費用、進め方までを整理します。" },
+    { title: `${client} ${profile.label}`, body: "現状理解から課題、提案方針、費用、進め方までを整理します。" },
     { title: "提案サマリー", body: form.project_brief.trim().slice(0, 180) || "案件メールの内容をもとに提案サマリーを整理します。" },
     { title: "現状理解・課題", body: form.hearing_result.trim().slice(0, 180) || "不足情報は次回確認事項として扱い、仮説ベースで課題を整理します。" },
     { title: "AI提案戦略", body: strategies.map((item) => `${item.title}: ${item.reason}`).join("\n") },
-    { title: "競合・SEO方針", body: `競合: ${form.competitor_site_url || form.competitor_company_name || "競合未確認"}\nSEO: ${form.seo_required || "要確認"}` },
+    { title: strategyTitle, body: strategyBody },
     { title: "概算見積・スケジュール", body: `概算見積: ${estimate.totalLabel}\n予算適合: ${estimate.budgetFit}\n納期: ${form.desired_launch_timing || "要確認"}` },
-    { title: "今後の進め方", body: "不足情報確認、要件定義、構成案作成、デザイン制作、実装、検証、公開の順で進行します。" }
+    { title: "今後の進め方", body: profile.category === "web" ? "不足情報確認、要件定義、構成案作成、デザイン制作、実装、検証、公開の順で進行します。" : "不足情報確認、要件定義、導入設計、検証、運用準備、定着支援の順で進行します。" }
   ];
 }
 
@@ -255,7 +283,7 @@ export function buildQualityScore(
   const improvements = [
     form.case_studies.trim() ? "成功事例の成果数値を表紙直後の提案サマリーにも反映します。" : "類似実績を1〜2件追加すると説得力が上がります。",
     form.budget_range.trim() && form.budget_range !== "未定" ? "予算内・オプションの切り分けを明確にします。" : "予算確認後、必須範囲とオプション範囲を再整理します。",
-    form.competitor_site_url.trim() ? "競合サイトのCTA・SEO・実績訴求を実画面で確認します。" : "競合サイトURLを確認すると差別化提案が強くなります。"
+    form.competitor_site_url.trim() || form.competitor_company_name.trim() ? "比較対象の機能・費用・運用観点を確認します。" : "比較対象を確認すると差別化提案が強くなります。"
   ];
 
   return { total, proposal, persuasion, roi, differentiation, readability, improvements };
@@ -263,13 +291,14 @@ export function buildQualityScore(
 
 export function buildDraftEmail(form: ProposalRequest): DraftEmail {
   const client = extractClientName(form);
+  const profile = getProposalProfile(allInputText(form));
   return {
-    subject: `【ご提案資料送付】${client} Webサイト制作のご提案`,
+    subject: `【ご提案資料送付】${client} ${profile.label}`,
     body: `${client}
 ご担当者様
 
 お世話になっております。
-Webサイト制作のご相談について、初回提案資料をお送りします。
+${profile.label}について、初回提案資料をお送りします。
 
 本資料では、現状理解、想定課題、提案方針、概算費用、スケジュールを整理しております。
 未確認事項については、次回のお打ち合わせで確認させてください。
@@ -283,13 +312,13 @@ export function buildAiMinutes(form: ProposalRequest, extracted: ExtractedInfo |
   const source = form.hearing_result.trim() || form.project_brief.trim();
   const minutes = [
     `${extractClientName(form)}の相談内容を確認`,
-    extracted?.projectContent || "Webサイト制作・改善提案について協議",
+    extracted?.projectContent || `${getProposalProfile(allInputText(form)).label}について協議`,
     extracted?.trouble || "現状課題と改善方針を整理"
   ];
   const todos = [
     form.budget_range && form.budget_range !== "未定" ? "予算範囲に合わせた提案範囲を調整" : "予算感を確認",
     form.desired_launch_timing && form.desired_launch_timing !== "要確認" ? "公開希望時期から逆算してスケジュール作成" : "公開希望時期を確認",
-    form.competitor_site_url || form.competitor_company_name ? "競合比較観点を提案書に反映" : "競合サイトを確認"
+    form.competitor_site_url || form.competitor_company_name ? "競合比較観点を提案書に反映" : "比較対象を確認"
   ];
   const nextActions = [
     "提案書初稿を確認",
@@ -368,22 +397,23 @@ export function buildPreMeetingChecklist(checks: InfoCheck[]) {
     { label: "予算を確認しましたか", done: Boolean(found.get("budget")) },
     { label: "納期を確認しましたか", done: Boolean(found.get("deadline")) },
     { label: "決裁者を確認しましたか", done: Boolean(found.get("decision-maker")) },
-    { label: "CMS希望を確認しましたか", done: Boolean(found.get("cms")) }
+    { label: "導入要件を確認しましたか", done: Boolean(found.get("cms")) }
   ];
 }
 
 export function buildCoachQuestions(form: ProposalRequest, missingItems: InfoCheck[]): CoachQuestion[] {
   const text = allInputText(form);
+  const profile = getProposalProfile(text);
   const base: CoachQuestion[] = [
     { priority: 5, question: "最終決裁者はどなたですか？", reason: "提案後の意思決定ルートを確認するため" },
-    { priority: 5, question: "今回のWeb制作で最も達成したい成果は何ですか？", reason: "提案軸とKPIを合わせるため" },
+    { priority: 5, question: "今回の提案で最も達成したい成果は何ですか？", reason: "提案軸とKPIを合わせるため" },
     { priority: 4, question: "予算の上限と、段階提案の可否を教えてください。", reason: "必須範囲とオプションを分けるため" },
     { priority: 4, question: "公開希望日は必達ですか、それとも目安ですか？", reason: "スケジュールリスクを判断するため" },
-    { priority: 4, question: "公開後の更新担当者はいますか？", reason: "CMSと運用体制を設計するため" },
-    { priority: 4, question: "競合サイトで良いと思う点・避けたい点はありますか？", reason: "差別化と好みを把握するため" },
-    { priority: 3, question: "現在のサイトで一番困っているページはどこですか？", reason: "改善優先度を決めるため" },
-    { priority: 3, question: "問い合わせや応募の現在数と目標数はありますか？", reason: "成果指標とROIを提示するため" },
-    { priority: 3, question: "写真撮影・原稿作成は社内対応できますか？", reason: "制作範囲と見積精度を上げるため" },
+    { priority: 4, question: "導入後の運用担当者はいますか？", reason: "運用体制を設計するため" },
+    { priority: 4, question: "比較対象で良いと思う点・避けたい点はありますか？", reason: "差別化と好みを把握するため" },
+    { priority: 3, question: "現在の業務で一番困っている工程はどこですか？", reason: "改善優先度を決めるため" },
+    { priority: 3, question: "現在数と目標数、削減したい時間はありますか？", reason: "成果指標とROIを提示するため" },
+    { priority: 3, question: "必要なデータや資料は社内で準備できますか？", reason: "導入範囲と見積精度を上げるため" },
     { priority: 3, question: "社内確認に必要な人数と確認期間を教えてください。", reason: "手戻りと納期遅延を防ぐため" }
   ];
 
@@ -394,9 +424,15 @@ export function buildCoachQuestions(form: ProposalRequest, missingItems: InfoChe
   }));
   const industryQuestion = /採用|求人|応募/.test(text)
     ? [{ priority: 5, question: "採用したい職種と応募者像を教えてください。", reason: "採用サイトの訴求軸を決めるため" }]
-    : /不動産|物件/.test(text)
-      ? [{ priority: 5, question: "物件情報の登録・検索・更新はどのように運用していますか？", reason: "物件検索やCMS要件を決めるため" }]
-      : [];
+    : profile.category === "ai_ocr"
+      ? [{ priority: 5, question: "読取対象の帳票種類と月間件数、抽出項目を教えてください。", reason: "AI-OCRのPoC範囲と精度目標を決めるため" }]
+      : profile.category === "rpa"
+        ? [{ priority: 5, question: "自動化したい作業手順と例外パターンを教えてください。", reason: "RPAの実装範囲と運用リスクを決めるため" }]
+        : profile.category === "crm_sfa"
+          ? [{ priority: 5, question: "管理したい顧客・案件項目と営業ステージを教えてください。", reason: "CRM/SFAの項目設計を決めるため" }]
+          : /不動産|物件/.test(text)
+            ? [{ priority: 5, question: "物件情報の登録・検索・更新はどのように運用していますか？", reason: "物件検索やCMS要件を決めるため" }]
+            : [];
 
   return uniqueTextItems([...industryQuestion, ...missingBoost, ...base].map((item) => `${item.priority}|${item.question}|${item.reason}`))
     .map((item) => {
@@ -418,15 +454,15 @@ export function buildRealtimeQuestion(liveMemo: string, questions: CoachQuestion
   if (!/予算|費用|金額/.test(text)) return "予算感と上限、段階提案の可否を確認しましょう。";
   if (!/納期|公開|いつ|時期/.test(text)) return "公開希望時期と必達期限を確認しましょう。";
   if (!/決裁|承認|社長|代表|役員/.test(text)) return "決裁者と承認フローを確認しましょう。";
-  if (!/競合|比較|他社/.test(text)) return "比較している競合サイトや参考サイトを確認しましょう。";
-  if (!/KPI|目標|問い合わせ|応募|CV/.test(text)) return "成果目標やKPIを数字で確認しましょう。";
+  if (!/競合|比較|他社/.test(text)) return "比較している企業・サービス・参考情報を確認しましょう。";
+  if (!/KPI|目標|問い合わせ|応募|CV|削減|精度|時間/.test(text)) return "成果目標やKPIを数字で確認しましょう。";
   return "最後に、次回までの提出物と確認スケジュールを合意しましょう。";
 }
 
 export function buildMeetingEvaluation(memo: string, form: ProposalRequest): MeetingEvaluation {
   const text = `${memo}\n${allInputText(form)}`;
-  const hearing = Math.min(100, 50 + ["予算", "納期", "決裁", "競合", "CMS", "KPI"].filter((word) => text.includes(word)).length * 8);
-  const proposal = Math.min(100, 55 + ["提案", "改善", "SEO", "CTA", "CMS", "運用"].filter((word) => text.includes(word)).length * 7);
+  const hearing = Math.min(100, 50 + ["予算", "納期", "決裁", "競合", "導入", "KPI"].filter((word) => text.includes(word)).length * 8);
+  const proposal = Math.min(100, 55 + ["提案", "改善", "自動化", "精度", "連携", "運用"].filter((word) => text.includes(word)).length * 7);
   const closing = Math.min(100, 48 + ["次回", "提出", "確認", "合意", "スケジュール"].filter((word) => text.includes(word)).length * 9);
   const questions = Math.min(100, 52 + (memo.match(/？|\?/g)?.length ?? 0) * 8 + ["誰", "いつ", "いくら", "どの"].filter((word) => text.includes(word)).length * 6);
   const information = Math.min(100, 50 + ["会社", "担当", "目的", "課題", "予算", "納期", "競合", "運用"].filter((word) => text.includes(word)).length * 6);
@@ -447,8 +483,8 @@ export function buildMeetingEvaluation(memo: string, form: ProposalRequest): Mee
     ],
     improvements: [
       text.includes("決裁") ? "決裁者情報を提案書にも反映しましょう" : "決裁者と承認フローを確認しましょう",
-      text.includes("KPI") || text.includes("目標") ? "KPIを提案サマリーで強調しましょう" : "問い合わせ数・応募数などの目標値を確認しましょう",
-      text.includes("競合") ? "競合比較を具体化しましょう" : "競合サイトや比較対象を確認しましょう"
+      text.includes("KPI") || text.includes("目標") ? "KPIを提案サマリーで強調しましょう" : "削減時間・精度・件数などの目標値を確認しましょう",
+      text.includes("競合") ? "競合比較を具体化しましょう" : "比較対象を確認しましょう"
     ],
     nextFocus: ["最終決裁者", "予算上限", "公開希望時期", "競合比較", "公開後の運用体制"].filter((item) => !text.includes(item.slice(0, 2))).slice(0, 3)
   };
@@ -458,7 +494,7 @@ export function buildNextMeetingPrep(form: ProposalRequest, missingItems: InfoCh
   return {
     confirmations: missingItems.slice(0, 5).map((item) => `${item.label}: ${item.nextQuestion}`),
     homework: [
-      "競合サイトの導線・CTA・SEO観点を確認",
+      "比較対象の機能・費用・運用観点を確認",
       "必須範囲とオプション範囲の見積を整理",
       "提案サマリーとKPI案を1枚で説明できるよう準備"
     ],
@@ -475,19 +511,19 @@ export function buildWinRateCoachAdvice(form: ProposalRequest, strategyCards: St
   const text = allInputText(form);
   return {
     additions: [
-      text.includes("KPI") ? "KPI達成までの改善サイクルを追加" : "問い合わせ数・応募数などのKPI目標を追加",
+      text.includes("KPI") ? "KPI達成までの改善サイクルを追加" : "削減時間・精度・件数などのKPI目標を追加",
       "費用対効果と優先順位を1枚で説明",
       "次回確認事項を商談最後に合意"
     ],
     differentiation: [
-      form.competitor_site_url || form.competitor_company_name ? "競合のCTA・コンテンツ量・SEOとの差を表で提示" : "競合サイトを確認して比較表を追加",
+      form.competitor_site_url || form.competitor_company_name ? "比較対象との差を表で提示" : "比較対象を確認して比較表を追加",
       strategyCards[0] ? `${strategyCards[0].title}を中心軸にする` : "実績訴求と運用支援を差別化軸にする",
       "公開後の改善運用まで含めて提案"
     ],
     delight: [
       "初回から要約版PPTと見積書PDFをセットで提示",
       "お客様側の社内説明に使いやすい1枚サマリーを追加",
-      "CMS更新マニュアルや公開後30日改善プランを提案"
+      "運用マニュアルや導入後30日改善プランを提案"
     ]
   };
 }
@@ -495,7 +531,7 @@ export function buildWinRateCoachAdvice(form: ProposalRequest, strategyCards: St
 export function buildSalesDailyReport(form: ProposalRequest, evaluation: MeetingEvaluation): DailyReport {
   return {
     activities: ["Ready Crew案件の整理", "AIによる提案書初稿作成", "商談準備チェックと質問設計"],
-    meeting: [`${extractClientName(form)}のWeb制作相談`, form.project_brief.trim().slice(0, 90) || "案件概要は要確認"],
+    meeting: [`${extractClientName(form)}の提案相談`, form.project_brief.trim().slice(0, 90) || "案件概要は要確認"],
     results: [`商談評価 ${evaluation.total}点`, `受注確率 ${deriveDealEvaluation(form, buildInfoChecks(form), deriveEstimateSummary(form)).probability}%`],
     issues: evaluation.improvements,
     tomorrow: ["不足情報の確認", "提案資料の最終調整", "次回商談日程の確認"]
@@ -503,7 +539,8 @@ export function buildSalesDailyReport(form: ProposalRequest, evaluation: Meeting
 }
 
 export function buildBossReport(form: ProposalRequest, deal: DealEvaluation, missingItems: InfoCheck[]) {
-  const report = `${extractClientName(form)}のWeb制作案件です。${form.project_brief.trim().slice(0, 90)}。受注確率は${deal.probability}%、判断は「${deal.decision}」。現在の課題は${missingItems.map((item) => item.label).slice(0, 3).join("、") || "大きな不足なし"}です。今後は不足情報確認、競合比較、概算見積の調整を行い、次回商談で提案内容を固めます。`;
+  const profile = getProposalProfile(allInputText(form));
+  const report = `${extractClientName(form)}の${profile.label}案件です。${form.project_brief.trim().slice(0, 90)}。受注確率は${deal.probability}%、判断は「${deal.decision}」。現在の課題は${missingItems.map((item) => item.label).slice(0, 3).join("、") || "大きな不足なし"}です。今後は不足情報確認、競合比較、概算見積の調整を行い、次回商談で提案内容を固めます。`;
   return report.slice(0, 300);
 }
 

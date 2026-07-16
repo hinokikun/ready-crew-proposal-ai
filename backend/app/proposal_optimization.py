@@ -15,7 +15,7 @@ OPTIMIZATION_CATEGORIES: dict[str, dict[str, Any]] = {
     "roi": {"title": "ROI improvement", "importance": 5, "effort": 3, "base_delta": 12.0, "tags": "roi,value"},
     "competition": {"title": "Competitive comparison", "importance": 4, "effort": 3, "base_delta": 9.0, "tags": "competition,differentiation"},
     "implementation": {"title": "Implementation roadmap", "importance": 4, "effort": 2, "base_delta": 7.0, "tags": "schedule,roadmap"},
-    "cta": {"title": "CTA improvement", "importance": 4, "effort": 2, "base_delta": 6.0, "tags": "cta,next-action"},
+    "next_action": {"title": "Next action improvement", "importance": 4, "effort": 2, "base_delta": 6.0, "tags": "next-action"},
     "evidence": {"title": "Numeric evidence", "importance": 4, "effort": 3, "base_delta": 8.0, "tags": "kpi,evidence"},
     "case_study": {"title": "Case study evidence", "importance": 3, "effort": 3, "base_delta": 6.0, "tags": "case-study,proof"},
     "faq": {"title": "FAQ addition", "importance": 3, "effort": 2, "base_delta": 5.0, "tags": "faq,risk"},
@@ -97,7 +97,7 @@ def _category_from_action(action: dict[str, Any]) -> str:
     if "roadmap" in raw or "schedule" in raw or "timeline" in raw or "implementation" in raw:
         return "implementation"
     if "cta" in raw or "next action" in raw or "contact" in raw:
-        return "cta"
+        return "next_action"
     if "case" in raw or "result" in raw or "record" in raw:
         return "case_study"
     if "faq" in raw or "qa" in raw or "q&a" in raw:
@@ -391,7 +391,7 @@ def run_optimization(db: Connection, *, user_id: int, project_id: str = "") -> d
         created_or_updated += 1
 
     if not signals:
-        for category in ("roi", "competition", "cta"):
+        for category in ("roi", "competition", "next_action"):
             scored = _score_item(category=category, issue_count=1, adopted_count=0, generated_count=0, source_type="ai_estimate")
             scored["explanation"] += " Baseline recommendation created because no review signal exists yet."
             _upsert_backlog_item(

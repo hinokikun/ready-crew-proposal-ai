@@ -4,15 +4,40 @@ from datetime import date
 import re
 
 from app.models import PowerPointData, PowerPointSlide, PptxDownloadRequest
+from app.proposal_profiles import ProposalProfile, get_proposal_profile, proposal_profile_for_text, score_rows_for_axes
 from app.services.pptx_theme import COLORS
 from app.services.pptx_parts.models import EstimateSummary
+
+
+def _split_label_body(value: str) -> tuple[str, str]:
+    if ":" in value:
+        label, body = value.split(":", 1)
+        return label.strip(), body.strip()
+    if "：" in value:
+        label, body = value.split("：", 1)
+        return label.strip(), body.strip()
+    return value.strip(), value.strip()
+
+
+def _profile_for_concept(concept: str) -> ProposalProfile:
+    mapping = {
+        "AI-OCR業務自動化": "ai_ocr",
+        "定型業務自動化": "rpa",
+        "営業情報の一元管理": "crm_sfa",
+        "入力案件の業務改善": "other",
+    }
+    if concept in mapping:
+        return get_proposal_profile(mapping[concept])
+    if any(keyword in concept for keyword in ["Web", "CMS", "SEO", "CTA", "CV", "サイト"]):
+        return get_proposal_profile("web")
+    return get_proposal_profile("other")
 
 
 def _fallback_slide(data: PowerPointData) -> PowerPointSlide:
     return PowerPointSlide(
         slide_no=1,
         layout="title",
-        title=data.deck_title or "Webサイト制作ご提案書",
+        title=data.deck_title or "業務改善ご提案書",
         bullets=[data.client_name or "提案先企業", "提案構成の生成結果をスライド化"],
         speaker_notes="生成結果をもとにした提案資料です。",
         visual_suggestion="表紙背景、企業名、自社ロゴ",
@@ -20,6 +45,9 @@ def _fallback_slide(data: PowerPointData) -> PowerPointSlide:
 
 
 def derive_concept(text: str) -> str:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return profile.concept
     if _contains_any(text, ["物件", "不動産", "賃貸", "売買"]):
         return "物件検索強化"
     if _contains_any(text, ["採用", "応募", "求人", "求職"]):
@@ -36,6 +64,17 @@ def derive_concept(text: str) -> str:
 
 
 def derive_current_understanding(project_brief: str, concept: str) -> dict[str, str]:
+    profile = proposal_profile_for_text(project_brief)
+    if profile.category != "web":
+        points = extract_project_points(project_brief)
+        issue = points[0] if points else profile.needs[0]
+        return {
+            "現状": f"{profile.label}の導入目的、対象業務、運用条件を整理する局面です。",
+            "課題": issue,
+            "機会": profile.summary,
+            "目指す状態": f"{profile.concept}を軸に、導入範囲、効果測定、運用定着までを明確にします。",
+        }
+
     points = extract_project_points(project_brief)
     current = "Webサイトの役割を見直し、営業・採用・広報の成果接点として再設計する局面です。"
     if _contains_any(project_brief, ["古", "リニューアル", "刷新", "改修"]):
@@ -62,6 +101,10 @@ def merge_understanding_items(base: dict[str, str], bullets: list[str]) -> dict[
 
 def concept_statement(concept: str) -> str:
     statements = {
+        "AI-OCR業務自動化": "帳票読み取り、項目抽出、連携、例外処理を整え、手入力と確認作業を削減します。",
+        "定型業務自動化": "対象業務、手順、例外処理を標準化し、RPAで安定した自動化を進めます。",
+        "営業情報の一元管理": "顧客、商談、活動履歴を統合し、営業活動を見える化します。",
+        "入力案件の業務改善": "案件目的、導入範囲、効果測定、運用定着を整理し、実行しやすい提案にします。",
         "問い合わせ最大化": "導線、CTA、実績訴求を連動させ、商談につながる問い合わせを増やします。",
         "採用強化": "仕事内容、働く魅力、応募導線を整理し、候補者の理解と応募行動を促します。",
         "ブランディング強化": "強み、実績、メッセージを統一し、第一印象と信頼感を高めます。",
@@ -70,10 +113,13 @@ def concept_statement(concept: str) -> str:
         "CMS運用強化": "更新しやすいCMSと運用フローを整備し、情報鮮度を維持します。",
         "Web成果最大化": "情報設計、導線、運用を整え、Webサイトを成果創出の基盤にします。",
     }
-    return statements.get(concept, statements["Web成果最大化"])
+    return statements.get(concept, "案件目的、導入範囲、効果測定、運用定着を整理し、実行しやすい提案にします。")
 
 
 def derive_journey_points(concept: str) -> list[tuple[str, str]]:
+    profile = _profile_for_concept(concept)
+    if profile.category != "web":
+        return [_split_label_body(item) for item in profile.journey[:4]]
     if concept == "採用強化":
         return [("認知", "企業の魅力と募集職種を伝える"), ("比較検討", "働き方・社員情報・制度で納得感を高める"), ("問い合わせ", "応募フォームまでの導線を短くする")]
     if concept == "物件検索強化":
@@ -84,6 +130,18 @@ def derive_journey_points(concept: str) -> list[tuple[str, str]]:
 
 
 def journey_action(stage: str, concept: str) -> str:
+    profile = _profile_for_concept(concept)
+    if profile.category != "web":
+        return {
+            "受付": "対象データと入力経路を整理",
+            "抽出": "処理ルールと品質基準を設計",
+            "確認": "例外処理と人手確認を明確化",
+            "連携": "既存システムへの接続条件を整理",
+            "現状把握": "対象業務と課題を棚卸し",
+            "設計": "導入範囲と実行手順を定義",
+            "導入": "小さく検証して拡張",
+            "定着": "効果測定と改善を継続",
+        }.get(stage, "導入後の運用改善につなげる")
     if stage == "認知":
         return "入口ページと訴求メッセージを最適化"
     if stage == "比較検討":
@@ -96,6 +154,9 @@ def journey_action(stage: str, concept: str) -> str:
 
 
 def derive_sitemap_items(text: str) -> list[str]:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return profile.structure_items
     items = ["トップ", "会社案内", "サービス", "実績", "お知らせ", "お問い合わせ"]
     if _contains_any(text, ["採用", "求人", "応募"]):
         items.insert(-1, "採用情報")
@@ -109,6 +170,23 @@ def derive_sitemap_items(text: str) -> list[str]:
 
 
 def sitemap_note(item: str) -> str:
+    generic_notes = {
+        "対象帳票": "処理対象を明確化",
+        "入力経路": "取り込み方法を整理",
+        "抽出項目": "必要データを定義",
+        "確認画面": "例外確認を効率化",
+        "CSV/API連携": "既存業務へ接続",
+        "例外処理": "運用品質を担保",
+        "運用レポート": "改善状況を可視化",
+        "対象業務": "提案範囲を明確化",
+        "課題": "優先論点を整理",
+        "導入範囲": "段階導入を設計",
+        "連携先": "既存システム条件",
+        "運用体制": "定着に必要な役割",
+        "効果測定": "KPI確認の土台",
+    }
+    if item in generic_notes:
+        return generic_notes[item]
     if item == "サービス":
         return "提供価値と選ばれる理由"
     if item == "実績":
@@ -127,6 +205,9 @@ def sitemap_note(item: str) -> str:
 
 
 def derive_kpi_rows(text: str, concept: str) -> list[tuple[str, str]]:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return [_split_label_body(item) for item in profile.kpis[:4]]
     targets = derive_kpi_targets(text, concept)
     if concept == "採用強化":
         return [("問い合わせ数", f"月{int(targets['inquiries'])}件"), ("CV率", f"{targets['cv_rate']}%"), ("自然検索流入", f"月{int(targets['organic'])}セッション"), ("資料DL数", f"月{int(targets['downloads'])}件")]
@@ -136,6 +217,9 @@ def derive_kpi_rows(text: str, concept: str) -> list[tuple[str, str]]:
 
 
 def derive_kpi_targets(text: str, concept: str) -> dict[str, float]:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return {"inquiries": 18, "cv_rate": 3.0, "organic": 3200, "downloads": 20}
     if concept == "採用強化":
         return {"inquiries": 8, "cv_rate": 2.0, "organic": 2500, "downloads": 10}
     if concept == "物件検索強化":
@@ -148,6 +232,9 @@ def derive_kpi_targets(text: str, concept: str) -> dict[str, float]:
 
 
 def derive_competitor_rows(text: str) -> list[list[str]]:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return score_rows_for_axes(profile.competitor_axes, text)
     scores = {
         "デザイン": 2 if _contains_any(text, ["古", "リニューアル", "刷新", "改修", "ブランド", "信頼感"]) else 3,
         "SEO": 2 if _contains_any(text, ["SEO", "検索", "自然検索", "流入"]) else 3,
@@ -161,6 +248,9 @@ def derive_competitor_rows(text: str) -> list[list[str]]:
 
 
 def derive_winning_strategy(text: str) -> str:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return profile.winning_strategy
     if _contains_any(text, ["物件", "不動産", "賃貸", "売買"]):
         return "物件検索で勝つ"
     if _contains_any(text, ["SEO", "検索", "自然検索", "流入"]):
@@ -177,6 +267,9 @@ def has_competitor_context(context: PptxContext) -> bool:
 
 
 def derive_target_user_rows(text: str, concept: str) -> list[tuple[str, str]]:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return [_split_label_body(item) for item in profile.targets[:4]]
     if concept == "採用強化":
         return [("主要ターゲット", "応募を検討する求職者"), ("ニーズ", "仕事内容、働く環境、成長機会を知りたい"), ("不安", "社風や選考後の働き方が見えにくい"), ("必要コンテンツ", "社員紹介、募集要項、FAQ、応募導線")]
     if concept == "物件検索強化":
@@ -187,6 +280,9 @@ def derive_target_user_rows(text: str, concept: str) -> list[tuple[str, str]]:
 
 
 def derive_content_items(text: str, concept: str) -> list[str]:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return profile.content_items[:4]
     items = ["サービス詳細: 強み、対象課題、提供範囲を明確化", "実績・事例: 成果とプロセスを見せて比較検討を後押し", "FAQ: 費用、納期、運用、CMSの不安を先回りして解消", "お問い合わせ: CTAとフォーム項目を最短化"]
     if concept == "採用強化":
         items[0] = "採用情報: 募集職種、働き方、社員の声を整理"
@@ -196,6 +292,9 @@ def derive_content_items(text: str, concept: str) -> list[str]:
 
 
 def derive_web_strategy_items(text: str, concept: str) -> list[str]:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return profile.strategy_items[:4]
     return unique_items(
         [
             "集客: SEO・広告・紹介流入の受け皿を整備",
@@ -212,6 +311,16 @@ def score_label(value: int) -> str:
 
 
 def kpi_metric_for(concept: str, category: str) -> str:
+    if _profile_for_concept(concept).category == "other":
+        return "\u5bfe\u8c61\u7bc4\u56f2\u30fb\u5165\u529b\u6761\u4ef6\u3092\u6574\u7406"
+    if concept == "AI-OCR業務自動化":
+        return {"集客": "対象帳票数・入力経路", "行動": "読取精度・例外確認件数", "成果": "手入力削減時間・連携成功率"}[category]
+    if concept == "定型業務自動化":
+        return {"集客": "対象業務数・処理頻度", "行動": "処理成功率・例外発生率", "成果": "削減工数・入力ミス削減"}[category]
+    if concept == "営業情報の一元管理":
+        return {"集客": "顧客・商談登録率", "行動": "活動更新率・停滞検知数", "成果": "受注率・案件化率"}[category]
+    if concept == "入力案件の業務改善":
+        return {"集客": "対象範囲・利用者数", "行動": "運用定着率・処理品質", "成果": "削減時間・改善率"}[category]
     if concept == "採用強化":
         return {"集客": "採用ページ流入", "行動": "募集要項閲覧・社員紹介閲覧", "成果": "応募数・応募率"}[category]
     if concept == "物件検索強化":
@@ -373,6 +482,9 @@ def extract_case_study_items(case_studies: str) -> list[str]:
 
 def extract_project_points(project_brief: str) -> list[str]:
     text = project_brief.strip()
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return profile.needs[:4]
     points = [
         "問い合わせ導線・CTAの改善" if _contains_any(text, ["問い合わせ", "問合せ", "CV", "コンバージョン"]) else "",
         "採用情報・応募導線の強化" if "採用" in text else "",
@@ -385,6 +497,9 @@ def extract_project_points(project_brief: str) -> list[str]:
 
 
 def extract_solution_points(text: str) -> list[str]:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return profile.strategy_items[:4]
     points = [
         "問い合わせ導線を起点にCTAとページ遷移を再設計" if _contains_any(text, ["問い合わせ", "問合せ", "CV"]) else "",
         "採用候補者向けの情報整理と応募導線を強化" if "採用" in text else "",
@@ -398,6 +513,9 @@ def extract_solution_points(text: str) -> list[str]:
 
 def extract_service_points(own_service_info: str) -> list[str]:
     extracted = extract_text_items(own_service_info, 3)
+    profile = proposal_profile_for_text(own_service_info)
+    if profile.category != "web":
+        return unique_items(extracted + profile.services, 4)
     points = extracted + [
         "CMS構築・更新しやすい管理設計" if _contains_any(own_service_info, ["CMS", "更新"]) else "",
         "SEOを考慮した情報設計" if _contains_any(own_service_info, ["SEO", "検索"]) else "",
@@ -407,6 +525,9 @@ def extract_service_points(own_service_info: str) -> list[str]:
 
 
 def extract_schedule_points(text: str) -> list[str]:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return profile.schedule[:4]
     points = [
         "初回ヒアリング・要件整理",
         "情報設計・ワイヤーフレーム",
@@ -419,6 +540,9 @@ def extract_schedule_points(text: str) -> list[str]:
 
 
 def extract_team_points(own_service_info: str) -> list[str]:
+    profile = proposal_profile_for_text(own_service_info)
+    if profile.category != "web":
+        return profile.team[:4]
     points = [
         "進行管理・要件整理",
         "情報設計・UI/ビジュアル設計",
@@ -429,6 +553,9 @@ def extract_team_points(own_service_info: str) -> list[str]:
 
 
 def extract_cost_points(text: str) -> list[str]:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return profile.cost_points[:4]
     has_budget_detail = "予算" in text and not _contains_any(text, ["予算は未定", "予算未定", "予算感未定"])
     points = [
         "予算に合わせて必須範囲を優先" if has_budget_detail else "予算確認後に必須範囲を確定",
@@ -440,6 +567,47 @@ def extract_cost_points(text: str) -> list[str]:
 
 
 def derive_estimate_summary(payload: PptxDownloadRequest, text: str) -> EstimateSummary:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        lines: list[dict[str, object]] = [
+            {
+                "name": line.name,
+                "min": line.min,
+                "max": line.max,
+                "priority": line.priority,
+                "enabled": not line.optional or _contains_any(text, ["運用", "保守", "改善", "支援", "継続", line.name]),
+            }
+            for line in profile.estimate_lines
+        ]
+        enabled_lines = [line for line in lines if bool(line["enabled"])]
+        total_min = sum(int(line["min"]) for line in enabled_lines)
+        total_max = sum(int(line["max"]) for line in enabled_lines)
+        budget = extract_budget_amount(f"{payload.budget_range}\n{text}")
+        if budget is None:
+            budget_fit = "予算未入力"
+            budget_label = "未入力"
+        elif budget >= total_max:
+            budget_fit = "予算内"
+            budget_label = f"{budget}万円"
+        elif budget >= total_min * 0.85:
+            budget_fit = "やや調整必要"
+            budget_label = f"{budget}万円"
+        else:
+            budget_fit = "予算超過の可能性あり"
+            budget_label = f"{budget}万円"
+        return EstimateSummary(
+            page_count=max(1, len(profile.structure_items)),
+            total_min=total_min,
+            total_max=total_max,
+            total_label=f"{total_min}万〜{total_max}万円",
+            budget_label=budget_label,
+            budget_fit=budget_fit,
+            lines=lines,
+            required=[str(line["name"]) for line in enabled_lines if line["priority"] == "必須対応"],
+            recommended=[str(line["name"]) for line in enabled_lines if line["priority"] == "推奨対応"],
+            optional=[str(line["name"]) for line in enabled_lines if line["priority"] == "オプション対応"],
+        )
+
     page_count = extract_page_count(payload.estimated_page_count, text)
     page_base = max(8, page_count)
     has_cms = estimate_flag(payload.cms_required, text, ["CMS", "WordPress", "更新"])
@@ -526,6 +694,9 @@ def estimate_flag(value: str, text: str, patterns: list[str]) -> bool:
 
 
 def extract_confirmation_items(text: str) -> list[str]:
+    profile = proposal_profile_for_text(text)
+    if profile.category != "web":
+        return profile.confirmations[:5]
     has_budget_detail = "予算" in text and not _contains_any(text, ["予算は未定", "予算未定", "予算感未定"])
     items = [
         "予算感・上限・見積粒度" if not has_budget_detail else "予算内で優先する必須範囲",
@@ -584,6 +755,14 @@ def build_solution_rows(items: list[str]) -> list[list[str]]:
 
 
 def _solution_hint(item: str, index: int = 0) -> str:
+    if "AI-OCR" in item or "帳票" in item or "読取" in item or "読み取り" in item:
+        return "対象帳票、抽出項目、連携先を整理し、PoCで精度を確認"
+    if "API" in item or "CSV" in item or "連携" in item:
+        return "既存システムとの連携条件を整理し、段階的に接続"
+    if "RPA" in item or "定型" in item or "自動化" in item:
+        return "手順と例外処理を標準化し、安定運用できる自動化へ"
+    if "CRM" in item or "SFA" in item or "商談" in item:
+        return "項目、権限、レポートを整理し、営業活動を可視化"
     if "導線" in item or "問い合わせ" in item:
         return "主要CTAとページ遷移を整理し、成果導線を明確化"
     if "情報" in item or "コンテンツ" in item:
@@ -601,10 +780,10 @@ def _solution_hint(item: str, index: int = 0) -> str:
 
 def _fallback_solution_hint(index: int) -> str:
     hints = [
-        "要件整理を通じて優先度を明確化し、制作方針へ反映",
-        "訴求軸を整理し、ユーザーに伝わる構成へ再設計",
-        "成果につながる接点を整理し、行動導線を強化",
-        "公開後の更新・改善を見据えた運用しやすい設計に整備",
+        "要件整理を通じて優先度を明確化し、実行方針へ反映",
+        "対象業務と利用者を整理し、導入しやすい構成へ再設計",
+        "成果につながる接点を整理し、効果測定を明確化",
+        "導入後の改善を見据えた運用しやすい設計に整備",
     ]
     return hints[index % len(hints)]
 

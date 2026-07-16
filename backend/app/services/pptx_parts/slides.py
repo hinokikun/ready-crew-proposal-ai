@@ -56,6 +56,16 @@ from app.services.pptx_parts.drawing import (
 from app.services.pptx_theme import COLORS, MARGIN_X, SECTION_COLORS, SLIDE_HEIGHT, SLIDE_WIDTH
 
 
+def _split_metric_text(value: str) -> tuple[str, str]:
+    if ":" in value:
+        label, body = value.split(":", 1)
+        return label.strip(), body.strip()
+    if "：" in value:
+        label, body = value.split("：", 1)
+        return label.strip(), body.strip()
+    return value, "要確認"
+
+
 def add_designed_slide(
     prs: Presentation,
     slide_data: PowerPointSlide,
@@ -137,11 +147,11 @@ def resolve_slide_kind(slide_data: PowerPointSlide, index: int) -> str:
         return "target_user"
     if "カスタマージャーニー" in title or "ユーザー行動" in title:
         return "customer_journey"
-    if "Web戦略" in title or "WEB戦略" in title:
+    if "Web戦略" in title or "WEB戦略" in title or "導入戦略" in title:
         return "web_strategy"
-    if "サイトマップ" in title or "サイト構成" in title:
+    if "サイトマップ" in title or "サイト構成" in title or "導入構成" in title:
         return "sitemap"
-    if "コンテンツ" in title:
+    if "コンテンツ" in title or "施策設計" in title:
         return "content"
     if "KPI" in title or "指標" in title:
         return "kpi"
@@ -202,18 +212,20 @@ def add_cover_slide(prs: Presentation, slide_data: PowerPointSlide, data: PowerP
     add_shape(slide, MSO_SHAPE.RECTANGLE, 9.15, 0, 4.18, SLIDE_HEIGHT, fill=COLORS["canvas"], line=COLORS["canvas"])
     add_shape(slide, MSO_SHAPE.OVAL, 9.65, 0.92, 3.05, 3.05, fill=COLORS["teal_light"], line=COLORS["teal_light"])
     add_shape(slide, MSO_SHAPE.OVAL, 10.82, 3.55, 1.72, 1.72, fill=COLORS["blue_light"], line=COLORS["blue_light"])
-    add_icon_badge(slide, "UX", 9.82, 1.68, COLORS["teal"])
-    add_icon_badge(slide, "SEO", 11.05, 2.78, COLORS["blue"])
-    add_icon_badge(slide, "CV", 9.9, 4.75, COLORS["orange"])
+    cover_badges = ("UX", "SEO", "CV") if context.proposal_category == "web" else ("AI", "KPI", "OPS")
+    add_icon_badge(slide, cover_badges[0], 9.82, 1.68, COLORS["teal"])
+    add_icon_badge(slide, cover_badges[1], 11.05, 2.78, COLORS["blue"])
+    add_icon_badge(slide, cover_badges[2], 9.9, 4.75, COLORS["orange"])
     add_shape(slide, MSO_SHAPE.RECTANGLE, 9.75, 5.92, 2.7, 0.13, fill=COLORS["teal"], line=COLORS["teal"])
     add_shape(slide, MSO_SHAPE.RECTANGLE, 9.75, 6.2, 1.9, 0.13, fill=COLORS["orange"], line=COLORS["orange"])
 
-    add_section_label(slide, "WEB PROPOSAL", 0.88, 0.8, fill=COLORS["teal"], color=COLORS["white"])
+    section_label = "WEB PROPOSAL" if context.proposal_category == "web" else f"{context.proposal_label.upper()} PROPOSAL"
+    add_section_label(slide, section_label[:24], 0.88, 0.8, fill=COLORS["teal"], color=COLORS["white"])
     add_title(slide, slide_data.title or data.deck_title, 0.88, 1.55, 7.35, 1.24, size=42, color=COLORS["white"])
     add_text(slide, f"{context.client_name} 御中", 0.92, 3.02, 6.9, 0.36, size=18, color=COLORS["teal_light"], bold=True)
     add_text(
         slide,
-        "成果につながるWebサイト制作・改善のご提案",
+        "成果につながるWebサイト制作・改善のご提案" if context.proposal_category == "web" else f"{context.concept}のご提案",
         0.92,
         3.68,
         7.25,
@@ -257,13 +269,16 @@ def add_proposal_summary_slide(prs: Presentation, slide_data: PowerPointSlide, c
 
     summary_items = ensure_items(
         slide_data.bullets + context.web_strategy_items,
-        ["現状課題を成果導線へ落とし込む", "情報設計とコンテンツを再構成", "KPIを定義して公開後改善につなげる"],
+        ["現状課題を実行方針へ落とし込む", "導入範囲と施策を再構成", "KPIを定義して導入後改善につなげる"],
         3,
     )
     titles = ["解決する課題", "主要施策", "期待成果"]
     for idx, item in enumerate(summary_items[:3]):
         add_card(slide, titles[idx], item, 0.95 + idx * 4.02, 3.36, 3.35, 1.68, SECTION_COLORS[idx], COLORS["white"], number=str(idx + 1))
-    add_insight_band(slide, "提案の結論", "顧客理解、競合比較、KPI設計を起点に、公開後も成果を追えるWebサイトへ改善します。", 0.92, 5.82, 11.4, 0.54)
+    conclusion = "顧客理解、競合比較、KPI設計を起点に、公開後も成果を追えるWebサイトへ改善します。"
+    if context.proposal_category != "web":
+        conclusion = "顧客理解、比較軸、KPI設計を起点に、導入後も成果を追える実行計画へ整理します。"
+    add_insight_band(slide, "提案の結論", conclusion, 0.92, 5.82, 11.4, 0.54)
     add_footer(slide, slide_data.slide_no)
 
 
@@ -310,7 +325,7 @@ def add_competitor_slide(prs: Presentation, slide_data: PowerPointSlide, context
     add_insight_band(
         slide,
         "競合に対する勝ち筋",
-        f"{context.winning_strategy}を軸に、競合が強い領域を踏まえて情報設計・検索性・CTAを重点改善します。",
+        f"{context.winning_strategy}を軸に、競合が強い領域を踏まえて重点改善領域を明確化します。",
         0.92,
         5.48,
         11.4,
@@ -328,25 +343,33 @@ def add_target_user_slide(prs: Presentation, slide_data: PowerPointSlide, contex
         x = 0.92 + (idx % 2) * 5.88
         y = 1.72 + (idx // 2) * 2.05
         add_card(slide, label, body, x, y, 5.24, 1.48, SECTION_COLORS[idx], COLORS["white"], number=str(idx + 1))
-    add_insight_band(slide, "設計方針", "ターゲットの不安をFAQ・実績・サービス詳細で解消し、問い合わせ前の比較検討を支援します。", 0.92, 5.92, 11.4, 0.5)
+    target_note = "ターゲットの不安をFAQ・実績・サービス詳細で解消し、問い合わせ前の比較検討を支援します。"
+    if context.proposal_category != "web":
+        target_note = "利用者、意思決定者、運用担当の不安を整理し、導入判断と定着を支援します。"
+    add_insight_band(slide, "設計方針", target_note, 0.92, 5.92, 11.4, 0.5)
     add_footer(slide, slide_data.slide_no)
 
 
 def add_web_strategy_slide(prs: Presentation, slide_data: PowerPointSlide, context: PptxContext) -> None:
     slide = blank_slide(prs)
     set_background(slide)
-    add_header(slide, slide_data.title or "Web戦略", "STRATEGY", accent=COLORS["blue"])
-    items = ensure_items(context.web_strategy_items + slide_data.bullets, ["集客入口を整備", "比較検討を支援", "問い合わせ導線を強化", "運用改善を継続"], 4)
+    add_header(slide, slide_data.title or ("Web戦略" if context.proposal_category == "web" else "導入戦略"), "STRATEGY", accent=COLORS["blue"])
+    items = ensure_items(context.web_strategy_items + slide_data.bullets, ["現状整理", "導入設計", "小規模検証", "運用改善"], 4)
+    labels = ["集客", "比較検討", "問い合わせ", "運用改善"] if context.proposal_category == "web" else ["現状", "設計", "検証", "運用"]
+    badges = ["SEO", "INFO", "CV", "PDCA"] if context.proposal_category == "web" else ["ASIS", "PLAN", "TEST", "OPS"]
     for idx, item in enumerate(items[:4]):
         x = 0.86 + idx * 3.05
         accent = SECTION_COLORS[idx]
         add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, x, 1.82, 2.58, 3.0, fill=COLORS["white"], line=COLORS["line"])
-        add_icon_badge(slide, ["SEO", "INFO", "CV", "PDCA"][idx], x + 0.75, 2.12, accent, size=0.72)
-        add_text(slide, ["集客", "比較検討", "問い合わせ", "運用改善"][idx], x + 0.26, 3.14, 2.04, 0.28, size=16, color=accent, bold=True, align=PP_ALIGN.CENTER)
+        add_icon_badge(slide, badges[idx], x + 0.75, 2.12, accent, size=0.72)
+        add_text(slide, labels[idx], x + 0.26, 3.14, 2.04, 0.28, size=16, color=accent, bold=True, align=PP_ALIGN.CENTER)
         add_text(slide, _trim(item, 40), x + 0.28, 3.72, 2.02, 0.54, size=13, color=COLORS["text"], bold=True, align=PP_ALIGN.CENTER)
         if idx < 3:
             add_shape(slide, MSO_SHAPE.CHEVRON, x + 2.5, 3.0, 0.36, 0.5, fill=COLORS["line_dark"], line=COLORS["line_dark"])
-    add_insight_band(slide, "戦略の要点", f"{context.concept}を軸に、入口設計からCV改善、公開後運用まで一貫して設計します。", 0.92, 5.62, 11.4, 0.58)
+    strategy_note = f"{context.concept}を軸に、入口設計からCV改善、公開後運用まで一貫して設計します。"
+    if context.proposal_category != "web":
+        strategy_note = f"{context.concept}を軸に、現状整理、導入設計、検証、運用改善まで一貫して設計します。"
+    add_insight_band(slide, "戦略の要点", strategy_note, 0.92, 5.62, 11.4, 0.58)
     add_footer(slide, slide_data.slide_no)
 
 
@@ -354,12 +377,16 @@ def add_content_design_slide(prs: Presentation, slide_data: PowerPointSlide, con
     slide = blank_slide(prs)
     set_background(slide)
     add_header(slide, slide_data.title or "コンテンツ設計", "CONTENT", accent=COLORS["green"])
-    items = ensure_items(context.content_items + slide_data.bullets, ["サービス詳細", "実績・事例", "FAQ", "お問い合わせ"], 4)
+    fallback_content = ["サービス詳細", "実績・事例", "FAQ", "お問い合わせ"] if context.proposal_category == "web" else ["課題整理", "導入範囲", "効果測定", "運用設計"]
+    items = ensure_items(context.content_items + slide_data.bullets, fallback_content, 4)
     for idx, item in enumerate(items[:4]):
         x = 0.92 + (idx % 2) * 5.88
         y = 1.68 + (idx // 2) * 2.0
         add_card(slide, content_title(item, idx), item, x, y, 5.24, 1.45, SECTION_COLORS[idx], COLORS["white"], number=str(idx + 1))
-    add_insight_band(slide, "コンテンツの役割", "認知、比較検討、問い合わせ前の不安解消まで、各コンテンツに明確な役割を持たせます。", 0.92, 5.88, 11.4, 0.54)
+    content_note = "認知、比較検討、問い合わせ前の不安解消まで、各コンテンツに明確な役割を持たせます。"
+    if context.proposal_category != "web":
+        content_note = "各施策に役割を持たせ、導入判断、実行、効果測定、運用定着を支援します。"
+    add_insight_band(slide, "施策の役割", content_note, 0.92, 5.88, 11.4, 0.54)
     add_footer(slide, slide_data.slide_no)
 
 
@@ -403,15 +430,19 @@ def add_customer_journey_slide(prs: Presentation, slide_data: PowerPointSlide, c
         if idx < len(stages) - 1:
             add_shape(slide, MSO_SHAPE.CHEVRON, x + stage_width + 0.18, stage_y + 0.88, 0.38, 0.46, fill=COLORS["line_dark"], line=COLORS["line_dark"])
 
-    add_insight_band(slide, "提案との関係", "認知から問い合わせまでの離脱点を減らし、情報設計・CTA・実績訴求を一連の導線として改善します。", 0.92, 5.58, 11.4, 0.58)
+    journey_note = "認知から問い合わせまでの離脱点を減らし、情報設計・CTA・実績訴求を一連の導線として改善します。"
+    if context.proposal_category != "web":
+        journey_note = "導入前後の流れを整理し、例外処理、連携、運用改善まで一連の業務として設計します。"
+    add_insight_band(slide, "提案との関係", journey_note, 0.92, 5.58, 11.4, 0.58)
     add_footer(slide, slide_data.slide_no)
 
 
 def add_sitemap_slide(prs: Presentation, slide_data: PowerPointSlide, context: PptxContext) -> None:
     slide = blank_slide(prs)
     set_background(slide)
-    add_header(slide, slide_data.title or "推奨サイト構成", "サイトマップ", accent=COLORS["green"])
-    items = ensure_items(context.sitemap_items, ["TOP", "会社案内", "サービス", "実績", "お知らせ", "FAQ", "お問い合わせ"], 8)
+    add_header(slide, slide_data.title or ("推奨サイト構成" if context.proposal_category == "web" else "導入構成"), "サイトマップ" if context.proposal_category == "web" else "構成案", accent=COLORS["green"])
+    fallback_structure = ["TOP", "会社案内", "サービス", "実績", "お知らせ", "FAQ", "お問い合わせ"] if context.proposal_category == "web" else ["対象業務", "課題", "導入範囲", "連携先", "運用体制", "効果測定"]
+    items = ensure_items(context.sitemap_items, fallback_structure, 8)
     top_label = items[0] if items else "TOP"
     children = [item for item in items[1:8] if item != top_label]
 
@@ -428,7 +459,10 @@ def add_sitemap_slide(prs: Presentation, slide_data: PowerPointSlide, context: P
         accent = SECTION_COLORS[idx % len(SECTION_COLORS)]
         add_shape(slide, MSO_SHAPE.RECTANGLE, x + 1.24, 2.78, 0.04, y - 2.78, fill=COLORS["line_dark"], line=COLORS["line_dark"])
         add_card(slide, item, sitemap_note(item), x, y, 2.54, 0.88, accent, COLORS["white"])
-    add_insight_band(slide, "構成意図", "サービス・実績・FAQで比較検討を支え、CMS更新領域から最新情報を継続発信します。", 0.92, 5.92, 11.4, 0.5)
+    structure_note = "サービス・実績・FAQで比較検討を支え、CMS更新領域から最新情報を継続発信します。"
+    if context.proposal_category != "web":
+        structure_note = "対象業務、連携先、運用体制、効果測定を分け、導入後の迷いを減らします。"
+    add_insight_band(slide, "構成意図", structure_note, 0.92, 5.92, 11.4, 0.5)
     add_footer(slide, slide_data.slide_no)
 
 
@@ -436,12 +470,24 @@ def add_kpi_slide(prs: Presentation, slide_data: PowerPointSlide, context: PptxC
     slide = blank_slide(prs)
     set_background(slide)
     add_header(slide, slide_data.title or "KPI設計", "成果設計", accent=COLORS["orange"])
-    metrics = [
-        ("問い合わせ数", f"月{int(context.kpi_targets['inquiries'])}件", context.kpi_targets["inquiries"] / 30, COLORS["teal"]),
-        ("CV率", f"{context.kpi_targets['cv_rate']}%", context.kpi_targets["cv_rate"] / 5, COLORS["blue"]),
-        ("自然検索流入", f"月{int(context.kpi_targets['organic'])}セッション", context.kpi_targets["organic"] / 6000, COLORS["green"]),
-        ("資料DL数", f"月{int(context.kpi_targets['downloads'])}件", context.kpi_targets["downloads"] / 40, COLORS["orange"]),
-    ]
+    if context.proposal_category == "web":
+        metrics = [
+            ("問い合わせ数", f"月{int(context.kpi_targets['inquiries'])}件", context.kpi_targets["inquiries"] / 30, COLORS["teal"]),
+            ("CV率", f"{context.kpi_targets['cv_rate']}%", context.kpi_targets["cv_rate"] / 5, COLORS["blue"]),
+            ("自然検索流入", f"月{int(context.kpi_targets['organic'])}セッション", context.kpi_targets["organic"] / 6000, COLORS["green"]),
+            ("資料DL数", f"月{int(context.kpi_targets['downloads'])}件", context.kpi_targets["downloads"] / 40, COLORS["orange"]),
+        ]
+    else:
+        metric_lines = ensure_items(
+            [f"{label}: {value}" for label, value in context.kpi_rows],
+            ["業務時間削減: 要確認", "処理品質向上: 要確認", "運用定着率: 要確認", "改善サイクル: 要確認"],
+            4,
+        )
+        metrics = [
+            (label, value, min(1.0, 0.48 + idx * 0.12), SECTION_COLORS[idx])
+            for idx, metric in enumerate(metric_lines)
+            for label, value in [_split_metric_text(metric)]
+        ]
     for idx, (label, value, ratio, accent) in enumerate(metrics):
         y = 1.72 + idx * 0.9
         add_text(slide, label, 0.98, y + 0.11, 2.0, 0.24, size=13, color=COLORS["text"], bold=True)
@@ -453,9 +499,9 @@ def add_kpi_slide(prs: Presentation, slide_data: PowerPointSlide, context: PptxC
         slide,
         headers=["設計観点", "見る指標", "改善アクション"],
         rows=[
-            ["集客", kpi_metric_for(context.concept, "集客"), "検索流入と入口ページを改善"],
-            ["比較検討", kpi_metric_for(context.concept, "行動"), "サービス・実績・FAQを強化"],
-            ["成果", kpi_metric_for(context.concept, "成果"), "CTAとフォーム導線を改善"],
+            ["入口", kpi_metric_for(context.concept, "集客"), "対象範囲と入力条件を整理"],
+            ["行動", kpi_metric_for(context.concept, "行動"), "施策と運用フローを強化"],
+            ["成果", kpi_metric_for(context.concept, "成果"), "KPIと改善サイクルを設計"],
         ],
         x=0.92,
         y=5.12,
@@ -470,7 +516,7 @@ def add_understanding_slide(prs: Presentation, slide_data: PowerPointSlide) -> N
     slide = blank_slide(prs)
     set_background(slide)
     add_header(slide, slide_data.title, "企業理解")
-    points = ensure_items(slide_data.bullets, ["事業内容とターゲットを整理", "Webサイトに期待される役割を仮説化", "確認すべき前提条件を明確化"], 3)
+    points = ensure_items(slide_data.bullets, ["事業内容とターゲットを整理", "提案に期待される役割を仮説化", "確認すべき前提条件を明確化"], 3)
 
     for idx, item in enumerate(points[:3]):
         x = MARGIN_X + idx * 4.1
@@ -486,7 +532,7 @@ def add_understanding_slide(prs: Presentation, slide_data: PowerPointSlide) -> N
             fill=COLORS["white"],
             number=str(idx + 1),
         )
-    add_insight_band(slide, "提案の前提", slide_data.visual_suggestion or "事業・ターゲット・Webの役割を整理した図", 0.9, 5.25, 11.5, 0.72)
+    add_insight_band(slide, "提案の前提", slide_data.visual_suggestion or "事業・ターゲット・提案範囲を整理した図", 0.9, 5.25, 11.5, 0.72)
     add_footer(slide, slide_data.slide_no)
 
 
@@ -519,7 +565,7 @@ def add_solution_slide(prs: Presentation, slide_data: PowerPointSlide, context: 
     slide = blank_slide(prs)
     set_background(slide)
     add_header(slide, slide_data.title, "解決策")
-    items = ensure_items(context.solution_points + slide_data.bullets, ["情報設計の再整理", "訴求軸とコンテンツ方針の策定", "問い合わせにつながる導線設計"], 4)
+    items = ensure_items(context.solution_points + slide_data.bullets, ["要件整理の再整理", "導入範囲と施策方針の策定", "効果測定につながる運用設計"], 4)
     rows = build_solution_rows(items)
     add_table(
         slide,
@@ -537,8 +583,8 @@ def add_solution_slide(prs: Presentation, slide_data: PowerPointSlide, context: 
 def add_process_slide(prs: Presentation, slide_data: PowerPointSlide, context: PptxContext) -> None:
     slide = blank_slide(prs)
     set_background(slide)
-    add_header(slide, slide_data.title, "制作方針")
-    steps = ensure_items(context.service_points + slide_data.bullets, ["初期設計を重視した制作プロセス", "確認しやすいワイヤーフレーム作成", "公開後の改善を見据えた設計"], 4)
+    add_header(slide, slide_data.title, "制作方針" if context.proposal_category == "web" else "実行方針")
+    steps = ensure_items(context.service_points + slide_data.bullets, ["初期設計を重視した実行プロセス", "確認しやすい要件整理", "導入後の改善を見据えた設計"], 4)
     add_step_flow(slide, steps[:4], 0.82, 2.12, 11.7, 1.85)
     add_insight_band(slide, "品質担保の考え方", "要件整理・設計・制作・検証を段階的に進め、認識齟齬を抑えます。", 0.92, 5.18, 11.4, 0.8)
     add_footer(slide, slide_data.slide_no)
@@ -548,7 +594,7 @@ def add_schedule_slide(prs: Presentation, slide_data: PowerPointSlide, context: 
     slide = blank_slide(prs)
     set_background(slide)
     add_header(slide, slide_data.title, "スケジュール")
-    phases = ensure_items(context.schedule_points + slide_data.bullets, ["要件整理", "設計・デザイン", "実装・検証", "公開・改善"], 4)
+    phases = ensure_items(context.schedule_points + slide_data.bullets, ["要件整理", "設計・計画", "実装・検証", "運用開始・改善"], 4)
     week_labels = ["1-2週", "3-4週", "5-7週", "8週"]
 
     add_text(slide, "工程", 0.92, 1.48, 1.5, 0.25, size=13, color=COLORS["muted"], bold=True)
@@ -604,8 +650,8 @@ def add_team_slide(prs: Presentation, slide_data: PowerPointSlide, context: Pptx
     slide = blank_slide(prs)
     set_background(slide)
     add_header(slide, slide_data.title, "体制紹介")
-    roles = ["PM/ディレクター", "デザイナー", "エンジニア", "運用・改善支援"]
-    details = ensure_items(context.team_points + slide_data.bullets, ["進行管理", "UI・ビジュアル設計", "実装・検証", "公開後の更新・改善相談"], 4)
+    roles = ["PM/ディレクター", "設計担当", "実装担当", "運用・改善支援"] if context.proposal_category != "web" else ["PM/ディレクター", "デザイナー", "エンジニア", "運用・改善支援"]
+    details = ensure_items(context.team_points + slide_data.bullets, ["進行管理", "要件・構成設計", "実装・検証", "導入後の改善相談"], 4)
 
     center_x, center_y = 6.1, 3.55
     add_shape(slide, MSO_SHAPE.OVAL, center_x - 0.82, center_y - 0.62, 1.65, 1.25, fill=COLORS["navy"], line=COLORS["navy"])
@@ -630,14 +676,17 @@ def add_cost_slide(prs: Presentation, slide_data: PowerPointSlide, context: Pptx
             *context.cost_points,
             *slide_data.bullets,
         ],
-        ["必須範囲とオプションを分離", "ページ数と機能要件に応じて調整", "詳細見積はヒアリング後に提示"],
+        ["必須範囲とオプションを分離", "規模と機能要件に応じて調整", "詳細見積はヒアリング後に提示"],
         4,
     )
+    scope_label = f"想定{context.estimate.page_count}ページ" if context.proposal_category == "web" else f"想定{context.estimate.page_count}項目相当"
+    required_detail = "要件整理・設計・制作・検証" if context.proposal_category == "web" else "要件整理・設計・実装・検証"
+    adjustable_detail = "CMS・SEO・特殊機能・撮影原稿" if context.proposal_category == "web" else "連携・学習・運用支援・追加検証"
     rows = [
-        ["合計概算", context.estimate.total_label, f"想定{context.estimate.page_count}ページ"],
+        ["合計概算", context.estimate.total_label, scope_label],
         ["予算適合", context.estimate.budget_fit, f"予算感: {context.estimate.budget_label}"],
-        ["必須対応", _trim("、".join(context.estimate.required[:4]), 36), "要件整理・設計・制作・検証"],
-        ["調整範囲", _trim(items[3] if len(items) > 3 else "推奨・オプションを段階化", 36), "CMS・SEO・特殊機能・撮影原稿"],
+        ["必須対応", _trim("、".join(context.estimate.required[:4]), 36), required_detail],
+        ["調整範囲", _trim(items[3] if len(items) > 3 else "推奨・オプションを段階化", 36), adjustable_detail],
     ]
     add_table(
         slide,
@@ -658,7 +707,8 @@ def add_estimate_slide(prs: Presentation, slide_data: PowerPointSlide, context: 
     set_background(slide)
     add_header(slide, slide_data.title or "概算見積", "ESTIMATE", accent=COLORS["teal"])
     add_text(slide, f"合計概算 {context.estimate.total_label}", 0.9, 1.1, 5.8, 0.35, size=20, color=COLORS["teal"], bold=True)
-    add_text(slide, f"想定ページ数: {context.estimate.page_count}ページ / 予算感: {context.estimate.budget_label}", 7.1, 1.16, 5.0, 0.24, size=12, color=COLORS["muted"], bold=True, align=PP_ALIGN.RIGHT)
+    estimate_scope = f"想定ページ数: {context.estimate.page_count}ページ" if context.proposal_category == "web" else f"想定範囲: {context.estimate.page_count}項目相当"
+    add_text(slide, f"{estimate_scope} / 予算感: {context.estimate.budget_label}", 7.1, 1.16, 5.0, 0.24, size=12, color=COLORS["muted"], bold=True, align=PP_ALIGN.RIGHT)
     rows = [
         [
             str(line["name"]),
@@ -694,7 +744,7 @@ def add_budget_fit_slide(prs: Presentation, slide_data: PowerPointSlide, context
     cards = [
         ("差分の見方", "上限予算と概算上限を比較し、調整要否を判断"),
         ("調整方針", "必須対応を優先し、推奨・オプションを段階化"),
-        ("次回確認", "ページ数、CMS範囲、特殊機能、素材準備を確定"),
+        ("次回確認", "規模、導入範囲、連携条件、運用体制を確定" if context.proposal_category != "web" else "ページ数、CMS範囲、特殊機能、素材準備を確定"),
     ]
     for idx, (title, body) in enumerate(cards):
         add_card(slide, title, body, 5.38, 1.55 + idx * 1.38, 6.9, 1.08, SECTION_COLORS[idx], COLORS["white"], number=str(idx + 1))
@@ -724,7 +774,7 @@ def add_summary_slide(prs: Presentation, slide_data: PowerPointSlide, context: P
     set_background(slide)
     add_header(slide, slide_data.title, "まとめ")
     confirmation = f"次回確認事項: {'・'.join(context.confirmation_items[:3])}" if context.confirmation_items else "次回確認事項を整理"
-    values = ensure_items(unique_items(slide_data.bullets, 2) + [confirmation], ["課題仮説に基づく制作方針", "成果につながる導線設計", "次回確認事項の整理"], 3)
+    values = ensure_items(unique_items(slide_data.bullets, 2) + [confirmation], ["課題仮説に基づく実行方針", "成果につながる導入設計", "次回確認事項の整理"], 3)
 
     for idx, item in enumerate(values[:3]):
         add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, 0.95 + idx * 4.02, 2.08, 3.35, 2.55, fill=[COLORS["teal_light"], COLORS["blue_light"], COLORS["orange_light"]][idx], line=COLORS["white"])
@@ -739,12 +789,12 @@ def add_next_steps_slide(prs: Presentation, slide_data: PowerPointSlide, context
     add_header(slide, slide_data.title or "今後の進め方", "NEXT STEP", accent=COLORS["blue"])
     steps = [
         "1. 目的・KPI・優先範囲の合意",
-        "2. サイト構成・必要コンテンツの確定",
+        "2. 提案範囲・必要データの確定" if context.proposal_category != "web" else "2. サイト構成・必要コンテンツの確定",
         "3. 見積・スケジュール・体制の最終化",
-        "4. キックオフ・素材準備・制作開始",
+        "4. キックオフ・データ準備・実行開始" if context.proposal_category != "web" else "4. キックオフ・素材準備・制作開始",
     ]
     add_step_flow(slide, steps, 0.82, 1.9, 11.7, 1.65)
-    confirmations = ensure_items(context.confirmation_items + slide_data.bullets, ["予算内で優先する必須範囲", "希望納期に対する素材準備状況", "CMS権限と更新担当範囲"], 4)
+    confirmations = ensure_items(context.confirmation_items + slide_data.bullets, ["予算内で優先する必須範囲", "希望納期に対する準備状況", "運用担当と確認フロー"], 4)
     for idx, item in enumerate(confirmations[:4]):
         x = 0.92 + (idx % 2) * 5.88
         y = 4.08 + (idx // 2) * 1.04

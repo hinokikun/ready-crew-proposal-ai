@@ -36,12 +36,14 @@ def chapter_icon(title: str) -> str:
         return "STR"
     if "体制" in title:
         return "TEAM"
-    return "WEB"
+    return "PLAN"
 
 
 def chapter_message(title: str, context: PptxContext) -> str:
     if "提案サマリー" in title:
-        return f"{context.concept}を軸に、成果につながるWebサイト改善の全体像を提示します。"
+        if context.proposal_category == "web":
+            return f"{context.concept}を軸に、成果につながるWebサイト改善の全体像を提示します。"
+        return f"{context.concept}を軸に、導入範囲、効果、運用までの全体像を提示します。"
     if "現状理解" in title:
         return "案件概要から読み取れる現状、事業課題、改善機会を整理します。"
     if "課題" in title:
@@ -50,16 +52,26 @@ def chapter_message(title: str, context: PptxContext) -> str:
         return f"競合標準を超えるための改善余地を6つの観点で可視化し、{context.winning_strategy}を提案します。"
     if "ターゲット" in title:
         return "主要ユーザーのニーズと不安を整理し、必要な情報接点を定義します。"
-    if "ジャーニー" in title:
-        return "認知から問い合わせまでの行動を分解し、離脱を減らす接点を設計します。"
-    if "Web戦略" in title or "WEB戦略" in title:
-        return f"{context.concept}を実現するための集客、比較検討、CV、運用改善を設計します。"
-    if "サイトマップ" in title or "サイト構成" in title:
-        return "ユーザーが必要情報へ迷わず進み、運用もしやすいサイト構成を提示します。"
-    if "コンテンツ" in title:
-        return "サービス理解、比較検討、不安解消、問い合わせを支えるコンテンツを設計します。"
+    if "ジャーニー" in title or "業務フロー" in title:
+        if context.proposal_category == "web":
+            return "認知から問い合わせまでの行動を分解し、離脱を減らす接点を設計します。"
+        return "導入前後の業務を分解し、例外処理と改善接点を設計します。"
+    if "Web戦略" in title or "WEB戦略" in title or "導入戦略" in title:
+        if context.proposal_category == "web":
+            return f"{context.concept}を実現するための集客、比較検討、CV、運用改善を設計します。"
+        return f"{context.concept}を実現するための現状整理、導入設計、検証、運用改善を設計します。"
+    if "サイトマップ" in title or "サイト構成" in title or "導入構成" in title:
+        if context.proposal_category == "web":
+            return "ユーザーが必要情報へ迷わず進み、運用もしやすいサイト構成を提示します。"
+        return "対象業務、連携、運用、効果測定の構成を提示します。"
+    if "コンテンツ" in title or "施策設計" in title:
+        if context.proposal_category == "web":
+            return "サービス理解、比較検討、不安解消、問い合わせを支えるコンテンツを設計します。"
+        return "導入判断、実行、効果測定、運用定着を支える施策を設計します。"
     if "KPI" in title:
-        return "問い合わせ数、CV率、自然検索流入、資料DL数を目標化します。"
+        if context.proposal_category == "web":
+            return "問い合わせ数、CV率、自然検索流入、資料DL数を目標化します。"
+        return "カテゴリに合う効果指標を目標化します。"
     if "制作方針" in title or "方針" in title:
         return "設計、デザイン、実装、検証を段階化し、品質と進行の見通しを示します。"
     if "スケジュール" in title:
@@ -69,7 +81,7 @@ def chapter_message(title: str, context: PptxContext) -> str:
     if "体制" in title:
         return "プロジェクトを安定して進める役割分担と支援範囲を明確にします。"
     if "見積" in title:
-        return f"想定ページ数と機能条件をもとに、概算見積レンジ{context.estimate.total_label}を提示します。"
+        return f"想定範囲と機能条件をもとに、概算見積レンジ{context.estimate.total_label}を提示します。"
     if "予算適合" in title:
         return f"入力予算と概算見積を比較し、{context.estimate.budget_fit}として調整方針を整理します。"
     if "必須" in title and "推奨" in title and "オプション" in title:
@@ -77,7 +89,7 @@ def chapter_message(title: str, context: PptxContext) -> str:
     if "費用" in title or "概算" in title:
         return "必須範囲とオプションを分け、予算判断しやすい費用構成を提示します。"
     if "今後" in title:
-        return "意思決定に必要な確認事項と、制作開始までの進め方を明確にします。"
+        return "意思決定に必要な確認事項と、実行開始までの進め方を明確にします。"
     return "本提案の実行内容と判断材料を、章ごとに具体化します。"
 
 

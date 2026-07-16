@@ -8,6 +8,7 @@ import type {
 import type { ProposalRequest } from "@/types/proposal";
 import { hasAny } from "@/components/app-shell/logic-parts/hearing";
 import { applyChatAnswersToForm } from "@/components/app-shell/logic-parts/strategy";
+import { getProposalProfile, isWebProposalText } from "@/components/app-shell/logic-parts/profiles";
 
 export function allInputText(form: ProposalRequest) {
   return [
@@ -47,25 +48,31 @@ export function optionalLabel(value: string) {
 
 export function buildProjectBriefFromEasyInput(easyInput: EasyInput) {
   const purposes = easyInput.purposes.length ? easyInput.purposes.join("、") : "未選択";
+  const profile = getProposalProfile([easyInput.projectType, easyInput.trouble, purposes, easyInput.cms].join("\n"));
+  const existingLabel = profile.category === "web" ? "既存サイトURL" : "既存資料・対象業務URL";
+  const competitorLabel = profile.category === "web" ? "競合サイトURL" : "比較対象";
   return `Ready Crew案件概要：
-制作したいものは「${optionalLabel(easyInput.projectType)}」。
+相談内容は「${optionalLabel(easyInput.projectType)}」。
 目的は、${purposes}。
 お客様の困りごとは、${optionalLabel(easyInput.trouble)}。
 予算感は「${easyInput.budget}」、納期は「${easyInput.deadline}」。
-既存サイトURL：${optionalLabel(easyInput.currentSiteUrl)}
-競合サイトURL：${optionalLabel(easyInput.competitorSiteUrl)}
-CMS希望：${easyInput.cms}
+${existingLabel}：${optionalLabel(easyInput.currentSiteUrl)}
+${competitorLabel}：${optionalLabel(easyInput.competitorSiteUrl)}
+${profile.requirementLabel}：${easyInput.cms}
 決裁者・確認者：${optionalLabel(easyInput.decisionMakers)}
 初回提案では、課題整理、提案方針、概算見積、スケジュール、PowerPoint提案書の初稿を作成したい。`;
 }
 
 export function patchFormFromEasyInput(current: ProposalRequest, easyInput: EasyInput): ProposalRequest {
   const nextBrief = buildProjectBriefFromEasyInput(easyInput);
-  const currentSiteLine = easyInput.currentSiteUrl.trim() ? `既存サイトURL：${easyInput.currentSiteUrl.trim()}` : "";
+  const isWeb = isWebProposalText(nextBrief);
+  const currentSiteLine = easyInput.currentSiteUrl.trim()
+    ? `${isWeb ? "既存サイトURL" : "既存資料・対象業務URL"}：${easyInput.currentSiteUrl.trim()}`
+    : "";
   const decisionLine = easyInput.decisionMakers.trim() ? `決裁者・確認者：${easyInput.decisionMakers.trim()}` : "";
   const existingClientInfo = current.client_company_info
     .split("\n")
-    .filter((line) => !line.startsWith("既存サイトURL：") && !line.startsWith("決裁者・確認者："))
+    .filter((line) => !line.startsWith("既存サイトURL：") && !line.startsWith("既存資料・対象業務URL：") && !line.startsWith("決裁者・確認者："))
     .join("\n")
     .trim();
   const clientInfo = [existingClientInfo, currentSiteLine, decisionLine]
@@ -80,8 +87,9 @@ export function patchFormFromEasyInput(current: ProposalRequest, easyInput: Easy
     competitor_site_url: easyInput.competitorSiteUrl.trim(),
     budget_range: easyInput.budget === "未定" ? "" : easyInput.budget,
     desired_launch_timing: easyInput.deadline === "未定" ? "" : easyInput.deadline,
-    cms_required: easyInput.cms,
-    seo_required: easyInput.purposes.includes("SEOを強化したい") ? "あり" : current.seo_required,
+    cms_required: isWeb ? easyInput.cms : current.cms_required,
+    special_function_required: isWeb ? current.special_function_required : easyInput.cms,
+    seo_required: isWeb && easyInput.purposes.includes("検索・集客を強化したい") ? "あり" : current.seo_required,
     contact_form_required: easyInput.purposes.includes("問い合わせを増やしたい") ? "あり" : current.contact_form_required
   };
 }
@@ -98,7 +106,7 @@ export function patchFormFromMinimalInput(current: ProposalRequest, minimalInput
 困りごと：${trouble}
 予算：未定
 納期：要確認
-CMS：要確認
+導入要件：要確認
 競合：未確認
 決裁者：要確認
 ターゲット：要確認
@@ -108,11 +116,11 @@ CMS：要確認
 ターゲット：要確認`,
     budget_range: "未定",
     desired_launch_timing: "要確認",
-    cms_required: "要確認",
+    special_function_required: "要確認",
     competitor_company_name: "競合未確認",
     hearing_result: `やりたいこと：${goal}
 困りごと：${trouble}
-次回確認事項：予算、納期、CMS、競合、決裁者、ターゲット`
+次回確認事項：予算、納期、導入要件、競合、決裁者、ターゲット`
   });
 }
 
@@ -143,6 +151,8 @@ export function buildProjectBriefFromChatAnswers(answers: ChatAnswers) {
   const deadline = answers.deadline?.trim() || "未確認";
   const competitor = answers.competitor?.trim() || "未確認";
 
+  const profile = getProposalProfile(`${project}\n${company}\n${trouble}`);
+
   return `AI営業アシスタント整理内容：
 案件内容：${project}
 お客様情報：${company}
@@ -150,7 +160,7 @@ export function buildProjectBriefFromChatAnswers(answers: ChatAnswers) {
 予算感：${budget}
 公開希望時期・納期：${deadline}
 競合情報：${competitor}
-提案書では、現状理解、課題整理、Web戦略、競合比較、概算見積、スケジュール、体制、今後の進め方を整理する。`;
+提案書では、現状理解、課題整理、${profile.winningStrategy}、競合比較、概算見積、スケジュール、体制、今後の進め方を整理する。`;
 }
 
 export function compactText(value: string) {
@@ -234,8 +244,10 @@ export function extractPurposeList(text: string) {
     { keyword: /問い合わせ|問合せ|資料請求|来店予約|CV|コンバージョン/i, label: "問い合わせを増やしたい" },
     { keyword: /採用|応募|求人|人材/i, label: "採用を強化したい" },
     { keyword: /信頼|ブランド|ブランディング|認知|実績/i, label: "会社の信頼感を上げたい" },
-    { keyword: /更新|CMS|お知らせ|ブログ|運用/i, label: "更新しやすくしたい" },
-    { keyword: /SEO|検索|自然流入|流入|順位/i, label: "SEOを強化したい" }
+    { keyword: /自動化|効率化|削減|省力化|RPA|AI-OCR|OCR/i, label: "業務を効率化したい" },
+    { keyword: /精度|読取|項目抽出|照合|ミス|品質/i, label: "精度や品質を上げたい" },
+    { keyword: /更新|CMS|お知らせ|ブログ|運用/i, label: "運用しやすくしたい" },
+    { keyword: /SEO|検索|自然流入|流入|順位/i, label: "検索・集客を強化したい" }
   ];
   return candidates.filter((item) => item.keyword.test(text)).map((item) => item.label);
 }
@@ -257,7 +269,7 @@ export function extractProposalInfo(rawText: string, homepageUrl: string): Extra
     "";
   const projectContent =
     findLabeledValue(text, ["案件内容", "依頼内容", "相談内容", "制作内容", "概要"]) ||
-    findSentence(text, ["リニューアル", "制作", "LP", "採用サイト", "Webサイト", "ホームページ", "コーポレートサイト"]);
+    findSentence(text, ["AI-OCR", "OCR", "帳票", "請求書", "RPA", "CRM", "SFA", "ERP", "リニューアル", "制作", "LP", "採用サイト", "Webサイト", "ホームページ", "コーポレートサイト"]);
   const trouble =
     findLabeledValue(text, ["課題", "困りごと", "悩み", "現状", "背景"]) ||
     findSentence(text, [/困|課題|古い|弱い|不足|できていない|伸びない|少ない|改善/]);
@@ -423,6 +435,8 @@ SEO状況：${insight.seoStatus}
 競合：${insight.competitors}
 改善ポイント：${insight.improvementPoints.join("、")}`
     : "";
+  const profile = getProposalProfile(`${sourceText}\n${info.projectContent}\n${info.trouble}`);
+  const webProject = profile.category === "web";
 
   return {
     ...next,
@@ -430,9 +444,9 @@ SEO状況：${insight.seoStatus}
 抽出元情報：
 目的：${info.purposes.join("、") || "未抽出"}
 ターゲット：${info.target || "未抽出"}
-SEO課題：${info.seoIssue || "未抽出"}
+${webProject ? "SEO課題" : "効果測定"}：${webProject ? info.seoIssue || "未抽出" : "要確認"}
 問い合わせ内容：${info.inquiryDetails || "未抽出"}
-CMS：${info.cms || "未抽出"}
+${profile.requirementLabel}：${webProject ? info.cms || "未抽出" : next.special_function_required || "未抽出"}
 ${urlInsightText}`.trim(),
     client_company_info: [
       info.companyName,
@@ -442,7 +456,8 @@ ${urlInsightText}`.trim(),
       insight?.business,
       insight?.strengths
     ].filter(Boolean).join("\n"),
-    cms_required: info.cms || next.cms_required,
+    cms_required: webProject ? info.cms || next.cms_required : next.cms_required,
+    special_function_required: webProject ? next.special_function_required : next.special_function_required || info.inquiryDetails || profile.requirementLabel,
     competitor_site_url: extractFirstUrl(info.competitor) || next.competitor_site_url,
     budget_range: info.budget || next.budget_range,
     desired_launch_timing: info.deadline || next.desired_launch_timing,
