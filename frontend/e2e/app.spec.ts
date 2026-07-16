@@ -124,6 +124,27 @@ test("案件入力欄へ入力できる", async ({ page }) => {
   await expect(input).toHaveValue(/株式会社サンプル/);
 });
 
+test("AI-OCR案件入力は以前のWeb案件に置き換わらない", async ({ page }) => {
+  await login(page, memberEmail);
+  await setTextareaValue(
+    page,
+    "project-source-input",
+    "株式会社サンプル様。請求書をAI-OCRで読み取り、会社名、日付、金額、請求書番号を抽出したい。CSVまたは会計システムへ連携する。"
+  );
+  await clickGuidedGenerate(page);
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).waitFor({ state: "visible", timeout: 25000 });
+  await expect(page.getByText(/AI-OCR|請求書/).first()).toBeVisible();
+  await expect(page.getByText("Webサイト制作ご提案書")).toHaveCount(0);
+
+  await page.locator(".guided-step-nav").getByRole("button", { name: /案件入力/ }).click();
+  await setTextareaValue(page, "project-source-input", "株式会社サンプル様。コーポレートサイトをリニューアルし、CMS導入とSEO改善を行いたい。");
+  await clickGuidedGenerate(page);
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).waitFor({ state: "visible", timeout: 25000 });
+  const currentStepCard = page.locator(".guided-step-card").last();
+  await expect(currentStepCard.getByText(/Web|CMS|SEO/).first()).toBeVisible();
+  await expect(currentStepCard.getByText("AI-OCR導入支援ご提案書")).toHaveCount(0);
+});
+
 test("通常モードは7ステップのかんたん操作フローを初期表示する", async ({ page }) => {
   await login(page, memberEmail);
   await expect(page.getByTestId("guided-flow")).toBeVisible();
@@ -701,7 +722,13 @@ async function mockApi(page: Page, options: MockOptions = {}) {
       );
     }
     if (path.endsWith("/api/analyze")) {
-      return json(route, proposalResponse());
+      let body: { project_brief?: string } = {};
+      try {
+        body = route.request().postDataJSON() as { project_brief?: string };
+      } catch {
+        body = {};
+      }
+      return json(route, proposalResponse(body));
     }
     if (path.endsWith("/api/organizations/context")) {
       if (route.request().method() === "PATCH") {
@@ -1188,16 +1215,34 @@ function mockResponse(path: string, options: MockOptions = {}, presentationState
   return { ok: true };
 }
 
-function proposalResponse() {
+function proposalResponse(body: { project_brief?: string } = {}) {
+  const brief = body.project_brief ?? "";
+  const isAiOcr = /AI[-\s]?OCR|OCR|請求書|帳票|文書認識|項目抽出|CSV/i.test(brief);
+  const isWeb = /Webサイト|サイト|CMS|SEO|コーポレートサイト|ホームページ/i.test(brief);
+  const title = isAiOcr
+    ? "株式会社サンプル AI-OCR導入支援ご提案書"
+    : isWeb
+      ? "株式会社サンプル不動産 Webサイト制作ご提案書"
+      : "株式会社サンプル 入力案件にもとづくご提案書";
+  const clientName = isWeb ? "株式会社サンプル不動産" : "株式会社サンプル";
+  const slideTitle = isAiOcr ? "AI-OCR導入支援ご提案" : isWeb ? "Webサイト制作ご提案" : "入力案件にもとづくご提案";
+  const bullets = isAiOcr
+    ? ["請求書読み取り", "項目抽出", "CSV連携"]
+    : isWeb
+      ? ["問い合わせ増加", "SEO改善", "CMS運用改善"]
+      : ["目的整理", "改善方針", "導入手順"];
+  const summary = isAiOcr ? "AI-OCRによる請求書・帳票読み取り案件" : isWeb ? "Webサイトリニューアル案件" : "入力案件にもとづく提案案件";
+  const policy = isAiOcr ? "請求書読み取りと項目抽出を軸に提案します。" : isWeb ? "問い合わせ増加を軸に提案します。" : "入力内容をもとに業務改善方針を整理します。";
+  const story = isAiOcr ? "帳票処理の現状課題からAI-OCR導入手順へつなげます。" : isWeb ? "現状課題から導線改善へつなげます。" : "現状課題から改善方針と実行手順へつなげます。";
   const powerpoint_generation_data = {
-    deck_title: "株式会社サンプル不動産 Webサイト制作ご提案書",
-    client_name: "株式会社サンプル不動産",
+    deck_title: title,
+    client_name: clientName,
     slides: [
       {
         slide_no: 1,
         layout: "cover",
-        title: "Webサイト制作ご提案",
-        bullets: ["問い合わせ増加", "SEO改善", "CMS運用改善"],
+        title: slideTitle,
+        bullets,
         speaker_notes: "提案概要を説明します。",
         visual_suggestion: "clean corporate cover"
       },
@@ -1205,17 +1250,17 @@ function proposalResponse() {
         slide_no: 2,
         layout: "summary",
         title: "提案サマリー",
-        bullets: ["問い合わせ導線を改善", "物件情報を整理", "更新しやすいCMSを構築"],
+        bullets: bullets.map((item) => `${item}を整理`),
         speaker_notes: "主要提案を説明します。",
         visual_suggestion: "three value cards"
       }
     ]
   };
   return {
-    markdown: "# 提案サマリー\n\n- 問い合わせ導線を改善します\n- SEOとCMS運用を強化します",
+    markdown: `# 提案サマリー\n\n- ${bullets.join("\n- ")}`,
     powerpoint_generation_data,
     analysis: {
-      project_summary: "Webサイトリニューアル案件",
+      project_summary: summary,
       assumed_customer_issues: [],
       issue_priorities: [],
       win_probability: {
@@ -1231,8 +1276,8 @@ function proposalResponse() {
         improvement_actions: ["決裁者確認"],
         projected_probability_after_actions: 75
       },
-      proposal_policy: "問い合わせ増加を軸に提案します。",
-      proposal_story: "現状課題から導線改善へつなげます。",
+      proposal_policy: policy,
+      proposal_story: story,
       proposal_structure: [],
       slide_scripts: [],
       expected_questions_and_answers: [],

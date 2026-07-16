@@ -102,6 +102,58 @@ def _extract_output_text(response: Any) -> str:
     raise OpenAIServiceError("AIの応答テキストを取得できませんでした。")
 
 
+AI_OCR_KEYWORDS = [
+    "AI-OCR",
+    "AIOCR",
+    "OCR",
+    "文書認識",
+    "帳票",
+    "請求書",
+    "納品書",
+    "注文書",
+    "申込書",
+    "PDF",
+    "スキャン",
+    "読み取り",
+    "項目抽出",
+    "CSV",
+    "会計システム",
+    "RPA",
+    "データ入力自動化",
+]
+
+WEB_PROJECT_KEYWORDS = [
+    "Webサイト",
+    "サイトリニューアル",
+    "コーポレートサイト",
+    "ホームページ",
+    "LP",
+    "CMS",
+    "SEO",
+    "WordPress",
+    "問い合わせ",
+    "採用サイト",
+]
+
+
+def _detect_project_category(text: str) -> str:
+    if _contains_any(text, AI_OCR_KEYWORDS):
+        return "ai_ocr"
+    if _contains_any(text, WEB_PROJECT_KEYWORDS):
+        return "web"
+    return "generic"
+
+
+def _input_based_project_label(payload: ProposalRequest, signals: dict[str, Any]) -> str:
+    category = str(signals.get("project_category") or "generic")
+    if category == "ai_ocr":
+        return "AI-OCR導入支援提案"
+    if category == "web":
+        return "Webサイト制作・改善提案"
+    brief = re.sub(r"\s+", " ", payload.project_brief.strip())[:40].strip("、。,. ")
+    return f"{brief} 提案" if brief else "入力案件にもとづく提案"
+
+
 def _extract_input_signals(payload: ProposalRequest) -> dict[str, Any]:
     full_text = "\n".join(
         [
@@ -123,6 +175,7 @@ def _extract_input_signals(payload: ProposalRequest) -> dict[str, Any]:
             payload.case_studies,
         ]
     )
+    project_category = _detect_project_category(full_text)
     needs = _unique_texts(
         [
             "問い合わせ導線・CTA改善" if _contains_any(full_text, ["問い合わせ", "問合せ", "CV", "コンバージョン"]) else "",
@@ -142,6 +195,13 @@ def _extract_input_signals(payload: ProposalRequest) -> dict[str, Any]:
     if not services:
         services = ["情報設計", "Webサイト制作", "公開後の改善運用支援"]
 
+    if project_category == "ai_ocr":
+        needs = ["AI-OCRでの帳票読み取り", "請求書・文書認識の項目抽出", "CSVまたは業務システム連携"]
+        services = ["AI-OCR導入設計", "帳票項目抽出設計", "CSV出力・システム連携支援"]
+    elif project_category == "generic":
+        needs = ["入力案件の目的整理", "業務課題と改善方針の整理", "実行手順と効果測定の整理"]
+        services = ["要件整理", "改善施策設計", "導入・運用支援"]
+
     cases = _extract_text_items(payload.case_studies, 3)
     if not cases:
         cases = ["近しい課題の成功事例を提案時に差し替え", "成果につながった進め方を紹介"]
@@ -155,6 +215,7 @@ def _extract_input_signals(payload: ProposalRequest) -> dict[str, Any]:
     estimate = _derive_estimate_summary(payload, full_text)
 
     return {
+        "project_category": project_category,
         "needs": needs,
         "services": services,
         "cases": cases,
@@ -186,6 +247,9 @@ def _extract_input_signals(payload: ProposalRequest) -> dict[str, Any]:
 
 
 def _derive_concept(text: str) -> str:
+    project_category = _detect_project_category(text)
+    if project_category == "ai_ocr":
+        return "AI-OCR業務自動化"
     if _contains_any(text, ["物件", "不動産", "賃貸", "売買"]):
         return "物件検索強化"
     if _contains_any(text, ["採用", "応募", "求人", "求職"]):
@@ -198,7 +262,7 @@ def _derive_concept(text: str) -> str:
         return "検索流入強化"
     if _contains_any(text, ["CMS", "更新", "運用"]):
         return "CMS運用強化"
-    return "Web成果最大化"
+    return "Web成果最大化" if project_category == "web" else "入力案件の業務改善"
 
 
 def _derive_understanding(text: str, needs: list[str], concept: str) -> tuple[str, str, str, str]:
@@ -686,6 +750,7 @@ def _build_mock_analysis(payload: ProposalRequest) -> ProposalAnalysis:
     client_name = _guess_client_name(payload.client_company_info)
     brief_head = payload.project_brief.strip().replace("\n", " ")[:90]
     signals = _extract_input_signals(payload)
+    project_label = _input_based_project_label(payload, signals)
     issues = _build_mock_issues(payload, signals)
 
     slides = []
@@ -788,6 +853,22 @@ def _build_mock_analysis(payload: ProposalRequest) -> ProposalAnalysis:
             ],
         },
     }
+
+    if signals.get("project_category") != "web":
+        data["project_summary"] = (
+            f"本案件は、{client_name}向けに{project_label}を作成するものです。"
+            f"案件概要の「{brief_head}」を起点に、課題、改善方針、導入手順、確認事項を整理します。"
+        )
+        data["proposal_policy"] = (
+            f"顧客理解を起点に、{_join_for_sentence(signals['needs'])}を中心課題として整理し、"
+            f"{signals['concept']}を提案コンセプトに据えます。"
+            "入力されていない数値や事実は作らず、次回確認事項として明示します。"
+        )
+        data["proposal_story"] = (
+            "まず案件概要と現状課題を整理し、次に改善方針、導入ステップ、期待効果、確認事項へ展開します。"
+            "最後に費用・スケジュール・次のアクションを示し、人が確認すべき項目を残します。"
+        )
+        data["powerpoint_generation_data"]["deck_title"] = f"{client_name} {project_label}"
 
     return ProposalAnalysis.parse_obj(data)
 

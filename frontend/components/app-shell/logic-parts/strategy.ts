@@ -30,10 +30,19 @@ export function findNextMissingQuestionIndex(answers: ChatAnswers) {
   return chatQuestionFlow.findIndex((question) => !answers[question.key]?.trim());
 }
 
-export function applyChatAnswersToForm(current: ProposalRequest, answers: ChatAnswers): ProposalRequest {
+export function applyChatAnswersToForm(
+  current: ProposalRequest,
+  answers: ChatAnswers,
+  options: { preserveCurrent?: boolean } = {}
+): ProposalRequest {
   const allText = Object.values(answers).filter(Boolean).join("\n");
   const competitorUrl = extractFirstUrl(answers.competitor);
   const competitorName = withoutUrl(answers.competitor);
+  const preserveCurrent = options.preserveCurrent ?? true;
+  const hasCmsIntent = /cms|wordpress|movable type/i.test(allText);
+  const hasContactIntent = /cta|contact|form/i.test(allText);
+  const hasSeoIntent = /seo/i.test(allText);
+  const hasSpecialFunctionIntent = /search|filter|simulation|ai-ocr|ocr|csv|rpa/i.test(allText);
 
   return {
     ...current,
@@ -48,7 +57,26 @@ export function applyChatAnswersToForm(current: ProposalRequest, answers: ChatAn
     seo_required: /seo|検索|自然流入|流入|順位/i.test(allText) ? "あり" : current.seo_required,
     special_function_required: /物件検索|予約|会員|検索機能|絞り込み|シミュレーション/i.test(allText)
       ? "特殊機能あり"
-      : current.special_function_required
+      : current.special_function_required,
+    ...(preserveCurrent
+      ? {}
+      : {
+          client_company_info: answers.company?.trim() || "",
+          competitor_site_url: competitorUrl || "",
+          competitor_company_name: competitorName || "",
+          estimated_page_count: "",
+          cms_required: hasCmsIntent ? "あり" : "",
+          contact_form_required: hasContactIntent ? "あり" : "",
+          special_function_required: hasSpecialFunctionIntent ? "特殊機能あり" : "",
+          seo_required: hasSeoIntent ? "あり" : "",
+          content_creation_required: "",
+          desired_launch_timing: isUnknownAnswer(answers.deadline) ? "" : answers.deadline?.trim() || "",
+          budget_range: isUnknownAnswer(answers.budget) ? "" : answers.budget?.trim() || "",
+          hearing_result: "",
+          own_service_info: "",
+          past_proposal_template: "",
+          case_studies: ""
+        })
   };
 }
 

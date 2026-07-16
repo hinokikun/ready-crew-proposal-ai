@@ -215,6 +215,7 @@ import {
   findNextMissingQuestionIndex,
   formatDateTime,
   formatEstimateRange,
+  hasMeaningfulSourceText,
   hashWorkspaceSeed,
   initialAgentSteps,
   initialChatMessages,
@@ -768,10 +769,20 @@ export default function Home() {
       setError("案件情報を入力してください。案件メール、議事録、ヒアリングメモをそのまま貼り付けられます。");
       return;
     }
-    const baseExtracted = extractProposalInfo(rawSourceText || form.project_brief, companyHomeUrl);
+    const sourceText = rawSourceText.trim() || form.project_brief.trim();
+    const shouldPreserveCurrentForm = !hasMeaningfulSourceText(rawSourceText);
+    const baseForm = shouldPreserveCurrentForm ? form : initialForm;
+    const baseExtracted = extractProposalInfo(sourceText, companyHomeUrl);
     const nextExtracted = fillMissingExtractedInfo(baseExtracted, companyHomeUrl);
-    const nextInsight = buildUrlInsight(companyHomeUrl, rawSourceText || form.project_brief, nextExtracted);
-    const nextForm = fillMissingProposalForm(buildFormFromExtracted(form, nextExtracted, nextInsight));
+    const nextInsight = buildUrlInsight(companyHomeUrl, sourceText, nextExtracted);
+    const extractedForm = buildFormFromExtracted(baseForm, nextExtracted, nextInsight, {
+      rawSourceText: sourceText,
+      preserveCurrent: shouldPreserveCurrentForm
+    });
+    const nextForm = fillMissingProposalForm({
+      ...extractedForm,
+      project_brief: hasMeaningfulSourceText(sourceText) ? sourceText : extractedForm.project_brief
+    });
 
     setExtractedInfo(nextExtracted);
     setUrlInsight(nextInsight);
@@ -1213,9 +1224,11 @@ export default function Home() {
       return false;
     }
 
-    const baseExtracted = extractProposalInfo(rawSourceText, companyHomeUrl);
+    const sourceText = rawSourceText.trim();
+    const shouldPreserveCurrentForm = !hasMeaningfulSourceText(sourceText);
+    const baseExtracted = extractProposalInfo(sourceText, companyHomeUrl);
     const nextExtracted = fillMissingExtractedInfo(baseExtracted, companyHomeUrl);
-    const nextInsight = buildUrlInsight(companyHomeUrl, rawSourceText, nextExtracted);
+    const nextInsight = buildUrlInsight(companyHomeUrl, sourceText, nextExtracted);
     const nextAnswers = buildChatAnswersFromExtracted(baseExtracted);
     const nextMissingIndex = findNextMissingQuestionIndex(nextAnswers);
     const missingQuestion =
@@ -1230,7 +1243,17 @@ export default function Home() {
     setChatQuestionIndex(nextMissingIndex >= 0 ? nextMissingIndex : chatQuestionFlow.length);
     setAssistantQuestionCount(nextMissingIndex >= 0 ? 1 : 0);
     setChatDraft("");
-    setForm((current) => fillMissingProposalForm(buildFormFromExtracted(current, nextExtracted, nextInsight)));
+    setForm((current) => {
+      const baseForm = shouldPreserveCurrentForm ? current : initialForm;
+      const extractedForm = buildFormFromExtracted(baseForm, nextExtracted, nextInsight, {
+        rawSourceText: sourceText,
+        preserveCurrent: shouldPreserveCurrentForm
+      });
+      return fillMissingProposalForm({
+        ...extractedForm,
+        project_brief: hasMeaningfulSourceText(sourceText) ? sourceText : extractedForm.project_brief
+      });
+    });
     setChatMessages([
       ...initialChatMessages,
       {
@@ -1309,9 +1332,7 @@ export default function Home() {
   }
 
   function insertSourceTemplate(kind: SourceTemplateKind) {
-    setRawSourceText(sourceTemplates[kind]);
-    setHasViewedOrganizedResult(false);
-    setError("");
+    handleSourceTextChange(sourceTemplates[kind]);
   }
 
   async function handleDroppedFiles(files: FileList | null) {
@@ -1335,7 +1356,7 @@ export default function Home() {
       })
     );
 
-    setRawSourceText((current) => [current, ...readableParts].filter(Boolean).join("\n\n"));
+    handleSourceTextChange([rawSourceText, ...readableParts].filter(Boolean).join("\n\n"));
   }
 
   function handleDrop(event: React.DragEvent<HTMLDivElement>) {
@@ -1360,7 +1381,7 @@ export default function Home() {
       const transcript = Array.from(event.results)
         .map((result) => result[0]?.transcript ?? "")
         .join("");
-      setRawSourceText((current) => [current, `音声入力：${transcript}`].filter(Boolean).join("\n"));
+      handleSourceTextChange([rawSourceText, `音声入力：${transcript}`].filter(Boolean).join("\n"));
     };
     recognition.onerror = () => setError("音声入力に失敗しました。マイク許可を確認してください。");
     recognition.start();
@@ -1514,6 +1535,50 @@ export default function Home() {
     setIsConfirmOpen(true);
   }
 
+  function resetProposalDerivedState(nextSourceText = "") {
+    setExtractedInfo(null);
+    setUrlInsight(null);
+    setChatAnswers({});
+    setChatQuestionIndex(0);
+    setAssistantQuestionCount(0);
+    setChatDraft("");
+    setResult(null);
+    setEditablePreviewSlides([]);
+    setBeautifulAiResult(null);
+    setBeautifulAiError("");
+    setBeautifulAiQualityGate(null);
+    setBeautifulAiQualityGateError("");
+    setQualityGateUnlocked(false);
+    setHasDownloadedSummary(false);
+    setHasViewedOrganizedResult(false);
+    setFeedbackRating("");
+    setFeedbackComment("");
+    setPilotFeedbackScores(initialPilotFeedbackScores);
+    setFeedbackStatus("idle");
+    setFeedbackError("");
+    setLastDownloadRetry(null);
+    setCopyState("idle");
+    setError("");
+    setIsConfirmOpen(false);
+    lastAutoAnalyzedSourceRef.current = "";
+    lastAutoGeneratedSignatureRef.current = "";
+    if (autoAnalyzeTimerRef.current) {
+      clearTimeout(autoAnalyzeTimerRef.current);
+      autoAnalyzeTimerRef.current = null;
+    }
+    if (autoReviewTimerRef.current) {
+      clearTimeout(autoReviewTimerRef.current);
+      autoReviewTimerRef.current = null;
+    }
+    setAutoFlowStatus(nextSourceText.trim() ? "typing" : "idle");
+  }
+
+  function handleSourceTextChange(value: string) {
+    setRawSourceText(value);
+    setForm(initialForm);
+    resetProposalDerivedState(value);
+  }
+
   function resetChat() {
     setChatMessages(initialChatMessages);
     setChatAnswers({});
@@ -1525,8 +1590,7 @@ export default function Home() {
     setExtractedInfo(null);
     setUrlInsight(null);
     setForm(initialForm);
-    setResult(null);
-    setError("");
+    resetProposalDerivedState("");
   }
 
   function persistHistory(nextHistory: HistoryEntry[]) {
@@ -2408,11 +2472,7 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
           onOpenCrm={() => openDetailsPanel("dashboard-panel")}
           onRetry={lastDownloadRetry ? () => void retryLastDownload() : undefined}
           onShowGuide={() => setShowGuideTutorial(true)}
-          onSourceTextChange={(value) => {
-            setRawSourceText(value);
-            setHasViewedOrganizedResult(false);
-            if (result) setResult(null);
-          }}
+          onSourceTextChange={handleSourceTextChange}
           onToggleDetailMode={() => setIsSimpleDetailMode((current) => !current)}
           onUseSample={startSampleExperience}
           organizationName={workspaceContext?.current?.organization_name || "Ready Crew"}
@@ -2531,11 +2591,8 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
                 <textarea
                   value={rawSourceText}
                   onChange={(event) => {
-                    setRawSourceText(event.target.value);
-                    setHasViewedOrganizedResult(false);
-                    setResult(null);
+                    handleSourceTextChange(event.target.value);
                     setIsAutoGenerationPaused(false);
-                    setAutoFlowStatus(event.target.value.trim() ? "typing" : "idle");
                   }}
                   placeholder="Ready Crewの案件メール、議事録、ヒアリングメモをそのまま貼り付けてください。URLだけでも大丈夫です。"
                   rows={10}
@@ -2871,10 +2928,7 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
           <span>案件メール・議事録・URLをここに貼り付け</span>
           <textarea
             value={rawSourceText}
-            onChange={(event) => {
-              setRawSourceText(event.target.value);
-              setHasViewedOrganizedResult(false);
-            }}
+            onChange={(event) => handleSourceTextChange(event.target.value)}
             placeholder="Ready Crew案件メール、商談メモ、Slack相談文、会社URLなどをそのまま貼り付けてください。"
             rows={8}
           />
@@ -3119,7 +3173,7 @@ SEO改善の重点：検索流入が伸び悩んでおり、サービスペー�
             </div>
             <textarea
               value={rawSourceText}
-              onChange={(event) => setRawSourceText(event.target.value)}
+              onChange={(event) => handleSourceTextChange(event.target.value)}
               placeholder="例：
 Ready Crew案件情報
 株式会社サンプル不動産様。Webサイトリニューアル希望。

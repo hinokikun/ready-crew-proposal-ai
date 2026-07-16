@@ -88,7 +88,7 @@ export function patchFormFromEasyInput(current: ProposalRequest, easyInput: Easy
 
 export function patchFormFromMinimalInput(current: ProposalRequest, minimalInput: MinimalInput): ProposalRequest {
   const companyName = minimalInput.companyName.trim() || "提案先企業";
-  const goal = minimalInput.goal.trim() || "Webサイト制作・改善";
+  const goal = minimalInput.goal.trim() || NEUTRAL_PROJECT_FALLBACK;
   const trouble = minimalInput.trouble.trim() || "現状課題は要確認";
   return fillMissingProposalForm({
     ...current,
@@ -155,6 +155,39 @@ export function buildProjectBriefFromChatAnswers(answers: ChatAnswers) {
 
 export function compactText(value: string) {
   return value.replace(/\r/g, "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+const NEUTRAL_PROJECT_FALLBACK = "入力された案件情報をもとにした提案";
+
+export function hasMeaningfulSourceText(value: string) {
+  return compactText(value).length >= 8;
+}
+
+function firstMeaningfulLine(text: string) {
+  return compactText(text)
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => line.length >= 6) || "";
+}
+
+function isAiOcrProjectText(text: string) {
+  return /AI[-\s]?OCR|OCR|文書認識|帳票|請求書|納品書|注文書|申込書|PDF|スキャン|読み取り|項目抽出|CSV|会計システム|RPA|データ入力自動化/i.test(text);
+}
+
+function isWebProjectText(text: string) {
+  return /Webサイト|サイトリニューアル|コーポレートサイト|ホームページ|LP|CMS|SEO|WordPress|問い合わせ|採用サイト/i.test(text);
+}
+
+function inferProjectContentFromRaw(text: string) {
+  const source = compactText(text);
+  if (!source) return "";
+  if (isAiOcrProjectText(source)) {
+    return "AI-OCRによる請求書・帳票読み取りと項目抽出の自動化提案";
+  }
+  if (isWebProjectText(source)) {
+    return "Webサイト制作・改善提案";
+  }
+  return firstMeaningfulLine(source).slice(0, 180) || NEUTRAL_PROJECT_FALLBACK;
 }
 
 export function findLabeledValue(text: string, labels: string[]) {
@@ -243,11 +276,12 @@ export function extractProposalInfo(rawText: string, homepageUrl: string): Extra
     findSentence(text, ["知りたい", "相談", "依頼", "提案", "見積", "スケジュール"]);
   const competitorUrl = extractFirstUrl(competitorLine);
   const currentSiteUrl = homepageUrl.trim() || extractFirstUrl(currentSiteLine) || urls.find((url) => url !== competitorUrl) || "";
+  const inferredProjectContent = inferProjectContentFromRaw(text);
 
   return {
     companyName: extractCompanyName(text, currentSiteUrl),
     contactPerson: findLabeledValue(text, ["担当者", "窓口", "ご担当", "決裁者", "確認者"]),
-    projectContent,
+    projectContent: projectContent || inferredProjectContent,
     purposes: extractPurposeList(text),
     trouble,
     budget,
@@ -314,9 +348,9 @@ export function fillMissingExtractedInfo(info: ExtractedInfo, homepageUrl: strin
     ...info,
     companyName: info.companyName || fallbackHost || "提案先企業",
     contactPerson: info.contactPerson || "要確認",
-    projectContent: info.projectContent || "Webサイト制作・改善提案",
+    projectContent: info.projectContent || NEUTRAL_PROJECT_FALLBACK,
     purposes: info.purposes.length ? info.purposes : ["問い合わせを増やしたい"],
-    trouble: info.trouble || "現状課題は要確認。初回提案ではWebサイトの改善余地を整理します。",
+    trouble: info.trouble || "現状課題は要確認。入力案件の目的と改善余地を整理します。",
     budget: info.budget || "未定",
     deadline: info.deadline || "要確認",
     competitor: info.competitor || "競合未確認",
@@ -337,7 +371,7 @@ export function fillMissingProposalForm(form: ProposalRequest): ProposalRequest 
     ...form,
     project_brief:
       form.project_brief.trim() ||
-      "Webサイト制作・改善提案。詳細条件は要確認として、提案書初稿を作成します。",
+      "入力された案件情報をもとにした提案。詳細条件は要確認として、提案書初稿を作成します。",
     client_company_info: [
       clientCompanyInfo,
       hasDecisionMaker ? "" : "担当者・決裁者：要確認",
@@ -368,9 +402,15 @@ export function buildChatAnswersFromExtracted(info: ExtractedInfo): ChatAnswers 
   };
 }
 
-export function buildFormFromExtracted(current: ProposalRequest, info: ExtractedInfo, insight: UrlInsight | null): ProposalRequest {
+export function buildFormFromExtracted(
+  current: ProposalRequest,
+  info: ExtractedInfo,
+  insight: UrlInsight | null,
+  options: { rawSourceText?: string; preserveCurrent?: boolean } = {}
+): ProposalRequest {
   const answers = buildChatAnswersFromExtracted(info);
-  const next = applyChatAnswersToForm(current, answers);
+  const sourceText = compactText(options.rawSourceText ?? "");
+  const next = applyChatAnswersToForm(current, answers, { preserveCurrent: options.preserveCurrent ?? true });
   const urlInsightText = insight
     ? `URL解析メモ：
 会社概要：${insight.companyOverview}
@@ -386,7 +426,7 @@ SEO状況：${insight.seoStatus}
 
   return {
     ...next,
-    project_brief: `${next.project_brief}
+    project_brief: `${sourceText || next.project_brief}
 抽出元情報：
 目的：${info.purposes.join("、") || "未抽出"}
 ターゲット：${info.target || "未抽出"}
@@ -406,6 +446,6 @@ ${urlInsightText}`.trim(),
     competitor_site_url: extractFirstUrl(info.competitor) || next.competitor_site_url,
     budget_range: info.budget || next.budget_range,
     desired_launch_timing: info.deadline || next.desired_launch_timing,
-    hearing_result: [current.hearing_result, info.inquiryDetails, urlInsightText].filter(Boolean).join("\n\n")
+    hearing_result: [options.preserveCurrent === false ? "" : current.hearing_result, info.inquiryDetails, urlInsightText].filter(Boolean).join("\n\n")
   };
 }

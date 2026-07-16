@@ -121,7 +121,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
   }, [props.isGenerating]);
 
   useEffect(() => {
-    if (props.hasProposal && activeStep < 3) setActiveStep(3);
+    if (props.hasProposal && activeStep === 2) setActiveStep(3);
   }, [activeStep, props.hasProposal]);
 
   useEffect(() => {
@@ -220,7 +220,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
         </article>
         <article>
           <span>作業中の案件</span>
-          <strong>{props.hasProposal ? "1件" : "まだ案件がありません"}</strong>
+          <strong>{props.hasProposal ? "現在の提案を作成中" : "まだ案件がありません"}</strong>
         </article>
         <article>
           <span>最近作成した提案書</span>
