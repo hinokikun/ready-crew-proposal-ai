@@ -53,6 +53,15 @@ from app.services.pptx_parts.drawing import (
     content_title,
     set_background,
 )
+from app.services.pptx_design.components import (
+    add_architecture_diagram,
+    add_estimate_overview,
+    add_metric_card,
+    add_next_action_cards,
+    add_timeline,
+)
+from app.services.pptx_design.icons import icon_labels_for_category
+from app.services.pptx_design.diagrams import architecture_nodes_for_category
 from app.services.pptx_theme import COLORS, MARGIN_X, SECTION_COLORS, SLIDE_HEIGHT, SLIDE_WIDTH
 
 
@@ -206,13 +215,13 @@ def add_cover_slide(prs: Presentation, slide_data: PowerPointSlide, data: PowerP
     slide = blank_slide(prs)
     set_background(slide)
 
-    add_shape(slide, MSO_SHAPE.RECTANGLE, 0, 0, SLIDE_WIDTH, SLIDE_HEIGHT, fill=COLORS["navy"], line=COLORS["navy"])
-    add_shape(slide, MSO_SHAPE.RECTANGLE, 0, 0, 0.16, SLIDE_HEIGHT, fill=COLORS["teal"], line=COLORS["teal"])
-    add_shape(slide, MSO_SHAPE.RIGHT_TRIANGLE, 8.55, 0, 4.78, 7.5, fill=COLORS["navy_2"], line=COLORS["navy_2"])
-    add_shape(slide, MSO_SHAPE.RECTANGLE, 9.15, 0, 4.18, SLIDE_HEIGHT, fill=COLORS["canvas"], line=COLORS["canvas"])
+    add_shape(slide, MSO_SHAPE.RECTANGLE, 0.02, 0.02, SLIDE_WIDTH - 0.04, SLIDE_HEIGHT - 0.04, fill=COLORS["navy"], line=COLORS["navy"])
+    add_shape(slide, MSO_SHAPE.RECTANGLE, 0.02, 0.02, 0.14, SLIDE_HEIGHT - 0.04, fill=COLORS["teal"], line=COLORS["teal"])
+    add_shape(slide, MSO_SHAPE.RIGHT_TRIANGLE, 8.55, 0.02, 4.72, 7.46, fill=COLORS["navy_2"], line=COLORS["navy_2"])
+    add_shape(slide, MSO_SHAPE.RECTANGLE, 9.15, 0.02, 4.12, SLIDE_HEIGHT - 0.04, fill=COLORS["canvas"], line=COLORS["canvas"])
     add_shape(slide, MSO_SHAPE.OVAL, 9.65, 0.92, 3.05, 3.05, fill=COLORS["teal_light"], line=COLORS["teal_light"])
     add_shape(slide, MSO_SHAPE.OVAL, 10.82, 3.55, 1.72, 1.72, fill=COLORS["blue_light"], line=COLORS["blue_light"])
-    cover_badges = ("UX", "SEO", "CV") if context.proposal_category == "web" else ("AI", "KPI", "OPS")
+    cover_badges = icon_labels_for_category(context.proposal_category)
     add_icon_badge(slide, cover_badges[0], 9.82, 1.68, COLORS["teal"])
     add_icon_badge(slide, cover_badges[1], 11.05, 2.78, COLORS["blue"])
     add_icon_badge(slide, cover_badges[2], 9.9, 4.75, COLORS["orange"])
@@ -443,6 +452,19 @@ def add_sitemap_slide(prs: Presentation, slide_data: PowerPointSlide, context: P
     add_header(slide, slide_data.title or ("推奨サイト構成" if context.proposal_category == "web" else "導入構成"), "サイトマップ" if context.proposal_category == "web" else "構成案", accent=COLORS["green"])
     fallback_structure = ["TOP", "会社案内", "サービス", "実績", "お知らせ", "FAQ", "お問い合わせ"] if context.proposal_category == "web" else ["対象業務", "課題", "導入範囲", "連携先", "運用体制", "効果測定"]
     items = ensure_items(context.sitemap_items, fallback_structure, 8)
+    if context.proposal_category != "web":
+        add_architecture_diagram(slide, architecture_nodes_for_category(context.proposal_category), 0.9, 2.04, 11.35, 1.86)
+        add_insight_band(
+            slide,
+            "構成の考え方",
+            "入力、AI判定、人による確認、既存業務への連携、運用改善までを一連の流れとして設計します。",
+            0.92,
+            5.55,
+            11.4,
+            0.62,
+        )
+        add_footer(slide, slide_data.slide_no)
+        return
     top_label = items[0] if items else "TOP"
     children = [item for item in items[1:8] if item != top_label]
 
@@ -489,11 +511,11 @@ def add_kpi_slide(prs: Presentation, slide_data: PowerPointSlide, context: PptxC
             for label, value in [_split_metric_text(metric)]
         ]
     for idx, (label, value, ratio, accent) in enumerate(metrics):
-        y = 1.72 + idx * 0.9
-        add_text(slide, label, 0.98, y + 0.11, 2.0, 0.24, size=13, color=COLORS["text"], bold=True)
-        add_text(slide, value, 3.0, y + 0.1, 1.8, 0.24, size=13, color=accent, bold=True)
-        add_shape(slide, MSO_SHAPE.RECTANGLE, 4.95, y + 0.17, 6.35, 0.16, fill=COLORS["line"], line=COLORS["line"])
-        add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, 4.95, y + 0.08, max(0.6, min(6.35, 6.35 * ratio)), 0.34, fill=accent, line=accent)
+        x = 0.9 + idx * 3.02
+        add_metric_card(slide, label, value, x, 1.62, 2.55, 1.28, accent)
+        y = 3.28 + idx * 0.34
+        add_shape(slide, MSO_SHAPE.RECTANGLE, 1.08, y + 0.08, 10.9, 0.08, fill=COLORS["line"], line=COLORS["line"])
+        add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, 1.08, y, max(0.7, min(10.9, 10.9 * ratio)), 0.24, fill=accent, line=accent)
 
     add_table(
         slide,
@@ -793,7 +815,7 @@ def add_next_steps_slide(prs: Presentation, slide_data: PowerPointSlide, context
         "3. 見積・スケジュール・体制の最終化",
         "4. キックオフ・データ準備・実行開始" if context.proposal_category != "web" else "4. キックオフ・素材準備・制作開始",
     ]
-    add_step_flow(slide, steps, 0.82, 1.9, 11.7, 1.65)
+    add_next_action_cards(slide, steps, 0.82, 1.9, 11.7)
     confirmations = ensure_items(context.confirmation_items + slide_data.bullets, ["予算内で優先する必須範囲", "希望納期に対する準備状況", "運用担当と確認フロー"], 4)
     for idx, item in enumerate(confirmations[:4]):
         x = 0.92 + (idx % 2) * 5.88

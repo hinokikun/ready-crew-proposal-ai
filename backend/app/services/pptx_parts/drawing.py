@@ -109,7 +109,7 @@ def add_header(slide, title: str, section: str, accent: str = COLORS["teal"]) ->
 
 def add_footer(slide, slide_no: int) -> None:
     add_shape(slide, MSO_SHAPE.RECTANGLE, MARGIN_X, 6.76, 11.88, 0.02, fill=COLORS["line"], line=COLORS["line"])
-    add_text(slide, "Ready Crew Proposal AI", MARGIN_X, FOOTER_Y, 3.4, 0.18, size=9, color=COLORS["muted"])
+    add_text(slide, "ProposalPilot / AI営業秘書", MARGIN_X, FOOTER_Y, 3.4, 0.18, size=9, color=COLORS["muted"])
     add_text(slide, f"{slide_no:02}", 11.58, 6.86, 0.76, 0.22, size=10, color=COLORS["muted"], align=PP_ALIGN.RIGHT)
 
 
@@ -139,9 +139,9 @@ def add_card(
     else:
         title_x = x + 0.28
         title_w = w - 0.54
-    add_text(slide, _trim(title, 28), title_x, y + 0.22, title_w, 0.26, size=12, color=accent, bold=True)
+    add_text(slide, _trim(title, 28), title_x, y + 0.22, title_w, 0.28, size=14, color=accent, bold=True)
     if body:
-        add_text(slide, _trim(body, 56), x + 0.28, y + 0.7, w - 0.54, h - 0.86, size=13, color=COLORS["text"])
+        add_text(slide, _trim(body, 56), x + 0.28, y + 0.72, w - 0.54, h - 0.88, size=14, color=COLORS["text"])
 
 
 def add_section_label(slide, text: str, x: float, y: float, *, fill: str, color: str) -> None:
@@ -182,12 +182,12 @@ def add_table(slide, headers: list[str], rows: list[list[str]], x: float, y: flo
         table.columns[col_index].width = Inches(width)
 
     for col_index, header in enumerate(headers):
-        set_cell(table.cell(0, col_index), header, fill=COLORS["navy"], color=COLORS["white"], size=11, bold=True)
+        set_cell(table.cell(0, col_index), header, fill=COLORS["navy"], color=COLORS["white"], size=12, bold=True)
 
     for row_index, row in enumerate(rows, start=1):
         for col_index, value in enumerate(row):
             fill = COLORS["canvas"] if row_index % 2 == 0 else COLORS["white"]
-            set_cell(table.cell(row_index, col_index), _trim(value, 52), fill=fill, color=COLORS["text"], size=11, bold=col_index == 0)
+            set_cell(table.cell(row_index, col_index), _trim(value, 52), fill=fill, color=COLORS["text"], size=12, bold=col_index == 0)
 
 
 def add_step_flow(slide, steps: list[str], x: float, y: float, w: float, h: float) -> None:

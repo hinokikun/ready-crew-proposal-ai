@@ -68,7 +68,6 @@ from app.services.pptx_parts.content import (
 from app.services.pptx_parts.slides import (
     add_budget_fit_slide,
     add_case_studies_slide,
-    add_chapter_title_slide,
     add_competitor_slide,
     add_concept_slide,
     add_content_design_slide,
@@ -96,6 +95,7 @@ from app.services.pptx_parts.slides import (
     add_win_probability_slide,
     resolve_slide_kind,
 )
+from app.services.pptx_design.validators import validate_premium_deck
 from app.services.pptx_theme import MEDIA_TYPE, SLIDE_HEIGHT, SLIDE_WIDTH
 
 
@@ -125,15 +125,21 @@ def _build_pptx_bytes(payload: PptxDownloadRequest, *, summary_mode: bool) -> by
         slides = insert_win_probability_slide(slides, context)
         if summary_mode:
             slides = build_summary_slides(slides, context)
+        else:
+            slides = normalize_detailed_slides(slides)
 
         display_slide_no = 1
         for index, slide_data in enumerate(slides):
-            if index > 0 and not summary_mode:
-                add_chapter_title_slide(prs, slide_data, index + 1, display_slide_no, context)
-                display_slide_no += 1
             numbered_slide = slide_data.copy(update={"slide_no": display_slide_no})
             add_designed_slide(prs, numbered_slide, data, index, context)
             display_slide_no += 1
+
+        issues = validate_premium_deck(prs)
+        if issues:
+            logger.info(
+                "pptx_design_validation_issues",
+                extra={"issue_count": len(issues), "issue_codes": [issue.code for issue in issues[:8]]},
+            )
 
         buffer = BytesIO()
         prs.save(buffer)
@@ -375,6 +381,59 @@ def insert_win_probability_slide(slides: list[PowerPointSlide], context: PptxCon
 
     insert_at = next((idx for idx, slide in enumerate(slides) if "今後" in slide.title or "進め方" in slide.title), len(slides))
     return [*slides[:insert_at], win_slide, *slides[insert_at:]]
+
+
+def normalize_detailed_slides(slides: list[PowerPointSlide], *, max_slides: int = 25) -> list[PowerPointSlide]:
+    compacted: list[PowerPointSlide] = []
+    seen_titles: set[str] = set()
+    for slide in slides:
+        key = re.sub(r"\s+", "", slide.title or "").lower()
+        if key and key in seen_titles:
+            continue
+        if key:
+            seen_titles.add(key)
+        compacted.append(slide)
+
+    if len(compacted) <= max_slides:
+        return compacted
+
+    priority_kinds = [
+        "cover",
+        "proposal_summary",
+        "current_understanding",
+        "issues",
+        "proposal_concept",
+        "solution",
+        "customer_journey",
+        "sitemap",
+        "kpi",
+        "process",
+        "schedule",
+        "team",
+        "cost",
+        "estimate",
+        "budget_fit",
+        "estimate_priority",
+        "win_probability",
+        "next_steps",
+    ]
+    selected: list[PowerPointSlide] = []
+    for kind in priority_kinds:
+        for index, slide in enumerate(compacted):
+            if slide in selected:
+                continue
+            if resolve_slide_kind(slide, index) == kind:
+                selected.append(slide)
+                break
+        if len(selected) >= max_slides:
+            return selected[:max_slides]
+
+    for slide in compacted:
+        if slide not in selected:
+            selected.append(slide)
+        if len(selected) >= max_slides:
+            break
+    return selected[:max_slides]
 
 
 def build_summary_slides(slides: list[PowerPointSlide], context: PptxContext) -> list[PowerPointSlide]:
