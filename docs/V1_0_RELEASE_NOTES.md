@@ -21,6 +21,8 @@ AI営業秘書 Version 1.0 is the first production-ready release candidate for l
 - Audit logs for login, generation, output, settings, and errors
 - Maintenance Mode and production runbooks
 - Production CORS and Security Headers hardening
+- AI-OCR and Web project inputs remain isolated when starting or regenerating proposals
+- ProposalPilot Pilot Fold final candidate assets for logo, favicon, app icon, and OGP review
 
 ## Supported roles
 
@@ -60,6 +62,13 @@ Before production rollout, confirm:
 ## Upgrade notes
 
 No destructive DB migration is required for Version 1.0 release preparation. Existing Version 25 RC1 deployments can use the same API and DB contracts.
+
+## Reliability fixes included
+
+- Latest pasted project input is preserved for AI analysis.
+- New proposals do not inherit previous project details.
+- AI-OCR proposal input is not replaced by the earlier Web-site demo/fallback content.
+- Authentication fallback wording is readable Japanese when the backend cannot provide a more specific `detail`.
 
 ## Security notes
 

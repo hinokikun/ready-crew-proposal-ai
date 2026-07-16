@@ -74,7 +74,7 @@ export async function loginWithPassword(password: string, email = "", loginMode?
   });
 
   if (!response.ok) {
-    const message = await readErrorMessage(response, "ログインに失敗しました。");
+    const message = await readErrorMessage(response, "ログイン処理を完了できませんでした。");
     throw new Error(message);
   }
 

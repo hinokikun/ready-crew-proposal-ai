@@ -11,12 +11,20 @@ All notable changes to AI営業秘書 are documented in this file.
 - Production support, contribution, conduct, and security documents
 - Demo data for safe browser/UAT verification
 - Documentation archive for older version-specific handoff files
+- ProposalPilot Pilot Fold final candidate logo, icon, favicon, and OGP export assets
 
 ### Changed
 
 - Organized product documentation for limited customer release
 - Clarified admin guide, user guide, environment variables, FAQ, support, and security reporting
 - Moved old version-specific documents into `docs/archive/`
+- Clarified login fallback wording so unexpected authentication failures remain readable in Japanese
+
+### Fixed
+
+- Preserved the latest user-entered proposal input through analysis so AI-OCR projects are not replaced by previous Web project content
+- Prevented previous proposal details from leaking into a newly started proposal
+- Removed the fixed Web-site fallback behavior from the proposal analysis flow
 
 ### Security
 
