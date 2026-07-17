@@ -1,0 +1,35 @@
+{
+  "schema_version": "strategy_brief_review_v1",
+  "decision": "approve_with_changes",
+  "reviewer": "sales_user",
+  "comment": "Persona and next action adjusted for the actual meeting owner.",
+  "reviewed_at": "2026-07-17T10:00:00+09:00",
+  "status": "approved_with_changes",
+  "applied_overrides": [
+    {
+      "field": "primary_persona",
+      "value": "department_head",
+      "reason": "The meeting owner is the department head."
+    },
+    {
+      "field": "next_actions",
+      "value": [
+        "PoC対象範囲を確定する",
+        "評価基準を合意する",
+        "既存データの提供条件を確認する"
+      ],
+      "reason": "Data confirmation must happen before proposal generation."
+    }
+  ],
+  "rejected_overrides": [
+    {
+      "field": "confidence",
+      "value": 0.95,
+      "reason": "Confidence is engine evidence and must stay locked."
+    }
+  ],
+  "review_required_before_presentation": true,
+  "original_brief": "<StrategyBrief JSON>",
+  "reviewed_brief": "<Reviewed StrategyBrief JSON>",
+  "markdown_summary": "<Markdown summary>"
+}

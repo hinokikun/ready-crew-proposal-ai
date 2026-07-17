@@ -8,6 +8,7 @@ from .enums import (
     Persona,
     PresentationPack,
     ProjectCategory,
+    ReviewDecision,
     StoryType,
     StrategyType,
 )
@@ -140,6 +141,49 @@ class StrategyBrief(BaseModel):
     @validator("confidence")
     def confidence_range(cls, value):
         return max(0.0, min(1.0, round(float(value), 2)))
+
+    class Config:
+        use_enum_values = True
+
+
+class ReviewOverride(BaseModel):
+    field: str
+    value: object
+    reason: str = ""
+
+    @validator("field", "reason", pre=True, always=True)
+    def normalize_override_text(cls, value):
+        return _clean_text(value)
+
+
+class HumanReviewResult(BaseModel):
+    decision: ReviewDecision
+    reviewer: str = ""
+    comment: str = ""
+    overrides: List[ReviewOverride] = Field(default_factory=list)
+    reviewed_at: Optional[str] = None
+
+    @validator("reviewer", "comment", "reviewed_at", pre=True, always=True)
+    def normalize_review_text(cls, value):
+        return _clean_text(value)
+
+    class Config:
+        use_enum_values = True
+
+
+class HumanReviewReport(BaseModel):
+    schema_version: str = "strategy_brief_review_v1"
+    decision: ReviewDecision
+    reviewer: str = ""
+    comment: str = ""
+    reviewed_at: Optional[str] = None
+    status: str
+    applied_overrides: List[ReviewOverride] = Field(default_factory=list)
+    rejected_overrides: List[ReviewOverride] = Field(default_factory=list)
+    review_required_before_presentation: bool = True
+    original_brief: StrategyBrief
+    reviewed_brief: StrategyBrief
+    markdown_summary: str = ""
 
     class Config:
         use_enum_values = True

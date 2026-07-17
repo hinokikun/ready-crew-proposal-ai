@@ -77,3 +77,10 @@ class EvidenceLevel(StrEnum):
     PROVIDED = "provided"
     INFERRED = "inferred"
     MISSING = "missing"
+
+
+class ReviewDecision(StrEnum):
+    APPROVE = "approve"
+    APPROVE_WITH_CHANGES = "approve_with_changes"
+    REJECT = "reject"
+    RE_EVALUATE = "re_evaluate"
