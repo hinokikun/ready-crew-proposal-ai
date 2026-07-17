@@ -91,6 +91,7 @@ class Settings:
     beautiful_ai_image_source: str = os.getenv("BEAUTIFUL_AI_IMAGE_SOURCE", "ai")
     beautiful_ai_image_style: str = os.getenv("BEAUTIFUL_AI_IMAGE_STYLE", "clean corporate proposal")
     beautiful_ai_timeout_seconds: int = _as_int(os.getenv("BEAUTIFUL_AI_TIMEOUT_SECONDS"), 120)
+    presentation_engine_mode: str = os.getenv("PRESENTATION_ENGINE_MODE", "legacy").strip().lower()
     presentation_max_revisions: int = _as_int(os.getenv("PRESENTATION_MAX_REVISIONS"), 3)
     optimization_min_sample_size: int = _as_int(os.getenv("OPTIMIZATION_MIN_SAMPLE_SIZE"), 10)
     optimization_weight_impact: float = _as_float(os.getenv("OPTIMIZATION_WEIGHT_IMPACT"), 0.30)

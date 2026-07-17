@@ -2,7 +2,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-
 class AuthLoginRequest(BaseModel):
     login_mode: Literal["user", "admin"] | None = None
     email: str = Field("", description="ログインメールアドレス")
@@ -553,6 +552,10 @@ class AnalysisResponse(BaseModel):
 class PptxDownloadRequest(BaseModel):
     powerpoint_generation_data: PowerPointData
     win_probability: WinProbability | None = None
+    strategy_review_report: dict | None = Field(
+        None,
+        description="Approved Strategy Brief review report for strategy_v1 presentation generation.",
+    )
     project_brief: str = Field("", description="Ready Crew の案件概要テキスト")
     client_company_info: str = Field("", description="提案先企業情報")
     competitor_site_url: str = Field("", description="競合サイトURL")

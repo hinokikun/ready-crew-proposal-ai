@@ -29,7 +29,8 @@ from app.router_registry import include_application_routers
 from app.services.company_research_service import build_company_research_response, extract_public_page_text, normalize_public_url
 from app.services.openai_service import OpenAIServiceError, generate_proposal
 from app.services.pdf_service import PDF_MEDIA_TYPE, build_estimate_pdf_bytes, build_estimate_pdf_filename
-from app.services.pptx_service import MEDIA_TYPE, build_pptx_bytes, build_pptx_filename
+from app.services.pptx_service import MEDIA_TYPE, build_pptx_filename
+from app.services.presentation_engine_integration import build_pptx_bytes_for_engine
 from app.services.proposal_metadata_service import extract_contact_person, extract_customer_name, proposal_input_length, pptx_input_length
 
 
@@ -315,7 +316,8 @@ async def download_pptx(
 ) -> StreamingResponse:
     ensure_not_maintenance_mode()
     try:
-        pptx_bytes = build_pptx_bytes(payload)
+        engine_result = build_pptx_bytes_for_engine(payload)
+        pptx_bytes = engine_result.pptx_bytes
         filename = build_pptx_filename(
             payload.powerpoint_generation_data,
             payload.client_company_info,

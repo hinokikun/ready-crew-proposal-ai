@@ -142,7 +142,7 @@ def test_same_input_returns_same_output():
     assert first == second
 
 
-def test_strategy_engine_is_not_imported_from_production_entrypoints():
+def test_strategy_engine_imports_are_limited_to_feature_flag_boundary():
     root = Path(__file__).resolve().parents[2]
     production_files = [
         root / "app" / "main.py",
@@ -152,6 +152,8 @@ def test_strategy_engine_is_not_imported_from_production_entrypoints():
     for path in production_files:
         if path.exists():
             assert "strategy_engine" not in path.read_text(encoding="utf-8", errors="ignore")
+    boundary = root / "app" / "services" / "presentation_engine_integration.py"
+    assert "app.strategy_engine" in boundary.read_text(encoding="utf-8", errors="ignore")
 
 
 def test_strategy_engine_does_not_call_external_services():

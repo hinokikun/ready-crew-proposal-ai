@@ -3,12 +3,13 @@ from __future__ import annotations
 from io import BytesIO
 import logging
 import re
+from typing import Any
 
 from pptx import Presentation
 from pptx.util import Inches
 
 from app.models import PowerPointData, PowerPointSlide, PptxDownloadRequest
-from app.proposal_profiles import proposal_profile_for_text
+from app.proposal_profiles import get_proposal_profile, proposal_profile_for_text
 from app.services.pptx_parts.models import PptxContext
 from app.services.pptx_parts.content import (
     _fallback_slide,
@@ -102,22 +103,27 @@ from app.services.pptx_theme import MEDIA_TYPE, SLIDE_HEIGHT, SLIDE_WIDTH
 logger = logging.getLogger(__name__)
 
 
-def build_pptx_bytes(payload: PptxDownloadRequest) -> bytes:
-    return _build_pptx_bytes(payload, summary_mode=payload.summary)
+def build_pptx_bytes(payload: PptxDownloadRequest, presentation_context: Any | None = None) -> bytes:
+    return _build_pptx_bytes(payload, summary_mode=payload.summary, presentation_context=presentation_context)
 
 
-def build_summary_pptx_bytes(payload: PptxDownloadRequest) -> bytes:
-    return _build_pptx_bytes(payload, summary_mode=True)
+def build_summary_pptx_bytes(payload: PptxDownloadRequest, presentation_context: Any | None = None) -> bytes:
+    return _build_pptx_bytes(payload, summary_mode=True, presentation_context=presentation_context)
 
 
-def _build_pptx_bytes(payload: PptxDownloadRequest, *, summary_mode: bool) -> bytes:
+def _build_pptx_bytes(
+    payload: PptxDownloadRequest,
+    *,
+    summary_mode: bool,
+    presentation_context: Any | None = None,
+) -> bytes:
     try:
         prs = Presentation()
         prs.slide_width = Inches(SLIDE_WIDTH)
         prs.slide_height = Inches(SLIDE_HEIGHT)
 
         data = payload.powerpoint_generation_data
-        context = build_pptx_context(payload)
+        context = build_pptx_context(payload, presentation_context=presentation_context)
         slides = data.slides or [_fallback_slide(data)]
         slides = insert_competitor_analysis_slide(slides, context)
         slides = insert_case_studies_slide(slides, context)
@@ -149,7 +155,10 @@ def _build_pptx_bytes(payload: PptxDownloadRequest, *, summary_mode: bool) -> by
         raise
 
 
-def build_pptx_context(payload: PptxDownloadRequest) -> PptxContext:
+def build_pptx_context(
+    payload: PptxDownloadRequest,
+    presentation_context: Any | None = None,
+) -> PptxContext:
     data = payload.powerpoint_generation_data
     all_input = "\n".join(
         [
@@ -171,8 +180,8 @@ def build_pptx_context(payload: PptxDownloadRequest) -> PptxContext:
             payload.case_studies,
         ]
     )
-    profile = proposal_profile_for_text(all_input)
-    concept = derive_concept(all_input)
+    profile = _profile_for_presentation(all_input, presentation_context)
+    concept = presentation_context.main_message if presentation_context else derive_concept(all_input)
     estimate = derive_estimate_summary(payload, all_input)
     return PptxContext(
         client_name=extract_client_name(payload.client_company_info, data.client_name),
@@ -203,6 +212,25 @@ def build_pptx_context(payload: PptxDownloadRequest) -> PptxContext:
         confirmation_items=extract_confirmation_items(all_input),
         win_probability=payload.win_probability,
     )
+
+
+PACK_TO_PPTX_CATEGORY = {
+    "vision_ocr": "ai_ocr",
+    "automation": "rpa",
+    "conversational_ai": "ai_agent",
+    "knowledge_ai": "generative_ai",
+    "crm_sales_intelligence": "crm_sfa",
+    "generative_ai_transformation": "generative_ai",
+    "digital_experience": "web",
+    "generic_consulting": "other",
+}
+
+
+def _profile_for_presentation(all_input: str, presentation_context: Any | None):
+    if presentation_context is None:
+        return proposal_profile_for_text(all_input)
+    category = PACK_TO_PPTX_CATEGORY.get(str(presentation_context.presentation_pack), "other")
+    return get_proposal_profile(category)
 
 
 def build_pptx_filename(data: PowerPointData, client_company_info: str = "", *, summary_mode: bool = False) -> str:

@@ -21,6 +21,9 @@ def adapt_approved_strategy_brief(
     return PresentationContext(
         source_strategy_schema_version=brief.schema_version,
         review_status=review_status,
+        source_project_category=str(brief.project_category),
+        persona=str(brief.primary_persona),
+        story_type=str(brief.story_type),
         hero={
             "theme": brief.hero_theme,
             "main_message": brief.main_message,

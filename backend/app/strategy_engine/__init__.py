@@ -1,8 +1,7 @@
-"""Offline Proposal Strategy Engine.
+"""Proposal Strategy Engine utilities.
 
-This package is intentionally not wired into FastAPI, proposal generation,
-PPTX generation, external presentation integrations, or database persistence. It is used by tests
-and offline evaluation only until the production integration is approved.
+The production PPTX path remains legacy by default. Strategy integration is available only through
+the presentation engine feature flag and requires an approved human review report.
 """
 
 from .evaluator import evaluate_strategy

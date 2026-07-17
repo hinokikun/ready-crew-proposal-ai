@@ -193,6 +193,9 @@ class PresentationContext(BaseModel):
     schema_version: str = "presentation_context_v1"
     source_strategy_schema_version: str
     review_status: str
+    source_project_category: str
+    persona: str
+    story_type: str
     hero: Dict[str, str]
     main_message: str
     problem_theme: str
