@@ -187,3 +187,31 @@ class HumanReviewReport(BaseModel):
 
     class Config:
         use_enum_values = True
+
+
+class PresentationContext(BaseModel):
+    schema_version: str = "presentation_context_v1"
+    source_strategy_schema_version: str
+    review_status: str
+    hero: Dict[str, str]
+    main_message: str
+    problem_theme: str
+    architecture_type: str
+    roadmap_type: str
+    kpi_pack: str
+    estimate_pack: str
+    slide_order: List[str] = Field(default_factory=list)
+    visual_theme: str
+    presentation_pack: PresentationPack
+    secondary_presentation_pack: Optional[PresentationPack] = None
+    required_slides: List[str] = Field(default_factory=list)
+    optional_slides: List[str] = Field(default_factory=list)
+    priority_messages: List[str] = Field(default_factory=list)
+    risk_messages: List[str] = Field(default_factory=list)
+    next_actions: List[str] = Field(default_factory=list)
+    allowed_terms: List[str] = Field(default_factory=list)
+    conditional_terms: List[str] = Field(default_factory=list)
+    prohibited_terms: List[str] = Field(default_factory=list)
+
+    class Config:
+        use_enum_values = True

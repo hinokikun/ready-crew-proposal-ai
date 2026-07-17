@@ -50,7 +50,7 @@ def test_approve_with_changes_applies_only_allowed_overrides():
                 ),
                 ReviewOverride(
                     field="next_actions",
-                    value=["PoC対象範囲を確定する", "既存データの提供条件を確認する"],
+                    value=["Confirm PoC scope", "Confirm data conditions"],
                     reason="data confirmation needed",
                 ),
                 ReviewOverride(
@@ -64,11 +64,10 @@ def test_approve_with_changes_applies_only_allowed_overrides():
 
     assert report.status == "approved_with_changes"
     assert report.reviewed_brief.primary_persona == "department_head"
-    assert report.reviewed_brief.next_actions == ["PoC対象範囲を確定する", "既存データの提供条件を確認する"]
+    assert report.reviewed_brief.next_actions == ["Confirm PoC scope", "Confirm data conditions"]
     assert report.reviewed_brief.confidence == brief.confidence
     assert [override.field for override in report.applied_overrides] == ["primary_persona", "next_actions"]
     assert [override.field for override in report.rejected_overrides] == ["confidence"]
-
 
 def test_reject_review_result_does_not_apply_overrides():
     brief = _brief()
