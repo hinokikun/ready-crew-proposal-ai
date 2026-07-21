@@ -54,6 +54,7 @@ export type ProposalResultSectionProps = {
   formatDateTime: (value: string) => string;
   history: any[];
   isBeautifulAiReady: boolean;
+  isBeautifulAiStatusAuthError: boolean;
   isCreatingBeautifulAi: boolean;
   isDownloadingEstimatePdf: boolean;
   isDownloadingPowerPoint: boolean;
@@ -130,6 +131,7 @@ export function ProposalResultSection({
   formatDateTime,
   history,
   isBeautifulAiReady,
+  isBeautifulAiStatusAuthError,
   isCreatingBeautifulAi,
   isDownloadingEstimatePdf,
   isDownloadingPowerPoint,
@@ -379,6 +381,7 @@ export function ProposalResultSection({
                 type="button"
                 onClick={createBeautifulAiCurrent}
                 data-testid="beautiful-ai-create-button-detail"
+                title={isBeautifulAiStatusAuthError ? "Beautiful.ai認証を確認してください" : undefined}
                 disabled={!canCreateBeautifulAiOutput}
               >
                 {isCreatingBeautifulAi ? (

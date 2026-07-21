@@ -33,6 +33,21 @@ def _beautiful_ai_input_length(payload: BeautifulAiPresentationRequest) -> int:
     return len(payload.project_brief or "") + len(payload.client_company_info or "") + len(slide_text)
 
 
+def _beautiful_ai_error_code(error_type: str) -> str:
+    mapping = {
+        "beautiful_ai_disabled": "BEAUTIFUL_AI_NOT_CONFIGURED",
+        "beautiful_ai_missing_api_key": "BEAUTIFUL_AI_NOT_CONFIGURED",
+        "beautiful_ai_bad_request": "BEAUTIFUL_AI_API_ERROR",
+        "beautiful_ai_invalid_api_key": "BEAUTIFUL_AI_INVALID_API_KEY",
+        "beautiful_ai_access_not_enabled": "BEAUTIFUL_AI_ACCESS_DENIED",
+        "beautiful_ai_endpoint_not_found": "BACKEND_UNREACHABLE",
+        "beautiful_ai_rate_limit": "BEAUTIFUL_AI_RATE_LIMIT",
+        "beautiful_ai_service_error": "BEAUTIFUL_AI_API_ERROR",
+        "beautiful_ai_timeout": "REQUEST_TIMEOUT",
+    }
+    return mapping.get(error_type, "BEAUTIFUL_AI_API_ERROR")
+
+
 @router.get("/status", response_model=BeautifulAiStatusResponse)
 async def get_status(_: dict = Depends(require_roles("admin", "manager", "member", "viewer"))) -> BeautifulAiStatusResponse:
     with get_db() as db:
@@ -70,6 +85,7 @@ async def create_presentation(payload: BeautifulAiPresentationRequest, user: dic
             )
             error = BeautifulAiSafeError(
                 error_type=exc.error_type,
+                error_code=_beautiful_ai_error_code(exc.error_type),
                 message=exc.message,
                 retry_after_seconds=exc.retry_after_seconds,
             )

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import hashlib
 import json
+import hashlib
 import logging
 from datetime import datetime, timezone
 from sqlite3 import Connection
@@ -273,12 +273,18 @@ def _insert_diagnostic_record(
 
 
 def _response_from_record(record: dict[str, Any]) -> BeautifulAiPresentationResponse:
+    presentation_id = str(record.get("presentation_id") or "")
+    urls = resolve_beautiful_ai_urls(
+        stored_editor_url=str(record.get("editor_url") or ""),
+        stored_player_url=str(record.get("player_url") or ""),
+        response_text=str(record.get("response_text") or ""),
+    )
     return BeautifulAiPresentationResponse(
-        presentation_id=str(record.get("presentation_id") or ""),
+        presentation_id=presentation_id,
         status=str(record.get("status") or "created"),
         title=str(record.get("title") or ""),
-        editor_url=str(record.get("editor_url") or ""),
-        player_url=str(record.get("player_url") or ""),
+        editor_url=urls["editor_url"],
+        player_url=urls["player_url"],
         created_at=str(record.get("created_at") or ""),
         provider=str(record.get("provider") or "beautiful.ai"),
         fallback_available=True,
@@ -314,6 +320,60 @@ def _safe_url(value: str) -> str:
     return raw
 
 
+def resolve_beautiful_ai_urls(
+    source: dict[str, Any] | None = None,
+    *,
+    stored_editor_url: str = "",
+    stored_player_url: str = "",
+    response_text: str = "",
+) -> dict[str, str]:
+    """Resolve open URLs only from URLs returned by Beautiful.ai, never from IDs."""
+    api_source = _extract_url_source(source)
+    if api_source is None and response_text and response_text != "mock":
+        try:
+            parsed = json.loads(response_text)
+        except ValueError:
+            parsed = {}
+        api_source = _extract_url_source(parsed) if isinstance(parsed, dict) else None
+
+    if api_source is not None:
+        editor_url = _safe_url(str(api_source.get("editor_url") or api_source.get("editorUrl") or api_source.get("editUrl") or ""))
+        player_url = _safe_url(str(api_source.get("player_url") or api_source.get("playerUrl") or api_source.get("shareUrl") or api_source.get("viewUrl") or ""))
+        return {
+            "editor_url": editor_url,
+            "player_url": player_url,
+            "open_url": editor_url or player_url,
+        }
+
+    if response_text and response_text != "mock":
+        return {"editor_url": "", "player_url": "", "open_url": ""}
+
+    editor_url = _safe_url(stored_editor_url)
+    player_url = _safe_url(stored_player_url)
+    return {
+        "editor_url": editor_url,
+        "player_url": player_url,
+        "open_url": editor_url or player_url,
+    }
+
+
+def _extract_url_source(data: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not data:
+        return None
+    sources: list[dict[str, Any]] = [data]
+    for key in ("data", "presentation", "result"):
+        nested_value = data.get(key)
+        if isinstance(nested_value, dict):
+            sources.append(nested_value)
+            nested_presentation = nested_value.get("presentation")
+            if isinstance(nested_presentation, dict):
+                sources.append(nested_presentation)
+    merged: dict[str, Any] = {}
+    for item in sources:
+        merged.update(item)
+    return merged
+
+
 def _safe_log_text(value: str, limit: int = 1000) -> str:
     text = (value or "").replace("\x00", "").strip()
     return text[:limit]
@@ -324,34 +384,23 @@ def _make_mock_response(project_id: str, title: str) -> dict[str, str]:
     presentation_id = f"mock-{suffix}"
     return {
         "presentation_id": presentation_id,
-        "editor_url": f"https://www.beautiful.ai/editor/{presentation_id}",
-        "player_url": f"https://www.beautiful.ai/player/{presentation_id}",
+        "editor_url": f"https://www.beautiful.ai/editor/mock-editor-{suffix}",
+        "player_url": f"https://www.beautiful.ai/player/mock-player-{suffix}",
         "status": "mock",
         "title": title,
     }
 
 
 def _extract_api_result(data: dict[str, Any], fallback_title: str) -> dict[str, str]:
-    sources: list[dict[str, Any]] = [data]
-    for key in ("data", "presentation", "result"):
-        nested_value = data.get(key)
-        if isinstance(nested_value, dict):
-            sources.append(nested_value)
-            nested_presentation = nested_value.get("presentation")
-            if isinstance(nested_presentation, dict):
-                sources.append(nested_presentation)
-    source: dict[str, Any] = {}
-    for item in sources:
-        source.update(item)
+    source = _extract_url_source(data) or {}
     presentation_id = str(source.get("presentation_id") or source.get("presentationId") or source.get("id") or "")
-    editor_url = str(source.get("editor_url") or source.get("editorUrl") or source.get("editUrl") or source.get("url") or "")
-    player_url = str(source.get("player_url") or source.get("playerUrl") or source.get("shareUrl") or source.get("viewUrl") or "")
+    urls = resolve_beautiful_ai_urls(source)
     status = str(source.get("status") or "created")
     title = str(source.get("title") or fallback_title)
     return {
         "presentation_id": presentation_id,
-        "editor_url": _safe_url(editor_url),
-        "player_url": _safe_url(player_url),
+        "editor_url": urls["editor_url"],
+        "player_url": urls["player_url"],
         "status": status,
         "title": title,
     }

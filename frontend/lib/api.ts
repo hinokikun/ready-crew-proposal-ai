@@ -245,3 +245,26 @@ export {
 } from "@/client-api/reviews";
 export { bypassQualityGate, completeQualityGate, getQualityGate, saveQualityGate } from "@/client-api/qualityGates";
 export { createReleaseRecord, getReleases, publishReleaseRecord, updateReleaseRecord, type ReleaseRecordPayload } from "@/client-api/releases";
+export {
+  downloadSalesAssistantProposalExport,
+  exportSalesAssistantProposal,
+  generateSalesAssistantBrief,
+  generateSalesAssistantProposalPreview,
+  getSalesAssistantStatus
+} from "@/client-api/salesAssistant";
+export type {
+  SalesAssistantBrief,
+  SalesAssistantExportDownloadResult,
+  SalesAssistantExportPayload,
+  SalesAssistantExportResponse,
+  SalesAssistantExportType,
+  SalesAssistantGeneratePayload,
+  SalesAssistantGenerateResponse,
+  SalesAssistantMeetingStage,
+  SalesAssistantProposalPreview,
+  SalesAssistantProposalPreviewPayload,
+  SalesAssistantProposalPreviewResponse,
+  SalesAssistantReviewStatus,
+  SalesAssistantStrategyBrief,
+  SalesAssistantStatus
+} from "@/types/salesAssistant";

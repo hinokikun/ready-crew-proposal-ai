@@ -25,6 +25,9 @@ def client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> TestClient:
     monkeypatch.setenv("RATE_LIMIT_LOGIN_LIMIT", "1000")
     monkeypatch.setenv("RATE_LIMIT_GENERATION_LIMIT", "1000")
     monkeypatch.setenv("RATE_LIMIT_ADMIN_LIMIT", "1000")
+    monkeypatch.setenv("BEAUTIFUL_AI_ENABLED", "false")
+    monkeypatch.setenv("BEAUTIFUL_AI_API_KEY", "")
+    monkeypatch.setenv("BEAUTIFUL_AI_MOCK", "false")
     _reload_app_modules()
     main = importlib.import_module("app.main")
     with TestClient(main.app) as test_client:

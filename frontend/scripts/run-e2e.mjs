@@ -1,6 +1,9 @@
 import { spawn } from "node:child_process";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3000";
+const serverURL = new URL(baseURL);
+const serverHost = serverURL.hostname || "127.0.0.1";
+const serverPort = serverURL.port || (serverURL.protocol === "https:" ? "443" : "3000");
 const isWindows = process.platform === "win32";
 const extraArgs = process.argv.slice(2);
 let serverProcess;
@@ -11,10 +14,14 @@ async function main() {
   if (!alreadyRunning) {
     serverProcess = spawn(
       process.execPath,
-      ["./node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", "3000"],
+      ["./node_modules/next/dist/bin/next", "dev", "--hostname", serverHost, "--port", serverPort],
       {
         cwd: process.cwd(),
-        env: process.env,
+        env: {
+          ...process.env,
+          NEXT_PUBLIC_SALES_ASSISTANT_ENABLED: process.env.NEXT_PUBLIC_SALES_ASSISTANT_ENABLED ?? "true",
+          NEXT_PUBLIC_PROPOSAL_EXPORT_ENABLED: process.env.NEXT_PUBLIC_PROPOSAL_EXPORT_ENABLED ?? "true"
+        },
         stdio: ["ignore", "pipe", "pipe"]
       }
     );
@@ -28,7 +35,9 @@ async function main() {
   const exitCode = await runCommand(playwrightBin, ["test", ...extraArgs], {
     ...process.env,
     PLAYWRIGHT_BASE_URL: baseURL,
-    PLAYWRIGHT_SKIP_WEBSERVER: "1"
+    PLAYWRIGHT_SKIP_WEBSERVER: "1",
+    NEXT_PUBLIC_SALES_ASSISTANT_ENABLED: process.env.NEXT_PUBLIC_SALES_ASSISTANT_ENABLED ?? "true",
+    NEXT_PUBLIC_PROPOSAL_EXPORT_ENABLED: process.env.NEXT_PUBLIC_PROPOSAL_EXPORT_ENABLED ?? "true"
   });
   await stopServer();
   process.exit(exitCode);

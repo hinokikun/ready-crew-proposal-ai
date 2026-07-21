@@ -24,6 +24,9 @@ def _client_with_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, **override
         "RATE_LIMIT_LOGIN_LIMIT": "1000",
         "RATE_LIMIT_GENERATION_LIMIT": "1000",
         "RATE_LIMIT_ADMIN_LIMIT": "1000",
+        "BEAUTIFUL_AI_ENABLED": "false",
+        "BEAUTIFUL_AI_API_KEY": "",
+        "BEAUTIFUL_AI_MOCK": "false",
     }
     env.update(overrides)
     for key, value in env.items():
@@ -290,6 +293,144 @@ def test_beautiful_ai_member_can_create_with_real_api_mode(
         assert body["editor_url"].startswith("https://www.beautiful.ai/")
 
 
+def test_beautiful_ai_does_not_build_urls_when_prompt_api_returns_only_id(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    sample_pptx_payload: dict[str, Any],
+) -> None:
+    with _client_with_env(
+        monkeypatch,
+        tmp_path,
+        BEAUTIFUL_AI_ENABLED="true",
+        BEAUTIFUL_AI_MOCK="false",
+        BEAUTIFUL_AI_API_KEY="dummy-beautiful-ai-key",
+    ) as client:
+        service = importlib.import_module("app.services.beautiful_ai_service")
+
+        async def fake_post(_: dict[str, Any]) -> dict[str, Any]:
+            return {
+                "presentationId": "prompt-id-only",
+                "status": "created",
+                "title": "Prompt API ID only",
+            }
+
+        monkeypatch.setattr(service, "_post_payload", fake_post)
+        headers = _login(client)
+        project_id = "id-only-project"
+        _complete_quality_gate(client, headers, project_id)
+
+        response = client.post(
+            "/api/beautiful-ai/presentations",
+            headers=headers,
+            json=_beautiful_payload(sample_pptx_payload, project_id),
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["presentation_id"] == "prompt-id-only"
+        assert body["editor_url"] == ""
+        assert body["player_url"] == ""
+
+
+def test_beautiful_ai_uses_player_url_returned_by_prompt_api(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    sample_pptx_payload: dict[str, Any],
+) -> None:
+    with _client_with_env(
+        monkeypatch,
+        tmp_path,
+        BEAUTIFUL_AI_ENABLED="true",
+        BEAUTIFUL_AI_MOCK="false",
+        BEAUTIFUL_AI_API_KEY="dummy-beautiful-ai-key",
+    ) as client:
+        service = importlib.import_module("app.services.beautiful_ai_service")
+
+        async def fake_post(_: dict[str, Any]) -> dict[str, Any]:
+            return {
+                "presentationId": "-PromptPlayerOnly",
+                "status": "completed",
+                "title": "Prompt API player URL only",
+                "playerUrl": "https://www.beautiful.ai/player/-PromptPlayerOnly?showControls=true",
+                "warnings": [],
+            }
+
+        monkeypatch.setattr(service, "_post_payload", fake_post)
+        headers = _login(client)
+        project_id = "player-only-project"
+        _complete_quality_gate(client, headers, project_id)
+
+        response = client.post(
+            "/api/beautiful-ai/presentations",
+            headers=headers,
+            json=_beautiful_payload(sample_pptx_payload, project_id),
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["presentation_id"] == "-PromptPlayerOnly"
+        assert body["editor_url"] == ""
+        assert body["player_url"] == "https://www.beautiful.ai/player/-PromptPlayerOnly?showControls=true"
+
+        cached_response = client.post(
+            "/api/beautiful-ai/presentations",
+            headers=headers,
+            json=_beautiful_payload(sample_pptx_payload, project_id),
+        )
+        cached_body = cached_response.json()
+        assert cached_response.status_code == 200
+        assert cached_body["editor_url"] == ""
+        assert cached_body["player_url"] == "https://www.beautiful.ai/player/-PromptPlayerOnly?showControls=true"
+
+
+def test_beautiful_ai_url_resolver_never_builds_url_from_presentation_id() -> None:
+    service = importlib.import_module("app.services.beautiful_ai_service")
+    assert service.resolve_beautiful_ai_urls({"presentationId": "id-only"}) == {"editor_url": "", "player_url": "", "open_url": ""}
+    assert service.resolve_beautiful_ai_urls(
+        {
+            "presentationId": "both",
+            "editorUrl": "https://www.beautiful.ai/editor/both",
+            "playerUrl": "https://www.beautiful.ai/player/both",
+        }
+    ) == {
+        "editor_url": "https://www.beautiful.ai/editor/both",
+        "player_url": "https://www.beautiful.ai/player/both",
+        "open_url": "https://www.beautiful.ai/editor/both",
+    }
+    assert service.resolve_beautiful_ai_urls(
+        {"presentationId": "player", "playerUrl": "https://www.beautiful.ai/player/player"}
+    ) == {
+        "editor_url": "",
+        "player_url": "https://www.beautiful.ai/player/player",
+        "open_url": "https://www.beautiful.ai/player/player",
+    }
+    assert service.resolve_beautiful_ai_urls(
+        {"presentationId": "editor", "editorUrl": "https://www.beautiful.ai/editor/editor"}
+    ) == {
+        "editor_url": "https://www.beautiful.ai/editor/editor",
+        "player_url": "",
+        "open_url": "https://www.beautiful.ai/editor/editor",
+    }
+
+
+def test_beautiful_ai_record_response_ignores_stored_generated_editor_url_when_raw_response_has_player_only() -> None:
+    service = importlib.import_module("app.services.beautiful_ai_service")
+    response = service._response_from_record(
+        {
+            "presentation_id": "-PromptPlayerOnly",
+            "status": "completed",
+            "title": "Prompt API player URL only",
+            "editor_url": "https://www.beautiful.ai/editor/-PromptPlayerOnly",
+            "player_url": "https://www.beautiful.ai/player/-PromptPlayerOnly?showControls=true",
+            "response_text": '{"presentationId":"-PromptPlayerOnly","status":"completed","playerUrl":"https://www.beautiful.ai/player/-PromptPlayerOnly?showControls=true"}',
+            "created_at": "2026-07-21T00:00:00Z",
+            "provider": "beautiful.ai",
+        }
+    )
+    assert response.editor_url == ""
+    assert response.player_url == "https://www.beautiful.ai/player/-PromptPlayerOnly?showControls=true"
+
+
 def test_beautiful_ai_requires_completed_quality_gate(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -379,6 +520,7 @@ def test_beautiful_ai_safe_error_mapping(
         serialized = str(body).lower()
         detail = body.get("detail") if isinstance(body.get("detail"), dict) else body
         assert detail["error_type"] == error_type
+        assert detail["error_code"]
         assert "dummy-beautiful-ai-key" not in serialized
         assert "authorization" not in serialized
 

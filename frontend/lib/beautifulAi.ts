@@ -1,5 +1,5 @@
 ﻿import { fetchJson } from "@/client-api/client";
-import { getAuthHeaders } from "@/lib/auth";
+import { getAuthHeaders, getAuthToken } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/config";
 import type { PowerPointData, ProposalRequest, WinProbability } from "@/types/proposal";
 
@@ -25,6 +25,7 @@ export type BeautifulAiStatusProbe = {
   httpStatus: number | null;
   message: string;
   checkedAt: string;
+  errorType?: "auth_required" | "forbidden" | "not_found" | "backend_error" | "network_error" | "status_error";
 };
 
 export type BeautifulAiHistoryRecord = {
@@ -134,6 +135,17 @@ export async function runBeautifulAiConnectionTest() {
 
 export async function getBeautifulAiStatusProbe(): Promise<BeautifulAiStatusProbe> {
   const checkedAt = new Date().toLocaleString("ja-JP");
+  if (!getAuthToken()) {
+    return {
+      status: null,
+      apiReachable: false,
+      routeFound: true,
+      httpStatus: null,
+      message: "Beautiful.ai status APIの認証情報が見つかりません。再ログインしてください。",
+      checkedAt,
+      errorType: "auth_required"
+    };
+  }
   try {
     const response = await fetch(`${API_BASE_URL}/api/beautiful-ai/status`, {
       cache: "no-store",
@@ -153,13 +165,15 @@ export async function getBeautifulAiStatusProbe(): Promise<BeautifulAiStatusProb
         checkedAt
       };
     }
+    const responseMessage = await readBeautifulAiStatusError(response);
     return {
       status: null,
       apiReachable: false,
       routeFound: response.status !== 404,
       httpStatus: response.status,
-      message: beautifulAiStatusErrorMessage(response.status),
-      checkedAt
+      message: responseMessage || beautifulAiStatusErrorMessage(response.status),
+      checkedAt,
+      errorType: beautifulAiStatusErrorType(response.status)
     };
   } catch {
     return {
@@ -168,9 +182,29 @@ export async function getBeautifulAiStatusProbe(): Promise<BeautifulAiStatusProb
       routeFound: false,
       httpStatus: null,
       message: "Beautiful.ai status APIへ接続できません。Backend URL、CORS、Renderの起動状態を確認してください。",
-      checkedAt
+      checkedAt,
+      errorType: "network_error"
     };
   }
+}
+
+async function readBeautifulAiStatusError(response: Response) {
+  const fallback = beautifulAiStatusErrorMessage(response.status);
+  try {
+    const body = (await response.json()) as { detail?: string | { message?: string }; message?: string };
+    const detail = typeof body.detail === "string" ? body.detail : body.detail?.message;
+    return detail || body.message ? `${fallback}（Backend応答: ${detail || body.message}）` : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function beautifulAiStatusErrorType(status: number): BeautifulAiStatusProbe["errorType"] {
+  if (status === 401) return "auth_required";
+  if (status === 403) return "forbidden";
+  if (status === 404) return "not_found";
+  if (status >= 500) return "backend_error";
+  return "status_error";
 }
 
 export async function getBackendHealthProbe(): Promise<BackendHealthProbe> {
@@ -256,6 +290,10 @@ export async function createBeautifulAiPresentation(payload: BeautifulAiPresenta
     method: "POST",
     body: JSON.stringify(payload)
   });
+}
+
+export function getBeautifulAiOpenUrl(presentation: { editor_url?: string; player_url?: string } | null | undefined) {
+  return presentation?.editor_url || presentation?.player_url || "";
 }
 
 export async function recordBeautifulAiEditorOpened(presentationId: string) {

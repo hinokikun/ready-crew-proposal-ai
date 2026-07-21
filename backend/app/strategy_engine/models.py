@@ -60,6 +60,7 @@ class ProposalStrategyInput(BaseModel):
         "constraints",
         pre=True,
         always=True,
+        allow_reuse=True,
     )
     def normalize_list(cls, value):
         return _as_list(value)
@@ -74,6 +75,7 @@ class ProposalStrategyInput(BaseModel):
         "source_text",
         pre=True,
         always=True,
+        allow_reuse=True,
     )
     def normalize_text(cls, value):
         return _clean_text(value)
@@ -138,7 +140,7 @@ class StrategyBrief(BaseModel):
     human_review_required: bool
     human_review_reasons: List[str] = Field(default_factory=list)
 
-    @validator("confidence")
+    @validator("confidence", allow_reuse=True)
     def confidence_range(cls, value):
         return max(0.0, min(1.0, round(float(value), 2)))
 
@@ -151,7 +153,7 @@ class ReviewOverride(BaseModel):
     value: object
     reason: str = ""
 
-    @validator("field", "reason", pre=True, always=True)
+    @validator("field", "reason", pre=True, always=True, allow_reuse=True)
     def normalize_override_text(cls, value):
         return _clean_text(value)
 
@@ -163,7 +165,7 @@ class HumanReviewResult(BaseModel):
     overrides: List[ReviewOverride] = Field(default_factory=list)
     reviewed_at: Optional[str] = None
 
-    @validator("reviewer", "comment", "reviewed_at", pre=True, always=True)
+    @validator("reviewer", "comment", "reviewed_at", pre=True, always=True, allow_reuse=True)
     def normalize_review_text(cls, value):
         return _clean_text(value)
 

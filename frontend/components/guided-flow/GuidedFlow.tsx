@@ -23,6 +23,8 @@ type GuidedFlowProps = {
   beautifulAiDisabledReason: string;
   beautifulAiError: string;
   beautifulAiIsCreating: boolean;
+  beautifulAiManualUrl?: string;
+  beautifulAiNotice?: string;
   beautifulAiRequirements: BeautifulAiSimpleRequirement[];
   beautifulAiResult?: { editor_url?: string; player_url?: string } | null;
   canCompleteQualityGate: boolean;
@@ -452,6 +454,12 @@ function GuidedFlowBase(props: GuidedFlowProps) {
               requirements={props.beautifulAiRequirements}
               resultLinks={props.beautifulAiResult ? { editorUrl: props.beautifulAiResult.editor_url, playerUrl: props.beautifulAiResult.player_url, onOpen: props.onOpenBeautifulAiUrl } : undefined}
             />
+          )}
+          {props.beautifulAiNotice && <p className="guided-inline-note" role="status">{props.beautifulAiNotice}</p>}
+          {props.beautifulAiManualUrl && (
+            <p className="guided-inline-note" role="status">
+              <a href={props.beautifulAiManualUrl} target="_blank" rel="noreferrer">Beautiful.aiを手動で開く</a>
+            </p>
           )}
           {props.beautifulAiError && <p className="guided-inline-warning" role="alert">{props.beautifulAiError}</p>}
           <StepFooter

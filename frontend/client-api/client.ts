@@ -5,9 +5,10 @@ import { logger } from "@/lib/logger";
 const DEFAULT_API_TIMEOUT_MS = 30000;
 
 type ErrorBody = {
-  detail?: string | { message?: string; error_type?: string; request_id?: string };
+  detail?: string | { message?: string; error_type?: string; error_code?: string; request_id?: string };
   message?: string;
   error_type?: string;
+  error_code?: string;
   request_id?: string;
 };
 
@@ -98,11 +99,14 @@ async function readApiError(response: Response, fallback: string, requestId: str
         ? errorBody.detail
         : errorBody.detail?.message;
     const message = errorBody.message || detailMessage;
+    const errorCode = errorBody.error_code || (typeof errorBody.detail === "object" ? errorBody.detail?.error_code : "") || "";
+    const errorType = errorBody.error_type || (typeof errorBody.detail === "object" ? errorBody.detail?.error_type : "") || "";
     const apiRequestId = errorBody.request_id || (typeof errorBody.detail === "object" ? errorBody.detail?.request_id : "") || requestId;
     const finalRequestHint = apiRequestId ? ` request_id=${apiRequestId}` : requestHint;
+    const codeHint = errorCode || errorType ? ` ${errorCode || errorType}` : "";
     return message
-      ? `${fallback}: ${message}${finalRequestHint}`
-      : `${fallback}: status=${response.status}${finalRequestHint}`;
+      ? `${fallback}: ${message}${codeHint}${finalRequestHint}`
+      : `${fallback}: status=${response.status}${codeHint}${finalRequestHint}`;
   } catch {
     return `${fallback}: status=${response.status}${requestHint}`;
   }

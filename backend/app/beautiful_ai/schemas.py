@@ -121,6 +121,7 @@ class BeautifulAiConnectionTestResponse(BaseModel):
 
 class BeautifulAiSafeError(BaseModel):
     error_type: str
+    error_code: str = ""
     message: str
     fallback_available: bool = True
     request_id: str = ""

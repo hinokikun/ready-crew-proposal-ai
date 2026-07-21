@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from app.routers import analytics as analytics_router
+from app.routers import admin_observability as admin_observability_router
 from app.routers import auth as auth_router
 from app.routers import beautiful_ai as beautiful_ai_router
 from app.routers import briefing as briefing_router
@@ -20,6 +21,8 @@ from app.routers import proposal_optimization as proposal_optimization_router
 from app.routers import quality_gates as quality_gates_router
 from app.routers import releases as releases_router
 from app.routers import reviews as reviews_router
+from app.routers import sales_assistant as sales_assistant_router
+from app.routers import system as system_router
 from app.routers import users as users_router
 from app.routers import workspace as workspace_router
 
@@ -37,6 +40,7 @@ def include_application_routers(app: FastAPI) -> None:
     app.include_router(feedback_router.router)
     app.include_router(integrations_router.router)
     app.include_router(analytics_router.router)
+    app.include_router(admin_observability_router.router)
     app.include_router(knowledge_router.router)
     app.include_router(learning_router.router)
     app.include_router(prompts_router.router)
@@ -47,3 +51,5 @@ def include_application_routers(app: FastAPI) -> None:
     app.include_router(quality_gates_router.router)
     app.include_router(releases_router.router)
     app.include_router(beautiful_ai_router.router)
+    app.include_router(sales_assistant_router.router)
+    app.include_router(system_router.router)

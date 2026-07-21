@@ -8,6 +8,7 @@ import { AdminKnowledgePanel } from "@/components/AdminKnowledgePanel";
 import { AdminOperationReadinessPanel } from "@/components/AdminOperationReadinessPanel";
 import { AdminPilotDashboardPanel } from "@/components/AdminPilotDashboardPanel";
 import { AdminProductAnalyticsPanel } from "@/components/AdminProductAnalyticsPanel";
+import { AdminSalesAssistantPanel } from "@/components/AdminSalesAssistantPanel";
 import { AdminTrialReportPanel } from "@/components/AdminTrialReportPanel";
 import { AdminUsageDashboardPanel } from "@/components/AdminUsageDashboardPanel";
 import { AdminUsersPanel } from "@/components/AdminUsersPanel";
@@ -19,6 +20,8 @@ import { PromptStudio } from "@/components/PromptStudio";
 import { QueueMonitor } from "@/components/QueueMonitor";
 import { SecurityNotice } from "@/components/SecurityNotice";
 import { SettingsPanel } from "@/components/SettingsPanel";
+import { SystemDiagnosticsPanel } from "@/components/SystemDiagnosticsPanel";
+import { SALES_ASSISTANT_FRONTEND_ENABLED } from "@/lib/config";
 import type { CreatableUserRole } from "@/lib/roles";
 
 export type AdminSectionProps = {
@@ -135,6 +138,7 @@ export function AdminSection({
             dbLogCount={dbLogCount}
           />
           <PermissionNotice role={currentUser?.role} />
+          <SystemDiagnosticsPanel />
 
           <section className="trial-check-panel" aria-label="運用準備チェック">
             <div className="section-heading">
@@ -218,6 +222,12 @@ export function AdminSection({
             <summary>Prompt Studio</summary>
             <PromptStudio />
           </details>
+          {SALES_ASSISTANT_FRONTEND_ENABLED && (
+            <details className="advanced-foldout" id="admin-sales-assistant-panel">
+              <summary>AI Sales Assistant / AI営業アシスタント</summary>
+              <AdminSalesAssistantPanel />
+            </details>
+          )}
 
           <p className="admin-menu-category-label">外部連携</p>
           <details className="advanced-foldout" id="admin-integration-panel">

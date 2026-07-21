@@ -5,6 +5,55 @@ export type FriendlyError = {
   action: string;
 };
 
+const userFriendlyErrorMessages: Record<string, string> = {
+  BEAUTIFUL_AI_NOT_CONFIGURED: "Beautiful.aiの設定が完了していません。管理者に設定内容の確認を依頼してください。",
+  BEAUTIFUL_AI_INVALID_API_KEY: "Beautiful.aiのAPIキーが無効です。管理者に設定内容の確認を依頼してください。",
+  BEAUTIFUL_AI_ACCESS_DENIED: "Beautiful.aiのWorkspaceまたはAPI利用権限を確認してください。",
+  BEAUTIFUL_AI_API_ERROR: "Beautiful.aiでプレゼンテーションを作成できませんでした。時間を置いて再度お試しください。",
+  BEAUTIFUL_AI_RATE_LIMIT: "Beautiful.aiの利用上限に達しました。時間を置いて再度お試しください。",
+  BEAUTIFUL_AI_URL_MISSING: "プレゼンテーションは作成されましたが、表示用URLを取得できませんでした。",
+  BEAUTIFUL_AI_VIEW_ONLY_URL: "編集用URLは取得できなかったため、閲覧用URLを開きます。",
+  AUTH_REQUIRED: "ログイン情報の有効期限が切れました。再度ログインしてください。",
+  BACKEND_UNREACHABLE: "Backendに接続できません。Backendが起動しているか確認してください。",
+  REQUEST_TIMEOUT: "通信がタイムアウトしました。時間を置いて再度お試しください。",
+  POPUP_BLOCKED: "新しいタブを開けませんでした。ブラウザでlocalhostのポップアップを許可してください。"
+};
+
+export function getUserFriendlyErrorMessage(error: unknown, fallback = "処理を完了できませんでした。時間を置いて再度お試しください。") {
+  const raw = error instanceof Error ? error.message : String(error ?? "");
+  const normalized = raw.toLowerCase();
+  for (const [code, message] of Object.entries(userFriendlyErrorMessages)) {
+    if (raw.includes(code) || normalized.includes(code.toLowerCase())) {
+      return message;
+    }
+  }
+  if (/beautiful_ai_disabled|beautiful_ai_missing_api_key|beautiful_ai_not_configured|not configured|未設定|設定.*不足/.test(normalized)) {
+    return userFriendlyErrorMessages.BEAUTIFUL_AI_NOT_CONFIGURED;
+  }
+  if (/beautiful_ai_invalid_api_key/i.test(raw)) {
+    return userFriendlyErrorMessages.BEAUTIFUL_AI_INVALID_API_KEY;
+  }
+  if (/beautiful_ai_rate_limit|rate limit|429/i.test(raw)) {
+    return userFriendlyErrorMessages.BEAUTIFUL_AI_RATE_LIMIT;
+  }
+  if (/401|unauthorized|auth_required/.test(normalized)) {
+    return userFriendlyErrorMessages.AUTH_REQUIRED;
+  }
+  if (/beautiful_ai_access_not_enabled|403|forbidden/.test(normalized)) {
+    return "このアカウントまたはWorkspaceではBeautiful.aiを利用できません。権限を確認してください。";
+  }
+  if (/beautiful_ai_timeout|timeout|abort/.test(normalized)) {
+    return userFriendlyErrorMessages.REQUEST_TIMEOUT;
+  }
+  if (/failed to fetch|network|cors|backend|502|503|504/.test(normalized)) {
+    return userFriendlyErrorMessages.BACKEND_UNREACHABLE;
+  }
+  if (/beautiful_ai|beautiful\.ai/.test(normalized)) {
+    return userFriendlyErrorMessages.BEAUTIFUL_AI_API_ERROR;
+  }
+  return fallback;
+}
+
 export function toFriendlyError(error: unknown): FriendlyError {
   const message = error instanceof Error ? error.message : String(error ?? "");
   const normalized = message.toLowerCase();

@@ -2,7 +2,7 @@
 
 import { FormEvent, ReactNode, useEffect, useState } from "react";
 import { Lock, Loader2, ShieldCheck, UserRound } from "lucide-react";
-import { clearAuthToken, getStoredLoginMode, loginWithPassword, saveLoginMode, verifyAuthToken, type LoginMode } from "@/lib/auth";
+import { clearAuthToken, getStoredLoginMode, getStoredUser, loginWithPassword, saveLoginMode, verifyAuthToken, type LoginMode } from "@/lib/auth";
 import { toFriendlyError } from "@/lib/errorMessage";
 
 type AuthGateProps = {
@@ -41,10 +41,17 @@ export function AuthGate({ children }: AuthGateProps) {
   useEffect(() => {
     setLoginMode(getInitialLoginMode());
     let mounted = true;
+    const hadStoredUser = Boolean(getStoredUser());
     verifyAuthToken()
       .then((authenticated) => {
         if (!mounted) return;
         setIsAuthenticated(authenticated);
+        if (!authenticated && hadStoredUser) {
+          clearAuthToken();
+        }
+        if (authenticated || hadStoredUser) {
+          window.dispatchEvent(new Event("ready-crew-auth-changed"));
+        }
       })
       .catch(() => {
         if (!mounted) return;
