@@ -126,6 +126,21 @@ npm.cmd run dev
 
 APIキー、Password、Token、DATABASE_URLの実値はコード、README、ログ、スクリーンショットへ記録しないでください。
 
+### 初期管理者の自動作成
+
+Backend起動時に `INITIAL_ADMIN_EMAIL` と `INITIAL_ADMIN_PASSWORD` が設定されている場合、同じメールアドレスのユーザーがDBに存在しないときだけ `admin` ロールの初期管理者を作成します。既にユーザーが存在する場合、パスワードやRoleは上書きしません。
+
+Renderでは Environment に次を設定してからBackendを再デプロイしてください。
+
+- `INITIAL_ADMIN_EMAIL`
+- `INITIAL_ADMIN_PASSWORD`
+- `APP_AUTH_SECRET`
+- `DATABASE_URL`
+
+`INITIAL_ADMIN_PASSWORD` には本番用の強いパスワードを設定し、ログやスクリーンショットへ表示しないでください。起動ログにはメールアドレスを伏せた作成結果だけが出力されます。
+
+Renderの通常ファイルシステム上にSQLite DBを置くと、デプロイや再起動でDBが失われる可能性があります。本番運用ではRender PostgreSQLを `DATABASE_URL` に設定するか、SQLiteを使う場合は永続ディスク上のパスを指定してください。
+
 ## Feature Flag一覧
 
 | 名称 | デフォルト | 対象画面 | 対象API | 管理者限定 | 依存関係 |

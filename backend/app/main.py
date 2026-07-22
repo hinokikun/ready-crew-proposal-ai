@@ -48,11 +48,14 @@ LOCAL_ENVIRONMENTS = {"local", "development", "dev", "test", "testing"}
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    if get_db_health().get("db_tables_count", 0):
+    db_tables_count = get_db_health().get("db_tables_count", 0)
+    if db_tables_count:
         with get_db() as db:
             ensure_initial_admin(db)
             seed_default_organization(db)
         seed_default_templates()
+    elif settings.initial_admin_email and settings.initial_admin_password:
+        logger.warning("initial_admin_seed_skipped reason=no_database_tables")
     yield
 
 

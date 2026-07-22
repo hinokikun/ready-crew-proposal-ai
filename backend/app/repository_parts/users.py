@@ -1,4 +1,5 @@
 ﻿import importlib.util
+import logging
 import os
 import re
 import uuid
@@ -7,9 +8,13 @@ from datetime import date
 from typing import Any
 
 from app.config import settings
+from app.database.connection import ENGINE_DIALECT
 from app.role_permissions import add_role_display_fields, normalize_role_for_storage
 from app.security import hash_password, verify_password
 from app.repository_parts.shared import _count_rows, _count_rows_in_scope, _feedback_score_metrics, _scope_filter, _scope_label, _scope_value
+
+logger = logging.getLogger(__name__)
+
 
 def row_to_dict(row: Row | None) -> dict[str, Any] | None:
     return dict(row) if row else None
@@ -17,13 +22,88 @@ def row_to_dict(row: Row | None) -> dict[str, Any] | None:
 
 def ensure_initial_admin(db: Connection) -> None:
     if not settings.initial_admin_email or not settings.initial_admin_password:
+        logger.info("initial_admin_seed_skipped reason=missing_environment")
         return
     existing = db.execute("SELECT id FROM users WHERE email = ?", (settings.initial_admin_email,)).fetchone()
     if existing:
+        logger.info("initial_admin_seed_skipped reason=already_exists email=%s", _mask_email(settings.initial_admin_email))
         return
-    db.execute(
+    cursor = db.execute(
         "INSERT INTO users (display_name, email, password_hash, role, is_active) VALUES (?, ?, ?, 'admin', 1)",
         ("Initial Admin", settings.initial_admin_email, hash_password(settings.initial_admin_password)),
+    )
+    user_id = int(getattr(cursor, "lastrowid", 0) or 0)
+    if user_id:
+        _ensure_initial_admin_membership(db, user_id)
+    logger.info("initial_admin_created email=%s role=admin password_stored=false", _mask_email(settings.initial_admin_email))
+
+
+def _mask_email(email: str) -> str:
+    local, separator, domain = email.partition("@")
+    if not separator:
+        return "***"
+    if not local:
+        masked_local = "***"
+    elif len(local) == 1:
+        masked_local = local[0] + "***"
+    else:
+        masked_local = local[0] + "***" + local[-1]
+    return f"{masked_local}@{domain}"
+
+
+def _table_exists(db: Connection, table_name: str) -> bool:
+    if ENGINE_DIALECT == "sqlite":
+        row = db.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+            (table_name,),
+        ).fetchone()
+        return bool(row)
+    if ENGINE_DIALECT == "postgresql":
+        row = db.execute(
+            """
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_name = ?
+            """,
+            (table_name,),
+        ).fetchone()
+        return bool(row)
+    return False
+
+
+def _ensure_initial_admin_membership(db: Connection, user_id: int) -> None:
+    required_tables = ("organizations", "workspaces", "organization_memberships")
+    if not all(_table_exists(db, table_name) for table_name in required_tables):
+        logger.warning("initial_admin_membership_skipped reason=missing_scope_tables")
+        return
+    if ENGINE_DIALECT == "postgresql":
+        db.execute(
+            "INSERT INTO organizations (id, name, slug) VALUES (1, 'Ready Crew', 'ready-crew') ON CONFLICT (slug) DO NOTHING"
+        )
+        db.execute(
+            "INSERT INTO workspaces (id, organization_id, name, slug) VALUES (1, 1, '営業部', 'sales') ON CONFLICT (organization_id, slug) DO NOTHING"
+        )
+        db.execute(
+            """
+            INSERT INTO organization_memberships (user_id, organization_id, workspace_id, membership_role)
+            VALUES (?, 1, 1, 'organization_admin')
+            ON CONFLICT (user_id, organization_id, workspace_id) DO NOTHING
+            """,
+            (user_id,),
+        )
+    else:
+        db.execute("INSERT OR IGNORE INTO organizations (id, name, slug) VALUES (1, 'Ready Crew', 'ready-crew')")
+        db.execute("INSERT OR IGNORE INTO workspaces (id, organization_id, name, slug) VALUES (1, 1, '営業部', 'sales')")
+        db.execute(
+            """
+            INSERT OR IGNORE INTO organization_memberships (user_id, organization_id, workspace_id, membership_role)
+            VALUES (?, 1, 1, 'organization_admin')
+            """,
+            (user_id,),
+        )
+    db.execute(
+        "UPDATE users SET current_organization_id = 1, current_workspace_id = 1 WHERE id = ?",
+        (user_id,),
     )
 
 
