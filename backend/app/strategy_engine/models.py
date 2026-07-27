@@ -139,6 +139,7 @@ class StrategyBrief(BaseModel):
     prohibited_terms: List[str] = Field(default_factory=list)
     human_review_required: bool
     human_review_reasons: List[str] = Field(default_factory=list)
+    sales_strategy_brief: Optional["SalesStrategyBrief"] = None
 
     @validator("confidence", allow_reuse=True)
     def confidence_range(cls, value):
@@ -146,6 +147,117 @@ class StrategyBrief(BaseModel):
 
     class Config:
         use_enum_values = True
+
+
+class DecisionMakerProfile(BaseModel):
+    decision_maker: str
+    focus_points: List[str] = Field(default_factory=list)
+    avoid_expressions: List[str] = Field(default_factory=list)
+    proposal_order: List[str] = Field(default_factory=list)
+
+
+class ExpectedObjection(BaseModel):
+    objection: str
+    reason: str
+    recommended_slide: str
+    recommended_evidence: str
+
+
+class SalesStrategyRisk(BaseModel):
+    category: str
+    item: str
+    reason: str
+
+
+class EvidenceClassification(BaseModel):
+    missing: List[str] = Field(default_factory=list)
+    hypothesis: List[str] = Field(default_factory=list)
+    needs_confirmation: List[str] = Field(default_factory=list)
+    ai_inferred: List[str] = Field(default_factory=list)
+
+
+class SalesStrategyBrief(BaseModel):
+    schema_version: str = "sales_strategy_brief_v1"
+    project_category: str
+    customer_industry: str = ""
+    customer_size: str = "unknown"
+    customer_maturity: str = "unknown"
+    business_model: str = "unknown"
+    decision_maker: str
+    decision_process: str
+    stakeholders: List[str] = Field(default_factory=list)
+    business_goal: str
+    current_situation: str
+    pain_points: List[str] = Field(default_factory=list)
+    urgency: str
+    budget_status: str
+    timeline: str
+    competitive_situation: str
+    proposal_position: str
+    winning_strategy: str
+    expected_objections: List[ExpectedObjection] = Field(default_factory=list)
+    risk_factors: List[SalesStrategyRisk] = Field(default_factory=list)
+    differentiation: List[str] = Field(default_factory=list)
+    recommended_story_type: str
+    recommended_slide_types: List[str] = Field(default_factory=list)
+    recommended_presentation_tone: str
+    executive_summary: str
+    confidence: float
+    human_review_required: bool
+    human_review_reasons: List[str] = Field(default_factory=list)
+    decision_maker_profile: DecisionMakerProfile
+    evidence_classification: EvidenceClassification = Field(default_factory=EvidenceClassification)
+    selection_reasons: List[str] = Field(default_factory=list)
+
+    @validator("confidence", allow_reuse=True)
+    def sales_strategy_confidence_range(cls, value):
+        return max(0.0, min(1.0, round(float(value), 2)))
+
+
+class StrategyWorkspaceChange(BaseModel):
+    field: str
+    ai_value: str = ""
+    edited_value: str = ""
+    changed: bool = False
+
+
+class StrategyScoreItem(BaseModel):
+    key: str
+    label: str
+    score: int
+    reason: str = ""
+
+    @validator("score", allow_reuse=True)
+    def strategy_score_item_range(cls, value):
+        return max(0, min(100, int(value)))
+
+
+class StrategyWorkspaceScore(BaseModel):
+    total: int
+    items: List[StrategyScoreItem] = Field(default_factory=list)
+    changed_field_count: int = 0
+    confirmed_information_count: int = 0
+
+    @validator("total", allow_reuse=True)
+    def strategy_workspace_total_range(cls, value):
+        return max(0, min(100, int(value)))
+
+
+class ProposalStrategyWorkspace(BaseModel):
+    schema_version: str = "proposal_strategy_workspace_v1"
+    status: str = "draft"
+    ai_brief: SalesStrategyBrief
+    edited_brief: SalesStrategyBrief
+    selected_story_id: str = ""
+    selected_tone: str = ""
+    confirmed_information: List[str] = Field(default_factory=list)
+    changes: List[StrategyWorkspaceChange] = Field(default_factory=list)
+    score: Optional[StrategyWorkspaceScore] = None
+
+    @validator("status", allow_reuse=True)
+    def strategy_workspace_status(cls, value):
+        normalized = (value or "draft").strip().lower()
+        return normalized if normalized in {"draft", "review", "approved"} else "draft"
 
 
 class ReviewOverride(BaseModel):
@@ -220,3 +332,6 @@ class PresentationContext(BaseModel):
 
     class Config:
         use_enum_values = True
+
+
+StrategyBrief.update_forward_refs(SalesStrategyBrief=SalesStrategyBrief)

@@ -1,0 +1,687 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "definitions": {
+    "ChartCandidate": {
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "bar",
+        "line",
+        "gauge",
+        "waterfall",
+        "kpi_card"
+      ],
+      "title": "ChartCandidate",
+      "type": "string"
+    },
+    "DiagramCandidate": {
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "comparison_table",
+        "timeline",
+        "roadmap",
+        "process_flow",
+        "hierarchy_tree",
+        "before_after_flow",
+        "kpi_cards",
+        "matrix",
+        "checklist",
+        "architecture_map",
+        "callout",
+        "image_placeholder",
+        "cost_breakdown"
+      ],
+      "title": "DiagramCandidate",
+      "type": "string"
+    },
+    "InformationDensity": {
+      "description": "An enumeration.",
+      "enum": [
+        "insufficient",
+        "low",
+        "medium",
+        "high",
+        "excessive"
+      ],
+      "title": "InformationDensity",
+      "type": "string"
+    },
+    "InformationPriority": {
+      "additionalProperties": false,
+      "properties": {
+        "density": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/InformationDensity"
+            }
+          ],
+          "default": "medium"
+        },
+        "emphasis": {
+          "default": "main_message",
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Emphasis",
+          "type": "string"
+        },
+        "muted_content": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 5,
+          "title": "Muted Content",
+          "type": "array"
+        },
+        "primary_focus": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Primary Focus",
+          "type": "string"
+        },
+        "secondary_focus": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 5,
+          "title": "Secondary Focus",
+          "type": "array"
+        }
+      },
+      "required": [
+        "primary_focus"
+      ],
+      "title": "InformationPriority",
+      "type": "object"
+    },
+    "IntentConfidence": {
+      "description": "An enumeration.",
+      "enum": [
+        "high",
+        "medium",
+        "low",
+        "blocked"
+      ],
+      "title": "IntentConfidence",
+      "type": "string"
+    },
+    "IntentEvaluationDimension": {
+      "additionalProperties": false,
+      "properties": {
+        "issues": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Issues",
+          "type": "array"
+        },
+        "max_score": {
+          "default": 10,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "recommendations": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Recommendations",
+          "type": "array"
+        },
+        "score": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Score",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "score",
+        "reason"
+      ],
+      "title": "IntentEvaluationDimension",
+      "type": "object"
+    },
+    "IntentEvaluationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking_issue_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Blocking Issue Count",
+          "type": "integer"
+        },
+        "dimensions": {
+          "items": {
+            "$ref": "#/definitions/IntentEvaluationDimension"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "title": "Dimensions",
+          "type": "array"
+        },
+        "grade": {
+          "maxLength": 2,
+          "minLength": 1,
+          "title": "Grade",
+          "type": "string"
+        },
+        "max_score": {
+          "default": 100,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "note": {
+          "maxLength": 320,
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        },
+        "total_score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Total Score",
+          "type": "integer"
+        },
+        "warning_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Warning Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_score",
+        "grade",
+        "note"
+      ],
+      "title": "IntentEvaluationResult",
+      "type": "object"
+    },
+    "IntentInputMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "checklist_item_count": {
+          "default": 0,
+          "maximum": 20,
+          "minimum": 0,
+          "title": "Checklist Item Count",
+          "type": "integer"
+        },
+        "comparison_basis_present": {
+          "default": false,
+          "title": "Comparison Basis Present",
+          "type": "boolean"
+        },
+        "hierarchy_basis_present": {
+          "default": false,
+          "title": "Hierarchy Basis Present",
+          "type": "boolean"
+        },
+        "image_evidence_present": {
+          "default": false,
+          "title": "Image Evidence Present",
+          "type": "boolean"
+        },
+        "missing_evidence_count": {
+          "maximum": 30,
+          "minimum": 0,
+          "title": "Missing Evidence Count",
+          "type": "integer"
+        },
+        "numeric_claim_count": {
+          "maximum": 20,
+          "minimum": 0,
+          "title": "Numeric Claim Count",
+          "type": "integer"
+        },
+        "required_evidence_count": {
+          "maximum": 30,
+          "minimum": 0,
+          "title": "Required Evidence Count",
+          "type": "integer"
+        },
+        "supporting_message_count": {
+          "maximum": 20,
+          "minimum": 0,
+          "title": "Supporting Message Count",
+          "type": "integer"
+        },
+        "time_sequence_present": {
+          "default": false,
+          "title": "Time Sequence Present",
+          "type": "boolean"
+        },
+        "total_text_chars": {
+          "maximum": 2000,
+          "minimum": 0,
+          "title": "Total Text Chars",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_text_chars",
+        "supporting_message_count",
+        "required_evidence_count",
+        "missing_evidence_count",
+        "numeric_claim_count"
+      ],
+      "title": "IntentInputMetrics",
+      "type": "object"
+    },
+    "IntentValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "field_path": {
+          "maxLength": 180,
+          "minLength": 1,
+          "title": "Field Path",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "related_slide_id": {
+          "maxLength": 120,
+          "title": "Related Slide Id",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/definitions/ValidationSeverity"
+        },
+        "suggestion": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Suggestion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "field_path",
+        "message",
+        "suggestion"
+      ],
+      "title": "IntentValidationIssue",
+      "type": "object"
+    },
+    "IntentValidationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "issues": {
+          "items": {
+            "$ref": "#/definitions/IntentValidationIssue"
+          },
+          "maxItems": 60,
+          "title": "Issues",
+          "type": "array"
+        },
+        "valid": {
+          "title": "Valid",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "valid"
+      ],
+      "title": "IntentValidationResult",
+      "type": "object"
+    },
+    "IntentWarning": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "maxLength": 260,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "severity": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/ValidationSeverity"
+            }
+          ],
+          "default": "warning"
+        },
+        "suggestion": {
+          "maxLength": 260,
+          "minLength": 1,
+          "title": "Suggestion",
+          "type": "string"
+        },
+        "warning_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Warning Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "warning_id",
+        "message",
+        "suggestion"
+      ],
+      "title": "IntentWarning",
+      "type": "object"
+    },
+    "LayoutConstraint": {
+      "description": "An enumeration.",
+      "enum": [
+        "keep_single_message",
+        "no_layout_generated",
+        "require_numeric_evidence",
+        "show_evidence_gap",
+        "split_if_dense",
+        "avoid_fake_numbers",
+        "image_placeholder_only",
+        "keep_cta_visible"
+      ],
+      "title": "LayoutConstraint",
+      "type": "string"
+    },
+    "ReadingOrder": {
+      "description": "An enumeration.",
+      "enum": [
+        "title_first",
+        "top_to_bottom",
+        "left_to_right",
+        "center_out",
+        "z_pattern",
+        "before_after",
+        "timeline",
+        "hierarchy",
+        "scan_cards"
+      ],
+      "title": "ReadingOrder",
+      "type": "string"
+    },
+    "SlideIntentType": {
+      "description": "An enumeration.",
+      "enum": [
+        "frame_decision",
+        "summarize",
+        "align_context",
+        "explain_problem",
+        "share_insight",
+        "compare_options",
+        "recommend_action",
+        "prove_value",
+        "explain_investment",
+        "show_plan",
+        "explain_process",
+        "show_hierarchy",
+        "reduce_risk",
+        "close_next_step"
+      ],
+      "title": "SlideIntentType",
+      "type": "string"
+    },
+    "SlideType": {
+      "description": "An enumeration.",
+      "enum": [
+        "cover",
+        "agenda",
+        "executive_summary",
+        "problem",
+        "current_state",
+        "analysis",
+        "comparison",
+        "proposal",
+        "feature",
+        "benefit",
+        "timeline",
+        "roadmap",
+        "estimate",
+        "kpi",
+        "case_study",
+        "risk",
+        "faq",
+        "summary",
+        "next_action",
+        "closing",
+        "appendix"
+      ],
+      "title": "SlideType",
+      "type": "string"
+    },
+    "ValidationSeverity": {
+      "description": "An enumeration.",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "title": "ValidationSeverity",
+      "type": "string"
+    },
+    "VisualPattern": {
+      "description": "An enumeration.",
+      "enum": [
+        "hero",
+        "summary_cards",
+        "callout",
+        "comparison",
+        "kpi_cards",
+        "timeline",
+        "roadmap",
+        "process",
+        "hierarchy",
+        "checklist",
+        "image_dominant",
+        "text_dominant",
+        "number_dominant",
+        "table",
+        "matrix"
+      ],
+      "title": "VisualPattern",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "chart_candidate": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ChartCandidate"
+        }
+      ],
+      "default": "none"
+    },
+    "connected_to_runtime": {
+      "default": false,
+      "title": "Connected To Runtime",
+      "type": "boolean"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "deck_id": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Deck Id",
+      "type": "string"
+    },
+    "diagram_candidate": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/DiagramCandidate"
+        }
+      ],
+      "default": "none"
+    },
+    "evaluation_result": {
+      "$ref": "#/definitions/IntentEvaluationResult"
+    },
+    "generated_chart": {
+      "default": false,
+      "title": "Generated Chart",
+      "type": "boolean"
+    },
+    "generated_diagram": {
+      "default": false,
+      "title": "Generated Diagram",
+      "type": "boolean"
+    },
+    "generated_pptx": {
+      "default": false,
+      "title": "Generated Pptx",
+      "type": "boolean"
+    },
+    "generated_slide_blueprint": {
+      "default": false,
+      "title": "Generated Slide Blueprint",
+      "type": "boolean"
+    },
+    "information_priority": {
+      "$ref": "#/definitions/InformationPriority"
+    },
+    "input_fingerprint": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Input Fingerprint",
+      "type": "string"
+    },
+    "input_metrics": {
+      "$ref": "#/definitions/IntentInputMetrics"
+    },
+    "intent_confidence": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/IntentConfidence"
+        }
+      ],
+      "default": "medium"
+    },
+    "intent_id": {
+      "maxLength": 140,
+      "minLength": 1,
+      "title": "Intent Id",
+      "type": "string"
+    },
+    "layout_constraint": {
+      "items": {
+        "$ref": "#/definitions/LayoutConstraint"
+      },
+      "maxItems": 12,
+      "type": "array"
+    },
+    "reading_order": {
+      "$ref": "#/definitions/ReadingOrder"
+    },
+    "rendering_hint": {
+      "maxLength": 280,
+      "minLength": 1,
+      "title": "Rendering Hint",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "pe2_slide_intent_v1",
+      "default": "pe2_slide_intent_v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "slide_blueprint_id": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Slide Blueprint Id",
+      "type": "string"
+    },
+    "slide_intent": {
+      "$ref": "#/definitions/SlideIntentType"
+    },
+    "slide_intent_version": {
+      "const": "pe2_slide_intent_v1",
+      "default": "pe2_slide_intent_v1",
+      "title": "Slide Intent Version",
+      "type": "string"
+    },
+    "slide_order": {
+      "maximum": 200,
+      "minimum": 0,
+      "title": "Slide Order",
+      "type": "integer"
+    },
+    "slide_type": {
+      "$ref": "#/definitions/SlideType"
+    },
+    "source_evidence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 24,
+      "title": "Source Evidence Ids",
+      "type": "array"
+    },
+    "source_message_design_id": {
+      "maxLength": 140,
+      "minLength": 1,
+      "title": "Source Message Design Id",
+      "type": "string"
+    },
+    "validation_result": {
+      "$ref": "#/definitions/IntentValidationResult"
+    },
+    "visual_pattern_candidate": {
+      "$ref": "#/definitions/VisualPattern"
+    },
+    "warnings": {
+      "items": {
+        "$ref": "#/definitions/IntentWarning"
+      },
+      "maxItems": 12,
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "intent_id",
+    "deck_id",
+    "slide_blueprint_id",
+    "source_message_design_id",
+    "slide_order",
+    "slide_intent",
+    "slide_type",
+    "information_priority",
+    "reading_order",
+    "visual_pattern_candidate",
+    "rendering_hint",
+    "input_metrics",
+    "input_fingerprint",
+    "created_at"
+  ],
+  "title": "Presentation Engine 2.0 Slide Intent",
+  "type": "object",
+  "x-phase": "phase2d"
+}

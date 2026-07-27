@@ -32,6 +32,10 @@ import { CreationHistoryPanel } from "@/components/CreationHistoryPanel";
 import { CrmPanel } from "@/components/CrmPanel";
 import { Dashboard } from "@/components/Dashboard";
 import { Header } from "@/components/Header";
+import { ProposalAgentDashboard } from "@/components/ProposalAgentDashboard";
+import { ProposalExperienceNav } from "@/components/proposal-experience/ProposalExperienceNav";
+import { ProposalExperienceStudio } from "@/components/proposal-experience/ProposalExperienceStudio";
+import type { PresentationTemplateId, ProposalExperienceView } from "@/components/proposal-experience/types";
 import type { HealthSnapshot } from "@/components/HealthStatus";
 import { PresentationReviewPanel } from "@/components/PresentationReviewPanel";
 import { ProposalOptimizationPanel } from "@/components/ProposalOptimizationPanel";
@@ -140,10 +144,11 @@ import { getUserFriendlyErrorMessage, toFriendlyError } from "@/lib/errorMessage
 import { logger } from "@/lib/logger";
 import { downloadEstimatePdf } from "@/lib/pdf";
 import { downloadProposalPowerPoint, downloadSummaryProposalPowerPoint } from "@/lib/pptx";
+import type { PresentationLayoutDecisionRequest, PresentationQualityDownloadReport, PresentationQualityRequestState } from "@/lib/pptx";
 import { canUseWorkFeatures, getRoleLabel, isAdminRole, isManagerCompatibleRole, type CreatableUserRole } from "@/lib/roles";
 import { appendUsageLog, buildScopedStorageKey, readUsageLogs, type UsageLogEntry } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
-import type { AnalysisResponse, ProposalRequest } from "@/types/proposal";
+import type { AnalysisResponse, PowerPointData, ProposalRequest } from "@/types/proposal";
 
 import {
   MAX_ASSISTANT_QUESTIONS,
@@ -347,6 +352,11 @@ export default function Home() {
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [isUatMode, setIsUatMode] = useState(false);
   const [isSimpleDetailMode, setIsSimpleDetailMode] = useState(false);
+  const [experienceView, setExperienceView] = useState<ProposalExperienceView>("home");
+  const [isExperienceSidebarCollapsed, setIsExperienceSidebarCollapsed] = useState(false);
+  const [isExperienceMobileOpen, setIsExperienceMobileOpen] = useState(false);
+  const [selectedPresentationTemplate, setSelectedPresentationTemplate] = useState<PresentationTemplateId>("corporate_clean");
+  const [lastPresentationQualityReport, setLastPresentationQualityReport] = useState<PresentationQualityDownloadReport | null>(null);
   const autoAnalyzeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoReviewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAutoAnalyzedSourceRef = useRef("");
@@ -392,6 +402,21 @@ export default function Home() {
       setIsSimpleDetailMode(false);
     }
   }, [currentUser, currentUser?.role, isUatMode]);
+
+  useEffect(() => {
+    if (!currentUser) {
+      setExperienceView("home");
+      setIsExperienceMobileOpen(false);
+      return;
+    }
+    if (experienceView === "admin" && !isAdminRole(currentUser.role)) {
+      setExperienceView("home");
+      return;
+    }
+    if ((experienceView === "analytics" || experienceView === "settings") && !isManagerCompatibleRole(currentUser.role)) {
+      setExperienceView("home");
+    }
+  }, [currentUser, currentUser?.role, experienceView]);
 
   useEffect(() => {
     if (!result) {
@@ -1763,7 +1788,12 @@ export default function Home() {
     downloadTextFile(buildExportMarkdown(targetResult.markdown, targetForm), `${sanitizeFileName(clientName)}_提案書初稿.md`);
   }
 
-  async function downloadPowerPointFor(targetResult: AnalysisResponse, targetForm: ProposalRequest, summary: boolean) {
+  async function downloadPowerPointFor(
+    targetResult: AnalysisResponse,
+    targetForm: ProposalRequest,
+    summary: boolean,
+    options: { powerpointData?: PowerPointData; qualityState?: PresentationQualityRequestState; layoutDecisions?: PresentationLayoutDecisionRequest[] } = {}
+  ) {
     if (isMaintenanceMode) {
       showMaintenanceError();
       return;
@@ -1788,8 +1818,8 @@ export default function Home() {
 
     try {
       const downloader = summary ? downloadSummaryProposalPowerPoint : downloadProposalPowerPoint;
-      await downloader(
-        targetResult.powerpoint_generation_data,
+      const downloadResult = await downloader(
+        options.powerpointData ?? targetResult.powerpoint_generation_data,
         targetResult.analysis.win_probability,
         targetForm.project_brief,
         targetForm.client_company_info,
@@ -1805,8 +1835,10 @@ export default function Home() {
         targetForm.budget_range,
         targetForm.own_service_info,
         targetForm.past_proposal_template,
-        targetForm.case_studies
+        targetForm.case_studies,
+        { designTemplate: selectedPresentationTemplate, qualityState: options.qualityState, layoutDecisions: options.layoutDecisions }
       );
+      setLastPresentationQualityReport(downloadResult.qualityReport);
       trackEvent({
         name: downloadEventName,
         feature: downloadFeatureName,
@@ -1842,9 +1874,9 @@ export default function Home() {
     }
   }
 
-  async function downloadPowerPoint() {
+  async function downloadPowerPoint(powerpointData?: PowerPointData, qualityState?: PresentationQualityRequestState, layoutDecisions?: PresentationLayoutDecisionRequest[]) {
     if (!result) return;
-    await downloadPowerPointFor(result, form, false);
+    await downloadPowerPointFor(result, form, false, { powerpointData, qualityState, layoutDecisions });
   }
 
   async function downloadSummaryPowerPoint() {
@@ -2514,9 +2546,70 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
     });
   }, []);
 
+  const experienceViewCopy: Record<ProposalExperienceView, { title: string; description: string }> = {
+    home: {
+      title: "ホーム",
+      description: "今日確認すべき提案、最近の案件、次のアクションをまとめて確認できます。"
+    },
+    "new-proposal": {
+      title: "新規提案",
+      description: "Prompt Builderで必要情報を整理し、従来の提案生成へ安全につなぎます。"
+    },
+    editor: {
+      title: "提案エディター",
+      description: "Story Engineと3ペイン編集で、PPT生成前に構成とメッセージを確認します。"
+    },
+    history: {
+      title: "提案履歴",
+      description: "作成済み提案、出力履歴、研修提出用CSVを確認します。"
+    },
+    projects: {
+      title: "案件一覧",
+      description: "CRMの案件状態と作成履歴を確認し、再開すべき案件を探します。"
+    },
+    assistant: {
+      title: "AI営業秘書",
+      description: "Proposal AgentとCopilotで、次に取るべき営業アクションを確認します。"
+    },
+    templates: {
+      title: "テンプレート",
+      description: "PowerPointの提案テンプレートを選び、資料の見た目を提案内容に合わせます。"
+    },
+    analytics: {
+      title: "分析",
+      description: "営業KPI、生成履歴、Beautiful.ai利用状況を管理者・マネージャー向けに確認します。"
+    },
+    improvement: {
+      title: "業務改善",
+      description: "研修提出用の短縮率、削減時間、品質変化を確認します。"
+    },
+    admin: {
+      title: "管理",
+      description: "ユーザー、監査、診断、UATを管理者向けに確認します。"
+    },
+    settings: {
+      title: "設定",
+      description: "Workspace、詳細診断、連携状態を確認します。"
+    }
+  };
+  const currentExperienceCopy = experienceViewCopy[experienceView];
+  const showExperienceStudio = experienceView === "new-proposal" || experienceView === "editor" || experienceView === "templates";
+  const showProposalAgentDashboard = experienceView === "home" || experienceView === "assistant";
+  const showGuidedFlow = experienceView === "home" || experienceView === "new-proposal";
+  const showHistoryPanel = experienceView === "home" || experienceView === "history" || experienceView === "projects" || experienceView === "improvement";
+  const showProjectsPanel = experienceView === "projects";
+  const showOperationsDashboard =
+    currentUser &&
+    isGuidedDetailMode &&
+    (experienceView === "home" || experienceView === "analytics" || experienceView === "admin" || experienceView === "settings");
+
   return (
     <AuthGate>
-    <main className={`app-shell ${isDarkMode ? "dark-mode" : ""} ${isGuidedDetailMode ? "guided-detail-mode" : "guided-normal-mode"}`}>
+    <main
+      className={`app-shell v80-experience-shell ${isDarkMode ? "dark-mode" : ""} ${
+        isGuidedDetailMode ? "guided-detail-mode" : "guided-normal-mode"
+      } ${isExperienceSidebarCollapsed ? "v80-sidebar-collapsed" : ""}`}
+    >
       <Header isDarkMode={isDarkMode} onToggleDarkMode={() => setIsDarkMode((current) => !current)} onLogout={handleLogout} />
       {currentUser && (
         <WorkspaceSwitcher
@@ -2540,6 +2633,31 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           <strong>メンテナンス中</strong>
           <span>新規作成・PPT/PDF作成は一時停止しています。履歴確認、CRM、管理画面は利用できます。</span>
         </section>
+      )}
+      {currentUser && (
+        <>
+          <ProposalExperienceNav
+            activeView={experienceView}
+            collapsed={isExperienceSidebarCollapsed}
+            mobileOpen={isExperienceMobileOpen}
+            role={currentUser.role}
+            workspaceName={workspaceContext?.current?.workspace_name || "営業部"}
+            organizationName={workspaceContext?.current?.organization_name || "Ready Crew"}
+            onChangeView={(view) => {
+              setExperienceView(view);
+              if (view === "admin" || view === "analytics" || view === "settings") {
+                setIsSimpleDetailMode(true);
+              }
+            }}
+            onToggleCollapsed={() => setIsExperienceSidebarCollapsed((current) => !current)}
+            onToggleMobile={() => setIsExperienceMobileOpen((current) => !current)}
+          />
+          <section className="v80-page-intro" aria-label="現在の画面">
+            <p className="eyebrow">Proposal Experience Edition</p>
+            <h1>{currentExperienceCopy.title}</h1>
+            <p>{currentExperienceCopy.description}</p>
+          </section>
+        </>
       )}
       {currentUser && isGuidedDetailMode && <ReleaseUpdatesPanel />}
       {currentUser && isGuidedDetailMode && (
@@ -2566,7 +2684,45 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
         />
       )}
 
-      {currentUser && (
+      {currentUser && showProposalAgentDashboard && (
+        <ProposalAgentDashboard
+          beautifulAiUrl={beautifulAiResult ? getBeautifulAiOpenUrl(beautifulAiResult) : ""}
+          canCreateBeautifulAi={canCreateBeautifulAiOutput}
+          canDownloadOutputs={canDownloadMainOutputs}
+          hasProposal={Boolean(result)}
+          isCreatingBeautifulAi={isCreatingBeautifulAi}
+          isGenerating={isLoading}
+          onCreateBeautifulAi={() => createBeautifulAiCurrent()}
+          onDownloadPdf={() => downloadEstimatePdfCurrent()}
+          onDownloadPowerPoint={() => downloadPowerPoint()}
+          onOneClickGenerate={() => generateFromGuidedFlow()}
+          onOpenCrm={() => setExperienceView("projects")}
+          onSourceTextChange={handleSourceTextChange}
+          sourceText={rawSourceText}
+          summaryItems={guidedSummaryItems}
+        />
+      )}
+
+      {currentUser && showExperienceStudio && (
+        <ProposalExperienceStudio
+          sourceText={rawSourceText}
+          result={result}
+          isGenerating={isLoading}
+          canGenerate={canGenerate}
+          canDownloadOutputs={canDownloadMainOutputs}
+          canCreateBeautifulAi={canCreateBeautifulAiOutput}
+          selectedTemplate={selectedPresentationTemplate}
+          onTemplateChange={setSelectedPresentationTemplate}
+          onSourceTextChange={handleSourceTextChange}
+          onGenerate={() => generateFromGuidedFlow()}
+          onDownloadPowerPoint={(powerpointData, qualityState, layoutDecisions) => downloadPowerPoint(powerpointData, qualityState, layoutDecisions)}
+          onDownloadPdf={() => downloadEstimatePdfCurrent()}
+          onCreateBeautifulAi={() => createBeautifulAiCurrent()}
+          lastPptxQualityReport={lastPresentationQualityReport}
+        />
+      )}
+
+      {currentUser && showGuidedFlow && (
         <GuidedFlow
           beautifulAiCanCreate={canCreateBeautifulAiOutput}
           beautifulAiDisabledReason={beautifulAiSimpleDisabledReason}
@@ -2597,7 +2753,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           onGenerate={() => generateFromGuidedFlow()}
           onNewCase={resetChat}
           onOpenBeautifulAiUrl={openBeautifulAiUrl}
-          onOpenCrm={() => openDetailsPanel("dashboard-panel")}
+          onOpenCrm={() => setExperienceView("projects")}
           onRetry={lastDownloadRetry ? () => void retryLastDownload() : undefined}
           onShowGuide={() => setShowGuideTutorial(true)}
           onSourceTextChange={handleSourceTextChange}
@@ -2621,9 +2777,15 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
         />
       )}
 
-      {currentUser && <CreationHistoryPanel />}
+      {currentUser && showProjectsPanel && (
+        <section className="v80-view-panel" aria-label="案件一覧">
+          <CrmPanel customers={crmCustomers} projects={crmProjects} currentRole={currentUser.role} onChanged={() => void refreshAccountData()} />
+        </section>
+      )}
 
-      {currentUser && isGuidedDetailMode && (
+      {currentUser && showHistoryPanel && <CreationHistoryPanel />}
+
+      {showOperationsDashboard && (
         <RealOperationsDashboard
           projects={crmProjects}
           history={history}
@@ -2873,7 +3035,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
                     <button
                       className="ppt-download-button"
                       type="button"
-                      onClick={downloadPowerPoint}
+                      onClick={() => downloadPowerPoint()}
                       disabled={!canDownloadMainOutputs || isDownloadingPowerPoint || isDownloadingSummaryPowerPoint || isDownloadingEstimatePdf || isCreatingBeautifulAi}
                     >
                       {isDownloadingPowerPoint ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <FileDown size={18} aria-hidden="true" />}

@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "definitions": {
+    "AlphaPipelineStage": {
+      "description": "An enumeration.",
+      "enum": [
+        "input",
+        "deck_planner",
+        "deck_validation",
+        "evidence_planner",
+        "evidence_validation",
+        "message_designer",
+        "message_validation",
+        "cross_module_validation",
+        "evaluation",
+        "reporting"
+      ],
+      "title": "AlphaPipelineStage",
+      "type": "string"
+    },
+    "AlphaValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "case_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Case Id",
+          "type": "string"
+        },
+        "code": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "evidence_id": {
+          "maxLength": 160,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "field_path": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Field Path",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 320,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 320,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/definitions/AlphaValidationSeverity"
+        },
+        "slide_id": {
+          "maxLength": 160,
+          "title": "Slide Id",
+          "type": "string"
+        },
+        "source_module": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Source Module",
+          "type": "string"
+        },
+        "stage": {
+          "$ref": "#/definitions/AlphaPipelineStage"
+        },
+        "suggestion": {
+          "maxLength": 320,
+          "minLength": 1,
+          "title": "Suggestion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "stage",
+        "field_path",
+        "case_id",
+        "message",
+        "reason",
+        "suggestion",
+        "source_module"
+      ],
+      "title": "AlphaValidationIssue",
+      "type": "object"
+    },
+    "AlphaValidationSeverity": {
+      "description": "An enumeration.",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "title": "AlphaValidationSeverity",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "checked_stage_count": {
+      "default": 4,
+      "minimum": 0,
+      "title": "Checked Stage Count",
+      "type": "integer"
+    },
+    "failed_stage_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Failed Stage Count",
+      "type": "integer"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/definitions/AlphaValidationIssue"
+      },
+      "maxItems": 120,
+      "title": "Issues",
+      "type": "array"
+    },
+    "passed_stage_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Passed Stage Count",
+      "type": "integer"
+    },
+    "valid": {
+      "title": "Valid",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "valid"
+  ],
+  "title": "Presentation Engine 2.0 Cross Module Validation",
+  "type": "object",
+  "x-phase": "alpha-integration"
+}

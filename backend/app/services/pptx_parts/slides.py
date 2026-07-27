@@ -62,7 +62,9 @@ from app.services.pptx_design.components import (
 )
 from app.services.pptx_design.icons import icon_labels_for_category
 from app.services.pptx_design.diagrams import architecture_nodes_for_category
-from app.services.pptx_theme import COLORS, MARGIN_X, SECTION_COLORS, SLIDE_HEIGHT, SLIDE_WIDTH
+from app.services.pptx_layout_integration import layout_id_from_layout_key
+from app.services.pptx_quality import extract_numbers
+from app.services.pptx_theme import COLORS, MARGIN_X, SECTION_COLORS, SLIDE_HEIGHT, SLIDE_WIDTH, resolve_template_colors
 
 
 def _split_metric_text(value: str) -> tuple[str, str]:
@@ -75,6 +77,229 @@ def _split_metric_text(value: str) -> tuple[str, str]:
     return value, "要確認"
 
 
+def _layout_items(slide_data: PowerPointSlide, count: int, fallback: list[str] | None = None) -> list[str]:
+    fallback_items = fallback or [f"{slide_data.title or 'Review point'} {index + 1}" for index in range(count)]
+    return ensure_items(unique_items(slide_data.bullets, count), fallback_items, count)
+
+
+def _layout_numbers(slide_data: PowerPointSlide, count: int = 4) -> list[str]:
+    body = "\n".join([slide_data.title, *slide_data.bullets])
+    return unique_items(extract_numbers(body), count)
+
+
+def _layout_accent(index: int = 0) -> str:
+    return SECTION_COLORS[index % len(SECTION_COLORS)]
+
+
+def _add_layout_header(slide, slide_data: PowerPointSlide, section: str, accent: str | None = None) -> None:
+    add_header(slide, slide_data.title or section.title(), section, accent=accent or _layout_accent())
+
+
+def render_title_only(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    add_section_label(slide, "TITLE", 0.9, 0.62, fill=COLORS["navy"], color=COLORS["white"])
+    add_title(slide, slide_data.title, 1.05, 2.35, 11.15, 0.9, size=34, color=COLORS["navy"])
+    if slide_data.bullets:
+        add_insight_band(slide, "Message", slide_data.bullets[0], 1.05, 4.05, 11.05, 0.78)
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_title_body(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "MESSAGE", COLORS["blue"])
+    add_bullet_list(slide, slide_data.bullets, 0.95, 1.8, 7.8, 3.85, max_items=5, size=15)
+    add_visual_frame(slide, slide_data.visual_suggestion or "diagram placeholder", 9.05, 1.82, 3.2, 3.82)
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_two_column(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "TWO COLUMN", COLORS["teal"])
+    items = _layout_items(slide_data, 6)
+    midpoint = max(1, (len(items) + 1) // 2)
+    add_card(slide, "Point A", "", 0.95, 1.72, 5.45, 3.85, COLORS["blue"], COLORS["white"])
+    add_card(slide, "Point B", "", 6.78, 1.72, 5.45, 3.85, COLORS["teal"], COLORS["white"])
+    add_bullet_list(slide, items[:midpoint], 1.24, 2.35, 4.88, 2.65, max_items=4, size=13)
+    add_bullet_list(slide, items[midpoint:], 7.08, 2.35, 4.88, 2.65, max_items=4, size=13)
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_three_column(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "THREE COLUMN", COLORS["purple"])
+    items = _layout_items(slide_data, 3)
+    for idx, item in enumerate(items[:3]):
+        add_card(slide, f"Theme {idx + 1}", item, 0.95 + idx * 3.88, 1.86, 3.42, 3.35, _layout_accent(idx), COLORS["white"], str(idx + 1))
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_hero(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    add_cover_slide(prs, slide_data, data, context)
+
+
+def render_kpi_cards(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "KPI", COLORS["green"])
+    numbers = _layout_numbers(slide_data, 4)
+    items = _layout_items(slide_data, 4)
+    if numbers:
+        for idx, value in enumerate(numbers[:4]):
+            add_metric_card(slide, f"Metric {idx + 1}", value, 0.95 + idx * 2.88, 1.72, 2.5, 1.45, _layout_accent(idx))
+        add_bullet_list(slide, items, 1.0, 3.72, 11.2, 1.65, max_items=5, size=13)
+    else:
+        for idx, item in enumerate(items[:4]):
+            add_card(slide, f"KPI Design {idx + 1}", item, 0.95 + idx * 2.88, 1.72, 2.5, 2.35, _layout_accent(idx), COLORS["white"])
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_comparison_table(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "COMPARISON", COLORS["blue"])
+    items = _layout_items(slide_data, 4)
+    rows = [[f"View {idx + 1}", item, "Confirm"] for idx, item in enumerate(items[:4])]
+    add_table(slide, ["Axis", "Current / Proposal", "Check"], rows, 0.95, 1.78, 11.45, 3.42, [1.65, 7.05, 2.75])
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_timeline(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "TIMELINE", COLORS["teal"])
+    items = _layout_items(slide_data, 5)
+    add_timeline(slide, items, 0.95, 2.02, 11.55)
+    for idx, item in enumerate(items[:5]):
+        add_card(slide, f"Step {idx + 1}", item, 0.95 + idx * 2.3, 4.28, 2.05, 1.05, _layout_accent(idx), COLORS["white"])
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_roadmap(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "ROADMAP", COLORS["orange"])
+    items = _layout_items(slide_data, 5)
+    add_timeline(slide, items, 0.92, 1.95, 11.6)
+    add_insight_band(slide, "Decision Gate", items[-1], 0.95, 5.42, 11.45, 0.72)
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_flow(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "FLOW", COLORS["purple"])
+    items = _layout_items(slide_data, 5)
+    add_step_flow(slide, items, 0.95, 2.05, 11.35, 1.65)
+    add_side_panel(slide, "Review", items[:4], 8.85, 4.18, 3.38, 1.68, COLORS["teal"])
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_matrix(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "MATRIX", COLORS["orange"])
+    items = _layout_items(slide_data, 4)
+    positions = [(0.95, 1.78), (6.72, 1.78), (0.95, 4.12), (6.72, 4.12)]
+    labels = ["High priority", "High impact", "Needs review", "Low priority"]
+    for idx, (x, y) in enumerate(positions):
+        add_card(slide, labels[idx], items[idx], x, y, 5.32, 1.42, _layout_accent(idx), COLORS["white"])
+    add_shape(slide, MSO_SHAPE.RECTANGLE, 6.48, 1.58, 0.03, 4.22, fill=COLORS["line_dark"], line=COLORS["line_dark"])
+    add_shape(slide, MSO_SHAPE.RECTANGLE, 0.9, 3.75, 11.52, 0.03, fill=COLORS["line_dark"], line=COLORS["line_dark"])
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_quote(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "QUOTE", COLORS["teal"])
+    quote = slide_data.bullets[0] if slide_data.bullets else slide_data.title
+    add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, 1.25, 2.05, 10.78, 2.36, fill=COLORS["canvas"], line=COLORS["line"])
+    add_text(slide, _trim(quote, 92), 1.78, 2.68, 9.72, 0.68, size=24, color=COLORS["navy"], bold=True, align=PP_ALIGN.CENTER)
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_image_left(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "IMAGE LEFT", COLORS["blue"])
+    add_visual_frame(slide, slide_data.visual_suggestion or "image placeholder", 0.95, 1.78, 4.55, 3.9)
+    add_bullet_list(slide, slide_data.bullets, 6.05, 1.9, 5.8, 3.55, max_items=5, size=14)
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_image_right(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "IMAGE RIGHT", COLORS["blue"])
+    add_bullet_list(slide, slide_data.bullets, 0.95, 1.9, 5.8, 3.55, max_items=5, size=14)
+    add_visual_frame(slide, slide_data.visual_suggestion or "image placeholder", 7.18, 1.78, 4.55, 3.9)
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_large_number(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "NUMBER", COLORS["green"])
+    numbers = _layout_numbers(slide_data, 1)
+    items = _layout_items(slide_data, 4)
+    if numbers:
+        add_text(slide, numbers[0], 0.95, 2.02, 4.2, 0.9, size=46, color=COLORS["green"], bold=True, align=PP_ALIGN.CENTER)
+        add_text(slide, _trim(items[0], 52), 0.95, 3.05, 4.2, 0.48, size=18, color=COLORS["navy"], bold=True, align=PP_ALIGN.CENTER)
+        add_bullet_list(slide, items[1:], 5.85, 2.0, 5.75, 2.35, max_items=4, size=14)
+    else:
+        add_bullet_list(slide, items, 1.0, 2.1, 11.1, 2.6, max_items=4, size=18)
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_checklist(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    _add_layout_header(slide, slide_data, "CHECKLIST", COLORS["teal"])
+    items = _layout_items(slide_data, 6)
+    for idx, item in enumerate(items[:6]):
+        x = 0.95 + (idx % 2) * 5.78
+        y = 1.72 + (idx // 2) * 1.32
+        add_shape(slide, MSO_SHAPE.OVAL, x, y + 0.12, 0.34, 0.34, fill=_layout_accent(idx), line=_layout_accent(idx))
+        add_text(slide, str(idx + 1), x + 0.01, y + 0.2, 0.32, 0.1, size=8, color=COLORS["white"], bold=True, align=PP_ALIGN.CENTER)
+        add_text(slide, _trim(item, 54), x + 0.52, y + 0.1, 4.9, 0.38, size=15, color=COLORS["text"], bold=True)
+    add_footer(slide, slide_data.slide_no)
+
+
+def render_closing(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    add_section_label(slide, "NEXT", 0.9, 0.72, fill=COLORS["navy"], color=COLORS["white"])
+    add_title(slide, slide_data.title or "Next Action", 1.02, 1.34, 11.15, 0.64, size=32, color=COLORS["navy"])
+    add_next_action_cards(slide, _layout_items(slide_data, 4), 0.92, 2.42, 11.55)
+    add_insight_band(slide, "Decision", "Confirm the next action and owner before moving forward.", 0.95, 5.48, 11.42, 0.72)
+    add_footer(slide, slide_data.slide_no)
+
+
+LAYOUT_RENDERER_REGISTRY = {
+    "LAYOUT-001": render_title_only,
+    "LAYOUT-002": render_title_body,
+    "LAYOUT-003": render_two_column,
+    "LAYOUT-004": render_three_column,
+    "LAYOUT-005": render_hero,
+    "LAYOUT-006": render_kpi_cards,
+    "LAYOUT-007": render_comparison_table,
+    "LAYOUT-008": render_timeline,
+    "LAYOUT-009": render_roadmap,
+    "LAYOUT-010": render_flow,
+    "LAYOUT-011": render_matrix,
+    "LAYOUT-012": render_quote,
+    "LAYOUT-013": render_image_left,
+    "LAYOUT-014": render_image_right,
+    "LAYOUT-015": render_large_number,
+    "LAYOUT-016": render_checklist,
+    "LAYOUT-017": render_closing,
+}
+
+
 def add_designed_slide(
     prs: Presentation,
     slide_data: PowerPointSlide,
@@ -82,6 +307,12 @@ def add_designed_slide(
     index: int,
     context: PptxContext,
 ) -> None:
+    layout_id = layout_id_from_layout_key(slide_data.layout)
+    renderer = LAYOUT_RENDERER_REGISTRY.get(layout_id or "")
+    if renderer is not None:
+        renderer(prs, slide_data, data, context)
+        return
+
     kind = resolve_slide_kind(slide_data, index)
     if kind == "cover":
         add_cover_slide(prs, slide_data, data, context)
@@ -136,12 +367,33 @@ def add_designed_slide(
         add_next_steps_slide(prs, slide_data, context)
     elif kind == "summary":
         add_summary_slide(prs, slide_data, context)
+    elif kind == "quality_comparison":
+        add_quality_comparison_slide(prs, slide_data, context)
+    elif kind == "quality_timeline":
+        add_quality_timeline_slide(prs, slide_data, context)
+    elif kind == "quality_roadmap":
+        add_quality_timeline_slide(prs, slide_data, context, section="ROADMAP")
+    elif kind == "quality_kpi":
+        add_quality_kpi_slide(prs, slide_data, context)
+    elif kind == "quality_flow":
+        add_quality_flow_slide(prs, slide_data, context)
+    elif kind == "quality_matrix":
+        add_quality_matrix_slide(prs, slide_data, context)
     else:
         add_generic_slide(prs, slide_data)
 
 
 def resolve_slide_kind(slide_data: PowerPointSlide, index: int) -> str:
     title = slide_data.title
+    if slide_data.layout in {
+        "quality_comparison",
+        "quality_timeline",
+        "quality_roadmap",
+        "quality_kpi",
+        "quality_flow",
+        "quality_matrix",
+    }:
+        return slide_data.layout
     if index == 0 or slide_data.layout == "title":
         return "cover"
     if "提案サマリー" in title:
@@ -214,23 +466,24 @@ def resolve_slide_kind(slide_data: PowerPointSlide, index: int) -> str:
 def add_cover_slide(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
     slide = blank_slide(prs)
     set_background(slide)
+    theme = resolve_template_colors(context.design_template)
 
-    add_shape(slide, MSO_SHAPE.RECTANGLE, 0.02, 0.02, SLIDE_WIDTH - 0.04, SLIDE_HEIGHT - 0.04, fill=COLORS["navy"], line=COLORS["navy"])
-    add_shape(slide, MSO_SHAPE.RECTANGLE, 0.02, 0.02, 0.14, SLIDE_HEIGHT - 0.04, fill=COLORS["teal"], line=COLORS["teal"])
-    add_shape(slide, MSO_SHAPE.RIGHT_TRIANGLE, 8.55, 0.02, 4.72, 7.46, fill=COLORS["navy_2"], line=COLORS["navy_2"])
-    add_shape(slide, MSO_SHAPE.RECTANGLE, 9.15, 0.02, 4.12, SLIDE_HEIGHT - 0.04, fill=COLORS["canvas"], line=COLORS["canvas"])
+    add_shape(slide, MSO_SHAPE.RECTANGLE, 0.02, 0.02, SLIDE_WIDTH - 0.04, SLIDE_HEIGHT - 0.04, fill=theme["background"], line=theme["background"])
+    add_shape(slide, MSO_SHAPE.RECTANGLE, 0.02, 0.02, 0.14, SLIDE_HEIGHT - 0.04, fill=theme["accent"], line=theme["accent"])
+    add_shape(slide, MSO_SHAPE.RIGHT_TRIANGLE, 8.55, 0.02, 4.72, 7.46, fill=theme["secondary"], line=theme["secondary"])
+    add_shape(slide, MSO_SHAPE.RECTANGLE, 9.15, 0.02, 4.12, SLIDE_HEIGHT - 0.04, fill=theme["surface"], line=theme["surface"])
     add_shape(slide, MSO_SHAPE.OVAL, 9.65, 0.92, 3.05, 3.05, fill=COLORS["teal_light"], line=COLORS["teal_light"])
     add_shape(slide, MSO_SHAPE.OVAL, 10.82, 3.55, 1.72, 1.72, fill=COLORS["blue_light"], line=COLORS["blue_light"])
     cover_badges = icon_labels_for_category(context.proposal_category)
-    add_icon_badge(slide, cover_badges[0], 9.82, 1.68, COLORS["teal"])
-    add_icon_badge(slide, cover_badges[1], 11.05, 2.78, COLORS["blue"])
-    add_icon_badge(slide, cover_badges[2], 9.9, 4.75, COLORS["orange"])
-    add_shape(slide, MSO_SHAPE.RECTANGLE, 9.75, 5.92, 2.7, 0.13, fill=COLORS["teal"], line=COLORS["teal"])
-    add_shape(slide, MSO_SHAPE.RECTANGLE, 9.75, 6.2, 1.9, 0.13, fill=COLORS["orange"], line=COLORS["orange"])
+    add_icon_badge(slide, cover_badges[0], 9.82, 1.68, theme["accent"])
+    add_icon_badge(slide, cover_badges[1], 11.05, 2.78, theme["primary"])
+    add_icon_badge(slide, cover_badges[2], 9.9, 4.75, theme["support"])
+    add_shape(slide, MSO_SHAPE.RECTANGLE, 9.75, 5.92, 2.7, 0.13, fill=theme["accent"], line=theme["accent"])
+    add_shape(slide, MSO_SHAPE.RECTANGLE, 9.75, 6.2, 1.9, 0.13, fill=theme["support"], line=theme["support"])
 
     section_label = "WEB PROPOSAL" if context.proposal_category == "web" else f"{context.proposal_label.upper()} PROPOSAL"
-    add_section_label(slide, section_label[:24], 0.88, 0.8, fill=COLORS["teal"], color=COLORS["white"])
-    add_title(slide, slide_data.title or data.deck_title, 0.88, 1.55, 7.35, 1.24, size=42, color=COLORS["white"])
+    add_section_label(slide, section_label[:24], 0.88, 0.8, fill=theme["accent"], color=theme["text_on_dark"])
+    add_title(slide, slide_data.title or data.deck_title, 0.88, 1.55, 7.35, 1.24, size=42, color=theme["text_on_dark"])
     add_text(slide, f"{context.client_name} 御中", 0.92, 3.02, 6.9, 0.36, size=18, color=COLORS["teal_light"], bold=True)
     add_text(
         slide,
@@ -240,16 +493,16 @@ def add_cover_slide(prs: Presentation, slide_data: PowerPointSlide, data: PowerP
         7.25,
         0.5,
         size=20,
-        color=COLORS["white"],
+        color=theme["text_on_dark"],
         bold=True,
     )
     add_text(slide, f"提案日 {date.today().strftime('%Y.%m.%d')}", 0.92, 5.95, 3.5, 0.26, size=12, color=COLORS["teal_light"])
     add_text(slide, "ProposalPilot / AI営業秘書", 0.92, 6.58, 4.0, 0.24, size=11, color=COLORS["teal_light"])
     add_text(slide, f"{slide_data.slide_no:02}", 11.58, 6.86, 0.76, 0.22, size=10, color=COLORS["muted"], align=PP_ALIGN.RIGHT)
 
-    add_text(slide, "Strategy", 9.45, 1.0, 2.6, 0.32, size=16, color=COLORS["navy"], bold=True, align=PP_ALIGN.CENTER)
-    add_text(slide, "Design", 10.28, 3.2, 1.9, 0.3, size=14, color=COLORS["navy"], bold=True, align=PP_ALIGN.CENTER)
-    add_text(slide, "Growth", 9.95, 5.18, 2.2, 0.3, size=14, color=COLORS["navy"], bold=True, align=PP_ALIGN.CENTER)
+    add_text(slide, "Strategy", 9.45, 1.0, 2.6, 0.32, size=16, color=theme["text_on_light"], bold=True, align=PP_ALIGN.CENTER)
+    add_text(slide, "Design", 10.28, 3.2, 1.9, 0.3, size=14, color=theme["text_on_light"], bold=True, align=PP_ALIGN.CENTER)
+    add_text(slide, "Growth", 9.95, 5.18, 2.2, 0.3, size=14, color=theme["text_on_light"], bold=True, align=PP_ALIGN.CENTER)
 
 
 def add_chapter_title_slide(prs: Presentation, slide_data: PowerPointSlide, chapter_no: int, display_slide_no: int, context: PptxContext) -> None:
@@ -821,6 +1074,70 @@ def add_next_steps_slide(prs: Presentation, slide_data: PowerPointSlide, context
         x = 0.92 + (idx % 2) * 5.88
         y = 4.08 + (idx // 2) * 1.04
         add_card(slide, f"確認事項 {idx + 1}", item, x, y, 5.24, 0.9, SECTION_COLORS[idx], COLORS["white"])
+    add_footer(slide, slide_data.slide_no)
+
+
+def add_quality_comparison_slide(prs: Presentation, slide_data: PowerPointSlide, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    add_header(slide, slide_data.title, "COMPARISON", accent=COLORS["blue"])
+    rows = []
+    for idx, item in enumerate(unique_items(slide_data.bullets, 4), start=1):
+        rows.append([f"観点 {idx}", item, "要確認"])
+    if not rows:
+        rows = [["観点", "入力内容を確認してください", "要確認"]]
+    add_table(slide, ["比較軸", "入力情報", "確認ポイント"], rows, 0.9, 1.72, 11.55, 3.35, [1.8, 7.0, 2.75])
+    add_insight_band(slide, "Quality Rule", "比較・競合・Before/Afterの内容を編集可能な表として整理しました。", 0.95, 5.55, 11.45, 0.72)
+    add_footer(slide, slide_data.slide_no)
+
+
+def add_quality_timeline_slide(prs: Presentation, slide_data: PowerPointSlide, context: PptxContext, *, section: str = "TIMELINE") -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    add_header(slide, slide_data.title, section, accent=COLORS["teal"])
+    phases = unique_items(slide_data.bullets, 5)
+    add_timeline(slide, phases, 0.88, 1.72, 11.6)
+    for idx, item in enumerate(phases[:5]):
+        add_card(slide, f"Step {idx + 1}", item, 0.95 + idx * 2.3, 4.15, 2.05, 1.05, SECTION_COLORS[idx % len(SECTION_COLORS)], COLORS["white"])
+    add_footer(slide, slide_data.slide_no)
+
+
+def add_quality_kpi_slide(prs: Presentation, slide_data: PowerPointSlide, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    add_header(slide, slide_data.title, "KPI", accent=COLORS["green"])
+    body = "\n".join(slide_data.bullets)
+    numbers = unique_items(extract_numbers(body), 4)
+    if not numbers:
+        numbers = ["要確認"]
+    for idx, value in enumerate(numbers[:4]):
+        add_metric_card(slide, f"Metric {idx + 1}", value, 0.95 + idx * 2.88, 1.72, 2.5, 1.45, SECTION_COLORS[idx % len(SECTION_COLORS)])
+    add_bullet_list(slide, slide_data.bullets, 1.0, 3.7, 11.2, 1.82, max_items=5, size=13)
+    add_insight_band(slide, "Numeric Integrity", "本文中の数値をそのまま保持し、存在しない実績値は追加していません。", 0.95, 5.72, 11.45, 0.58)
+    add_footer(slide, slide_data.slide_no)
+
+
+def add_quality_flow_slide(prs: Presentation, slide_data: PowerPointSlide, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    add_header(slide, slide_data.title, "FLOW", accent=COLORS["purple"])
+    steps = unique_items(slide_data.bullets, 5)
+    add_step_flow(slide, steps, 0.95, 2.0, 11.35, 1.7)
+    add_bullet_list(slide, steps, 1.0, 4.4, 11.1, 1.15, max_items=5, size=13)
+    add_footer(slide, slide_data.slide_no)
+
+
+def add_quality_matrix_slide(prs: Presentation, slide_data: PowerPointSlide, context: PptxContext) -> None:
+    slide = blank_slide(prs)
+    set_background(slide)
+    add_header(slide, slide_data.title, "MATRIX", accent=COLORS["orange"])
+    items = unique_items(slide_data.bullets, 4)
+    labels = items + ["要確認"] * (4 - len(items))
+    positions = [(0.95, 1.78), (6.72, 1.78), (0.95, 4.15), (6.72, 4.15)]
+    for idx, (x, y) in enumerate(positions):
+        add_card(slide, ["高優先", "高効果", "要検証", "低優先"][idx], labels[idx], x, y, 5.32, 1.45, SECTION_COLORS[idx], COLORS["white"])
+    add_shape(slide, MSO_SHAPE.RECTANGLE, 6.48, 1.58, 0.03, 4.28, fill=COLORS["line_dark"], line=COLORS["line_dark"])
+    add_shape(slide, MSO_SHAPE.RECTANGLE, 0.9, 3.78, 11.52, 0.03, fill=COLORS["line_dark"], line=COLORS["line_dark"])
     add_footer(slide, slide_data.slide_no)
 
 

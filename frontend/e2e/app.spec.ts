@@ -149,14 +149,210 @@ test("AI-OCR案件入力は以前のWeb案件に置き換わらない", async ({
 
 test("通常モードは7ステップのかんたん操作フローを初期表示する", async ({ page }) => {
   await login(page, memberEmail);
-  await expect(page.getByTestId("guided-flow")).toBeVisible();
+  const flow = page.getByTestId("guided-flow");
+  await expect(flow).toBeVisible();
   for (const label of ["案件入力", "AI分析", "内容確認", "提出前チェック", "出力", "改善", "完了"]) {
-    await expect(page.getByRole("button", { name: new RegExp(label) })).toBeVisible();
+    await expect(flow.getByRole("button", { name: new RegExp(label) })).toBeVisible();
   }
   await expect(page.getByText("Current backend version")).toHaveCount(0);
   await expect(page.getByText("Git Commit")).toHaveCount(0);
   await expect(page.getByText("Prompt Studioを開く")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "詳細モード" })).toHaveCount(0);
+});
+
+test("Version80の固定サイドバーからPrompt BuilderとDesignerへ移動できる", async ({ page }) => {
+  await login(page, memberEmail);
+  const sidebar = page.getByTestId("v80-sidebar");
+  await expect(sidebar).toBeVisible();
+  await sidebar.getByRole("button", { name: /新規提案/ }).click();
+  await expect(page.getByTestId("v80-prompt-builder")).toBeVisible();
+  await page.getByLabel("案件名").fill("AI-OCR導入支援");
+  await page.getByLabel("クライアント名").fill("サンプル株式会社");
+  await page.getByRole("button", { name: "Sales Strategy確認" }).click();
+  await expect(page.getByTestId("v81-sales-strategy-review")).toBeVisible();
+  await page.getByRole("button", { name: /この戦略でStoryを作成/ }).click();
+  await expect(page.getByTestId("v80-story-engine")).toBeVisible();
+  await page.getByRole("button", { name: "3ペイン編集" }).click();
+  await expect(page.getByTestId("v80-slide-editor")).toBeVisible();
+  await page.getByRole("button", { name: "Designer", exact: true }).click();
+  await expect(page.getByTestId("v80-presentation-designer")).toBeVisible();
+  await page.getByRole("button", { name: /Modern Dark/ }).click();
+  await expect(page.getByTestId("v80-quality-score")).toBeVisible();
+});
+
+test("Version81 Presentation Quality Engineは18カテゴリ評価とAuto Fixを表示して適用できる", async ({ page }) => {
+  await login(page, memberEmail);
+  const sidebar = page.getByTestId("v80-sidebar");
+  await sidebar.getByRole("button", { name: /新規提案/ }).click();
+  await page.getByLabel("案件名").fill("AI-OCR導入支援");
+  await page.getByLabel("クライアント名").fill("サンプル株式会社");
+  await page.getByRole("button", { name: "生成開始" }).click();
+  await expect(page.getByRole("button", { name: "生成開始" })).toBeEnabled();
+  await page.getByRole("button", { name: "Sales Strategy確認" }).click();
+  await page.getByRole("button", { name: /この戦略でStoryを作成/ }).click();
+  await page.getByRole("button", { name: "3ペイン編集" }).click();
+  await page.locator(".v80-slide-canvas").getByLabel("スライド本文").fill(
+    "競合比較、導入フェーズ、KPI、確認フロー、API連携、CSV出力、担当者承認、スケジュール、費用条件を一枚で説明しており、文章量が多く余白を圧迫しています。また、PoC評価、既存システム連携、担当者承認、データ品質、セキュリティ、運用教育、費用条件、導入スケジュールも一枚で説明しています。さらに、現場運用、評価基準、リスク、次のアクション、KPI、確認フロー、API/CSV連携まで同時に伝えたい状態です。一方で、結論が後半にあり視線誘導が弱く、本文量が多いため余白を圧迫しています。"
+  );
+  await page.getByRole("button", { name: "Designer", exact: true }).click();
+  const engine = page.getByTestId("v81-quality-engine");
+  await expect(engine).toBeVisible();
+  await expect(engine.getByText("18カテゴリ評価")).toBeVisible();
+  expect(await engine.locator(".v81-quality-item").count()).toBe(18);
+  await expect(engine.getByText("Quality Rule Engine")).toBeVisible();
+  await expect(engine.getByText("Diagram Recommendation Engine")).toBeVisible();
+  await expect(engine.getByText("Content Fit Engine")).toBeVisible();
+  const autoFix = engine.locator(".v81-auto-fix-card").filter({ hasText: "結論:" }).first();
+  await expect(autoFix.getByRole("button", { name: /適用/ }).first()).toBeVisible();
+  await expect(autoFix.getByRole("button", { name: /却下/ }).first()).toBeVisible();
+  await autoFix.getByRole("button", { name: /適用/ }).first().click();
+  await page.getByRole("button", { name: "3ペイン編集" }).click();
+  await expect(page.locator(".v80-slide-canvas").getByLabel("スライド本文")).toHaveValue(/結論/);
+  await page.getByRole("button", { name: "Designer", exact: true }).click();
+  const pptxRequestPromise = page.waitForRequest("**/api/download-pptx");
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "PowerPoint生成" }).click();
+  const pptxRequest = await pptxRequestPromise;
+  const pptxBody = pptxRequest.postDataJSON() as {
+    presentation_quality_state?: { applied_fixes?: string[] };
+    powerpoint_generation_data?: { slides?: Array<{ bullets?: string[] }> };
+  };
+  expect(pptxBody.presentation_quality_state?.applied_fixes?.length).toBeGreaterThan(0);
+  expect(pptxBody.powerpoint_generation_data?.slides?.length).toBeGreaterThan(0);
+  await downloadPromise;
+  await expect(page.getByTestId("v81-pptx-quality-summary")).toBeVisible();
+  await expect(page.getByTestId("v81-pptx-quality-summary").getByText("Score 86")).toBeVisible();
+  await expect(page.getByText("8 -> 9 slides")).toBeVisible();
+});
+
+test("Version81 Phase5 Sales Strategy ReviewはStoryとDesignerへ連携する", async ({ page }) => {
+  await login(page, memberEmail);
+  const sidebar = page.getByTestId("v80-sidebar");
+  await sidebar.getByRole("button", { name: /新規提案/ }).click();
+  await page.getByLabel("案件名").fill("AI-OCR導入支援");
+  await page.getByLabel("クライアント名").fill("サンプル株式会社");
+  await page.getByLabel("案件種別").fill("AI-OCR");
+  await page.getByLabel("クイック入力").fill("経営者向けに、他社OCRツールとの価格競争を意識しながら、請求書AI-OCRで入力時間を削減し、PoCで精度と修正時間を確認します。予算1000万円。");
+
+  await page.getByRole("button", { name: "Sales Strategy確認" }).click();
+  const review = page.getByTestId("v81-sales-strategy-review");
+  await expect(review).toBeVisible();
+  await expect(review.getByRole("heading", { name: "Proposal Strategy Workspace" })).toBeVisible();
+  await expect(review.getByRole("heading", { name: "AI Suggestions" })).toBeVisible();
+  await expect(review.getByRole("heading", { name: "Sales Edits" })).toBeVisible();
+  await expect(review.getByRole("heading", { name: "Expected Objections" })).toBeVisible();
+  await expect(review.getByLabel("Presentation Tone")).toHaveValue("Executive");
+
+  await review.getByRole("button", { name: /この戦略でStoryを作成/ }).click();
+  await expect(page.getByTestId("v80-story-engine")).toContainText("Sales Strategy AI");
+  await page.getByRole("button", { name: "Presentation Designer" }).click();
+  await expect(page.getByTestId("v81-presentation-designer-ai")).toContainText("Sales Strategy:");
+});
+
+test("Version81 Phase6 Proposal Strategy Workspaceは編集差分と確定戦略を連携する", async ({ page }) => {
+  await login(page, memberEmail);
+  const sidebar = page.getByTestId("v80-sidebar");
+  await sidebar.getByRole("button", { name: /新規提案/ }).click();
+  await page.getByLabel("案件名").fill("EC改善提案");
+  await page.getByLabel("クライアント名").fill("サンプルEC株式会社");
+  await page.getByLabel("案件種別").fill("EC");
+  await page.getByLabel("クイック入力").fill("経営層向けにEC購入率と売上改善を提案します。競合比較、ROI、KPI、ロードマップを重視します。");
+
+  await page.getByRole("button", { name: "Sales Strategy確認" }).click();
+  const workspace = page.getByTestId("v81-strategy-workspace");
+  await expect(workspace).toBeVisible();
+  await expect(page.getByTestId("v81-strategy-score")).toBeVisible();
+  await workspace.getByLabel("Winning Strategy").fill("ROI改善を最優先にし、EC購入率と平均注文額の改善を提案する。");
+  await expect(page.getByTestId("v81-strategy-diff").first()).toBeVisible();
+
+  await page.getByTestId("v81-story-candidate").filter({ hasText: "ROI" }).first().click();
+  await page.getByTestId("v81-tone-candidate").filter({ hasText: "Data Driven" }).click();
+  await expect(workspace.getByLabel("Presentation Tone")).toHaveValue("Data Driven");
+  await page.getByRole("button", { name: /この戦略でStoryを作成/ }).click();
+
+  await expect(page.getByTestId("v80-story-engine")).toContainText("ROI改善を最優先");
+  await page.getByRole("button", { name: "Presentation Designer" }).click();
+  const designer = page.getByTestId("v81-presentation-designer-ai");
+  await expect(designer).toContainText("Sales Strategy:");
+  await expect(designer).toContainText("Tone=Data Driven");
+});
+
+test("Version81 Presentation Designer AIはLayout候補とBefore/Afterを表示して適用できる", async ({ page }) => {
+  await login(page, memberEmail);
+  const sidebar = page.getByTestId("v80-sidebar");
+  await sidebar.getByRole("button", { name: /新規提案/ }).click();
+  await page.getByLabel("案件名").fill("AI-OCR導入支援");
+  await page.getByLabel("クライアント名").fill("サンプル株式会社");
+  await page.getByLabel("案件種別").fill("AI-OCR");
+  await page.getByLabel("クイック入力").fill("人手確認に時間がかかり、判定品質が担当者ごとにばらついています。手作業継続案と既存OCRツールを比較し、1000万円以内でPoCを検討します。");
+  await page.getByRole("button", { name: "Sales Strategy確認" }).click();
+  await page.getByRole("button", { name: /この戦略でStoryを作成/ }).click();
+  await page.getByRole("button", { name: "Presentation Designer" }).click();
+
+  const designer = page.getByTestId("v81-presentation-designer-ai");
+  await expect(designer).toBeVisible();
+  await expect(designer.getByText("Layout候補")).toBeVisible();
+  await expect(designer.getByRole("heading", { name: "Before" })).toBeVisible();
+  await expect(designer.getByRole("heading", { name: "After" })).toBeVisible();
+  await expect(designer.getByText(/Score \+\d+/)).toBeVisible();
+  await expect(designer.getByTestId("v81-layout-pptx-contract")).toContainText("PPTX Renderer");
+  await designer.getByTestId("v81-layout-apply").click();
+  await expect(designer.getByText(/適用しました/)).toBeVisible();
+  await designer.getByTestId("v81-layout-revert").click();
+  await expect(designer.getByText(/元へ戻しました/)).toBeVisible();
+});
+
+test("Version81 Designer AIの適用済みLayoutはPPTX生成リクエストへ渡る", async ({ page }) => {
+  await login(page, memberEmail);
+  const sidebar = page.getByTestId("v80-sidebar");
+  await sidebar.getByRole("button", { name: /新規提案/ }).click();
+  await page.getByLabel("案件名").fill("AI-OCR導入支援");
+  await page.getByLabel("クライアント名").fill("サンプル株式会社");
+  await page.getByLabel("案件種別").fill("AI-OCR");
+  await page.getByLabel("クイック入力").fill("AI-OCRで請求書処理を効率化します。KPI、PoC、比較表、ロードマップを含めます。");
+  await page.getByRole("button", { name: "生成開始" }).click();
+  await expect(page.getByRole("button", { name: "生成開始" })).toBeEnabled();
+  await page.getByRole("button", { name: "Sales Strategy確認" }).click();
+  await page.getByRole("button", { name: /この戦略でStoryを作成/ }).click();
+  await page.getByRole("button", { name: "Presentation Designer" }).click();
+
+  const designer = page.getByTestId("v81-presentation-designer-ai");
+  await designer.getByTestId("v81-layout-apply").click();
+  await expect(designer.getByText(/適用しました/)).toBeVisible();
+  await page.getByRole("button", { name: "Designer", exact: true }).click();
+
+  const pptxRequestPromise = page.waitForRequest("**/api/download-pptx");
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "PowerPoint生成" }).click();
+  const pptxRequest = await pptxRequestPromise;
+  const pptxBody = pptxRequest.postDataJSON() as {
+    presentation_layout_decisions?: Array<{
+      slide_id?: string;
+      slide_type?: string;
+      selected_layout_id?: string;
+      recommended_layout_ids?: string[];
+      status?: string;
+      applied_by?: string;
+      design_token_id?: string;
+    }>;
+  };
+  const appliedDecision = pptxBody.presentation_layout_decisions?.find((decision) => decision.status === "applied");
+  expect(appliedDecision?.selected_layout_id).toMatch(/^LAYOUT-\d{3}$/);
+  expect(appliedDecision?.recommended_layout_ids?.length).toBeGreaterThan(0);
+  expect(appliedDecision?.applied_by).toBe("user");
+  expect(appliedDecision?.design_token_id).toContain(":");
+  await downloadPromise;
+  await expect(page.getByTestId("v81-pptx-quality-summary")).toContainText("Layouts");
+  await expect(page.getByTestId("v81-pptx-quality-summary")).toContainText("Numbers preserved");
+});
+
+test("Version80のサイドバーはスマートフォン幅でドロワーとして開ける", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 820 });
+  await login(page, memberEmail);
+  await page.getByRole("button", { name: "メニューを開く" }).click();
+  await expect(page.getByTestId("v80-sidebar")).toHaveClass(/is-open/);
+  await page.getByTestId("v80-sidebar").getByRole("button", { name: /新規提案/ }).click();
+  await expect(page.getByTestId("v80-prompt-builder")).toBeVisible();
 });
 
 test("提出前チェックは未チェック数を表示し全チェック後に完了できる", async ({ page }) => {
@@ -1129,6 +1325,39 @@ async function mockApi(page: Page, options: MockOptions = {}) {
         body = {};
       }
       return json(route, proposalResponse(body));
+    }
+    if (path.endsWith("/api/download-pptx")) {
+      return route.fulfill({
+        status: 200,
+        headers: {
+          "content-type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "content-disposition": "attachment; filename*=UTF-8''ProposalPilot_quality_mock.pptx",
+          "access-control-expose-headers": "Content-Disposition, X-Presentation-Quality-Report",
+          "x-presentation-quality-report": encodeURIComponent(JSON.stringify({
+            overall_score: 86,
+            category_scores: { title: 90, content_fit: 82, diagram: 88 },
+            findings: [{ rule_id: "PPT-BODY-001", category: "content_fit", severity: "warning", message: "本文量を確認してください。", recommendation: "分割または図解化してください。" }],
+            auto_fixes_applied: [{ rule_id: "PPT-BODY-001", message: "本文を圧縮しました。" }],
+            warnings: ["本文量を確認してください。"],
+            human_review_required: true,
+            slide_count_before: 8,
+            slide_count_after: 9,
+            template: "corporate_clean",
+            generation_duration: 0.12,
+            layout_decisions: [{ slide_id: "slide-1", selected_layout_id: "LAYOUT-003", status: "applied" }],
+            layout_fallbacks: [],
+            preview_pptx_differences: [{ category: "layout_mismatch", before: "Two Column", after: "designer:LAYOUT-003" }],
+            predicted_score: 82,
+            rendered_score: 86,
+            score_delta: 4,
+            unsupported_layouts: [],
+            numeric_integrity: { preserved: true, checked_slide_count: 8, mismatches: [] },
+            template_token_application: { template: "corporate_clean", mode: "detailed" },
+            human_review_items: []
+          }))
+        },
+        body: "PK mock pptx content"
+      });
     }
     if (path.endsWith("/api/organizations/context")) {
       if (route.request().method() === "PATCH") {

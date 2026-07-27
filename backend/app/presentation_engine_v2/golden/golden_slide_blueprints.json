@@ -1,0 +1,2683 @@
+[
+  {
+    "blueprint_version": "pe2_slide_blueprint_v1",
+    "blueprint_id": "bp-cover",
+    "slide_id": "slide-cover",
+    "slide_index": 0,
+    "slide_type": "cover",
+    "status": "validated",
+    "slide_goal": "cover",
+    "audience": "department_head",
+    "decision_question": "AI-OCR導入で確認作業をどう変えるか",
+    "desired_reaction": "人の確認を残しながら効率化できると理解する",
+    "headline": "AI-OCR導入により確認作業をレビュー中心へ変える",
+    "main_message": "人手確認の品質を保ちながら、AI候補提示で処理負荷を下げる提案です。",
+    "supporting_messages": [
+      "完全自動化ではなく人の判断を残す",
+      "判定履歴を再学習データとして活用する"
+    ],
+    "supporting_evidence": [
+      {
+        "evidence_id": "ev-user-input-001",
+        "evidence_type": "user_input",
+        "text": "商品画像と商品データの対応確認を人手で行っている",
+        "confidence": "high",
+        "source_reference_ids": [
+          "src-project-input"
+        ],
+        "is_assumption": false
+      }
+    ],
+    "speaker_note_summary": "現場担当者の確認責任を残す設計であることを説明する。",
+    "visual_type": "hero",
+    "diagram_type": "none",
+    "layout_direction": "left_to_right",
+    "visual_rationale": "BeforeとAfterの業務変化を並べて説明するため。",
+    "image_requirement": {
+      "required": false
+    },
+    "chart_requirement": {
+      "required": false
+    },
+    "content_blocks": [
+      {
+        "block_id": "block-before",
+        "role": "before",
+        "text": "商品画像を人が目視し、商品データと照合する",
+        "priority": "high",
+        "emphasis": "medium",
+        "evidence_ids": [
+          "ev-user-input-001"
+        ]
+      },
+      {
+        "block_id": "block-after",
+        "role": "after",
+        "text": "AIが候補を提示し、担当者が確認して商品管理システムへ連携する",
+        "priority": "critical",
+        "emphasis": "high",
+        "evidence_ids": []
+      }
+    ],
+    "metrics": [
+      {
+        "metric_id": "metric-review-time",
+        "label": "確認時間",
+        "value": "PoCで測定",
+        "unit": null,
+        "context": "目標値はPoCで確定",
+        "evidence_id": "ev-user-input-001",
+        "confidence": "medium"
+      }
+    ],
+    "comparison_items": [
+      {
+        "item_id": "cmp-before",
+        "label": "Before",
+        "current_state": "人が目視で確認",
+        "proposed_state": null,
+        "difference": "作業負荷と判定差が発生しやすい",
+        "priority": "high"
+      },
+      {
+        "item_id": "cmp-after",
+        "label": "After",
+        "current_state": null,
+        "proposed_state": "AI候補提示と人の最終確認",
+        "difference": "確認作業をレビュー中心へ移行",
+        "priority": "critical"
+      }
+    ],
+    "timeline_items": [],
+    "process_steps": [],
+    "table_data": null,
+    "citations": [],
+    "source_references": [
+      {
+        "source_id": "src-project-input",
+        "source_type": "user_input",
+        "label": "案件入力",
+        "url": null,
+        "page": null,
+        "confidence": "high"
+      }
+    ],
+    "primary_element": "headline",
+    "secondary_elements": [
+      "before_after_flow",
+      "review_message"
+    ],
+    "content_priority": "high",
+    "emphasis": "high",
+    "reading_order": [
+      "headline",
+      "block-before",
+      "block-after",
+      "main_message"
+    ],
+    "hierarchy_level": "primary",
+    "theme": "consulting",
+    "color_palette": {
+      "background": "#FFFFFF",
+      "text": "#0F172A",
+      "primary": "#2563EB",
+      "secondary": "#64748B",
+      "accent": "#06B6D4",
+      "muted": "#E2E8F0",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "danger": "#EF4444"
+    },
+    "background_style": "clean",
+    "surface_style": "card",
+    "border_style": "subtle",
+    "icon_style": "line",
+    "title_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 36,
+      "font_weight": 700,
+      "line_height": 1.15,
+      "color": "#0F172A"
+    },
+    "subtitle_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 22,
+      "font_weight": 500,
+      "line_height": 1.2,
+      "color": "#475569"
+    },
+    "body_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 18,
+      "font_weight": 400,
+      "line_height": 1.35,
+      "color": "#0F172A"
+    },
+    "metric_style": {
+      "font_family": "Inter",
+      "font_size_pt": 48,
+      "font_weight": 700,
+      "line_height": 1.05,
+      "color": "#2563EB"
+    },
+    "caption_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 12,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "footnote_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 10,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "grid": {
+      "columns": 12,
+      "rows": 8,
+      "gutter": 0.16,
+      "margin": {
+        "top": 0.42,
+        "right": 0.48,
+        "bottom": 0.42,
+        "left": 0.48
+      }
+    },
+    "safe_area": {
+      "x": 0.04,
+      "y": 0.05,
+      "w": 0.92,
+      "h": 0.88
+    },
+    "margins": {
+      "top": 0.42,
+      "right": 0.48,
+      "bottom": 0.42,
+      "left": 0.48
+    },
+    "gaps": 0.16,
+    "alignment": "left",
+    "density": "medium",
+    "overflow_strategy": "require_review",
+    "split_allowed": true,
+    "fallback_visual_type": "text_only",
+    "animation_hint": "appear_by_step",
+    "cta": {
+      "cta_type": "none",
+      "cta_label": null,
+      "cta_detail": null
+    },
+    "generation_source": "offline_fixture",
+    "confidence": 0.86,
+    "warnings": [],
+    "validation_result": null,
+    "rendering_metadata": {
+      "editable_shapes_required": true,
+      "external_assets_allowed": false,
+      "page_number_required": true,
+      "footer_required": false,
+      "warnings": [],
+      "renderer_notes": [
+        "Blueprint readiness does not guarantee final visual quality."
+      ]
+    },
+    "diagram_definition": {
+      "diagram_id": "diagram-cover",
+      "diagram_type": "before_after_flow",
+      "title": "Before / After",
+      "nodes": [
+        {
+          "node_id": "node-before",
+          "label": "人が目視確認",
+          "role": "before",
+          "group_id": null
+        },
+        {
+          "node_id": "node-after",
+          "label": "AI候補提示 + 人の最終確認",
+          "role": "after",
+          "group_id": null
+        }
+      ],
+      "connectors": [
+        {
+          "connector_id": "conn-change",
+          "source_node_id": "node-before",
+          "target_node_id": "node-after",
+          "label": "移行"
+        }
+      ],
+      "axes": [],
+      "legend": [],
+      "reading_order": [
+        "node-before",
+        "node-after"
+      ]
+    },
+    "created_at": "2026-07-27T00:00:00Z"
+  },
+  {
+    "blueprint_version": "pe2_slide_blueprint_v1",
+    "blueprint_id": "bp-agenda",
+    "slide_id": "slide-agenda",
+    "slide_index": 1,
+    "slide_type": "agenda",
+    "status": "validated",
+    "slide_goal": "agenda",
+    "audience": "department_head",
+    "decision_question": "AI-OCR導入で確認作業をどう変えるか",
+    "desired_reaction": "人の確認を残しながら効率化できると理解する",
+    "headline": "本提案では現状課題からPoC判断までを順に確認する",
+    "main_message": "課題、解決方針、PoC計画、評価基準、概算費用、次のアクションを短時間で確認します。",
+    "supporting_messages": [
+      "完全自動化ではなく人の判断を残す",
+      "判定履歴を再学習データとして活用する"
+    ],
+    "supporting_evidence": [
+      {
+        "evidence_id": "ev-user-input-001",
+        "evidence_type": "user_input",
+        "text": "商品画像と商品データの対応確認を人手で行っている",
+        "confidence": "high",
+        "source_reference_ids": [
+          "src-project-input"
+        ],
+        "is_assumption": false
+      }
+    ],
+    "speaker_note_summary": "現場担当者の確認責任を残す設計であることを説明する。",
+    "visual_type": "text_only",
+    "diagram_type": "none",
+    "layout_direction": "left_to_right",
+    "visual_rationale": "BeforeとAfterの業務変化を並べて説明するため。",
+    "image_requirement": {
+      "required": false
+    },
+    "chart_requirement": {
+      "required": false
+    },
+    "content_blocks": [
+      {
+        "block_id": "agenda-1",
+        "role": "agenda",
+        "text": "現状課題と業務フロー"
+      },
+      {
+        "block_id": "agenda-2",
+        "role": "agenda",
+        "text": "AI画像認識による支援方針"
+      },
+      {
+        "block_id": "agenda-3",
+        "role": "agenda",
+        "text": "PoC計画と評価基準"
+      }
+    ],
+    "metrics": [
+      {
+        "metric_id": "metric-review-time",
+        "label": "確認時間",
+        "value": "PoCで測定",
+        "unit": null,
+        "context": "目標値はPoCで確定",
+        "evidence_id": "ev-user-input-001",
+        "confidence": "medium"
+      }
+    ],
+    "comparison_items": [
+      {
+        "item_id": "cmp-before",
+        "label": "Before",
+        "current_state": "人が目視で確認",
+        "proposed_state": null,
+        "difference": "作業負荷と判定差が発生しやすい",
+        "priority": "high"
+      },
+      {
+        "item_id": "cmp-after",
+        "label": "After",
+        "current_state": null,
+        "proposed_state": "AI候補提示と人の最終確認",
+        "difference": "確認作業をレビュー中心へ移行",
+        "priority": "critical"
+      }
+    ],
+    "timeline_items": [],
+    "process_steps": [],
+    "table_data": null,
+    "citations": [],
+    "source_references": [
+      {
+        "source_id": "src-project-input",
+        "source_type": "user_input",
+        "label": "案件入力",
+        "url": null,
+        "page": null,
+        "confidence": "high"
+      }
+    ],
+    "primary_element": "headline",
+    "secondary_elements": [
+      "before_after_flow",
+      "review_message"
+    ],
+    "content_priority": "high",
+    "emphasis": "high",
+    "reading_order": [
+      "headline",
+      "block-before",
+      "block-after",
+      "main_message"
+    ],
+    "hierarchy_level": "primary",
+    "theme": "consulting",
+    "color_palette": {
+      "background": "#FFFFFF",
+      "text": "#0F172A",
+      "primary": "#2563EB",
+      "secondary": "#64748B",
+      "accent": "#06B6D4",
+      "muted": "#E2E8F0",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "danger": "#EF4444"
+    },
+    "background_style": "clean",
+    "surface_style": "card",
+    "border_style": "subtle",
+    "icon_style": "line",
+    "title_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 36,
+      "font_weight": 700,
+      "line_height": 1.15,
+      "color": "#0F172A"
+    },
+    "subtitle_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 22,
+      "font_weight": 500,
+      "line_height": 1.2,
+      "color": "#475569"
+    },
+    "body_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 18,
+      "font_weight": 400,
+      "line_height": 1.35,
+      "color": "#0F172A"
+    },
+    "metric_style": {
+      "font_family": "Inter",
+      "font_size_pt": 48,
+      "font_weight": 700,
+      "line_height": 1.05,
+      "color": "#2563EB"
+    },
+    "caption_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 12,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "footnote_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 10,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "grid": {
+      "columns": 12,
+      "rows": 8,
+      "gutter": 0.16,
+      "margin": {
+        "top": 0.42,
+        "right": 0.48,
+        "bottom": 0.42,
+        "left": 0.48
+      }
+    },
+    "safe_area": {
+      "x": 0.04,
+      "y": 0.05,
+      "w": 0.92,
+      "h": 0.88
+    },
+    "margins": {
+      "top": 0.42,
+      "right": 0.48,
+      "bottom": 0.42,
+      "left": 0.48
+    },
+    "gaps": 0.16,
+    "alignment": "left",
+    "density": "medium",
+    "overflow_strategy": "require_review",
+    "split_allowed": true,
+    "fallback_visual_type": "text_only",
+    "animation_hint": "appear_by_step",
+    "cta": {
+      "cta_type": "none",
+      "cta_label": null,
+      "cta_detail": null
+    },
+    "generation_source": "offline_fixture",
+    "confidence": 0.86,
+    "warnings": [],
+    "validation_result": null,
+    "rendering_metadata": {
+      "editable_shapes_required": true,
+      "external_assets_allowed": false,
+      "page_number_required": true,
+      "footer_required": false,
+      "warnings": [],
+      "renderer_notes": [
+        "Blueprint readiness does not guarantee final visual quality."
+      ]
+    },
+    "diagram_definition": {
+      "diagram_id": "diagram-agenda",
+      "diagram_type": "before_after_flow",
+      "title": "Before / After",
+      "nodes": [
+        {
+          "node_id": "node-before",
+          "label": "人が目視確認",
+          "role": "before",
+          "group_id": null
+        },
+        {
+          "node_id": "node-after",
+          "label": "AI候補提示 + 人の最終確認",
+          "role": "after",
+          "group_id": null
+        }
+      ],
+      "connectors": [
+        {
+          "connector_id": "conn-change",
+          "source_node_id": "node-before",
+          "target_node_id": "node-after",
+          "label": "移行"
+        }
+      ],
+      "axes": [],
+      "legend": [],
+      "reading_order": [
+        "node-before",
+        "node-after"
+      ]
+    },
+    "created_at": "2026-07-27T00:00:00Z"
+  },
+  {
+    "blueprint_version": "pe2_slide_blueprint_v1",
+    "blueprint_id": "bp-problem",
+    "slide_id": "slide-problem",
+    "slide_index": 2,
+    "slide_type": "problem_statement",
+    "status": "validated",
+    "slide_goal": "problem_sharing",
+    "audience": "department_head",
+    "decision_question": "AI-OCR導入で確認作業をどう変えるか",
+    "desired_reaction": "人の確認を残しながら効率化できると理解する",
+    "headline": "繁忙時の目視確認が処理遅延と品質差を生んでいる",
+    "main_message": "画像確認、照合、分類が担当者の経験に依存し、判断履歴も再利用しにくい状態です。",
+    "supporting_messages": [
+      "完全自動化ではなく人の判断を残す",
+      "判定履歴を再学習データとして活用する"
+    ],
+    "supporting_evidence": [
+      {
+        "evidence_id": "ev-user-input-001",
+        "evidence_type": "user_input",
+        "text": "商品画像と商品データの対応確認を人手で行っている",
+        "confidence": "high",
+        "source_reference_ids": [
+          "src-project-input"
+        ],
+        "is_assumption": false
+      }
+    ],
+    "speaker_note_summary": "現場担当者の確認責任を残す設計であることを説明する。",
+    "visual_type": "process_flow",
+    "diagram_type": "process_flow",
+    "layout_direction": "left_to_right",
+    "visual_rationale": "BeforeとAfterの業務変化を並べて説明するため。",
+    "image_requirement": {
+      "required": false
+    },
+    "chart_requirement": {
+      "required": false
+    },
+    "content_blocks": [
+      {
+        "block_id": "block-before",
+        "role": "before",
+        "text": "商品画像を人が目視し、商品データと照合する",
+        "priority": "high",
+        "emphasis": "medium",
+        "evidence_ids": [
+          "ev-user-input-001"
+        ]
+      },
+      {
+        "block_id": "block-after",
+        "role": "after",
+        "text": "AIが候補を提示し、担当者が確認して商品管理システムへ連携する",
+        "priority": "critical",
+        "emphasis": "high",
+        "evidence_ids": []
+      }
+    ],
+    "metrics": [
+      {
+        "metric_id": "metric-review-time",
+        "label": "確認時間",
+        "value": "PoCで測定",
+        "unit": null,
+        "context": "目標値はPoCで確定",
+        "evidence_id": "ev-user-input-001",
+        "confidence": "medium"
+      }
+    ],
+    "comparison_items": [
+      {
+        "item_id": "cmp-before",
+        "label": "Before",
+        "current_state": "人が目視で確認",
+        "proposed_state": null,
+        "difference": "作業負荷と判定差が発生しやすい",
+        "priority": "high"
+      },
+      {
+        "item_id": "cmp-after",
+        "label": "After",
+        "current_state": null,
+        "proposed_state": "AI候補提示と人の最終確認",
+        "difference": "確認作業をレビュー中心へ移行",
+        "priority": "critical"
+      }
+    ],
+    "timeline_items": [],
+    "process_steps": [
+      {
+        "step_id": "step-image",
+        "label": "画像確認"
+      },
+      {
+        "step_id": "step-match",
+        "label": "商品データ照合"
+      },
+      {
+        "step_id": "step-register",
+        "label": "商品登録"
+      }
+    ],
+    "table_data": null,
+    "citations": [],
+    "source_references": [
+      {
+        "source_id": "src-project-input",
+        "source_type": "user_input",
+        "label": "案件入力",
+        "url": null,
+        "page": null,
+        "confidence": "high"
+      }
+    ],
+    "primary_element": "headline",
+    "secondary_elements": [
+      "before_after_flow",
+      "review_message"
+    ],
+    "content_priority": "high",
+    "emphasis": "high",
+    "reading_order": [
+      "headline",
+      "block-before",
+      "block-after",
+      "main_message"
+    ],
+    "hierarchy_level": "primary",
+    "theme": "consulting",
+    "color_palette": {
+      "background": "#FFFFFF",
+      "text": "#0F172A",
+      "primary": "#2563EB",
+      "secondary": "#64748B",
+      "accent": "#06B6D4",
+      "muted": "#E2E8F0",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "danger": "#EF4444"
+    },
+    "background_style": "clean",
+    "surface_style": "card",
+    "border_style": "subtle",
+    "icon_style": "line",
+    "title_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 36,
+      "font_weight": 700,
+      "line_height": 1.15,
+      "color": "#0F172A"
+    },
+    "subtitle_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 22,
+      "font_weight": 500,
+      "line_height": 1.2,
+      "color": "#475569"
+    },
+    "body_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 18,
+      "font_weight": 400,
+      "line_height": 1.35,
+      "color": "#0F172A"
+    },
+    "metric_style": {
+      "font_family": "Inter",
+      "font_size_pt": 48,
+      "font_weight": 700,
+      "line_height": 1.05,
+      "color": "#2563EB"
+    },
+    "caption_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 12,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "footnote_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 10,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "grid": {
+      "columns": 12,
+      "rows": 8,
+      "gutter": 0.16,
+      "margin": {
+        "top": 0.42,
+        "right": 0.48,
+        "bottom": 0.42,
+        "left": 0.48
+      }
+    },
+    "safe_area": {
+      "x": 0.04,
+      "y": 0.05,
+      "w": 0.92,
+      "h": 0.88
+    },
+    "margins": {
+      "top": 0.42,
+      "right": 0.48,
+      "bottom": 0.42,
+      "left": 0.48
+    },
+    "gaps": 0.16,
+    "alignment": "left",
+    "density": "medium",
+    "overflow_strategy": "require_review",
+    "split_allowed": true,
+    "fallback_visual_type": "text_only",
+    "animation_hint": "appear_by_step",
+    "cta": {
+      "cta_type": "none",
+      "cta_label": null,
+      "cta_detail": null
+    },
+    "generation_source": "offline_fixture",
+    "confidence": 0.86,
+    "warnings": [],
+    "validation_result": null,
+    "rendering_metadata": {
+      "editable_shapes_required": true,
+      "external_assets_allowed": false,
+      "page_number_required": true,
+      "footer_required": false,
+      "warnings": [],
+      "renderer_notes": [
+        "Blueprint readiness does not guarantee final visual quality."
+      ]
+    },
+    "diagram_definition": {
+      "diagram_id": "diagram-problem",
+      "diagram_type": "process_flow",
+      "title": "Before / After",
+      "nodes": [
+        {
+          "node_id": "n1",
+          "label": "画像確認"
+        },
+        {
+          "node_id": "n2",
+          "label": "照合"
+        },
+        {
+          "node_id": "n3",
+          "label": "登録"
+        }
+      ],
+      "connectors": [
+        {
+          "connector_id": "c1",
+          "source_node_id": "n1",
+          "target_node_id": "n2"
+        },
+        {
+          "connector_id": "c2",
+          "source_node_id": "n2",
+          "target_node_id": "n3"
+        }
+      ],
+      "axes": [],
+      "legend": [],
+      "reading_order": [
+        "node-before",
+        "node-after"
+      ]
+    },
+    "created_at": "2026-07-27T00:00:00Z"
+  },
+  {
+    "blueprint_version": "pe2_slide_blueprint_v1",
+    "blueprint_id": "bp-ai-ocr-before-after",
+    "slide_id": "slide-before-after",
+    "slide_index": 3,
+    "slide_type": "before_after",
+    "status": "validated",
+    "slide_goal": "comparison",
+    "audience": "department_head",
+    "decision_question": "AI-OCR導入で確認作業をどう変えるか",
+    "desired_reaction": "人の確認を残しながら効率化できると理解する",
+    "headline": "AI候補提示により、確認作業を人手中心からレビュー中心へ変える",
+    "main_message": "AIが候補を提示し、担当者が最終確認することで、処理時間と判定ばらつきの低減を目指します。",
+    "supporting_messages": [
+      "完全自動化ではなく人の判断を残す",
+      "判定履歴を再学習データとして活用する"
+    ],
+    "supporting_evidence": [
+      {
+        "evidence_id": "ev-user-input-001",
+        "evidence_type": "user_input",
+        "text": "商品画像と商品データの対応確認を人手で行っている",
+        "confidence": "high",
+        "source_reference_ids": [
+          "src-project-input"
+        ],
+        "is_assumption": false
+      }
+    ],
+    "speaker_note_summary": "現場担当者の確認責任を残す設計であることを説明する。",
+    "visual_type": "two_column",
+    "diagram_type": "before_after_flow",
+    "layout_direction": "left_to_right",
+    "visual_rationale": "BeforeとAfterの業務変化を並べて説明するため。",
+    "image_requirement": {
+      "required": false
+    },
+    "chart_requirement": {
+      "required": false
+    },
+    "content_blocks": [
+      {
+        "block_id": "block-before",
+        "role": "before",
+        "text": "商品画像を人が目視し、商品データと照合する",
+        "priority": "high",
+        "emphasis": "medium",
+        "evidence_ids": [
+          "ev-user-input-001"
+        ]
+      },
+      {
+        "block_id": "block-after",
+        "role": "after",
+        "text": "AIが候補を提示し、担当者が確認して商品管理システムへ連携する",
+        "priority": "critical",
+        "emphasis": "high",
+        "evidence_ids": []
+      }
+    ],
+    "metrics": [
+      {
+        "metric_id": "metric-review-time",
+        "label": "確認時間",
+        "value": "PoCで測定",
+        "unit": null,
+        "context": "目標値はPoCで確定",
+        "evidence_id": "ev-user-input-001",
+        "confidence": "medium"
+      }
+    ],
+    "comparison_items": [
+      {
+        "item_id": "cmp-before",
+        "label": "Before",
+        "current_state": "人が目視で確認",
+        "proposed_state": null,
+        "difference": "作業負荷と判定差が発生しやすい",
+        "priority": "high"
+      },
+      {
+        "item_id": "cmp-after",
+        "label": "After",
+        "current_state": null,
+        "proposed_state": "AI候補提示と人の最終確認",
+        "difference": "確認作業をレビュー中心へ移行",
+        "priority": "critical"
+      }
+    ],
+    "timeline_items": [],
+    "process_steps": [],
+    "table_data": null,
+    "citations": [],
+    "source_references": [
+      {
+        "source_id": "src-project-input",
+        "source_type": "user_input",
+        "label": "案件入力",
+        "url": null,
+        "page": null,
+        "confidence": "high"
+      }
+    ],
+    "primary_element": "headline",
+    "secondary_elements": [
+      "before_after_flow",
+      "review_message"
+    ],
+    "content_priority": "high",
+    "emphasis": "high",
+    "reading_order": [
+      "headline",
+      "block-before",
+      "block-after",
+      "main_message"
+    ],
+    "hierarchy_level": "primary",
+    "theme": "consulting",
+    "color_palette": {
+      "background": "#FFFFFF",
+      "text": "#0F172A",
+      "primary": "#2563EB",
+      "secondary": "#64748B",
+      "accent": "#06B6D4",
+      "muted": "#E2E8F0",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "danger": "#EF4444"
+    },
+    "background_style": "clean",
+    "surface_style": "card",
+    "border_style": "subtle",
+    "icon_style": "line",
+    "title_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 36,
+      "font_weight": 700,
+      "line_height": 1.15,
+      "color": "#0F172A"
+    },
+    "subtitle_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 22,
+      "font_weight": 500,
+      "line_height": 1.2,
+      "color": "#475569"
+    },
+    "body_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 18,
+      "font_weight": 400,
+      "line_height": 1.35,
+      "color": "#0F172A"
+    },
+    "metric_style": {
+      "font_family": "Inter",
+      "font_size_pt": 48,
+      "font_weight": 700,
+      "line_height": 1.05,
+      "color": "#2563EB"
+    },
+    "caption_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 12,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "footnote_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 10,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "grid": {
+      "columns": 12,
+      "rows": 8,
+      "gutter": 0.16,
+      "margin": {
+        "top": 0.42,
+        "right": 0.48,
+        "bottom": 0.42,
+        "left": 0.48
+      }
+    },
+    "safe_area": {
+      "x": 0.04,
+      "y": 0.05,
+      "w": 0.92,
+      "h": 0.88
+    },
+    "margins": {
+      "top": 0.42,
+      "right": 0.48,
+      "bottom": 0.42,
+      "left": 0.48
+    },
+    "gaps": 0.16,
+    "alignment": "left",
+    "density": "medium",
+    "overflow_strategy": "require_review",
+    "split_allowed": true,
+    "fallback_visual_type": "text_only",
+    "animation_hint": "appear_by_step",
+    "cta": {
+      "cta_type": "none",
+      "cta_label": null,
+      "cta_detail": null
+    },
+    "generation_source": "offline_fixture",
+    "confidence": 0.86,
+    "warnings": [],
+    "validation_result": null,
+    "rendering_metadata": {
+      "editable_shapes_required": true,
+      "external_assets_allowed": false,
+      "page_number_required": true,
+      "footer_required": false,
+      "warnings": [],
+      "renderer_notes": [
+        "Blueprint readiness does not guarantee final visual quality."
+      ]
+    },
+    "diagram_definition": {
+      "diagram_id": "diagram-before-after",
+      "diagram_type": "before_after_flow",
+      "title": "Before / After",
+      "nodes": [
+        {
+          "node_id": "node-before",
+          "label": "人が目視確認",
+          "role": "before",
+          "group_id": null
+        },
+        {
+          "node_id": "node-after",
+          "label": "AI候補提示 + 人の最終確認",
+          "role": "after",
+          "group_id": null
+        }
+      ],
+      "connectors": [
+        {
+          "connector_id": "conn-change",
+          "source_node_id": "node-before",
+          "target_node_id": "node-after",
+          "label": "移行"
+        }
+      ],
+      "axes": [],
+      "legend": [],
+      "reading_order": [
+        "node-before",
+        "node-after"
+      ]
+    },
+    "created_at": "2026-07-27T00:00:00Z"
+  },
+  {
+    "blueprint_version": "pe2_slide_blueprint_v1",
+    "blueprint_id": "bp-comparison",
+    "slide_id": "slide-comparison",
+    "slide_index": 4,
+    "slide_type": "competitor_comparison",
+    "status": "validated",
+    "slide_goal": "comparison",
+    "audience": "department_head",
+    "decision_question": "AI-OCR導入で確認作業をどう変えるか",
+    "desired_reaction": "人の確認を残しながら効率化できると理解する",
+    "headline": "人手中心とAI支援型の違いを判断負荷で比較する",
+    "main_message": "AI支援型では確認対象を候補に絞り、担当者は最終判断に集中できます。",
+    "supporting_messages": [
+      "完全自動化ではなく人の判断を残す",
+      "判定履歴を再学習データとして活用する"
+    ],
+    "supporting_evidence": [
+      {
+        "evidence_id": "ev-user-input-001",
+        "evidence_type": "user_input",
+        "text": "商品画像と商品データの対応確認を人手で行っている",
+        "confidence": "high",
+        "source_reference_ids": [
+          "src-project-input"
+        ],
+        "is_assumption": false
+      }
+    ],
+    "speaker_note_summary": "現場担当者の確認責任を残す設計であることを説明する。",
+    "visual_type": "comparison_table",
+    "diagram_type": "comparison_table",
+    "layout_direction": "left_to_right",
+    "visual_rationale": "BeforeとAfterの業務変化を並べて説明するため。",
+    "image_requirement": {
+      "required": false
+    },
+    "chart_requirement": {
+      "required": false
+    },
+    "content_blocks": [
+      {
+        "block_id": "block-before",
+        "role": "before",
+        "text": "商品画像を人が目視し、商品データと照合する",
+        "priority": "high",
+        "emphasis": "medium",
+        "evidence_ids": [
+          "ev-user-input-001"
+        ]
+      },
+      {
+        "block_id": "block-after",
+        "role": "after",
+        "text": "AIが候補を提示し、担当者が確認して商品管理システムへ連携する",
+        "priority": "critical",
+        "emphasis": "high",
+        "evidence_ids": []
+      }
+    ],
+    "metrics": [
+      {
+        "metric_id": "metric-review-time",
+        "label": "確認時間",
+        "value": "PoCで測定",
+        "unit": null,
+        "context": "目標値はPoCで確定",
+        "evidence_id": "ev-user-input-001",
+        "confidence": "medium"
+      }
+    ],
+    "comparison_items": [
+      {
+        "item_id": "cmp-before",
+        "label": "Before",
+        "current_state": "人が目視で確認",
+        "proposed_state": null,
+        "difference": "作業負荷と判定差が発生しやすい",
+        "priority": "high"
+      },
+      {
+        "item_id": "cmp-after",
+        "label": "After",
+        "current_state": null,
+        "proposed_state": "AI候補提示と人の最終確認",
+        "difference": "確認作業をレビュー中心へ移行",
+        "priority": "critical"
+      }
+    ],
+    "timeline_items": [],
+    "process_steps": [],
+    "table_data": {
+      "columns": [
+        {
+          "column_id": "criteria",
+          "label": "観点"
+        },
+        {
+          "column_id": "manual",
+          "label": "人手中心"
+        },
+        {
+          "column_id": "ai",
+          "label": "AI支援型"
+        }
+      ],
+      "rows": [
+        {
+          "row_id": "workload",
+          "cells": {
+            "criteria": "作業負荷",
+            "manual": "高い",
+            "ai": "レビュー中心"
+          }
+        },
+        {
+          "row_id": "history",
+          "cells": {
+            "criteria": "履歴活用",
+            "manual": "限定的",
+            "ai": "再学習に活用"
+          }
+        }
+      ]
+    },
+    "citations": [],
+    "source_references": [
+      {
+        "source_id": "src-project-input",
+        "source_type": "user_input",
+        "label": "案件入力",
+        "url": null,
+        "page": null,
+        "confidence": "high"
+      }
+    ],
+    "primary_element": "headline",
+    "secondary_elements": [
+      "before_after_flow",
+      "review_message"
+    ],
+    "content_priority": "high",
+    "emphasis": "high",
+    "reading_order": [
+      "headline",
+      "block-before",
+      "block-after",
+      "main_message"
+    ],
+    "hierarchy_level": "primary",
+    "theme": "consulting",
+    "color_palette": {
+      "background": "#FFFFFF",
+      "text": "#0F172A",
+      "primary": "#2563EB",
+      "secondary": "#64748B",
+      "accent": "#06B6D4",
+      "muted": "#E2E8F0",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "danger": "#EF4444"
+    },
+    "background_style": "clean",
+    "surface_style": "card",
+    "border_style": "subtle",
+    "icon_style": "line",
+    "title_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 36,
+      "font_weight": 700,
+      "line_height": 1.15,
+      "color": "#0F172A"
+    },
+    "subtitle_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 22,
+      "font_weight": 500,
+      "line_height": 1.2,
+      "color": "#475569"
+    },
+    "body_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 18,
+      "font_weight": 400,
+      "line_height": 1.35,
+      "color": "#0F172A"
+    },
+    "metric_style": {
+      "font_family": "Inter",
+      "font_size_pt": 48,
+      "font_weight": 700,
+      "line_height": 1.05,
+      "color": "#2563EB"
+    },
+    "caption_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 12,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "footnote_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 10,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "grid": {
+      "columns": 12,
+      "rows": 8,
+      "gutter": 0.16,
+      "margin": {
+        "top": 0.42,
+        "right": 0.48,
+        "bottom": 0.42,
+        "left": 0.48
+      }
+    },
+    "safe_area": {
+      "x": 0.04,
+      "y": 0.05,
+      "w": 0.92,
+      "h": 0.88
+    },
+    "margins": {
+      "top": 0.42,
+      "right": 0.48,
+      "bottom": 0.42,
+      "left": 0.48
+    },
+    "gaps": 0.16,
+    "alignment": "left",
+    "density": "medium",
+    "overflow_strategy": "require_review",
+    "split_allowed": true,
+    "fallback_visual_type": "text_only",
+    "animation_hint": "appear_by_step",
+    "cta": {
+      "cta_type": "none",
+      "cta_label": null,
+      "cta_detail": null
+    },
+    "generation_source": "offline_fixture",
+    "confidence": 0.86,
+    "warnings": [],
+    "validation_result": null,
+    "rendering_metadata": {
+      "editable_shapes_required": true,
+      "external_assets_allowed": false,
+      "page_number_required": true,
+      "footer_required": false,
+      "warnings": [],
+      "renderer_notes": [
+        "Blueprint readiness does not guarantee final visual quality."
+      ]
+    },
+    "diagram_definition": {
+      "diagram_id": "diagram-comparison",
+      "diagram_type": "before_after_flow",
+      "title": "Before / After",
+      "nodes": [
+        {
+          "node_id": "node-before",
+          "label": "人が目視確認",
+          "role": "before",
+          "group_id": null
+        },
+        {
+          "node_id": "node-after",
+          "label": "AI候補提示 + 人の最終確認",
+          "role": "after",
+          "group_id": null
+        }
+      ],
+      "connectors": [
+        {
+          "connector_id": "conn-change",
+          "source_node_id": "node-before",
+          "target_node_id": "node-after",
+          "label": "移行"
+        }
+      ],
+      "axes": [],
+      "legend": [],
+      "reading_order": [
+        "node-before",
+        "node-after"
+      ]
+    },
+    "created_at": "2026-07-27T00:00:00Z"
+  },
+  {
+    "blueprint_version": "pe2_slide_blueprint_v1",
+    "blueprint_id": "bp-competitive",
+    "slide_id": "slide-competitive",
+    "slide_index": 5,
+    "slide_type": "competitive_landscape",
+    "status": "validated",
+    "slide_goal": "competitive_analysis",
+    "audience": "department_head",
+    "decision_question": "AI-OCR導入で確認作業をどう変えるか",
+    "desired_reaction": "人の確認を残しながら効率化できると理解する",
+    "headline": "競合比較では精度だけでなく現場運用への適合を重視する",
+    "main_message": "価格や機能だけでなく、人の最終確認を残せる運用設計を差別化ポイントにします。",
+    "supporting_messages": [
+      "完全自動化ではなく人の判断を残す",
+      "判定履歴を再学習データとして活用する"
+    ],
+    "supporting_evidence": [
+      {
+        "evidence_id": "ev-user-input-001",
+        "evidence_type": "user_input",
+        "text": "商品画像と商品データの対応確認を人手で行っている",
+        "confidence": "high",
+        "source_reference_ids": [
+          "src-project-input"
+        ],
+        "is_assumption": false
+      }
+    ],
+    "speaker_note_summary": "現場担当者の確認責任を残す設計であることを説明する。",
+    "visual_type": "matrix_2x2",
+    "diagram_type": "matrix_2x2",
+    "layout_direction": "left_to_right",
+    "visual_rationale": "BeforeとAfterの業務変化を並べて説明するため。",
+    "image_requirement": {
+      "required": false
+    },
+    "chart_requirement": {
+      "required": false
+    },
+    "content_blocks": [
+      {
+        "block_id": "block-before",
+        "role": "before",
+        "text": "商品画像を人が目視し、商品データと照合する",
+        "priority": "high",
+        "emphasis": "medium",
+        "evidence_ids": [
+          "ev-user-input-001"
+        ]
+      },
+      {
+        "block_id": "block-after",
+        "role": "after",
+        "text": "AIが候補を提示し、担当者が確認して商品管理システムへ連携する",
+        "priority": "critical",
+        "emphasis": "high",
+        "evidence_ids": []
+      }
+    ],
+    "metrics": [
+      {
+        "metric_id": "metric-review-time",
+        "label": "確認時間",
+        "value": "PoCで測定",
+        "unit": null,
+        "context": "目標値はPoCで確定",
+        "evidence_id": "ev-user-input-001",
+        "confidence": "medium"
+      }
+    ],
+    "comparison_items": [
+      {
+        "item_id": "cmp-before",
+        "label": "Before",
+        "current_state": "人が目視で確認",
+        "proposed_state": null,
+        "difference": "作業負荷と判定差が発生しやすい",
+        "priority": "high"
+      },
+      {
+        "item_id": "cmp-after",
+        "label": "After",
+        "current_state": null,
+        "proposed_state": "AI候補提示と人の最終確認",
+        "difference": "確認作業をレビュー中心へ移行",
+        "priority": "critical"
+      }
+    ],
+    "timeline_items": [],
+    "process_steps": [],
+    "table_data": null,
+    "citations": [],
+    "source_references": [
+      {
+        "source_id": "src-project-input",
+        "source_type": "user_input",
+        "label": "案件入力",
+        "url": null,
+        "page": null,
+        "confidence": "high"
+      }
+    ],
+    "primary_element": "headline",
+    "secondary_elements": [
+      "before_after_flow",
+      "review_message"
+    ],
+    "content_priority": "high",
+    "emphasis": "high",
+    "reading_order": [
+      "headline",
+      "block-before",
+      "block-after",
+      "main_message"
+    ],
+    "hierarchy_level": "primary",
+    "theme": "consulting",
+    "color_palette": {
+      "background": "#FFFFFF",
+      "text": "#0F172A",
+      "primary": "#2563EB",
+      "secondary": "#64748B",
+      "accent": "#06B6D4",
+      "muted": "#E2E8F0",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "danger": "#EF4444"
+    },
+    "background_style": "clean",
+    "surface_style": "card",
+    "border_style": "subtle",
+    "icon_style": "line",
+    "title_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 36,
+      "font_weight": 700,
+      "line_height": 1.15,
+      "color": "#0F172A"
+    },
+    "subtitle_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 22,
+      "font_weight": 500,
+      "line_height": 1.2,
+      "color": "#475569"
+    },
+    "body_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 18,
+      "font_weight": 400,
+      "line_height": 1.35,
+      "color": "#0F172A"
+    },
+    "metric_style": {
+      "font_family": "Inter",
+      "font_size_pt": 48,
+      "font_weight": 700,
+      "line_height": 1.05,
+      "color": "#2563EB"
+    },
+    "caption_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 12,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "footnote_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 10,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "grid": {
+      "columns": 12,
+      "rows": 8,
+      "gutter": 0.16,
+      "margin": {
+        "top": 0.42,
+        "right": 0.48,
+        "bottom": 0.42,
+        "left": 0.48
+      }
+    },
+    "safe_area": {
+      "x": 0.04,
+      "y": 0.05,
+      "w": 0.92,
+      "h": 0.88
+    },
+    "margins": {
+      "top": 0.42,
+      "right": 0.48,
+      "bottom": 0.42,
+      "left": 0.48
+    },
+    "gaps": 0.16,
+    "alignment": "left",
+    "density": "medium",
+    "overflow_strategy": "require_review",
+    "split_allowed": true,
+    "fallback_visual_type": "text_only",
+    "animation_hint": "appear_by_step",
+    "cta": {
+      "cta_type": "none",
+      "cta_label": null,
+      "cta_detail": null
+    },
+    "generation_source": "offline_fixture",
+    "confidence": 0.86,
+    "warnings": [],
+    "validation_result": null,
+    "rendering_metadata": {
+      "editable_shapes_required": true,
+      "external_assets_allowed": false,
+      "page_number_required": true,
+      "footer_required": false,
+      "warnings": [],
+      "renderer_notes": [
+        "Blueprint readiness does not guarantee final visual quality."
+      ]
+    },
+    "diagram_definition": {
+      "diagram_id": "diagram-competitive",
+      "diagram_type": "matrix_2x2",
+      "title": "Before / After",
+      "nodes": [
+        {
+          "node_id": "node-before",
+          "label": "人が目視確認",
+          "role": "before",
+          "group_id": null
+        },
+        {
+          "node_id": "node-after",
+          "label": "AI候補提示 + 人の最終確認",
+          "role": "after",
+          "group_id": null
+        }
+      ],
+      "connectors": [
+        {
+          "connector_id": "conn-change",
+          "source_node_id": "node-before",
+          "target_node_id": "node-after",
+          "label": "移行"
+        }
+      ],
+      "axes": [
+        "運用適合性",
+        "AI活用度"
+      ],
+      "legend": [],
+      "reading_order": [
+        "node-before",
+        "node-after"
+      ]
+    },
+    "created_at": "2026-07-27T00:00:00Z"
+  },
+  {
+    "blueprint_version": "pe2_slide_blueprint_v1",
+    "blueprint_id": "bp-kpi",
+    "slide_id": "slide-kpi",
+    "slide_index": 6,
+    "slide_type": "kpi_definition",
+    "status": "validated",
+    "slide_goal": "kpi_definition",
+    "audience": "department_head",
+    "decision_question": "AI-OCR導入で確認作業をどう変えるか",
+    "desired_reaction": "人の確認を残しながら効率化できると理解する",
+    "headline": "PoCでは精度だけでなく確認時間と修正率を測定する",
+    "main_message": "候補正答率、人手修正率、確認時間を評価し、本番化判断の根拠にします。",
+    "supporting_messages": [
+      "完全自動化ではなく人の判断を残す",
+      "判定履歴を再学習データとして活用する"
+    ],
+    "supporting_evidence": [
+      {
+        "evidence_id": "ev-user-input-001",
+        "evidence_type": "user_input",
+        "text": "商品画像と商品データの対応確認を人手で行っている",
+        "confidence": "high",
+        "source_reference_ids": [
+          "src-project-input"
+        ],
+        "is_assumption": false
+      }
+    ],
+    "speaker_note_summary": "現場担当者の確認責任を残す設計であることを説明する。",
+    "visual_type": "kpi_dashboard",
+    "diagram_type": "kpi_dashboard",
+    "layout_direction": "left_to_right",
+    "visual_rationale": "BeforeとAfterの業務変化を並べて説明するため。",
+    "image_requirement": {
+      "required": false
+    },
+    "chart_requirement": {
+      "required": false
+    },
+    "content_blocks": [
+      {
+        "block_id": "block-before",
+        "role": "before",
+        "text": "商品画像を人が目視し、商品データと照合する",
+        "priority": "high",
+        "emphasis": "medium",
+        "evidence_ids": [
+          "ev-user-input-001"
+        ]
+      },
+      {
+        "block_id": "block-after",
+        "role": "after",
+        "text": "AIが候補を提示し、担当者が確認して商品管理システムへ連携する",
+        "priority": "critical",
+        "emphasis": "high",
+        "evidence_ids": []
+      }
+    ],
+    "metrics": [
+      {
+        "metric_id": "m-accuracy",
+        "label": "候補正答率",
+        "value": "PoCで確定",
+        "confidence": "medium"
+      },
+      {
+        "metric_id": "m-review",
+        "label": "確認時間",
+        "value": "PoCで測定",
+        "confidence": "medium"
+      }
+    ],
+    "comparison_items": [
+      {
+        "item_id": "cmp-before",
+        "label": "Before",
+        "current_state": "人が目視で確認",
+        "proposed_state": null,
+        "difference": "作業負荷と判定差が発生しやすい",
+        "priority": "high"
+      },
+      {
+        "item_id": "cmp-after",
+        "label": "After",
+        "current_state": null,
+        "proposed_state": "AI候補提示と人の最終確認",
+        "difference": "確認作業をレビュー中心へ移行",
+        "priority": "critical"
+      }
+    ],
+    "timeline_items": [],
+    "process_steps": [],
+    "table_data": null,
+    "citations": [],
+    "source_references": [
+      {
+        "source_id": "src-project-input",
+        "source_type": "user_input",
+        "label": "案件入力",
+        "url": null,
+        "page": null,
+        "confidence": "high"
+      }
+    ],
+    "primary_element": "headline",
+    "secondary_elements": [
+      "before_after_flow",
+      "review_message"
+    ],
+    "content_priority": "high",
+    "emphasis": "high",
+    "reading_order": [
+      "headline",
+      "block-before",
+      "block-after",
+      "main_message"
+    ],
+    "hierarchy_level": "primary",
+    "theme": "consulting",
+    "color_palette": {
+      "background": "#FFFFFF",
+      "text": "#0F172A",
+      "primary": "#2563EB",
+      "secondary": "#64748B",
+      "accent": "#06B6D4",
+      "muted": "#E2E8F0",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "danger": "#EF4444"
+    },
+    "background_style": "clean",
+    "surface_style": "card",
+    "border_style": "subtle",
+    "icon_style": "line",
+    "title_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 36,
+      "font_weight": 700,
+      "line_height": 1.15,
+      "color": "#0F172A"
+    },
+    "subtitle_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 22,
+      "font_weight": 500,
+      "line_height": 1.2,
+      "color": "#475569"
+    },
+    "body_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 18,
+      "font_weight": 400,
+      "line_height": 1.35,
+      "color": "#0F172A"
+    },
+    "metric_style": {
+      "font_family": "Inter",
+      "font_size_pt": 48,
+      "font_weight": 700,
+      "line_height": 1.05,
+      "color": "#2563EB"
+    },
+    "caption_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 12,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "footnote_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 10,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "grid": {
+      "columns": 12,
+      "rows": 8,
+      "gutter": 0.16,
+      "margin": {
+        "top": 0.42,
+        "right": 0.48,
+        "bottom": 0.42,
+        "left": 0.48
+      }
+    },
+    "safe_area": {
+      "x": 0.04,
+      "y": 0.05,
+      "w": 0.92,
+      "h": 0.88
+    },
+    "margins": {
+      "top": 0.42,
+      "right": 0.48,
+      "bottom": 0.42,
+      "left": 0.48
+    },
+    "gaps": 0.16,
+    "alignment": "left",
+    "density": "medium",
+    "overflow_strategy": "require_review",
+    "split_allowed": true,
+    "fallback_visual_type": "text_only",
+    "animation_hint": "appear_by_step",
+    "cta": {
+      "cta_type": "none",
+      "cta_label": null,
+      "cta_detail": null
+    },
+    "generation_source": "offline_fixture",
+    "confidence": 0.86,
+    "warnings": [],
+    "validation_result": null,
+    "rendering_metadata": {
+      "editable_shapes_required": true,
+      "external_assets_allowed": false,
+      "page_number_required": true,
+      "footer_required": false,
+      "warnings": [],
+      "renderer_notes": [
+        "Blueprint readiness does not guarantee final visual quality."
+      ]
+    },
+    "diagram_definition": {
+      "diagram_id": "diagram-kpi",
+      "diagram_type": "before_after_flow",
+      "title": "Before / After",
+      "nodes": [
+        {
+          "node_id": "node-before",
+          "label": "人が目視確認",
+          "role": "before",
+          "group_id": null
+        },
+        {
+          "node_id": "node-after",
+          "label": "AI候補提示 + 人の最終確認",
+          "role": "after",
+          "group_id": null
+        }
+      ],
+      "connectors": [
+        {
+          "connector_id": "conn-change",
+          "source_node_id": "node-before",
+          "target_node_id": "node-after",
+          "label": "移行"
+        }
+      ],
+      "axes": [],
+      "legend": [],
+      "reading_order": [
+        "node-before",
+        "node-after"
+      ]
+    },
+    "created_at": "2026-07-27T00:00:00Z"
+  },
+  {
+    "blueprint_version": "pe2_slide_blueprint_v1",
+    "blueprint_id": "bp-roi",
+    "slide_id": "slide-roi",
+    "slide_index": 7,
+    "slide_type": "roi_estimate",
+    "status": "validated",
+    "slide_goal": "roi_explanation",
+    "audience": "department_head",
+    "decision_question": "AI-OCR導入で確認作業をどう変えるか",
+    "desired_reaction": "人の確認を残しながら効率化できると理解する",
+    "headline": "ROIは処理時間と誤登録削減の実測から判断する",
+    "main_message": "根拠のない削減率を置かず、PoCで測定した値から投資判断を行います。",
+    "supporting_messages": [
+      "完全自動化ではなく人の判断を残す",
+      "判定履歴を再学習データとして活用する"
+    ],
+    "supporting_evidence": [
+      {
+        "evidence_id": "ev-user-input-001",
+        "evidence_type": "user_input",
+        "text": "商品画像と商品データの対応確認を人手で行っている",
+        "confidence": "high",
+        "source_reference_ids": [
+          "src-project-input"
+        ],
+        "is_assumption": false
+      }
+    ],
+    "speaker_note_summary": "現場担当者の確認責任を残す設計であることを説明する。",
+    "visual_type": "metric_cards",
+    "diagram_type": "metric_cards",
+    "layout_direction": "left_to_right",
+    "visual_rationale": "BeforeとAfterの業務変化を並べて説明するため。",
+    "image_requirement": {
+      "required": false
+    },
+    "chart_requirement": {
+      "required": false
+    },
+    "content_blocks": [
+      {
+        "block_id": "block-before",
+        "role": "before",
+        "text": "商品画像を人が目視し、商品データと照合する",
+        "priority": "high",
+        "emphasis": "medium",
+        "evidence_ids": [
+          "ev-user-input-001"
+        ]
+      },
+      {
+        "block_id": "block-after",
+        "role": "after",
+        "text": "AIが候補を提示し、担当者が確認して商品管理システムへ連携する",
+        "priority": "critical",
+        "emphasis": "high",
+        "evidence_ids": []
+      }
+    ],
+    "metrics": [
+      {
+        "metric_id": "m-roi",
+        "label": "ROI",
+        "value": "PoC後に算定",
+        "confidence": "low"
+      }
+    ],
+    "comparison_items": [
+      {
+        "item_id": "cmp-before",
+        "label": "Before",
+        "current_state": "人が目視で確認",
+        "proposed_state": null,
+        "difference": "作業負荷と判定差が発生しやすい",
+        "priority": "high"
+      },
+      {
+        "item_id": "cmp-after",
+        "label": "After",
+        "current_state": null,
+        "proposed_state": "AI候補提示と人の最終確認",
+        "difference": "確認作業をレビュー中心へ移行",
+        "priority": "critical"
+      }
+    ],
+    "timeline_items": [],
+    "process_steps": [],
+    "table_data": null,
+    "citations": [],
+    "source_references": [
+      {
+        "source_id": "src-project-input",
+        "source_type": "user_input",
+        "label": "案件入力",
+        "url": null,
+        "page": null,
+        "confidence": "high"
+      }
+    ],
+    "primary_element": "headline",
+    "secondary_elements": [
+      "before_after_flow",
+      "review_message"
+    ],
+    "content_priority": "high",
+    "emphasis": "high",
+    "reading_order": [
+      "headline",
+      "block-before",
+      "block-after",
+      "main_message"
+    ],
+    "hierarchy_level": "primary",
+    "theme": "consulting",
+    "color_palette": {
+      "background": "#FFFFFF",
+      "text": "#0F172A",
+      "primary": "#2563EB",
+      "secondary": "#64748B",
+      "accent": "#06B6D4",
+      "muted": "#E2E8F0",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "danger": "#EF4444"
+    },
+    "background_style": "clean",
+    "surface_style": "card",
+    "border_style": "subtle",
+    "icon_style": "line",
+    "title_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 36,
+      "font_weight": 700,
+      "line_height": 1.15,
+      "color": "#0F172A"
+    },
+    "subtitle_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 22,
+      "font_weight": 500,
+      "line_height": 1.2,
+      "color": "#475569"
+    },
+    "body_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 18,
+      "font_weight": 400,
+      "line_height": 1.35,
+      "color": "#0F172A"
+    },
+    "metric_style": {
+      "font_family": "Inter",
+      "font_size_pt": 48,
+      "font_weight": 700,
+      "line_height": 1.05,
+      "color": "#2563EB"
+    },
+    "caption_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 12,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "footnote_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 10,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "grid": {
+      "columns": 12,
+      "rows": 8,
+      "gutter": 0.16,
+      "margin": {
+        "top": 0.42,
+        "right": 0.48,
+        "bottom": 0.42,
+        "left": 0.48
+      }
+    },
+    "safe_area": {
+      "x": 0.04,
+      "y": 0.05,
+      "w": 0.92,
+      "h": 0.88
+    },
+    "margins": {
+      "top": 0.42,
+      "right": 0.48,
+      "bottom": 0.42,
+      "left": 0.48
+    },
+    "gaps": 0.16,
+    "alignment": "left",
+    "density": "medium",
+    "overflow_strategy": "require_review",
+    "split_allowed": true,
+    "fallback_visual_type": "text_only",
+    "animation_hint": "appear_by_step",
+    "cta": {
+      "cta_type": "none",
+      "cta_label": null,
+      "cta_detail": null
+    },
+    "generation_source": "offline_fixture",
+    "confidence": 0.86,
+    "warnings": [],
+    "validation_result": null,
+    "rendering_metadata": {
+      "editable_shapes_required": true,
+      "external_assets_allowed": false,
+      "page_number_required": true,
+      "footer_required": false,
+      "warnings": [],
+      "renderer_notes": [
+        "Blueprint readiness does not guarantee final visual quality."
+      ]
+    },
+    "diagram_definition": {
+      "diagram_id": "diagram-roi",
+      "diagram_type": "before_after_flow",
+      "title": "Before / After",
+      "nodes": [
+        {
+          "node_id": "node-before",
+          "label": "人が目視確認",
+          "role": "before",
+          "group_id": null
+        },
+        {
+          "node_id": "node-after",
+          "label": "AI候補提示 + 人の最終確認",
+          "role": "after",
+          "group_id": null
+        }
+      ],
+      "connectors": [
+        {
+          "connector_id": "conn-change",
+          "source_node_id": "node-before",
+          "target_node_id": "node-after",
+          "label": "移行"
+        }
+      ],
+      "axes": [],
+      "legend": [],
+      "reading_order": [
+        "node-before",
+        "node-after"
+      ]
+    },
+    "created_at": "2026-07-27T00:00:00Z"
+  },
+  {
+    "blueprint_version": "pe2_slide_blueprint_v1",
+    "blueprint_id": "bp-estimate",
+    "slide_id": "slide-estimate",
+    "slide_index": 8,
+    "slide_type": "estimate_overview",
+    "status": "validated",
+    "slide_goal": "estimate",
+    "audience": "department_head",
+    "decision_question": "AI-OCR導入で確認作業をどう変えるか",
+    "desired_reaction": "人の確認を残しながら効率化できると理解する",
+    "headline": "概算費用はPoC範囲と連携条件により調整する",
+    "main_message": "予算上限を前提に、データ準備、モデル検証、連携、運用支援の範囲を確定します。",
+    "supporting_messages": [
+      "完全自動化ではなく人の判断を残す",
+      "判定履歴を再学習データとして活用する"
+    ],
+    "supporting_evidence": [
+      {
+        "evidence_id": "ev-user-input-001",
+        "evidence_type": "user_input",
+        "text": "商品画像と商品データの対応確認を人手で行っている",
+        "confidence": "high",
+        "source_reference_ids": [
+          "src-project-input"
+        ],
+        "is_assumption": false
+      }
+    ],
+    "speaker_note_summary": "現場担当者の確認責任を残す設計であることを説明する。",
+    "visual_type": "table",
+    "diagram_type": "cost_breakdown",
+    "layout_direction": "left_to_right",
+    "visual_rationale": "BeforeとAfterの業務変化を並べて説明するため。",
+    "image_requirement": {
+      "required": false
+    },
+    "chart_requirement": {
+      "required": false
+    },
+    "content_blocks": [
+      {
+        "block_id": "block-before",
+        "role": "before",
+        "text": "商品画像を人が目視し、商品データと照合する",
+        "priority": "high",
+        "emphasis": "medium",
+        "evidence_ids": [
+          "ev-user-input-001"
+        ]
+      },
+      {
+        "block_id": "block-after",
+        "role": "after",
+        "text": "AIが候補を提示し、担当者が確認して商品管理システムへ連携する",
+        "priority": "critical",
+        "emphasis": "high",
+        "evidence_ids": []
+      }
+    ],
+    "metrics": [
+      {
+        "metric_id": "m-budget",
+        "label": "予算上限",
+        "value": "1,000万円",
+        "confidence": "high"
+      }
+    ],
+    "comparison_items": [
+      {
+        "item_id": "cmp-before",
+        "label": "Before",
+        "current_state": "人が目視で確認",
+        "proposed_state": null,
+        "difference": "作業負荷と判定差が発生しやすい",
+        "priority": "high"
+      },
+      {
+        "item_id": "cmp-after",
+        "label": "After",
+        "current_state": null,
+        "proposed_state": "AI候補提示と人の最終確認",
+        "difference": "確認作業をレビュー中心へ移行",
+        "priority": "critical"
+      }
+    ],
+    "timeline_items": [],
+    "process_steps": [],
+    "table_data": {
+      "columns": [
+        {
+          "column_id": "item",
+          "label": "区分"
+        },
+        {
+          "column_id": "note",
+          "label": "内容"
+        }
+      ],
+      "rows": [
+        {
+          "row_id": "poc",
+          "cells": {
+            "item": "PoC設計",
+            "note": "評価基準と対象範囲"
+          }
+        },
+        {
+          "row_id": "model",
+          "cells": {
+            "item": "モデル検証",
+            "note": "画像分類と精度確認"
+          }
+        }
+      ]
+    },
+    "citations": [],
+    "source_references": [
+      {
+        "source_id": "src-project-input",
+        "source_type": "user_input",
+        "label": "案件入力",
+        "url": null,
+        "page": null,
+        "confidence": "high"
+      }
+    ],
+    "primary_element": "headline",
+    "secondary_elements": [
+      "before_after_flow",
+      "review_message"
+    ],
+    "content_priority": "high",
+    "emphasis": "high",
+    "reading_order": [
+      "headline",
+      "block-before",
+      "block-after",
+      "main_message"
+    ],
+    "hierarchy_level": "primary",
+    "theme": "consulting",
+    "color_palette": {
+      "background": "#FFFFFF",
+      "text": "#0F172A",
+      "primary": "#2563EB",
+      "secondary": "#64748B",
+      "accent": "#06B6D4",
+      "muted": "#E2E8F0",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "danger": "#EF4444"
+    },
+    "background_style": "clean",
+    "surface_style": "card",
+    "border_style": "subtle",
+    "icon_style": "line",
+    "title_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 36,
+      "font_weight": 700,
+      "line_height": 1.15,
+      "color": "#0F172A"
+    },
+    "subtitle_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 22,
+      "font_weight": 500,
+      "line_height": 1.2,
+      "color": "#475569"
+    },
+    "body_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 18,
+      "font_weight": 400,
+      "line_height": 1.35,
+      "color": "#0F172A"
+    },
+    "metric_style": {
+      "font_family": "Inter",
+      "font_size_pt": 48,
+      "font_weight": 700,
+      "line_height": 1.05,
+      "color": "#2563EB"
+    },
+    "caption_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 12,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "footnote_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 10,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "grid": {
+      "columns": 12,
+      "rows": 8,
+      "gutter": 0.16,
+      "margin": {
+        "top": 0.42,
+        "right": 0.48,
+        "bottom": 0.42,
+        "left": 0.48
+      }
+    },
+    "safe_area": {
+      "x": 0.04,
+      "y": 0.05,
+      "w": 0.92,
+      "h": 0.88
+    },
+    "margins": {
+      "top": 0.42,
+      "right": 0.48,
+      "bottom": 0.42,
+      "left": 0.48
+    },
+    "gaps": 0.16,
+    "alignment": "left",
+    "density": "medium",
+    "overflow_strategy": "require_review",
+    "split_allowed": true,
+    "fallback_visual_type": "text_only",
+    "animation_hint": "appear_by_step",
+    "cta": {
+      "cta_type": "none",
+      "cta_label": null,
+      "cta_detail": null
+    },
+    "generation_source": "offline_fixture",
+    "confidence": 0.86,
+    "warnings": [],
+    "validation_result": null,
+    "rendering_metadata": {
+      "editable_shapes_required": true,
+      "external_assets_allowed": false,
+      "page_number_required": true,
+      "footer_required": false,
+      "warnings": [],
+      "renderer_notes": [
+        "Blueprint readiness does not guarantee final visual quality."
+      ]
+    },
+    "diagram_definition": {
+      "diagram_id": "diagram-estimate",
+      "diagram_type": "before_after_flow",
+      "title": "Before / After",
+      "nodes": [
+        {
+          "node_id": "node-before",
+          "label": "人が目視確認",
+          "role": "before",
+          "group_id": null
+        },
+        {
+          "node_id": "node-after",
+          "label": "AI候補提示 + 人の最終確認",
+          "role": "after",
+          "group_id": null
+        }
+      ],
+      "connectors": [
+        {
+          "connector_id": "conn-change",
+          "source_node_id": "node-before",
+          "target_node_id": "node-after",
+          "label": "移行"
+        }
+      ],
+      "axes": [],
+      "legend": [],
+      "reading_order": [
+        "node-before",
+        "node-after"
+      ]
+    },
+    "created_at": "2026-07-27T00:00:00Z"
+  },
+  {
+    "blueprint_version": "pe2_slide_blueprint_v1",
+    "blueprint_id": "bp-timeline",
+    "slide_id": "slide-timeline",
+    "slide_index": 9,
+    "slide_type": "timeline",
+    "status": "validated",
+    "slide_goal": "timeline",
+    "audience": "department_head",
+    "decision_question": "AI-OCR導入で確認作業をどう変えるか",
+    "desired_reaction": "人の確認を残しながら効率化できると理解する",
+    "headline": "PoCから本番判断までを段階的に進める",
+    "main_message": "要件確認、データ確認、モデル検証、現場検証、本番判断の順にリスクを下げます。",
+    "supporting_messages": [
+      "完全自動化ではなく人の判断を残す",
+      "判定履歴を再学習データとして活用する"
+    ],
+    "supporting_evidence": [
+      {
+        "evidence_id": "ev-user-input-001",
+        "evidence_type": "user_input",
+        "text": "商品画像と商品データの対応確認を人手で行っている",
+        "confidence": "high",
+        "source_reference_ids": [
+          "src-project-input"
+        ],
+        "is_assumption": false
+      }
+    ],
+    "speaker_note_summary": "現場担当者の確認責任を残す設計であることを説明する。",
+    "visual_type": "timeline",
+    "diagram_type": "linear_timeline",
+    "layout_direction": "left_to_right",
+    "visual_rationale": "BeforeとAfterの業務変化を並べて説明するため。",
+    "image_requirement": {
+      "required": false
+    },
+    "chart_requirement": {
+      "required": false
+    },
+    "content_blocks": [
+      {
+        "block_id": "block-before",
+        "role": "before",
+        "text": "商品画像を人が目視し、商品データと照合する",
+        "priority": "high",
+        "emphasis": "medium",
+        "evidence_ids": [
+          "ev-user-input-001"
+        ]
+      },
+      {
+        "block_id": "block-after",
+        "role": "after",
+        "text": "AIが候補を提示し、担当者が確認して商品管理システムへ連携する",
+        "priority": "critical",
+        "emphasis": "high",
+        "evidence_ids": []
+      }
+    ],
+    "metrics": [
+      {
+        "metric_id": "metric-review-time",
+        "label": "確認時間",
+        "value": "PoCで測定",
+        "unit": null,
+        "context": "目標値はPoCで確定",
+        "evidence_id": "ev-user-input-001",
+        "confidence": "medium"
+      }
+    ],
+    "comparison_items": [
+      {
+        "item_id": "cmp-before",
+        "label": "Before",
+        "current_state": "人が目視で確認",
+        "proposed_state": null,
+        "difference": "作業負荷と判定差が発生しやすい",
+        "priority": "high"
+      },
+      {
+        "item_id": "cmp-after",
+        "label": "After",
+        "current_state": null,
+        "proposed_state": "AI候補提示と人の最終確認",
+        "difference": "確認作業をレビュー中心へ移行",
+        "priority": "critical"
+      }
+    ],
+    "timeline_items": [
+      {
+        "item_id": "t1",
+        "label": "要件確認",
+        "period": "Step 1"
+      },
+      {
+        "item_id": "t2",
+        "label": "モデル検証",
+        "period": "Step 2"
+      },
+      {
+        "item_id": "t3",
+        "label": "本番判断",
+        "period": "Step 3",
+        "milestone": true
+      }
+    ],
+    "process_steps": [],
+    "table_data": null,
+    "citations": [],
+    "source_references": [
+      {
+        "source_id": "src-project-input",
+        "source_type": "user_input",
+        "label": "案件入力",
+        "url": null,
+        "page": null,
+        "confidence": "high"
+      }
+    ],
+    "primary_element": "headline",
+    "secondary_elements": [
+      "before_after_flow",
+      "review_message"
+    ],
+    "content_priority": "high",
+    "emphasis": "high",
+    "reading_order": [
+      "headline",
+      "block-before",
+      "block-after",
+      "main_message"
+    ],
+    "hierarchy_level": "primary",
+    "theme": "consulting",
+    "color_palette": {
+      "background": "#FFFFFF",
+      "text": "#0F172A",
+      "primary": "#2563EB",
+      "secondary": "#64748B",
+      "accent": "#06B6D4",
+      "muted": "#E2E8F0",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "danger": "#EF4444"
+    },
+    "background_style": "clean",
+    "surface_style": "card",
+    "border_style": "subtle",
+    "icon_style": "line",
+    "title_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 36,
+      "font_weight": 700,
+      "line_height": 1.15,
+      "color": "#0F172A"
+    },
+    "subtitle_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 22,
+      "font_weight": 500,
+      "line_height": 1.2,
+      "color": "#475569"
+    },
+    "body_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 18,
+      "font_weight": 400,
+      "line_height": 1.35,
+      "color": "#0F172A"
+    },
+    "metric_style": {
+      "font_family": "Inter",
+      "font_size_pt": 48,
+      "font_weight": 700,
+      "line_height": 1.05,
+      "color": "#2563EB"
+    },
+    "caption_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 12,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "footnote_style": {
+      "font_family": "Noto Sans JP",
+      "font_size_pt": 10,
+      "font_weight": 400,
+      "line_height": 1.2,
+      "color": "#64748B"
+    },
+    "grid": {
+      "columns": 12,
+      "rows": 8,
+      "gutter": 0.16,
+      "margin": {
+        "top": 0.42,
+        "right": 0.48,
+        "bottom": 0.42,
+        "left": 0.48
+      }
+    },
+    "safe_area": {
+      "x": 0.04,
+      "y": 0.05,
+      "w": 0.92,
+      "h": 0.88
+    },
+    "margins": {
+      "top": 0.42,
+      "right": 0.48,
+      "bottom": 0.42,
+      "left": 0.48
+    },
+    "gaps": 0.16,
+    "alignment": "left",
+    "density": "medium",
+    "overflow_strategy": "require_review",
+    "split_allowed": true,
+    "fallback_visual_type": "text_only",
+    "animation_hint": "appear_by_step",
+    "cta": {
+      "cta_type": "none",
+      "cta_label": null,
+      "cta_detail": null
+    },
+    "generation_source": "offline_fixture",
+    "confidence": 0.86,
+    "warnings": [],
+    "validation_result": null,
+    "rendering_metadata": {
+      "editable_shapes_required": true,
+      "external_assets_allowed": false,
+      "page_number_required": true,
+      "footer_required": false,
+      "warnings": [],
+      "renderer_notes": [
+        "Blueprint readiness does not guarantee final visual quality."
+      ]
+    },
+    "diagram_definition": {
+      "diagram_id": "diagram-timeline",
+      "diagram_type": "before_after_flow",
+      "title": "Before / After",
+      "nodes": [
+        {
+          "node_id": "node-before",
+          "label": "人が目視確認",
+          "role": "before",
+          "group_id": null
+        },
+        {
+          "node_id": "node-after",
+          "label": "AI候補提示 + 人の最終確認",
+          "role": "after",
+          "group_id": null
+        }
+      ],
+      "connectors": [
+        {
+          "connector_id": "conn-change",
+          "source_node_id": "node-before",
+          "target_node_id": "node-after",
+          "label": "移行"
+        }
+      ],
+      "axes": [],
+      "legend": [],
+      "reading_order": [
+        "node-before",
+        "node-after"
+      ]
+    },
+    "created_at": "2026-07-27T00:00:00Z"
+  }
+]

@@ -1,5 +1,8 @@
 from fastapi.testclient import TestClient
 
+from app.models import PptxDownloadRequest
+from app.services.pptx_service import build_pptx_context
+
 
 def test_analyze_generates_markdown_and_saves_logs(
     client: TestClient,
@@ -48,6 +51,20 @@ def test_summary_pptx_download_returns_powerpoint(
     assert response.status_code == 200
     assert response.content[:2] == b"PK"
     assert "%E8%A6%81%E7%B4%84%E7%89%88" in response.headers.get("content-disposition", "")
+
+
+def test_pptx_download_accepts_v80_design_template(
+    client: TestClient,
+    admin_headers: dict[str, str],
+    sample_pptx_payload: dict,
+) -> None:
+    payload = {**sample_pptx_payload, "design_template": "modern_dark", "brand_settings": {"accent": "#06AED4"}}
+    context = build_pptx_context(PptxDownloadRequest(**payload))
+    response = client.post("/api/download-pptx", headers=admin_headers, json=payload)
+
+    assert context.design_template == "modern_dark"
+    assert response.status_code == 200
+    assert response.content[:2] == b"PK"
 
 
 def test_estimate_pdf_download_returns_pdf(

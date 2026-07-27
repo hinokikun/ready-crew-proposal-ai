@@ -97,17 +97,66 @@ def create_history_log(
     output_type: str,
     status: str,
     error_type: str = "",
+    project_name: str = "",
+    proposal_generation_duration_ms: int = 0,
+    powerpoint_generation_duration_ms: int = 0,
+    beautiful_ai_generation_duration_ms: int = 0,
+    pdf_generation_duration_ms: int = 0,
+    is_demo: bool = False,
 ) -> None:
     from app.repository_parts.operations import create_audit_log
 
     organization_id, workspace_id = get_user_context_ids(db, user_id)
+    total_generation_duration_ms = max(
+        int(proposal_generation_duration_ms or 0)
+        + int(powerpoint_generation_duration_ms or 0)
+        + int(beautiful_ai_generation_duration_ms or 0)
+        + int(pdf_generation_duration_ms or 0),
+        0,
+    )
     db.execute(
         """
         INSERT INTO proposal_histories
-        (user_id, customer_id, project_id, feature_name, input_length, output_type, status, error_type, organization_id, workspace_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (
+            user_id,
+            customer_id,
+            project_id,
+            feature_name,
+            project_name,
+            input_length,
+            output_type,
+            status,
+            error_type,
+            proposal_generation_duration_ms,
+            powerpoint_generation_duration_ms,
+            beautiful_ai_generation_duration_ms,
+            pdf_generation_duration_ms,
+            total_generation_duration_ms,
+            is_demo,
+            organization_id,
+            workspace_id
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (user_id, customer_id, project_id, feature_name, input_length, output_type, status, error_type, organization_id, workspace_id),
+        (
+            user_id,
+            customer_id,
+            project_id,
+            feature_name,
+            project_name[:200],
+            input_length,
+            output_type,
+            status,
+            error_type,
+            max(int(proposal_generation_duration_ms or 0), 0),
+            max(int(powerpoint_generation_duration_ms or 0), 0),
+            max(int(beautiful_ai_generation_duration_ms or 0), 0),
+            max(int(pdf_generation_duration_ms or 0), 0),
+            total_generation_duration_ms,
+            1 if is_demo else 0,
+            organization_id,
+            workspace_id,
+        ),
     )
     db.execute(
         """
@@ -132,11 +181,14 @@ def list_creation_history(
     status: str = "",
     date_from: str = "",
     date_to: str = "",
+    include_demo: bool = False,
 ) -> list[dict[str, Any]]:
     organization_id, workspace_id = get_user_context_ids(db, int(user.get("id") or 0))
     role = str(user.get("role") or "")
     clauses = ["h.organization_id = ?", "h.workspace_id = ?"]
     params: list[Any] = [organization_id, workspace_id]
+    if not include_demo:
+        clauses.append("COALESCE(h.is_demo, 0) = 0")
     if role not in {"admin", "manager"}:
         clauses.append("h.user_id = ?")
         params.append(int(user.get("id") or 0))
@@ -165,11 +217,17 @@ def list_creation_history(
             h.customer_id,
             COALESCE(c.company_name, '') AS customer_name,
             h.project_id,
-            COALESCE(p.name, '') AS project_name,
+            COALESCE(NULLIF(h.project_name, ''), p.name, '') AS project_name,
             h.feature_name,
             h.output_type,
             h.status,
             h.error_type,
+            h.proposal_generation_duration_ms,
+            h.powerpoint_generation_duration_ms,
+            h.beautiful_ai_generation_duration_ms,
+            h.pdf_generation_duration_ms,
+            h.total_generation_duration_ms,
+            COALESCE(h.is_demo, 0) AS is_demo,
             h.organization_id,
             h.workspace_id,
             COALESCE(o.name, '') AS organization_name,

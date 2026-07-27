@@ -1,0 +1,182 @@
+[
+  {
+    "audience": "Marketing manager",
+    "available_evidence": [
+      "project_summary",
+      "industry",
+      "proposal_category",
+      "problems",
+      "expected_outcomes",
+      "budget_range",
+      "competitive_information",
+      "timeline"
+    ],
+    "case_name": "Manufacturing Website Renewal",
+    "decision_stage": "auto",
+    "deck_length_preference": "auto",
+    "expected_deck_characteristics": [
+      "Deck starts with cover and ends with next action or appendix.",
+      "Story progresses from problem framing to recommendation and decision.",
+      "Slide order remains stable across modules."
+    ],
+    "expected_evidence_characteristics": [
+      "Every planned slide has required evidence.",
+      "Numeric slides require numeric evidence.",
+      "Missing evidence is explicit and traceable."
+    ],
+    "expected_message_characteristics": [
+      "Headline is conclusion-first.",
+      "Main message is evidence-aware.",
+      "Missing evidence is disclosed rather than invented."
+    ],
+    "industry": "Manufacturing",
+    "integration_case_id": "alpha-01-planner-fixture-web-01",
+    "intentionally_missing_evidence": [],
+    "known_constraints": [
+      "No customer PII.",
+      "No PPTX rendering.",
+      "No external AI call."
+    ],
+    "proposal_category": "Web production",
+    "review_tags": [
+      "default",
+      "synthetic"
+    ],
+    "schema_version": "pe2_alpha_integration_case_v1"
+  },
+  {
+    "audience": "Marketing manager",
+    "available_evidence": [
+      "project_summary",
+      "industry",
+      "proposal_category",
+      "problems",
+      "expected_outcomes",
+      "budget_range",
+      "competitive_information",
+      "timeline"
+    ],
+    "case_name": "Manufacturing Website Renewal",
+    "decision_stage": "auto",
+    "deck_length_preference": "auto",
+    "expected_deck_characteristics": [
+      "Deck starts with cover and ends with next action or appendix.",
+      "Story progresses from problem framing to recommendation and decision.",
+      "Slide order remains stable across modules."
+    ],
+    "expected_evidence_characteristics": [
+      "Every planned slide has required evidence.",
+      "Numeric slides require numeric evidence.",
+      "Missing evidence is explicit and traceable."
+    ],
+    "expected_message_characteristics": [
+      "Headline is conclusion-first.",
+      "Main message is evidence-aware.",
+      "Missing evidence is disclosed rather than invented."
+    ],
+    "industry": "Manufacturing",
+    "integration_case_id": "alpha-01-planner-fixture-web-01",
+    "intentionally_missing_evidence": [],
+    "known_constraints": [
+      "No customer PII.",
+      "No PPTX rendering.",
+      "No external AI call."
+    ],
+    "proposal_category": "Web production",
+    "proposal_context": {
+      "budget_range": "8M to 12M JPY",
+      "competitive_information": "Alternative web agencies are being compared.",
+      "decision_maker": "Marketing department head",
+      "expected_outcomes": [
+        "Higher qualified inquiries",
+        "Clearer product story"
+      ],
+      "implementation_purpose": "Improve customer acquisition and product explanation.",
+      "industry": "Manufacturing",
+      "language": "ja",
+      "persona": "Marketing manager",
+      "problems": [
+        "Product strengths are hard to understand",
+        "Inquiry quality is inconsistent"
+      ],
+      "project_id": "planner-fixture-web-01",
+      "project_name": "Manufacturing Website Renewal",
+      "project_summary": "Renew a corporate website to improve lead quality and product understanding.",
+      "proposal_category": "Web production",
+      "timeline": "Launch in six months"
+    },
+    "review_tags": [
+      "default",
+      "synthetic"
+    ],
+    "schema_version": "old"
+  },
+  {
+    "audience": "Marketing manager",
+    "available_evidence": [
+      "project_summary",
+      "industry",
+      "proposal_category",
+      "problems",
+      "expected_outcomes",
+      "budget_range",
+      "competitive_information",
+      "timeline"
+    ],
+    "case_name": "Manufacturing Website Renewal",
+    "decision_stage": "auto",
+    "deck_length_preference": "auto",
+    "expected_deck_characteristics": [
+      "Deck starts with cover and ends with next action or appendix.",
+      "Story progresses from problem framing to recommendation and decision.",
+      "Slide order remains stable across modules."
+    ],
+    "expected_evidence_characteristics": [
+      "Every planned slide has required evidence.",
+      "Numeric slides require numeric evidence.",
+      "Missing evidence is explicit and traceable."
+    ],
+    "expected_message_characteristics": [
+      "Headline is conclusion-first.",
+      "Main message is evidence-aware.",
+      "Missing evidence is disclosed rather than invented."
+    ],
+    "industry": "Manufacturing",
+    "integration_case_id": "alpha-01-planner-fixture-web-01",
+    "intentionally_missing_evidence": [],
+    "known_constraints": [
+      "No customer PII.",
+      "No PPTX rendering.",
+      "No external AI call."
+    ],
+    "proposal_category": "Web production",
+    "proposal_context": {
+      "budget_range": "8M to 12M JPY",
+      "competitive_information": "Alternative web agencies are being compared.",
+      "decision_maker": "Marketing department head",
+      "expected_outcomes": [
+        "Higher qualified inquiries",
+        "Clearer product story"
+      ],
+      "implementation_purpose": "Improve customer acquisition and product explanation.",
+      "industry": "Manufacturing",
+      "language": "ja",
+      "persona": "Marketing manager",
+      "problems": [
+        "Product strengths are hard to understand",
+        "Inquiry quality is inconsistent"
+      ],
+      "project_id": "planner-fixture-web-01",
+      "project_name": "Manufacturing Website Renewal",
+      "project_summary": "Renew a corporate website to improve lead quality and product understanding.",
+      "proposal_category": "Web production",
+      "timeline": "Launch in six months"
+    },
+    "review_tags": [
+      "default",
+      "synthetic"
+    ],
+    "schema_version": "pe2_alpha_integration_case_v1",
+    "unexpected": "not allowed"
+  }
+]

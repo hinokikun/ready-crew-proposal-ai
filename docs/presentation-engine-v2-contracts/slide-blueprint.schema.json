@@ -1,0 +1,1680 @@
+{
+  "title": "Presentation Engine 2.0 Slide Blueprint",
+  "type": "object",
+  "properties": {
+    "blueprint_version": {
+      "title": "Blueprint Version",
+      "default": "pe2_slide_blueprint_v1",
+      "const": "pe2_slide_blueprint_v1",
+      "type": "string"
+    },
+    "blueprint_id": {
+      "title": "Blueprint Id",
+      "maxLength": 100,
+      "minLength": 1,
+      "type": "string"
+    },
+    "slide_id": {
+      "title": "Slide Id",
+      "maxLength": 100,
+      "minLength": 1,
+      "type": "string"
+    },
+    "slide_index": {
+      "title": "Slide Index",
+      "minimum": 0,
+      "maximum": 200,
+      "type": "integer"
+    },
+    "slide_type": {
+      "$ref": "#/definitions/SlideType"
+    },
+    "status": {
+      "default": "draft",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BlueprintStatus"
+        }
+      ]
+    },
+    "slide_goal": {
+      "$ref": "#/definitions/SlideGoal"
+    },
+    "audience": {
+      "default": "general",
+      "allOf": [
+        {
+          "$ref": "#/definitions/AudienceType"
+        }
+      ]
+    },
+    "decision_question": {
+      "title": "Decision Question",
+      "maxLength": 180,
+      "type": "string"
+    },
+    "desired_reaction": {
+      "title": "Desired Reaction",
+      "maxLength": 180,
+      "type": "string"
+    },
+    "headline": {
+      "title": "Headline",
+      "maxLength": 90,
+      "minLength": 1,
+      "type": "string"
+    },
+    "main_message": {
+      "title": "Main Message",
+      "maxLength": 240,
+      "minLength": 1,
+      "type": "string"
+    },
+    "supporting_messages": {
+      "title": "Supporting Messages",
+      "maxItems": 6,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "supporting_evidence": {
+      "title": "Supporting Evidence",
+      "maxItems": 10,
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/EvidenceBlock"
+      }
+    },
+    "speaker_note_summary": {
+      "title": "Speaker Note Summary",
+      "maxLength": 360,
+      "type": "string"
+    },
+    "visual_type": {
+      "$ref": "#/definitions/VisualType"
+    },
+    "diagram_type": {
+      "default": "none",
+      "allOf": [
+        {
+          "$ref": "#/definitions/DiagramType"
+        }
+      ]
+    },
+    "layout_direction": {
+      "default": "left_to_right",
+      "allOf": [
+        {
+          "$ref": "#/definitions/LayoutDirection"
+        }
+      ]
+    },
+    "visual_rationale": {
+      "title": "Visual Rationale",
+      "maxLength": 220,
+      "type": "string"
+    },
+    "image_requirement": {
+      "$ref": "#/definitions/ImageRequirement"
+    },
+    "chart_requirement": {
+      "$ref": "#/definitions/ChartRequirement"
+    },
+    "content_blocks": {
+      "title": "Content Blocks",
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TextBlock"
+      }
+    },
+    "metrics": {
+      "title": "Metrics",
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/MetricBlock"
+      }
+    },
+    "comparison_items": {
+      "title": "Comparison Items",
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ComparisonItem"
+      }
+    },
+    "timeline_items": {
+      "title": "Timeline Items",
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TimelineItem"
+      }
+    },
+    "process_steps": {
+      "title": "Process Steps",
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ProcessStep"
+      }
+    },
+    "table_data": {
+      "$ref": "#/definitions/TableData"
+    },
+    "citations": {
+      "title": "Citations",
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_references": {
+      "title": "Source References",
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SourceReference"
+      }
+    },
+    "primary_element": {
+      "title": "Primary Element",
+      "maxLength": 80,
+      "minLength": 1,
+      "type": "string"
+    },
+    "secondary_elements": {
+      "title": "Secondary Elements",
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "content_priority": {
+      "default": "high",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ContentPriority"
+        }
+      ]
+    },
+    "emphasis": {
+      "default": "medium",
+      "allOf": [
+        {
+          "$ref": "#/definitions/EmphasisLevel"
+        }
+      ]
+    },
+    "reading_order": {
+      "title": "Reading Order",
+      "maxItems": 16,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "hierarchy_level": {
+      "default": "primary",
+      "allOf": [
+        {
+          "$ref": "#/definitions/HierarchyLevel"
+        }
+      ]
+    },
+    "theme": {
+      "default": "consulting",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ThemeType"
+        }
+      ]
+    },
+    "color_palette": {
+      "$ref": "#/definitions/ColorPalette"
+    },
+    "background_style": {
+      "title": "Background Style",
+      "default": "clean",
+      "maxLength": 60,
+      "type": "string"
+    },
+    "surface_style": {
+      "title": "Surface Style",
+      "default": "card",
+      "maxLength": 60,
+      "type": "string"
+    },
+    "border_style": {
+      "title": "Border Style",
+      "default": "subtle",
+      "maxLength": 60,
+      "type": "string"
+    },
+    "icon_style": {
+      "title": "Icon Style",
+      "default": "line",
+      "maxLength": 60,
+      "type": "string"
+    },
+    "title_style": {
+      "$ref": "#/definitions/TypographyStyle"
+    },
+    "subtitle_style": {
+      "$ref": "#/definitions/TypographyStyle"
+    },
+    "body_style": {
+      "$ref": "#/definitions/TypographyStyle"
+    },
+    "metric_style": {
+      "$ref": "#/definitions/TypographyStyle"
+    },
+    "caption_style": {
+      "$ref": "#/definitions/TypographyStyle"
+    },
+    "footnote_style": {
+      "$ref": "#/definitions/TypographyStyle"
+    },
+    "grid": {
+      "$ref": "#/definitions/GridSpec"
+    },
+    "safe_area": {
+      "$ref": "#/definitions/SafeAreaSpec"
+    },
+    "margins": {
+      "$ref": "#/definitions/MarginSpec"
+    },
+    "gaps": {
+      "title": "Gaps",
+      "default": 0.16,
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "type": "number"
+    },
+    "alignment": {
+      "default": "left",
+      "allOf": [
+        {
+          "$ref": "#/definitions/AlignmentType"
+        }
+      ]
+    },
+    "density": {
+      "default": "medium",
+      "allOf": [
+        {
+          "$ref": "#/definitions/DensityLevel"
+        }
+      ]
+    },
+    "overflow_strategy": {
+      "default": "require_review",
+      "allOf": [
+        {
+          "$ref": "#/definitions/OverflowStrategy"
+        }
+      ]
+    },
+    "split_allowed": {
+      "title": "Split Allowed",
+      "default": true,
+      "type": "boolean"
+    },
+    "fallback_visual_type": {
+      "default": "text_only",
+      "allOf": [
+        {
+          "$ref": "#/definitions/VisualType"
+        }
+      ]
+    },
+    "animation_hint": {
+      "default": "none",
+      "allOf": [
+        {
+          "$ref": "#/definitions/AnimationHint"
+        }
+      ]
+    },
+    "cta": {
+      "$ref": "#/definitions/CTAConfig"
+    },
+    "generation_source": {
+      "title": "Generation Source",
+      "default": "offline_fixture",
+      "maxLength": 80,
+      "type": "string"
+    },
+    "confidence": {
+      "title": "Confidence",
+      "default": 0.8,
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "type": "number"
+    },
+    "warnings": {
+      "title": "Warnings",
+      "maxItems": 20,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "validation_result": {
+      "$ref": "#/definitions/ValidationResult"
+    },
+    "rendering_metadata": {
+      "$ref": "#/definitions/RenderingMetadata"
+    },
+    "diagram_definition": {
+      "$ref": "#/definitions/DiagramDefinition"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "blueprint_id",
+    "slide_id",
+    "slide_index",
+    "slide_type",
+    "slide_goal",
+    "headline",
+    "main_message",
+    "visual_type",
+    "primary_element"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "SlideType": {
+      "title": "SlideType",
+      "description": "An enumeration.",
+      "enum": [
+        "cover",
+        "agenda",
+        "executive_summary",
+        "key_message",
+        "customer_context",
+        "problem_statement",
+        "current_state",
+        "root_cause",
+        "before_after",
+        "competitive_landscape",
+        "competitor_comparison",
+        "differentiation",
+        "recommended_strategy",
+        "proposal_overview",
+        "solution_concept",
+        "solution_architecture",
+        "ai_workflow",
+        "business_process",
+        "feature_overview",
+        "benefit_overview",
+        "kpi_definition",
+        "roi_estimate",
+        "estimate_overview",
+        "timeline",
+        "roadmap",
+        "implementation_plan",
+        "risk_register",
+        "team_structure",
+        "case_study",
+        "faq",
+        "next_action",
+        "closing",
+        "appendix"
+      ],
+      "type": "string"
+    },
+    "BlueprintStatus": {
+      "title": "BlueprintStatus",
+      "description": "An enumeration.",
+      "enum": [
+        "draft",
+        "normalized",
+        "validated",
+        "ready_for_render",
+        "needs_review",
+        "invalid"
+      ],
+      "type": "string"
+    },
+    "SlideGoal": {
+      "title": "SlideGoal",
+      "description": "An enumeration.",
+      "enum": [
+        "cover",
+        "agenda",
+        "executive_summary",
+        "problem_sharing",
+        "current_state",
+        "background",
+        "market_context",
+        "customer_insight",
+        "competitive_analysis",
+        "comparison",
+        "roi_explanation",
+        "kpi_definition",
+        "proposal_overview",
+        "solution_detail",
+        "architecture",
+        "process",
+        "roadmap",
+        "timeline",
+        "estimate",
+        "pricing",
+        "risk_handling",
+        "case_study",
+        "team",
+        "implementation_plan",
+        "faq",
+        "next_action",
+        "closing",
+        "appendix"
+      ],
+      "type": "string"
+    },
+    "AudienceType": {
+      "title": "AudienceType",
+      "description": "An enumeration.",
+      "enum": [
+        "ceo",
+        "executive",
+        "department_head",
+        "manager",
+        "field_leader",
+        "information_systems",
+        "finance",
+        "marketing",
+        "sales",
+        "hr",
+        "procurement",
+        "general"
+      ],
+      "type": "string"
+    },
+    "EvidenceType": {
+      "title": "EvidenceType",
+      "description": "An enumeration.",
+      "enum": [
+        "user_input",
+        "customer_document",
+        "interview",
+        "analysis",
+        "benchmark",
+        "assumption",
+        "missing"
+      ],
+      "type": "string"
+    },
+    "DataConfidence": {
+      "title": "DataConfidence",
+      "description": "An enumeration.",
+      "enum": [
+        "high",
+        "medium",
+        "low",
+        "unknown"
+      ],
+      "type": "string"
+    },
+    "EvidenceBlock": {
+      "title": "EvidenceBlock",
+      "type": "object",
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "evidence_type": {
+          "default": "user_input",
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceType"
+            }
+          ]
+        },
+        "text": {
+          "title": "Text",
+          "maxLength": 280,
+          "minLength": 1,
+          "type": "string"
+        },
+        "confidence": {
+          "default": "medium",
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConfidence"
+            }
+          ]
+        },
+        "source_reference_ids": {
+          "title": "Source Reference Ids",
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "is_assumption": {
+          "title": "Is Assumption",
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "VisualType": {
+      "title": "VisualType",
+      "description": "An enumeration.",
+      "enum": [
+        "hero",
+        "text_only",
+        "two_column",
+        "three_column",
+        "comparison_table",
+        "kpi_dashboard",
+        "timeline",
+        "roadmap",
+        "process_flow",
+        "architecture_map",
+        "matrix_2x2",
+        "pyramid",
+        "funnel",
+        "tree",
+        "swimlane",
+        "risk_matrix",
+        "heatmap",
+        "chart",
+        "table",
+        "metric_cards",
+        "image_placeholder",
+        "quote",
+        "closing"
+      ],
+      "type": "string"
+    },
+    "DiagramType": {
+      "title": "DiagramType",
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "linear_timeline",
+        "roadmap_lanes",
+        "process_flow",
+        "swimlane_process",
+        "before_after_flow",
+        "matrix_2x2",
+        "risk_matrix",
+        "comparison_table",
+        "feature_matrix",
+        "kpi_dashboard",
+        "metric_cards",
+        "layered_architecture",
+        "data_flow",
+        "system_integration_map",
+        "ai_pipeline",
+        "human_in_the_loop",
+        "feedback_loop",
+        "maturity_model",
+        "stakeholder_map",
+        "roi_bridge",
+        "cost_breakdown",
+        "next_action_board"
+      ],
+      "type": "string"
+    },
+    "LayoutDirection": {
+      "title": "LayoutDirection",
+      "description": "An enumeration.",
+      "enum": [
+        "left_to_right",
+        "right_to_left",
+        "top_to_bottom",
+        "bottom_to_top",
+        "radial",
+        "grid"
+      ],
+      "type": "string"
+    },
+    "ImageRequirement": {
+      "title": "ImageRequirement",
+      "type": "object",
+      "properties": {
+        "required": {
+          "title": "Required",
+          "default": false,
+          "type": "boolean"
+        },
+        "image_role": {
+          "title": "Image Role",
+          "maxLength": 80,
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "maxLength": 180,
+          "type": "string"
+        },
+        "source_type": {
+          "title": "Source Type",
+          "default": "placeholder",
+          "maxLength": 40,
+          "type": "string"
+        },
+        "license": {
+          "title": "License",
+          "default": "not_applicable",
+          "maxLength": 80,
+          "type": "string"
+        },
+        "replaceable": {
+          "title": "Replaceable",
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ChartRequirement": {
+      "title": "ChartRequirement",
+      "type": "object",
+      "properties": {
+        "required": {
+          "title": "Required",
+          "default": false,
+          "type": "boolean"
+        },
+        "chart_type": {
+          "title": "Chart Type",
+          "maxLength": 60,
+          "type": "string"
+        },
+        "data_label": {
+          "title": "Data Label",
+          "maxLength": 120,
+          "type": "string"
+        },
+        "source_reference_id": {
+          "title": "Source Reference Id",
+          "maxLength": 80,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ContentPriority": {
+      "title": "ContentPriority",
+      "description": "An enumeration.",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ],
+      "type": "string"
+    },
+    "EmphasisLevel": {
+      "title": "EmphasisLevel",
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "hero"
+      ],
+      "type": "string"
+    },
+    "TextBlock": {
+      "title": "TextBlock",
+      "type": "object",
+      "properties": {
+        "block_id": {
+          "title": "Block Id",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "role": {
+          "title": "Role",
+          "default": "body",
+          "maxLength": 40,
+          "minLength": 1,
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "maxLength": 520,
+          "minLength": 1,
+          "type": "string"
+        },
+        "priority": {
+          "default": "medium",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ContentPriority"
+            }
+          ]
+        },
+        "emphasis": {
+          "default": "none",
+          "allOf": [
+            {
+              "$ref": "#/definitions/EmphasisLevel"
+            }
+          ]
+        },
+        "evidence_ids": {
+          "title": "Evidence Ids",
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "block_id",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "MetricBlock": {
+      "title": "MetricBlock",
+      "type": "object",
+      "properties": {
+        "metric_id": {
+          "title": "Metric Id",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "maxLength": 40,
+          "type": "string"
+        },
+        "context": {
+          "title": "Context",
+          "maxLength": 160,
+          "type": "string"
+        },
+        "evidence_id": {
+          "title": "Evidence Id",
+          "maxLength": 80,
+          "type": "string"
+        },
+        "confidence": {
+          "default": "medium",
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConfidence"
+            }
+          ]
+        }
+      },
+      "required": [
+        "metric_id",
+        "label",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "ComparisonItem": {
+      "title": "ComparisonItem",
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "title": "Item Id",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        "current_state": {
+          "title": "Current State",
+          "maxLength": 220,
+          "type": "string"
+        },
+        "proposed_state": {
+          "title": "Proposed State",
+          "maxLength": 220,
+          "type": "string"
+        },
+        "difference": {
+          "title": "Difference",
+          "maxLength": 220,
+          "type": "string"
+        },
+        "priority": {
+          "default": "medium",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ContentPriority"
+            }
+          ]
+        }
+      },
+      "required": [
+        "item_id",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "TimelineItem": {
+      "title": "TimelineItem",
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "title": "Item Id",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        "period": {
+          "title": "Period",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "maxLength": 220,
+          "type": "string"
+        },
+        "milestone": {
+          "title": "Milestone",
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "item_id",
+        "label",
+        "period"
+      ],
+      "additionalProperties": false
+    },
+    "ProcessStep": {
+      "title": "ProcessStep",
+      "type": "object",
+      "properties": {
+        "step_id": {
+          "title": "Step Id",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "maxLength": 220,
+          "type": "string"
+        },
+        "owner": {
+          "title": "Owner",
+          "maxLength": 80,
+          "type": "string"
+        },
+        "output": {
+          "title": "Output",
+          "maxLength": 120,
+          "type": "string"
+        }
+      },
+      "required": [
+        "step_id",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "AlignmentType": {
+      "title": "AlignmentType",
+      "description": "An enumeration.",
+      "enum": [
+        "left",
+        "center",
+        "right",
+        "top",
+        "middle",
+        "bottom"
+      ],
+      "type": "string"
+    },
+    "TableColumn": {
+      "title": "TableColumn",
+      "type": "object",
+      "properties": {
+        "column_id": {
+          "title": "Column Id",
+          "maxLength": 60,
+          "minLength": 1,
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "alignment": {
+          "default": "left",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AlignmentType"
+            }
+          ]
+        },
+        "value_type": {
+          "title": "Value Type",
+          "default": "text",
+          "maxLength": 40,
+          "type": "string"
+        }
+      },
+      "required": [
+        "column_id",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "TableRow": {
+      "title": "TableRow",
+      "type": "object",
+      "properties": {
+        "row_id": {
+          "title": "Row Id",
+          "maxLength": 60,
+          "minLength": 1,
+          "type": "string"
+        },
+        "cells": {
+          "title": "Cells",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "row_id"
+      ],
+      "additionalProperties": false
+    },
+    "TableData": {
+      "title": "TableData",
+      "type": "object",
+      "properties": {
+        "columns": {
+          "title": "Columns",
+          "maxItems": 5,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TableColumn"
+          }
+        },
+        "rows": {
+          "title": "Rows",
+          "maxItems": 10,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TableRow"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "SourceReference": {
+      "title": "SourceReference",
+      "type": "object",
+      "properties": {
+        "source_id": {
+          "title": "Source Id",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "source_type": {
+          "default": "user_input",
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceType"
+            }
+          ]
+        },
+        "label": {
+          "title": "Label",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "maxLength": 500,
+          "type": "string"
+        },
+        "page": {
+          "title": "Page",
+          "maxLength": 40,
+          "type": "string"
+        },
+        "confidence": {
+          "default": "medium",
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConfidence"
+            }
+          ]
+        }
+      },
+      "required": [
+        "source_id",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "HierarchyLevel": {
+      "title": "HierarchyLevel",
+      "description": "An enumeration.",
+      "enum": [
+        "primary",
+        "secondary",
+        "tertiary",
+        "supporting"
+      ],
+      "type": "string"
+    },
+    "ThemeType": {
+      "title": "ThemeType",
+      "description": "An enumeration.",
+      "enum": [
+        "corporate",
+        "consulting",
+        "executive",
+        "agency",
+        "modern",
+        "minimal",
+        "startup",
+        "investor"
+      ],
+      "type": "string"
+    },
+    "ColorPalette": {
+      "title": "ColorPalette",
+      "type": "object",
+      "properties": {
+        "background": {
+          "title": "Background",
+          "default": "#FFFFFF",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "default": "#0F172A",
+          "type": "string"
+        },
+        "primary": {
+          "title": "Primary",
+          "default": "#2563EB",
+          "type": "string"
+        },
+        "secondary": {
+          "title": "Secondary",
+          "default": "#64748B",
+          "type": "string"
+        },
+        "accent": {
+          "title": "Accent",
+          "default": "#06B6D4",
+          "type": "string"
+        },
+        "muted": {
+          "title": "Muted",
+          "default": "#E2E8F0",
+          "type": "string"
+        },
+        "success": {
+          "title": "Success",
+          "default": "#10B981",
+          "type": "string"
+        },
+        "warning": {
+          "title": "Warning",
+          "default": "#F59E0B",
+          "type": "string"
+        },
+        "danger": {
+          "title": "Danger",
+          "default": "#EF4444",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "TypographyStyle": {
+      "title": "TypographyStyle",
+      "type": "object",
+      "properties": {
+        "font_family": {
+          "title": "Font Family",
+          "default": "Noto Sans JP",
+          "maxLength": 80,
+          "type": "string"
+        },
+        "font_size_pt": {
+          "title": "Font Size Pt",
+          "default": 18,
+          "minimum": 8,
+          "maximum": 80,
+          "type": "integer"
+        },
+        "font_weight": {
+          "title": "Font Weight",
+          "default": 400,
+          "minimum": 100,
+          "maximum": 900,
+          "type": "integer"
+        },
+        "line_height": {
+          "title": "Line Height",
+          "default": 1.25,
+          "minimum": 1.0,
+          "maximum": 2.0,
+          "type": "number"
+        },
+        "color": {
+          "title": "Color",
+          "maxLength": 20,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "MarginSpec": {
+      "title": "MarginSpec",
+      "type": "object",
+      "properties": {
+        "top": {
+          "title": "Top",
+          "default": 0.42,
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "type": "number"
+        },
+        "right": {
+          "title": "Right",
+          "default": 0.48,
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "type": "number"
+        },
+        "bottom": {
+          "title": "Bottom",
+          "default": 0.42,
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "type": "number"
+        },
+        "left": {
+          "title": "Left",
+          "default": 0.48,
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "GridSpec": {
+      "title": "GridSpec",
+      "type": "object",
+      "properties": {
+        "columns": {
+          "title": "Columns",
+          "default": 12,
+          "minimum": 1,
+          "maximum": 24,
+          "type": "integer"
+        },
+        "rows": {
+          "title": "Rows",
+          "default": 8,
+          "minimum": 1,
+          "maximum": 16,
+          "type": "integer"
+        },
+        "gutter": {
+          "title": "Gutter",
+          "default": 0.16,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "type": "number"
+        },
+        "margin": {
+          "$ref": "#/definitions/MarginSpec"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SafeAreaSpec": {
+      "title": "SafeAreaSpec",
+      "type": "object",
+      "properties": {
+        "x": {
+          "title": "X",
+          "default": 0.04,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "default": 0.05,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "type": "number"
+        },
+        "w": {
+          "title": "W",
+          "default": 0.92,
+          "minimum": 0.1,
+          "maximum": 1.0,
+          "type": "number"
+        },
+        "h": {
+          "title": "H",
+          "default": 0.88,
+          "minimum": 0.1,
+          "maximum": 1.0,
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "DensityLevel": {
+      "title": "DensityLevel",
+      "description": "An enumeration.",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "type": "string"
+    },
+    "OverflowStrategy": {
+      "title": "OverflowStrategy",
+      "description": "An enumeration.",
+      "enum": [
+        "fit",
+        "compress",
+        "split",
+        "diagramize",
+        "require_review"
+      ],
+      "type": "string"
+    },
+    "AnimationHint": {
+      "title": "AnimationHint",
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "appear_by_section",
+        "appear_by_step",
+        "highlight_main_message",
+        "build_timeline",
+        "build_process",
+        "fade_supporting_evidence"
+      ],
+      "type": "string"
+    },
+    "CTAType": {
+      "title": "CTAType",
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "approve",
+        "discuss",
+        "decide",
+        "contact",
+        "next_meeting",
+        "start_poc"
+      ],
+      "type": "string"
+    },
+    "CTAConfig": {
+      "title": "CTAConfig",
+      "type": "object",
+      "properties": {
+        "cta_type": {
+          "default": "none",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CTAType"
+            }
+          ]
+        },
+        "cta_label": {
+          "title": "Cta Label",
+          "maxLength": 80,
+          "type": "string"
+        },
+        "cta_detail": {
+          "title": "Cta Detail",
+          "maxLength": 180,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ValidationSeverity": {
+      "title": "ValidationSeverity",
+      "description": "An enumeration.",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "type": "string"
+    },
+    "ValidationIssue": {
+      "title": "ValidationIssue",
+      "type": "object",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "maxLength": 40,
+          "minLength": 1,
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/definitions/ValidationSeverity"
+        },
+        "field_path": {
+          "title": "Field Path",
+          "maxLength": 160,
+          "minLength": 1,
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "maxLength": 260,
+          "minLength": 1,
+          "type": "string"
+        },
+        "suggestion": {
+          "title": "Suggestion",
+          "maxLength": 260,
+          "type": "string"
+        },
+        "blocking": {
+          "title": "Blocking",
+          "default": false,
+          "type": "boolean"
+        },
+        "source": {
+          "title": "Source",
+          "default": "validator",
+          "maxLength": 80,
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "field_path",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "ValidationResult": {
+      "title": "ValidationResult",
+      "type": "object",
+      "properties": {
+        "valid": {
+          "title": "Valid",
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/definitions/BlueprintStatus"
+        },
+        "issues": {
+          "title": "Issues",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ValidationIssue"
+          }
+        }
+      },
+      "required": [
+        "valid",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "RenderingMetadata": {
+      "title": "RenderingMetadata",
+      "type": "object",
+      "properties": {
+        "editable_shapes_required": {
+          "title": "Editable Shapes Required",
+          "default": true,
+          "type": "boolean"
+        },
+        "external_assets_allowed": {
+          "title": "External Assets Allowed",
+          "default": false,
+          "type": "boolean"
+        },
+        "page_number_required": {
+          "title": "Page Number Required",
+          "default": true,
+          "type": "boolean"
+        },
+        "footer_required": {
+          "title": "Footer Required",
+          "default": false,
+          "type": "boolean"
+        },
+        "warnings": {
+          "title": "Warnings",
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "renderer_notes": {
+          "title": "Renderer Notes",
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "DiagramNode": {
+      "title": "DiagramNode",
+      "type": "object",
+      "properties": {
+        "node_id": {
+          "title": "Node Id",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        "role": {
+          "title": "Role",
+          "default": "node",
+          "maxLength": 40,
+          "type": "string"
+        },
+        "group_id": {
+          "title": "Group Id",
+          "maxLength": 80,
+          "type": "string"
+        }
+      },
+      "required": [
+        "node_id",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "DiagramConnector": {
+      "title": "DiagramConnector",
+      "type": "object",
+      "properties": {
+        "connector_id": {
+          "title": "Connector Id",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "source_node_id": {
+          "title": "Source Node Id",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "target_node_id": {
+          "title": "Target Node Id",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "maxLength": 80,
+          "type": "string"
+        }
+      },
+      "required": [
+        "connector_id",
+        "source_node_id",
+        "target_node_id"
+      ],
+      "additionalProperties": false
+    },
+    "DiagramDefinition": {
+      "title": "DiagramDefinition",
+      "type": "object",
+      "properties": {
+        "diagram_id": {
+          "title": "Diagram Id",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "diagram_type": {
+          "default": "none",
+          "allOf": [
+            {
+              "$ref": "#/definitions/DiagramType"
+            }
+          ]
+        },
+        "title": {
+          "title": "Title",
+          "maxLength": 120,
+          "type": "string"
+        },
+        "nodes": {
+          "title": "Nodes",
+          "maxItems": 16,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DiagramNode"
+          }
+        },
+        "connectors": {
+          "title": "Connectors",
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DiagramConnector"
+          }
+        },
+        "axes": {
+          "title": "Axes",
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "legend": {
+          "title": "Legend",
+          "maxItems": 8,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reading_order": {
+          "title": "Reading Order",
+          "maxItems": 16,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "diagram_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://proposalpilot.local/schemas/presentation-engine-v2/slide-blueprint.schema.json",
+  "description": "Offline contract for one renderer-ready slide blueprint."
+}

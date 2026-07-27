@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ready-crew.local/schemas/v81/quality-report.schema.json",
+  "title": "QualityReport",
+  "type": "object",
+  "required": ["schema_version", "overall_score", "grade", "findings"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "v1" },
+    "overall_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "grade": { "type": "string", "enum": ["A", "B", "C", "D"] },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "score", "message", "severity"],
+        "properties": {
+          "category": { "type": "string" },
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "message": { "type": "string", "maxLength": 400 },
+          "severity": { "type": "string", "enum": ["info", "warning", "critical"] },
+          "auto_repair_available": { "type": "boolean" },
+          "human_review_required": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "red_flags": { "type": "array", "items": { "type": "string", "maxLength": 240 } }
+  },
+  "additionalProperties": false
+}
+

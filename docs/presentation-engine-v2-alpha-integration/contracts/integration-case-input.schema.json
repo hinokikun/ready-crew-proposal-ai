@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "definitions": {
+    "ProposalContext": {
+      "additionalProperties": false,
+      "description": "Minimal business context accepted by the offline planner.",
+      "properties": {
+        "budget_range": {
+          "maxLength": 120,
+          "title": "Budget Range",
+          "type": "string"
+        },
+        "competitive_information": {
+          "maxLength": 1200,
+          "title": "Competitive Information",
+          "type": "string"
+        },
+        "decision_maker": {
+          "maxLength": 120,
+          "title": "Decision Maker",
+          "type": "string"
+        },
+        "expected_outcomes": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Expected Outcomes",
+          "type": "array"
+        },
+        "implementation_purpose": {
+          "maxLength": 1200,
+          "title": "Implementation Purpose",
+          "type": "string"
+        },
+        "industry": {
+          "maxLength": 120,
+          "title": "Industry",
+          "type": "string"
+        },
+        "language": {
+          "default": "ja",
+          "maxLength": 16,
+          "minLength": 2,
+          "title": "Language",
+          "type": "string"
+        },
+        "persona": {
+          "maxLength": 120,
+          "title": "Persona",
+          "type": "string"
+        },
+        "problems": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Problems",
+          "type": "array"
+        },
+        "project_id": {
+          "maxLength": 120,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "project_name": {
+          "maxLength": 160,
+          "title": "Project Name",
+          "type": "string"
+        },
+        "project_summary": {
+          "maxLength": 1200,
+          "minLength": 1,
+          "title": "Project Summary",
+          "type": "string"
+        },
+        "proposal_category": {
+          "maxLength": 120,
+          "title": "Proposal Category",
+          "type": "string"
+        },
+        "timeline": {
+          "maxLength": 160,
+          "title": "Timeline",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_summary"
+      ],
+      "title": "ProposalContext",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "audience": {
+      "maxLength": 120,
+      "title": "Audience",
+      "type": "string"
+    },
+    "available_evidence": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 30,
+      "title": "Available Evidence",
+      "type": "array"
+    },
+    "case_name": {
+      "maxLength": 160,
+      "minLength": 1,
+      "title": "Case Name",
+      "type": "string"
+    },
+    "decision_stage": {
+      "maxLength": 120,
+      "title": "Decision Stage",
+      "type": "string"
+    },
+    "deck_length_preference": {
+      "maxLength": 80,
+      "title": "Deck Length Preference",
+      "type": "string"
+    },
+    "expected_deck_characteristics": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Expected Deck Characteristics",
+      "type": "array"
+    },
+    "expected_evidence_characteristics": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Expected Evidence Characteristics",
+      "type": "array"
+    },
+    "expected_message_characteristics": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Expected Message Characteristics",
+      "type": "array"
+    },
+    "industry": {
+      "maxLength": 120,
+      "title": "Industry",
+      "type": "string"
+    },
+    "integration_case_id": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Integration Case Id",
+      "type": "string"
+    },
+    "intentionally_missing_evidence": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 30,
+      "title": "Intentionally Missing Evidence",
+      "type": "array"
+    },
+    "known_constraints": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Known Constraints",
+      "type": "array"
+    },
+    "proposal_category": {
+      "maxLength": 120,
+      "title": "Proposal Category",
+      "type": "string"
+    },
+    "proposal_context": {
+      "$ref": "#/definitions/ProposalContext"
+    },
+    "review_tags": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Review Tags",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "pe2_alpha_integration_case_v1",
+      "default": "pe2_alpha_integration_case_v1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "integration_case_id",
+    "case_name",
+    "proposal_context"
+  ],
+  "title": "Presentation Engine 2.0 Alpha Integration Case Input",
+  "type": "object",
+  "x-phase": "alpha-integration"
+}

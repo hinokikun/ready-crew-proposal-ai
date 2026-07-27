@@ -21,6 +21,8 @@ _CONTEXT_TABLES = (
     "project_handoffs",
     "project_retrospectives",
     "proposal_histories",
+    "business_improvement_reports",
+    "proposal_agent_memories",
     "meeting_memos",
     "usage_logs",
     "audit_logs",
@@ -100,6 +102,16 @@ def add_missing_columns() -> None:
         _ensure_column(db, "integration_settings", "data_retention_days", "INTEGER NOT NULL DEFAULT 90")
         _ensure_column(db, "integration_settings", "last_security_review_at", "TEXT")
         _ensure_column(db, "integration_settings", "security_note", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(db, "proposal_histories", "project_name", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(db, "proposal_histories", "proposal_generation_duration_ms", "INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(db, "proposal_histories", "powerpoint_generation_duration_ms", "INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(db, "proposal_histories", "beautiful_ai_generation_duration_ms", "INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(db, "proposal_histories", "pdf_generation_duration_ms", "INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(db, "proposal_histories", "total_generation_duration_ms", "INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(db, "proposal_histories", "is_demo", "INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(db, "business_improvement_reports", "ai_input_minutes", "REAL NOT NULL DEFAULT 0")
+        _ensure_column(db, "business_improvement_reports", "ai_wait_minutes", "REAL NOT NULL DEFAULT 0")
+        _ensure_column(db, "business_improvement_reports", "is_demo", "INTEGER NOT NULL DEFAULT 0")
         _ensure_column(db, "external_intake_items", "security_flags", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(db, "external_intake_items", "reviewed_by", "INTEGER")
         _ensure_column(db, "external_intake_items", "reviewed_at", "TEXT")

@@ -373,6 +373,30 @@ class TrialReportRequest(BaseModel):
     admin_comment: str = Field("", max_length=2000)
 
 
+class BusinessImprovementReportRequest(BaseModel):
+    project_id: int | None = Field(None, ge=1)
+    project_name: str = Field("", max_length=200)
+    before_minutes: float = Field(..., ge=0, le=10080)
+    after_minutes: float = Field(0, ge=0, le=10080)
+    ai_input_minutes: float = Field(0, ge=0, le=10080)
+    ai_wait_minutes: float = Field(0, ge=0, le=10080)
+    revision_minutes: float = Field(0, ge=0, le=10080)
+    review_minutes: float = Field(0, ge=0, le=10080)
+    quality_score: int = Field(..., ge=1, le=5)
+    mistake_count: int = Field(0, ge=0, le=10000)
+    comment: str = Field("", max_length=2000)
+
+
+class ProposalAgentMemoryRequest(BaseModel):
+    project_id: int | None = Field(None, ge=1)
+    project_name: str = Field("", max_length=200)
+    hearing_notes: str = Field("", max_length=2000)
+    confirmation_items: str = Field("", max_length=2000)
+    proposal_content: str = Field("", max_length=2000)
+    competitor_analysis: str = Field("", max_length=2000)
+    improvement_history: str = Field("", max_length=2000)
+
+
 class WorkspaceConversationInput(BaseModel):
     client_message_id: str = Field(..., min_length=1, max_length=120)
     agent_name: str = Field(..., min_length=1, max_length=40)
@@ -528,6 +552,22 @@ class PowerPointData(BaseModel):
     slides: list[PowerPointSlide]
 
 
+class PresentationLayoutDecisionContract(BaseModel):
+    slide_id: str = Field("", description="Frontend slide identifier. Not persisted.")
+    slide_index: int | None = Field(None, description="1-based slide index from Proposal Studio.")
+    slide_type: str = Field("", description="Designer AI slide type.")
+    selected_layout_id: str = Field("", description="Selected LAYOUT-xxx id.")
+    recommended_layout_ids: list[str] = Field(default_factory=list, description="Candidate LAYOUT-xxx ids.")
+    selection_reason: str = Field("", description="Safe explanation of layout selection.")
+    expected_effect: str = Field("", description="Expected visual effect.")
+    template_id: str = Field("", description="Presentation template id.")
+    design_token_id: str = Field("", description="Design token id.")
+    applied_by: str = Field("designer_ai", description="user | designer_ai | quality_engine | backend_fallback")
+    status: str = Field("suggested", description="suggested | applied | rejected | backend_fallback | unsupported")
+    confidence: float = Field(0.8, ge=0, le=1, description="Decision confidence.")
+    human_review_required: bool = Field(False, description="Whether human review is required before submission.")
+
+
 class ProposalAnalysis(BaseModel):
     project_summary: str
     assumed_customer_issues: list[AssumedIssue]
@@ -573,4 +613,14 @@ class PptxDownloadRequest(BaseModel):
     past_proposal_template: str = Field("", description="過去提案書テンプレート")
     case_studies: str = Field("", description="成功事例データ")
     summary: bool = Field(False, description="要約版PowerPointとして生成するか")
+    design_template: str = Field("corporate_clean", description="Version 80 Presentation Designer template id")
+    brand_settings: dict[str, str] = Field(default_factory=dict, description="Optional brand color and font settings")
+    presentation_quality_state: dict | None = Field(
+        None,
+        description="Optional Version 81 Presentation Quality Engine state. Applied/rejected fixes only; not persisted.",
+    )
+    presentation_layout_decisions: list[PresentationLayoutDecisionContract] = Field(
+        default_factory=list,
+        description="Optional Version 81 Phase4 Designer AI layout decisions. Backward compatible and not persisted.",
+    )
 

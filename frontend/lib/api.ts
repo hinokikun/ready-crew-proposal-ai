@@ -8,6 +8,8 @@
   AiNotificationSummary,
   ActionQueueItem,
   ActionQueueStatus,
+  BusinessImprovementReport,
+  BusinessImprovementSummary,
   CreationHistoryItem,
   CrmCustomer,
   CrmProject,
@@ -72,6 +74,19 @@
   PresentationReviewScore,
   PresentationRevision,
   PresentationRevisionChange,
+  ProposalAgentDashboardData,
+  ProposalAgentMemory,
+  ProposalAgentProjectScore,
+  ProposalAgentScoreCriterion,
+  ProposalAgentCompetitor,
+  ProposalAgentHealth,
+  ProposalAgentKpi,
+  ProposalAgentPriority,
+  ProposalAgentSalesAction,
+  ProposalAgentStatusCard,
+  ProposalAgentTimelineItem,
+  ProposalAgentTodo,
+  ProposalAgentWinProbability,
   ProductAnalyticsDashboardData,
   ProjectHandoff,
   ProjectLifecycleAnalytics,
@@ -124,8 +139,13 @@ export {
   type ProjectHandoffPayload
 } from "@/client-api/crm";
 export {
+  createBusinessImprovementDemoData,
+  createBusinessImprovementReport,
   createTrialReport,
+  downloadBusinessImprovementReportsCsv,
+  downloadCreationHistoryCsv,
   downloadUsageDashboardCsv,
+  getBusinessImprovementReports,
   getAuditLogs,
   getCreationHistory,
   getDbLogs,
@@ -211,6 +231,7 @@ export {
   type WorkspaceConversationPayload
 } from "@/client-api/workspace";
 export { getWorkspaceContext, switchWorkspaceContext } from "@/client-api/organizations";
+export { downloadProposalAgentDashboard, getProposalAgentDashboard, saveProposalAgentMemory, type ProposalAgentMemoryPayload } from "@/client-api/proposalAgent";
 export {
   approvePresentationRevision,
   comparePresentationRevisions,

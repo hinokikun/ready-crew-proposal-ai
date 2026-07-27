@@ -1,0 +1,699 @@
+{
+  "connected_to_runtime": false,
+  "created_at": "2026-07-27 00:00:00+00:00",
+  "deck_blueprint_version": "pe2_deck_blueprint_v1",
+  "deck_id": "deck-plan-0ee17cfe60a9",
+  "evaluation_result": {
+    "blocking_warning_count": 0,
+    "dimensions": [
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Evidence Completeness",
+        "reason": "Every planned slide should have at least one required evidence item.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Evidence Quality",
+        "reason": "Evidence plans should use enough source variety for credible review.",
+        "recommendations": [],
+        "score": 9
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Evidence Traceability",
+        "reason": "Evidence requirements are traceability-aware.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Numeric Integrity Readiness",
+        "reason": "Numeric claims should be backed by explicit numeric evidence requirements.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Sales Persuasiveness",
+        "reason": "Critical evidence is assigned to decision, value, and CTA slides.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Customer-facing Readiness",
+        "reason": "Planner output remains evidence-only and avoids generated copy or slide blueprints.",
+        "recommendations": [],
+        "score": 10
+      }
+    ],
+    "grade": "A",
+    "max_score": 100,
+    "note": "This score evaluates evidence planning readiness only. It does not evaluate headlines, body copy, Slide Blueprints, diagrams, PPTX rendering, or sales outcome.",
+    "total_score": 98,
+    "warning_count": 0
+  },
+  "evidence_planner_version": "pe2_evidence_planner_v1",
+  "generated_body_text": false,
+  "generated_headlines": false,
+  "generated_main_messages": false,
+  "generated_slide_blueprints": false,
+  "project_id": "planner-fixture-web-01",
+  "slide_evidence": [
+    {
+      "case_study_required": false,
+      "customer_proof_required": false,
+      "evidence_confidence": "unknown",
+      "evidence_priority": "medium",
+      "evidence_source_types": [
+        "customer_interview"
+      ],
+      "generated_body_text": false,
+      "generated_headline": false,
+      "generated_main_message": false,
+      "generated_slide_blueprint": false,
+      "missing_evidence_warnings": [],
+      "numeric_evidence_required": false,
+      "optional_evidence": [],
+      "required_evidence": [
+        {
+          "case_study_required": false,
+          "confidence": "unknown",
+          "customer_proof_required": false,
+          "label": "Customer context confirmation",
+          "numeric_required": false,
+          "priority": "medium",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-00-cover-01",
+          "source_type": "customer_interview",
+          "traceability_required": true
+        }
+      ],
+      "risk_if_missing": "The slide may be less persuasive or harder to verify.",
+      "section_id": "sec-00-cover",
+      "section_type": "cover",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-00-cover",
+      "slide_goal": "cover",
+      "slide_order": 0,
+      "slide_role": "opening",
+      "visual_evidence_recommendation": "none"
+    },
+    {
+      "case_study_required": false,
+      "customer_proof_required": false,
+      "evidence_confidence": "likely",
+      "evidence_priority": "high",
+      "evidence_source_types": [
+        "internal_kpi",
+        "financial_estimate"
+      ],
+      "generated_body_text": false,
+      "generated_headline": false,
+      "generated_main_message": false,
+      "generated_slide_blueprint": false,
+      "missing_evidence_warnings": [],
+      "numeric_evidence_required": true,
+      "optional_evidence": [],
+      "required_evidence": [
+        {
+          "case_study_required": false,
+          "confidence": "likely",
+          "customer_proof_required": false,
+          "label": "Executive-level success criteria",
+          "numeric_required": true,
+          "priority": "high",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-01",
+          "source_type": "internal_kpi",
+          "traceability_required": true
+        },
+        {
+          "case_study_required": false,
+          "confidence": "likely",
+          "customer_proof_required": false,
+          "label": "Investment or value summary",
+          "numeric_required": true,
+          "priority": "high",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-02",
+          "source_type": "financial_estimate",
+          "traceability_required": true
+        }
+      ],
+      "risk_if_missing": "The slide may be less persuasive or harder to verify.",
+      "section_id": "sec-01-executive_summary",
+      "section_type": "executive_summary",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-01-executive_summary",
+      "slide_goal": "executive_summary",
+      "slide_order": 1,
+      "slide_role": "summary",
+      "visual_evidence_recommendation": "metric_card"
+    },
+    {
+      "case_study_required": false,
+      "customer_proof_required": true,
+      "evidence_confidence": "likely",
+      "evidence_priority": "critical",
+      "evidence_source_types": [
+        "customer_interview",
+        "internal_kpi",
+        "user_feedback"
+      ],
+      "generated_body_text": false,
+      "generated_headline": false,
+      "generated_main_message": false,
+      "generated_slide_blueprint": false,
+      "missing_evidence_warnings": [],
+      "numeric_evidence_required": true,
+      "optional_evidence": [
+        {
+          "case_study_required": false,
+          "confidence": "unknown",
+          "customer_proof_required": true,
+          "label": "Customer quote or voice-of-customer note",
+          "numeric_required": false,
+          "priority": "low",
+          "rationale": "A quote can make the issue more concrete if approved for use.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-02-problem-optional-quote",
+          "source_type": "user_feedback",
+          "traceability_required": true
+        }
+      ],
+      "required_evidence": [
+        {
+          "case_study_required": false,
+          "confidence": "likely",
+          "customer_proof_required": true,
+          "label": "Problem statement proof",
+          "numeric_required": false,
+          "priority": "critical",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-02-problem-01",
+          "source_type": "customer_interview",
+          "traceability_required": true
+        },
+        {
+          "case_study_required": false,
+          "confidence": "likely",
+          "customer_proof_required": false,
+          "label": "Problem impact metric",
+          "numeric_required": true,
+          "priority": "high",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-02-problem-02",
+          "source_type": "internal_kpi",
+          "traceability_required": true
+        }
+      ],
+      "risk_if_missing": "The proposal may feel generic because the customer's actual situation is not proven.",
+      "section_id": "sec-02-problem",
+      "section_type": "problem",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-02-problem",
+      "slide_goal": "problem_sharing",
+      "slide_order": 2,
+      "slide_role": "problem",
+      "visual_evidence_recommendation": "metric_card"
+    },
+    {
+      "case_study_required": false,
+      "customer_proof_required": false,
+      "evidence_confidence": "unknown",
+      "evidence_priority": "high",
+      "evidence_source_types": [
+        "market_research",
+        "industry_statistics"
+      ],
+      "generated_body_text": false,
+      "generated_headline": false,
+      "generated_main_message": false,
+      "generated_slide_blueprint": false,
+      "missing_evidence_warnings": [],
+      "numeric_evidence_required": true,
+      "optional_evidence": [],
+      "required_evidence": [
+        {
+          "case_study_required": false,
+          "confidence": "unknown",
+          "customer_proof_required": false,
+          "label": "Insight support",
+          "numeric_required": false,
+          "priority": "high",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-03-insight-01",
+          "source_type": "market_research",
+          "traceability_required": true
+        },
+        {
+          "case_study_required": false,
+          "confidence": "likely",
+          "customer_proof_required": false,
+          "label": "Industry benchmark",
+          "numeric_required": true,
+          "priority": "medium",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-03-insight-02",
+          "source_type": "industry_statistics",
+          "traceability_required": true
+        }
+      ],
+      "risk_if_missing": "The slide may be less persuasive or harder to verify.",
+      "section_id": "sec-03-insight",
+      "section_type": "insight",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-03-insight",
+      "slide_goal": "customer_insight",
+      "slide_order": 3,
+      "slide_role": "insight",
+      "visual_evidence_recommendation": "comparison_table"
+    },
+    {
+      "case_study_required": false,
+      "customer_proof_required": false,
+      "evidence_confidence": "unknown",
+      "evidence_priority": "critical",
+      "evidence_source_types": [
+        "competitor_analysis",
+        "market_research"
+      ],
+      "generated_body_text": false,
+      "generated_headline": false,
+      "generated_main_message": false,
+      "generated_slide_blueprint": false,
+      "missing_evidence_warnings": [],
+      "numeric_evidence_required": false,
+      "optional_evidence": [],
+      "required_evidence": [
+        {
+          "case_study_required": false,
+          "confidence": "likely",
+          "customer_proof_required": false,
+          "label": "Competitor comparison basis",
+          "numeric_required": false,
+          "priority": "critical",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-01",
+          "source_type": "competitor_analysis",
+          "traceability_required": true
+        },
+        {
+          "case_study_required": false,
+          "confidence": "unknown",
+          "customer_proof_required": false,
+          "label": "Market alternative evidence",
+          "numeric_required": false,
+          "priority": "high",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-02",
+          "source_type": "market_research",
+          "traceability_required": true
+        }
+      ],
+      "risk_if_missing": "The differentiation logic may be weak against alternatives.",
+      "section_id": "sec-04-competitor",
+      "section_type": "competitor",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-04-competitor",
+      "slide_goal": "competitive_analysis",
+      "slide_order": 4,
+      "slide_role": "proof",
+      "visual_evidence_recommendation": "comparison_table"
+    },
+    {
+      "case_study_required": true,
+      "customer_proof_required": true,
+      "evidence_confidence": "estimated",
+      "evidence_priority": "high",
+      "evidence_source_types": [
+        "project_experience",
+        "customer_interview"
+      ],
+      "generated_body_text": false,
+      "generated_headline": false,
+      "generated_main_message": false,
+      "generated_slide_blueprint": false,
+      "missing_evidence_warnings": [],
+      "numeric_evidence_required": false,
+      "optional_evidence": [],
+      "required_evidence": [
+        {
+          "case_study_required": true,
+          "confidence": "estimated",
+          "customer_proof_required": false,
+          "label": "Strategy feasibility basis",
+          "numeric_required": false,
+          "priority": "high",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-01",
+          "source_type": "project_experience",
+          "traceability_required": true
+        },
+        {
+          "case_study_required": false,
+          "confidence": "likely",
+          "customer_proof_required": true,
+          "label": "Strategic priority confirmation",
+          "numeric_required": false,
+          "priority": "high",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-02",
+          "source_type": "customer_interview",
+          "traceability_required": true
+        }
+      ],
+      "risk_if_missing": "The slide may be less persuasive or harder to verify.",
+      "section_id": "sec-05-strategy",
+      "section_type": "strategy",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-05-strategy",
+      "slide_goal": "proposal_overview",
+      "slide_order": 5,
+      "slide_role": "recommendation",
+      "visual_evidence_recommendation": "none"
+    },
+    {
+      "case_study_required": true,
+      "customer_proof_required": false,
+      "evidence_confidence": "estimated",
+      "evidence_priority": "high",
+      "evidence_source_types": [
+        "project_experience",
+        "implementation_result"
+      ],
+      "generated_body_text": false,
+      "generated_headline": false,
+      "generated_main_message": false,
+      "generated_slide_blueprint": false,
+      "missing_evidence_warnings": [],
+      "numeric_evidence_required": false,
+      "optional_evidence": [
+        {
+          "case_study_required": true,
+          "confidence": "estimated",
+          "customer_proof_required": false,
+          "label": "Relevant project example",
+          "numeric_required": false,
+          "priority": "low",
+          "rationale": "Useful if available, but not required for deck-level planning.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-06-solution-optional-case",
+          "source_type": "project_experience",
+          "traceability_required": true
+        }
+      ],
+      "required_evidence": [
+        {
+          "case_study_required": true,
+          "confidence": "estimated",
+          "customer_proof_required": false,
+          "label": "Solution feasibility evidence",
+          "numeric_required": false,
+          "priority": "high",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-06-solution-01",
+          "source_type": "project_experience",
+          "traceability_required": true
+        },
+        {
+          "case_study_required": true,
+          "confidence": "estimated",
+          "customer_proof_required": false,
+          "label": "Implementation outcome evidence",
+          "numeric_required": false,
+          "priority": "medium",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-06-solution-02",
+          "source_type": "implementation_result",
+          "traceability_required": true
+        }
+      ],
+      "risk_if_missing": "The slide may be less persuasive or harder to verify.",
+      "section_id": "sec-06-solution",
+      "section_type": "solution",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-06-solution",
+      "slide_goal": "proposal_overview",
+      "slide_order": 6,
+      "slide_role": "recommendation",
+      "visual_evidence_recommendation": "none"
+    },
+    {
+      "case_study_required": false,
+      "customer_proof_required": false,
+      "evidence_confidence": "likely",
+      "evidence_priority": "critical",
+      "evidence_source_types": [
+        "internal_kpi",
+        "financial_estimate"
+      ],
+      "generated_body_text": false,
+      "generated_headline": false,
+      "generated_main_message": false,
+      "generated_slide_blueprint": false,
+      "missing_evidence_warnings": [],
+      "numeric_evidence_required": true,
+      "optional_evidence": [],
+      "required_evidence": [
+        {
+          "case_study_required": false,
+          "confidence": "likely",
+          "customer_proof_required": false,
+          "label": "KPI baseline and target",
+          "numeric_required": true,
+          "priority": "critical",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-01",
+          "source_type": "internal_kpi",
+          "traceability_required": true
+        },
+        {
+          "case_study_required": false,
+          "confidence": "likely",
+          "customer_proof_required": false,
+          "label": "Measurement formula",
+          "numeric_required": true,
+          "priority": "high",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-02",
+          "source_type": "financial_estimate",
+          "traceability_required": true
+        }
+      ],
+      "risk_if_missing": "The customer may not trust value, cost, or investment claims.",
+      "section_id": "sec-07-kpi",
+      "section_type": "kpi",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-07-kpi",
+      "slide_goal": "kpi_definition",
+      "slide_order": 7,
+      "slide_role": "proof",
+      "visual_evidence_recommendation": "kpi_table"
+    },
+    {
+      "case_study_required": false,
+      "customer_proof_required": false,
+      "evidence_confidence": "likely",
+      "evidence_priority": "critical",
+      "evidence_source_types": [
+        "financial_estimate",
+        "internal_kpi"
+      ],
+      "generated_body_text": false,
+      "generated_headline": false,
+      "generated_main_message": false,
+      "generated_slide_blueprint": false,
+      "missing_evidence_warnings": [],
+      "numeric_evidence_required": true,
+      "optional_evidence": [],
+      "required_evidence": [
+        {
+          "case_study_required": false,
+          "confidence": "likely",
+          "customer_proof_required": false,
+          "label": "ROI model",
+          "numeric_required": true,
+          "priority": "critical",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-08-roi-01",
+          "source_type": "financial_estimate",
+          "traceability_required": true
+        },
+        {
+          "case_study_required": false,
+          "confidence": "likely",
+          "customer_proof_required": false,
+          "label": "Current baseline for ROI",
+          "numeric_required": true,
+          "priority": "high",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-08-roi-02",
+          "source_type": "internal_kpi",
+          "traceability_required": true
+        }
+      ],
+      "risk_if_missing": "The customer may not trust value, cost, or investment claims.",
+      "section_id": "sec-08-roi",
+      "section_type": "roi",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-08-roi",
+      "slide_goal": "roi_explanation",
+      "slide_order": 8,
+      "slide_role": "proof",
+      "visual_evidence_recommendation": "metric_card"
+    },
+    {
+      "case_study_required": true,
+      "customer_proof_required": false,
+      "evidence_confidence": "estimated",
+      "evidence_priority": "high",
+      "evidence_source_types": [
+        "project_experience",
+        "implementation_result"
+      ],
+      "generated_body_text": false,
+      "generated_headline": false,
+      "generated_main_message": false,
+      "generated_slide_blueprint": false,
+      "missing_evidence_warnings": [],
+      "numeric_evidence_required": false,
+      "optional_evidence": [
+        {
+          "case_study_required": true,
+          "confidence": "estimated",
+          "customer_proof_required": false,
+          "label": "Relevant project example",
+          "numeric_required": false,
+          "priority": "low",
+          "rationale": "Useful if available, but not required for deck-level planning.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-optional-case",
+          "source_type": "project_experience",
+          "traceability_required": true
+        }
+      ],
+      "required_evidence": [
+        {
+          "case_study_required": false,
+          "confidence": "estimated",
+          "customer_proof_required": false,
+          "label": "Roadmap feasibility evidence",
+          "numeric_required": false,
+          "priority": "high",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-01",
+          "source_type": "project_experience",
+          "traceability_required": true
+        },
+        {
+          "case_study_required": false,
+          "confidence": "estimated",
+          "customer_proof_required": false,
+          "label": "Milestone precedent",
+          "numeric_required": false,
+          "priority": "medium",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-02",
+          "source_type": "implementation_result",
+          "traceability_required": true
+        }
+      ],
+      "risk_if_missing": "The slide may be less persuasive or harder to verify.",
+      "section_id": "sec-09-roadmap",
+      "section_type": "roadmap",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-09-roadmap",
+      "slide_goal": "roadmap",
+      "slide_order": 9,
+      "slide_role": "plan",
+      "visual_evidence_recommendation": "roadmap"
+    },
+    {
+      "case_study_required": false,
+      "customer_proof_required": false,
+      "evidence_confidence": "estimated",
+      "evidence_priority": "critical",
+      "evidence_source_types": [
+        "financial_estimate",
+        "project_experience"
+      ],
+      "generated_body_text": false,
+      "generated_headline": false,
+      "generated_main_message": false,
+      "generated_slide_blueprint": false,
+      "missing_evidence_warnings": [],
+      "numeric_evidence_required": true,
+      "optional_evidence": [],
+      "required_evidence": [
+        {
+          "case_study_required": false,
+          "confidence": "likely",
+          "customer_proof_required": false,
+          "label": "Pricing basis",
+          "numeric_required": true,
+          "priority": "critical",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-01",
+          "source_type": "financial_estimate",
+          "traceability_required": true
+        },
+        {
+          "case_study_required": false,
+          "confidence": "estimated",
+          "customer_proof_required": false,
+          "label": "Scope and cost assumption",
+          "numeric_required": false,
+          "priority": "high",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-02",
+          "source_type": "project_experience",
+          "traceability_required": true
+        }
+      ],
+      "risk_if_missing": "The customer may not trust value, cost, or investment claims.",
+      "section_id": "sec-10-pricing",
+      "section_type": "pricing",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-10-pricing",
+      "slide_goal": "pricing",
+      "slide_order": 10,
+      "slide_role": "decision",
+      "visual_evidence_recommendation": "kpi_table"
+    },
+    {
+      "case_study_required": false,
+      "customer_proof_required": true,
+      "evidence_confidence": "likely",
+      "evidence_priority": "critical",
+      "evidence_source_types": [
+        "customer_interview"
+      ],
+      "generated_body_text": false,
+      "generated_headline": false,
+      "generated_main_message": false,
+      "generated_slide_blueprint": false,
+      "missing_evidence_warnings": [],
+      "numeric_evidence_required": false,
+      "optional_evidence": [],
+      "required_evidence": [
+        {
+          "case_study_required": false,
+          "confidence": "likely",
+          "customer_proof_required": true,
+          "label": "Next action agreement",
+          "numeric_required": false,
+          "priority": "critical",
+          "rationale": "Required to make the slide evidence-backed.",
+          "requirement_id": "ev-deck-plan-0ee17cfe60a9-slide-11-next_action-01",
+          "source_type": "customer_interview",
+          "traceability_required": true
+        }
+      ],
+      "risk_if_missing": "The deck may end without a decision-ready next step.",
+      "section_id": "sec-11-next_action",
+      "section_type": "next_action",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-11-next_action",
+      "slide_goal": "next_action",
+      "slide_order": 11,
+      "slide_role": "closing",
+      "visual_evidence_recommendation": "none"
+    }
+  ],
+  "warnings": []
+}

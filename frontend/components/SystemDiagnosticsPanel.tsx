@@ -6,6 +6,8 @@ import {
   getAdminAiLogs,
   getEnvironmentChecks,
   getProposalGenerationHistory,
+  getProposalGenerationStats,
+  downloadProposalGenerationHistoryCsv,
   getSystemDiagnostics,
   runConnectionTests,
   runSystemSelfCheck,
@@ -13,6 +15,7 @@ import {
   type EnvironmentCheckItem,
   type EnvironmentCheckStatus,
   type ProposalGenerationHistoryItem,
+  type ProposalGenerationStats,
   type SystemCheckRun,
   type SystemDiagnostics,
   type SystemDiagnosticStatus
@@ -52,6 +55,7 @@ export function SystemDiagnosticsPanel() {
   const [environment, setEnvironment] = useState<EnvironmentCheckItem[]>([]);
   const [aiLogs, setAiLogs] = useState<AdminAiLogItem[]>([]);
   const [history, setHistory] = useState<ProposalGenerationHistoryItem[]>([]);
+  const [historyStats, setHistoryStats] = useState<ProposalGenerationStats | null>(null);
   const [loading, setLoading] = useState("");
   const [error, setError] = useState("");
 
@@ -113,10 +117,31 @@ export function SystemDiagnosticsPanel() {
     setLoading("history");
     setError("");
     try {
-      const response = await getProposalGenerationHistory();
+      const [response, statsResponse] = await Promise.all([getProposalGenerationHistory(), getProposalGenerationStats()]);
       setHistory(response.items);
+      setHistoryStats(statsResponse.stats);
     } catch {
       setError("提案書生成履歴を取得できませんでした。権限またはBackendを確認してください。");
+    } finally {
+      setLoading("");
+    }
+  }
+
+  async function downloadHistoryCsv() {
+    setLoading("history-csv");
+    setError("");
+    try {
+      const blob = await downloadProposalGenerationHistoryCsv();
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "admin-proposal-generation-history.csv";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setError("提案書生成履歴CSVを出力できませんでした。");
     } finally {
       setLoading("");
     }
@@ -218,6 +243,10 @@ export function SystemDiagnosticsPanel() {
           <button className="secondary-button" type="button" onClick={() => void loadHistory()} disabled={loading === "history"}>
             {loading === "history" ? "読み込み中" : "履歴を読み込む"}
           </button>
+          <button className="secondary-button" type="button" onClick={() => void downloadHistoryCsv()} disabled={loading === "history-csv"}>
+            {loading === "history-csv" ? "CSV作成中" : "履歴CSV"}
+          </button>
+          {historyStats && <GenerationStatsGrid stats={historyStats} />}
           <HistoryTable items={history} />
         </div>
       </details>
@@ -289,6 +318,29 @@ function EnvironmentTable({ items }: { items: EnvironmentCheckItem[] }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function GenerationStatsGrid({ stats }: { stats: ProposalGenerationStats }) {
+  const toSeconds = (value: number) => `${Math.round((value / 1000) * 10) / 10}秒`;
+  return (
+    <div className="operation-summary-grid">
+      <article>
+        <span>累計生成回数</span>
+        <strong>{stats.total_count}件</strong>
+        <p>提案書・PPT・PDF・Beautiful.aiの履歴合計</p>
+      </article>
+      <article>
+        <span>平均生成時間</span>
+        <strong>{toSeconds(stats.average_generation_duration_ms)}</strong>
+        <p>時間計測済み履歴の平均</p>
+      </article>
+      <article>
+        <span>最短 / 最長</span>
+        <strong>{toSeconds(stats.min_generation_duration_ms)} / {toSeconds(stats.max_generation_duration_ms)}</strong>
+        <p>生成時間の幅</p>
+      </article>
     </div>
   );
 }

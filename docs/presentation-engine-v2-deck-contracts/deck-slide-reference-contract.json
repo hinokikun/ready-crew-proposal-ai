@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://proposalpilot.local/schemas/presentation-engine-v2/deck-slide-reference-contract.json",
+  "title": "Deck to Slide Blueprint Reference Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "slide_blueprint_id",
+    "slide_id",
+    "slide_order",
+    "expected_slide_type",
+    "expected_slide_goal",
+    "section_id",
+    "required"
+  ],
+  "properties": {
+    "slide_blueprint_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "slide_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "slide_order": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 200
+    },
+    "expected_slide_type": {
+      "type": "string"
+    },
+    "expected_slide_goal": {
+      "type": "string"
+    },
+    "section_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "required": {
+      "type": "boolean"
+    },
+    "embedded_slide_blueprint": {
+      "description": "Optional Phase 1 Slide Blueprint. Prefer references for Phase 1.5 fixtures.",
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  }
+}

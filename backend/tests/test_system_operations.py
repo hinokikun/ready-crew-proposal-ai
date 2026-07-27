@@ -142,3 +142,53 @@ def test_admin_ai_logs_and_proposal_history_reuse_existing_safe_records(monkeypa
         serialized = str(history_body).lower()
         assert "dummy-beautiful-secret" not in serialized
         assert "password" not in serialized
+
+
+def test_proposal_generation_history_stats_and_csv_include_training_metrics(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    with _client_with_env(monkeypatch, tmp_path) as client:
+        headers = _admin_headers(client)
+        from app.db import get_db
+        from app.repositories import create_history_log
+
+        with get_db() as db:
+            admin = db.execute("SELECT id FROM users WHERE email = 'admin@example.com'").fetchone()
+            user_id = int(admin["id"])
+            create_history_log(
+                db,
+                user_id,
+                None,
+                None,
+                "proposal_generation",
+                120,
+                "markdown+pptx-data",
+                "success",
+                project_name="Training Proposal",
+                proposal_generation_duration_ms=1500,
+            )
+            create_history_log(
+                db,
+                user_id,
+                None,
+                None,
+                "PowerPoint",
+                120,
+                "pptx",
+                "success",
+                project_name="Training Proposal",
+                powerpoint_generation_duration_ms=500,
+            )
+
+        stats_response = client.get("/api/admin/proposal-generation-history/stats", headers=headers)
+        assert stats_response.status_code == 200
+        stats = stats_response.json()["stats"]
+        assert stats["total_count"] >= 2
+        assert stats["average_generation_duration_ms"] > 0
+        assert stats["min_generation_duration_ms"] > 0
+        assert stats["max_generation_duration_ms"] >= stats["min_generation_duration_ms"]
+
+        csv_response = client.get("/api/admin/proposal-generation-history.csv", headers=headers)
+        assert csv_response.status_code == 200
+        body = csv_response.content.decode("utf-8-sig")
+        assert "案件名" in body
+        assert "Training Proposal" in body
+        assert "提案書生成時間" in body

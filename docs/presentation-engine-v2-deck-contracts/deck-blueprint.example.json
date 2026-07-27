@@ -1,0 +1,696 @@
+{
+  "deck_blueprint_version": "pe2_deck_blueprint_v1",
+  "deck_id": "deck-web_agency",
+  "project_id": "project-web_agency",
+  "deck_title": "Web制作会社向け新規サイト提案",
+  "deck_type": "web_production_proposal",
+  "status": "validated",
+  "language": "ja",
+  "created_at": "2026-07-27T00:00:00Z",
+  "deck_goal": "sell",
+  "primary_audience": "department_head",
+  "audience_seniority": "senior_manager",
+  "decision_stage": "approval",
+  "decision_question": "この提案を次の検討段階へ進めるべきか",
+  "desired_decision": "PoCまたは次回打ち合わせへ進む判断を得る",
+  "desired_reaction": "課題、価値、進め方が明確で検討しやすいと感じる",
+  "decision_urgency": "normal",
+  "story_arc": "problem_solution",
+  "persuasion_strategy": "roi",
+  "evidence_strategy": "balanced",
+  "core_thesis": "現状課題を整理し、段階的な導入でリスクを抑えながら成果を確認する。",
+  "value_proposition": "業務時間の削減と品質の標準化を同時に実現する。",
+  "key_differentiator": "AI活用と人の判断を組み合わせた現場定着型の提案である。",
+  "primary_objection": "導入負荷と費用対効果が不明確ではないか",
+  "objection_response": {
+    "objection_id": "obj-roi",
+    "objection": "費用対効果が不明確",
+    "response": "PoCで評価指標を確認し、本番判断の根拠を作ります。",
+    "evidence_requirement": "balanced",
+    "related_slide_ids": [
+      "slide-web_agency-05",
+      "slide-web_agency-07"
+    ]
+  },
+  "sections": [
+    {
+      "section_id": "sec-cover",
+      "section_type": "cover",
+      "section_title": "表紙",
+      "section_goal": "提案の主題を提示する",
+      "section_order": 0,
+      "required": true,
+      "minimum_slides": 1,
+      "maximum_slides": 3,
+      "slide_ids": [
+        "slide-web_agency-00"
+      ],
+      "entry_message": "表紙を確認します。",
+      "exit_message": "表紙から次の論点へ進みます。",
+      "transition_type": "continue",
+      "decision_relevance": "medium"
+    },
+    {
+      "section_id": "sec-summary",
+      "section_type": "executive_summary",
+      "section_title": "要約",
+      "section_goal": "意思決定に必要な結論を先に示す",
+      "section_order": 1,
+      "required": true,
+      "minimum_slides": 1,
+      "maximum_slides": 3,
+      "slide_ids": [
+        "slide-web_agency-01"
+      ],
+      "entry_message": "要約を確認します。",
+      "exit_message": "要約から次の論点へ進みます。",
+      "transition_type": "continue",
+      "decision_relevance": "high"
+    },
+    {
+      "section_id": "sec-problem",
+      "section_type": "problem",
+      "section_title": "課題",
+      "section_goal": "顧客課題を共有する",
+      "section_order": 2,
+      "required": true,
+      "minimum_slides": 1,
+      "maximum_slides": 3,
+      "slide_ids": [
+        "slide-web_agency-02"
+      ],
+      "entry_message": "課題を確認します。",
+      "exit_message": "課題から次の論点へ進みます。",
+      "transition_type": "continue",
+      "decision_relevance": "medium"
+    },
+    {
+      "section_id": "sec-insight",
+      "section_type": "insight",
+      "section_title": "示唆",
+      "section_goal": "課題から提案方針へ接続する",
+      "section_order": 3,
+      "required": true,
+      "minimum_slides": 1,
+      "maximum_slides": 3,
+      "slide_ids": [
+        "slide-web_agency-03"
+      ],
+      "entry_message": "示唆を確認します。",
+      "exit_message": "示唆から次の論点へ進みます。",
+      "transition_type": "continue",
+      "decision_relevance": "medium"
+    },
+    {
+      "section_id": "sec-solution",
+      "section_type": "solution",
+      "section_title": "提案",
+      "section_goal": "解決策を提示する",
+      "section_order": 4,
+      "required": true,
+      "minimum_slides": 1,
+      "maximum_slides": 3,
+      "slide_ids": [
+        "slide-web_agency-04"
+      ],
+      "entry_message": "提案を確認します。",
+      "exit_message": "提案から次の論点へ進みます。",
+      "transition_type": "continue",
+      "decision_relevance": "medium"
+    },
+    {
+      "section_id": "sec-kpi",
+      "section_type": "kpi",
+      "section_title": "評価基準",
+      "section_goal": "成果の測定方法を示す",
+      "section_order": 5,
+      "required": true,
+      "minimum_slides": 1,
+      "maximum_slides": 3,
+      "slide_ids": [
+        "slide-web_agency-05"
+      ],
+      "entry_message": "評価基準を確認します。",
+      "exit_message": "評価基準から次の論点へ進みます。",
+      "transition_type": "continue",
+      "decision_relevance": "medium"
+    },
+    {
+      "section_id": "sec-roadmap",
+      "section_type": "roadmap",
+      "section_title": "進め方",
+      "section_goal": "導入手順を示す",
+      "section_order": 6,
+      "required": true,
+      "minimum_slides": 1,
+      "maximum_slides": 3,
+      "slide_ids": [
+        "slide-web_agency-06"
+      ],
+      "entry_message": "進め方を確認します。",
+      "exit_message": "進め方から次の論点へ進みます。",
+      "transition_type": "continue",
+      "decision_relevance": "medium"
+    },
+    {
+      "section_id": "sec-pricing",
+      "section_type": "pricing",
+      "section_title": "概算費用",
+      "section_goal": "価値と費用の関係を示す",
+      "section_order": 7,
+      "required": true,
+      "minimum_slides": 1,
+      "maximum_slides": 3,
+      "slide_ids": [
+        "slide-web_agency-07"
+      ],
+      "entry_message": "概算費用を確認します。",
+      "exit_message": "概算費用から次の論点へ進みます。",
+      "transition_type": "continue",
+      "decision_relevance": "high"
+    },
+    {
+      "section_id": "sec-risk",
+      "section_type": "risk",
+      "section_title": "リスク",
+      "section_goal": "懸念と対策を示す",
+      "section_order": 8,
+      "required": true,
+      "minimum_slides": 1,
+      "maximum_slides": 3,
+      "slide_ids": [
+        "slide-web_agency-08"
+      ],
+      "entry_message": "リスクを確認します。",
+      "exit_message": "リスクから次の論点へ進みます。",
+      "transition_type": "continue",
+      "decision_relevance": "medium"
+    },
+    {
+      "section_id": "sec-next",
+      "section_type": "next_action",
+      "section_title": "次のアクション",
+      "section_goal": "意思決定後の行動を明確にする",
+      "section_order": 9,
+      "required": true,
+      "minimum_slides": 1,
+      "maximum_slides": 3,
+      "slide_ids": [
+        "slide-web_agency-09"
+      ],
+      "entry_message": "次のアクションを確認します。",
+      "exit_message": "次のアクションから次の論点へ進みます。",
+      "transition_type": "continue",
+      "decision_relevance": "high"
+    }
+  ],
+  "slide_plan": [
+    {
+      "slide_order": 0,
+      "slide_role": "opening",
+      "slide_type": "cover",
+      "section_id": "sec-cover",
+      "slide_goal": "cover",
+      "narrative_function": "hook",
+      "working_title": "表紙",
+      "key_message": "表紙を通じて、提案判断に必要な情報を整理します。",
+      "required": true,
+      "optional": false,
+      "decision_relevance": "medium",
+      "evidence_requirement": "balanced",
+      "transition_from_previous": "none",
+      "transition_to_next": "continue",
+      "slide_blueprint_id": "slide-web_agency-00"
+    },
+    {
+      "slide_order": 1,
+      "slide_role": "summary",
+      "slide_type": "executive_summary",
+      "section_id": "sec-summary",
+      "slide_goal": "executive_summary",
+      "narrative_function": "frame",
+      "working_title": "要約",
+      "key_message": "要約を通じて、提案判断に必要な情報を整理します。",
+      "required": true,
+      "optional": false,
+      "decision_relevance": "high",
+      "evidence_requirement": "balanced",
+      "transition_from_previous": "continue",
+      "transition_to_next": "continue",
+      "slide_blueprint_id": "slide-web_agency-01"
+    },
+    {
+      "slide_order": 2,
+      "slide_role": "problem",
+      "slide_type": "problem_statement",
+      "section_id": "sec-problem",
+      "slide_goal": "problem_sharing",
+      "narrative_function": "diagnose",
+      "working_title": "課題",
+      "key_message": "課題を通じて、提案判断に必要な情報を整理します。",
+      "required": true,
+      "optional": false,
+      "decision_relevance": "medium",
+      "evidence_requirement": "balanced",
+      "transition_from_previous": "continue",
+      "transition_to_next": "continue",
+      "slide_blueprint_id": "slide-web_agency-02"
+    },
+    {
+      "slide_order": 3,
+      "slide_role": "insight",
+      "slide_type": "recommended_strategy",
+      "section_id": "sec-insight",
+      "slide_goal": "customer_insight",
+      "narrative_function": "explain",
+      "working_title": "示唆",
+      "key_message": "示唆を通じて、提案判断に必要な情報を整理します。",
+      "required": true,
+      "optional": false,
+      "decision_relevance": "medium",
+      "evidence_requirement": "balanced",
+      "transition_from_previous": "continue",
+      "transition_to_next": "continue",
+      "slide_blueprint_id": "slide-web_agency-03"
+    },
+    {
+      "slide_order": 4,
+      "slide_role": "recommendation",
+      "slide_type": "proposal_overview",
+      "section_id": "sec-solution",
+      "slide_goal": "proposal_overview",
+      "narrative_function": "recommend",
+      "working_title": "提案",
+      "key_message": "提案を通じて、提案判断に必要な情報を整理します。",
+      "required": true,
+      "optional": false,
+      "decision_relevance": "medium",
+      "evidence_requirement": "balanced",
+      "transition_from_previous": "continue",
+      "transition_to_next": "continue",
+      "slide_blueprint_id": "slide-web_agency-04"
+    },
+    {
+      "slide_order": 5,
+      "slide_role": "proof",
+      "slide_type": "kpi_definition",
+      "section_id": "sec-kpi",
+      "slide_goal": "kpi_definition",
+      "narrative_function": "quantify",
+      "working_title": "評価基準",
+      "key_message": "評価基準を通じて、提案判断に必要な情報を整理します。",
+      "required": true,
+      "optional": false,
+      "decision_relevance": "medium",
+      "evidence_requirement": "balanced",
+      "transition_from_previous": "continue",
+      "transition_to_next": "continue",
+      "slide_blueprint_id": "slide-web_agency-05"
+    },
+    {
+      "slide_order": 6,
+      "slide_role": "plan",
+      "slide_type": "roadmap",
+      "section_id": "sec-roadmap",
+      "slide_goal": "roadmap",
+      "narrative_function": "explain",
+      "working_title": "進め方",
+      "key_message": "進め方を通じて、提案判断に必要な情報を整理します。",
+      "required": true,
+      "optional": false,
+      "decision_relevance": "medium",
+      "evidence_requirement": "balanced",
+      "transition_from_previous": "continue",
+      "transition_to_next": "continue",
+      "slide_blueprint_id": "slide-web_agency-06"
+    },
+    {
+      "slide_order": 7,
+      "slide_role": "decision",
+      "slide_type": "estimate_overview",
+      "section_id": "sec-pricing",
+      "slide_goal": "pricing",
+      "narrative_function": "quantify",
+      "working_title": "概算費用",
+      "key_message": "概算費用を通じて、提案判断に必要な情報を整理します。",
+      "required": true,
+      "optional": false,
+      "decision_relevance": "high",
+      "evidence_requirement": "balanced",
+      "transition_from_previous": "continue",
+      "transition_to_next": "continue",
+      "slide_blueprint_id": "slide-web_agency-07"
+    },
+    {
+      "slide_order": 8,
+      "slide_role": "support",
+      "slide_type": "risk_register",
+      "section_id": "sec-risk",
+      "slide_goal": "risk_handling",
+      "narrative_function": "de_risk",
+      "working_title": "リスク",
+      "key_message": "リスクを通じて、提案判断に必要な情報を整理します。",
+      "required": true,
+      "optional": false,
+      "decision_relevance": "medium",
+      "evidence_requirement": "balanced",
+      "transition_from_previous": "continue",
+      "transition_to_next": "continue",
+      "slide_blueprint_id": "slide-web_agency-08"
+    },
+    {
+      "slide_order": 9,
+      "slide_role": "closing",
+      "slide_type": "next_action",
+      "section_id": "sec-next",
+      "slide_goal": "next_action",
+      "narrative_function": "ask",
+      "working_title": "次のアクション",
+      "key_message": "次のアクションを通じて、提案判断に必要な情報を整理します。",
+      "required": true,
+      "optional": false,
+      "decision_relevance": "high",
+      "evidence_requirement": "balanced",
+      "transition_from_previous": "continue",
+      "transition_to_next": "summary_to_action",
+      "slide_blueprint_id": "slide-web_agency-09"
+    }
+  ],
+  "target_slide_count": 10,
+  "minimum_slide_count": 8,
+  "maximum_slide_count": 14,
+  "deck_length_type": "standard",
+  "appendix_allowed": true,
+  "optional_sections": [
+    "faq",
+    "appendix"
+  ],
+  "required_sections": [
+    "cover",
+    "executive_summary",
+    "problem",
+    "solution",
+    "kpi",
+    "roadmap",
+    "pricing",
+    "next_action"
+  ],
+  "opening_message": "本提案の目的と判断ポイントを最初に共有します。",
+  "problem_statement": "現状の業務には工数、品質、判断材料の不足という課題があります。",
+  "insight_statement": "課題は単独ではなく、業務フローと判断基準の設計に関係しています。",
+  "recommendation_statement": "段階的なPoCで価値と運用適合性を確認することを推奨します。",
+  "impact_statement": "確認時間、品質、意思決定速度の改善が期待できます。",
+  "closing_message": "次回は対象範囲と評価基準を確定します。",
+  "narrative_summary": "課題を共有し、示唆から提案へ接続し、評価基準と費用を確認したうえで次の行動を決める構成です。",
+  "story_beats": [
+    {
+      "beat_id": "beat-hook",
+      "narrative_function": "hook",
+      "message": "提案テーマを明確にする",
+      "related_section_ids": [
+        "sec-cover"
+      ],
+      "related_slide_ids": [
+        "slide-web_agency-00"
+      ]
+    },
+    {
+      "beat_id": "beat-diagnose",
+      "narrative_function": "diagnose",
+      "message": "課題を整理する",
+      "related_section_ids": [
+        "sec-problem"
+      ],
+      "related_slide_ids": [
+        "slide-web_agency-02"
+      ]
+    },
+    {
+      "beat_id": "beat-recommend",
+      "narrative_function": "recommend",
+      "message": "提案方針を示す",
+      "related_section_ids": [
+        "sec-solution"
+      ],
+      "related_slide_ids": [
+        "slide-web_agency-04"
+      ]
+    },
+    {
+      "beat_id": "beat-ask",
+      "narrative_function": "ask",
+      "message": "次の行動を合意する",
+      "related_section_ids": [
+        "sec-next"
+      ],
+      "related_slide_ids": [
+        "slide-web_agency-09"
+      ]
+    }
+  ],
+  "key_takeaways": [
+    "課題が明確",
+    "PoCで確認可能",
+    "次の行動が具体的"
+  ],
+  "decision_points": [
+    {
+      "decision_id": "dec-poc",
+      "question": "PoCへ進むか",
+      "required_evidence": [
+        "評価基準",
+        "概算費用"
+      ],
+      "related_slide_ids": [
+        "slide-web_agency-05",
+        "slide-web_agency-07"
+      ],
+      "urgency": "normal"
+    }
+  ],
+  "approval_requirements": [
+    {
+      "requirement_id": "app-budget",
+      "approver": "部門責任者",
+      "approval_condition": "PoC範囲と概算費用の合意",
+      "related_slide_ids": [
+        "slide-web_agency-07"
+      ]
+    }
+  ],
+  "cta_plan": {
+    "cta_strategy": "次回打ち合わせでPoC条件を確定する",
+    "next_action": "対象範囲と評価基準を確認する",
+    "owner": "営業担当",
+    "due_timing": "次回打ち合わせ",
+    "success_condition": "PoC実施可否の判断材料が揃う"
+  },
+  "next_action": "対象範囲と評価基準を確認する",
+  "risk_level": "medium",
+  "decision_dependencies": [
+    "評価基準",
+    "対象範囲",
+    "概算費用"
+  ],
+  "theme_direction": {
+    "recommended_theme": "consulting",
+    "tone": "consulting",
+    "formality": "business",
+    "visual_density": "medium",
+    "evidence_density": "balanced",
+    "executive_summary_required": true
+  },
+  "slide_blueprint_refs": [
+    {
+      "slide_blueprint_id": "slide-web_agency-00",
+      "slide_id": "slide-web_agency-00",
+      "slide_order": 0,
+      "expected_slide_type": "cover",
+      "expected_slide_goal": "cover",
+      "section_id": "sec-cover",
+      "required": true,
+      "embedded_slide_blueprint": null
+    },
+    {
+      "slide_blueprint_id": "slide-web_agency-01",
+      "slide_id": "slide-web_agency-01",
+      "slide_order": 1,
+      "expected_slide_type": "executive_summary",
+      "expected_slide_goal": "executive_summary",
+      "section_id": "sec-summary",
+      "required": true,
+      "embedded_slide_blueprint": null
+    },
+    {
+      "slide_blueprint_id": "slide-web_agency-02",
+      "slide_id": "slide-web_agency-02",
+      "slide_order": 2,
+      "expected_slide_type": "problem_statement",
+      "expected_slide_goal": "problem_sharing",
+      "section_id": "sec-problem",
+      "required": true,
+      "embedded_slide_blueprint": null
+    },
+    {
+      "slide_blueprint_id": "slide-web_agency-03",
+      "slide_id": "slide-web_agency-03",
+      "slide_order": 3,
+      "expected_slide_type": "recommended_strategy",
+      "expected_slide_goal": "customer_insight",
+      "section_id": "sec-insight",
+      "required": true,
+      "embedded_slide_blueprint": null
+    },
+    {
+      "slide_blueprint_id": "slide-web_agency-04",
+      "slide_id": "slide-web_agency-04",
+      "slide_order": 4,
+      "expected_slide_type": "proposal_overview",
+      "expected_slide_goal": "proposal_overview",
+      "section_id": "sec-solution",
+      "required": true,
+      "embedded_slide_blueprint": null
+    },
+    {
+      "slide_blueprint_id": "slide-web_agency-05",
+      "slide_id": "slide-web_agency-05",
+      "slide_order": 5,
+      "expected_slide_type": "kpi_definition",
+      "expected_slide_goal": "kpi_definition",
+      "section_id": "sec-kpi",
+      "required": true,
+      "embedded_slide_blueprint": null
+    },
+    {
+      "slide_blueprint_id": "slide-web_agency-06",
+      "slide_id": "slide-web_agency-06",
+      "slide_order": 6,
+      "expected_slide_type": "roadmap",
+      "expected_slide_goal": "roadmap",
+      "section_id": "sec-roadmap",
+      "required": true,
+      "embedded_slide_blueprint": null
+    },
+    {
+      "slide_blueprint_id": "slide-web_agency-07",
+      "slide_id": "slide-web_agency-07",
+      "slide_order": 7,
+      "expected_slide_type": "estimate_overview",
+      "expected_slide_goal": "pricing",
+      "section_id": "sec-pricing",
+      "required": true,
+      "embedded_slide_blueprint": null
+    },
+    {
+      "slide_blueprint_id": "slide-web_agency-08",
+      "slide_id": "slide-web_agency-08",
+      "slide_order": 8,
+      "expected_slide_type": "risk_register",
+      "expected_slide_goal": "risk_handling",
+      "section_id": "sec-risk",
+      "required": true,
+      "embedded_slide_blueprint": null
+    },
+    {
+      "slide_blueprint_id": "slide-web_agency-09",
+      "slide_id": "slide-web_agency-09",
+      "slide_order": 9,
+      "expected_slide_type": "next_action",
+      "expected_slide_goal": "next_action",
+      "section_id": "sec-next",
+      "required": true,
+      "embedded_slide_blueprint": null
+    }
+  ],
+  "generation_source": "offline_fixture",
+  "confidence": 0.84,
+  "warnings": [],
+  "validation_result": null,
+  "evaluation_result": null,
+  "source_references": [
+    {
+      "source_id": "src-training",
+      "label": "研修用架空案件",
+      "source_type": "fixture",
+      "confidence": "high"
+    }
+  ],
+  "created_by": "phase1_5_fixture",
+  "schema_version": "pe2_deck_blueprint_v1",
+  "audience_profile": {
+    "primary_audience": "department_head",
+    "seniority": "senior_manager",
+    "decision_stage": "approval",
+    "known_priorities": [
+      "費用対効果",
+      "実行可能性"
+    ],
+    "avoid_topics": [
+      "根拠のない断定"
+    ]
+  },
+  "constraints": [
+    {
+      "constraint_id": "con-no-facts",
+      "label": "未入力の事実を作らない",
+      "detail": "数値は入力またはPoC測定と明記する",
+      "blocking": true
+    }
+  ],
+  "transitions": [
+    {
+      "transition_type": "continue",
+      "from_slide_id": "slide-web_agency-00",
+      "to_slide_id": "slide-web_agency-01",
+      "bridge_message": "次の論点へ進みます。"
+    },
+    {
+      "transition_type": "continue",
+      "from_slide_id": "slide-web_agency-01",
+      "to_slide_id": "slide-web_agency-02",
+      "bridge_message": "次の論点へ進みます。"
+    },
+    {
+      "transition_type": "continue",
+      "from_slide_id": "slide-web_agency-02",
+      "to_slide_id": "slide-web_agency-03",
+      "bridge_message": "次の論点へ進みます。"
+    },
+    {
+      "transition_type": "continue",
+      "from_slide_id": "slide-web_agency-03",
+      "to_slide_id": "slide-web_agency-04",
+      "bridge_message": "次の論点へ進みます。"
+    },
+    {
+      "transition_type": "continue",
+      "from_slide_id": "slide-web_agency-04",
+      "to_slide_id": "slide-web_agency-05",
+      "bridge_message": "次の論点へ進みます。"
+    },
+    {
+      "transition_type": "continue",
+      "from_slide_id": "slide-web_agency-05",
+      "to_slide_id": "slide-web_agency-06",
+      "bridge_message": "次の論点へ進みます。"
+    },
+    {
+      "transition_type": "continue",
+      "from_slide_id": "slide-web_agency-06",
+      "to_slide_id": "slide-web_agency-07",
+      "bridge_message": "次の論点へ進みます。"
+    },
+    {
+      "transition_type": "continue",
+      "from_slide_id": "slide-web_agency-07",
+      "to_slide_id": "slide-web_agency-08",
+      "bridge_message": "次の論点へ進みます。"
+    },
+    {
+      "transition_type": "continue",
+      "from_slide_id": "slide-web_agency-08",
+      "to_slide_id": "slide-web_agency-09",
+      "bridge_message": "次の論点へ進みます。"
+    }
+  ]
+}

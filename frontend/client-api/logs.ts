@@ -1,6 +1,8 @@
 ﻿import { fetchBlob, fetchJson } from "@/client-api/client";
 import type {
   AuditLog,
+  BusinessImprovementReport,
+  BusinessImprovementSummary,
   CreationHistoryItem,
   ImprovementDashboardData,
   OperationReadinessData,
@@ -26,6 +28,7 @@ export function getCreationHistory(params: {
   date_from?: string;
   date_to?: string;
   limit?: number;
+  include_demo?: boolean;
 } = {}): Promise<{ items: CreationHistoryItem[] }> {
   const search = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
@@ -35,6 +38,62 @@ export function getCreationHistory(params: {
   });
   const suffix = search.toString() ? `?${search.toString()}` : "";
   return fetchJson(`/api/logs/creation-history${suffix}`);
+}
+
+export function downloadCreationHistoryCsv(params: {
+  q?: string;
+  status?: string;
+  date_from?: string;
+  date_to?: string;
+  limit?: number;
+  include_demo?: boolean;
+} = {}): Promise<Blob> {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== "") {
+      search.set(key, String(value));
+    }
+  });
+  const suffix = search.toString() ? `?${search.toString()}` : "";
+  return fetchBlob(`/api/logs/creation-history.csv${suffix}`);
+}
+
+export function getBusinessImprovementReports(includeDemo = false): Promise<{ items: BusinessImprovementReport[]; summary: BusinessImprovementSummary; include_demo: boolean }> {
+  return fetchJson(`/api/logs/business-improvement-reports?include_demo=${includeDemo ? "true" : "false"}`);
+}
+
+export function createBusinessImprovementReport(payload: {
+  project_id?: number | null;
+  project_name: string;
+  before_minutes: number;
+  after_minutes: number;
+  ai_input_minutes: number;
+  ai_wait_minutes: number;
+  revision_minutes: number;
+  review_minutes: number;
+  quality_score: number;
+  mistake_count: number;
+  comment: string;
+}): Promise<{ report: BusinessImprovementReport }> {
+  return fetchJson("/api/logs/business-improvement-reports", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function createBusinessImprovementDemoData(): Promise<{
+  created: number;
+  history_created: number;
+  items: BusinessImprovementReport[];
+  summary: BusinessImprovementSummary;
+}> {
+  return fetchJson("/api/logs/business-improvement-reports/demo-data", {
+    method: "POST"
+  });
+}
+
+export function downloadBusinessImprovementReportsCsv(includeDemo = false): Promise<Blob> {
+  return fetchBlob(`/api/logs/business-improvement-reports.csv?include_demo=${includeDemo ? "true" : "false"}`);
 }
 
 export function downloadUsageDashboardCsv(): Promise<Blob> {

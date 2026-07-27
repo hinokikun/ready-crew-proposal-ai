@@ -1,0 +1,1797 @@
+{
+  "connected_to_runtime": false,
+  "created_at": "2026-07-27 00:00:00+00:00",
+  "deck_id": "deck-plan-0ee17cfe60a9",
+  "evaluation_result": {
+    "blocking_issue_count": 0,
+    "dimensions": [
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Intent Clarity",
+        "reason": "Average intent clarity across 12 slide intents.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Visual Readiness",
+        "reason": "Average visual readiness across 12 slide intents.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Information Hierarchy",
+        "reason": "Average information hierarchy across 12 slide intents.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Reading Flow",
+        "reason": "Average reading flow across 12 slide intents.",
+        "recommendations": [],
+        "score": 9
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Evidence Compatibility",
+        "reason": "Average evidence compatibility across 12 slide intents.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Message Compatibility",
+        "reason": "Average message compatibility across 12 slide intents.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Diagram Suitability",
+        "reason": "Average diagram suitability across 12 slide intents.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Chart Suitability",
+        "reason": "Average chart suitability across 12 slide intents.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Customer-facing Readiness",
+        "reason": "Average customer-facing readiness across 12 slide intents.",
+        "recommendations": [],
+        "score": 10
+      }
+    ],
+    "grade": "S",
+    "max_score": 100,
+    "note": "This score evaluates Slide Intent readiness only. It does not evaluate Slide Blueprint generation, layout, diagram rendering, chart rendering, typography, theme, PPTX output, API behavior, or sales outcome.",
+    "total_score": 99,
+    "warning_count": 0
+  },
+  "generated_charts": false,
+  "generated_diagrams": false,
+  "generated_pptx": false,
+  "generated_slide_blueprints": false,
+  "project_id": "planner-fixture-web-01",
+  "project_name": "Manufacturing Website Renewal",
+  "slide_intent_output_version": "pe2_slide_intent_output_v1",
+  "slide_intents": [
+    {
+      "chart_candidate": "none",
+      "connected_to_runtime": false,
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "diagram_candidate": "image_placeholder",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Intent Clarity",
+            "reason": "Slide Intent must say what the viewer should understand or decide.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Visual Readiness",
+            "reason": "Slide Intent should provide enough abstraction for Visual Director to choose a visual pattern.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Information Hierarchy",
+            "reason": "Primary focus, secondary points, and muted content should be clearly separated.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Reading Flow",
+            "reason": "Reading order should describe how information should be scanned before rendering.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Compatibility",
+            "reason": "Visual intent must respect evidence gaps and avoid hiding missing proof.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Compatibility",
+            "reason": "Intent should be traceable to Message Designer output.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Diagram Suitability",
+            "reason": "Diagram candidate should be selected only when it clarifies the slide purpose.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Chart Suitability",
+            "reason": "Chart candidate should require numeric evidence and avoid fake numbers.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readiness",
+            "reason": "Intent should be safe for customer-facing visual planning.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "S",
+        "max_score": 100,
+        "note": "This score evaluates Slide Intent readiness only. It does not evaluate Slide Blueprint generation, layout, diagram rendering, chart rendering, typography, theme, PPTX output, API behavior, or sales outcome.",
+        "total_score": 99,
+        "warning_count": 0
+      },
+      "generated_chart": false,
+      "generated_diagram": false,
+      "generated_pptx": false,
+      "generated_slide_blueprint": false,
+      "information_priority": {
+        "density": "low",
+        "emphasis": "main_message",
+        "muted_content": [],
+        "primary_focus": "この資料では、案件の目的、検討理由、次の判断事項を営業説明しやすい順に整理します。",
+        "secondary_focus": [
+          "Customer context confirmationを確認する"
+        ]
+      },
+      "input_fingerprint": "e9ec884017e04f8fda8052cdb3a1a16d84bec568",
+      "input_metrics": {
+        "checklist_item_count": 1,
+        "comparison_basis_present": true,
+        "hierarchy_basis_present": false,
+        "image_evidence_present": false,
+        "missing_evidence_count": 0,
+        "numeric_claim_count": 0,
+        "required_evidence_count": 1,
+        "supporting_message_count": 1,
+        "time_sequence_present": true,
+        "total_text_chars": 149
+      },
+      "intent_confidence": "high",
+      "intent_id": "intent-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-00-cover-e9ec884017",
+      "layout_constraint": [
+        "keep_single_message",
+        "no_layout_generated",
+        "image_placeholder_only"
+      ],
+      "reading_order": "center_out",
+      "rendering_hint": "Show the slide as hero communicating frame_decision without generating coordinates, fonts, colors, or PowerPoint objects. Visual Director may consider image_placeholder.",
+      "schema_version": "pe2_slide_intent_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-00-cover",
+      "slide_intent": "frame_decision",
+      "slide_intent_version": "pe2_slide_intent_v1",
+      "slide_order": 0,
+      "slide_type": "cover",
+      "source_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-00-cover-01"
+      ],
+      "source_message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-00-cover-60073de2",
+      "validation_result": {
+        "issues": [],
+        "valid": true
+      },
+      "visual_pattern_candidate": "hero",
+      "warnings": []
+    },
+    {
+      "chart_candidate": "none",
+      "connected_to_runtime": false,
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "diagram_candidate": "callout",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Intent Clarity",
+            "reason": "Slide Intent must say what the viewer should understand or decide.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Visual Readiness",
+            "reason": "Slide Intent should provide enough abstraction for Visual Director to choose a visual pattern.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Information Hierarchy",
+            "reason": "Primary focus, secondary points, and muted content should be clearly separated.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Reading Flow",
+            "reason": "Reading order should describe how information should be scanned before rendering.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Compatibility",
+            "reason": "Visual intent must respect evidence gaps and avoid hiding missing proof.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Compatibility",
+            "reason": "Intent should be traceable to Message Designer output.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Diagram Suitability",
+            "reason": "Diagram candidate should be selected only when it clarifies the slide purpose.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Chart Suitability",
+            "reason": "Chart candidate should require numeric evidence and avoid fake numbers.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readiness",
+            "reason": "Intent should be safe for customer-facing visual planning.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "S",
+        "max_score": 100,
+        "note": "This score evaluates Slide Intent readiness only. It does not evaluate Slide Blueprint generation, layout, diagram rendering, chart rendering, typography, theme, PPTX output, API behavior, or sales outcome.",
+        "total_score": 99,
+        "warning_count": 0
+      },
+      "generated_chart": false,
+      "generated_diagram": false,
+      "generated_pptx": false,
+      "generated_slide_blueprint": false,
+      "information_priority": {
+        "density": "medium",
+        "emphasis": "numeric_claim",
+        "muted_content": [],
+        "primary_focus": "意思決定に必要な課題、提案方針、期待成果、次のアクションを先に確認できる構成です。",
+        "secondary_focus": [
+          "Executive-level success criteriaを確認する",
+          "Investment or value summaryを確認する"
+        ]
+      },
+      "input_fingerprint": "7e63f3d98c88daa66626a684ca9d58deec0535c4",
+      "input_metrics": {
+        "checklist_item_count": 2,
+        "comparison_basis_present": true,
+        "hierarchy_basis_present": false,
+        "image_evidence_present": false,
+        "missing_evidence_count": 0,
+        "numeric_claim_count": 1,
+        "required_evidence_count": 2,
+        "supporting_message_count": 2,
+        "time_sequence_present": true,
+        "total_text_chars": 166
+      },
+      "intent_confidence": "high",
+      "intent_id": "intent-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-01-executive_summary-7e63f3d98c",
+      "layout_constraint": [
+        "keep_single_message",
+        "no_layout_generated"
+      ],
+      "reading_order": "scan_cards",
+      "rendering_hint": "Show the slide as summary_cards communicating summarize without generating coordinates, fonts, colors, or PowerPoint objects. Visual Director may consider callout.",
+      "schema_version": "pe2_slide_intent_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-01-executive_summary",
+      "slide_intent": "summarize",
+      "slide_intent_version": "pe2_slide_intent_v1",
+      "slide_order": 1,
+      "slide_type": "executive_summary",
+      "source_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-02"
+      ],
+      "source_message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-01-executive_summary-b53ff831",
+      "validation_result": {
+        "issues": [],
+        "valid": true
+      },
+      "visual_pattern_candidate": "summary_cards",
+      "warnings": []
+    },
+    {
+      "chart_candidate": "none",
+      "connected_to_runtime": false,
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "diagram_candidate": "callout",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Intent Clarity",
+            "reason": "Slide Intent must say what the viewer should understand or decide.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Visual Readiness",
+            "reason": "Slide Intent should provide enough abstraction for Visual Director to choose a visual pattern.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Information Hierarchy",
+            "reason": "Primary focus, secondary points, and muted content should be clearly separated.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Reading Flow",
+            "reason": "Reading order should describe how information should be scanned before rendering.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Compatibility",
+            "reason": "Visual intent must respect evidence gaps and avoid hiding missing proof.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Compatibility",
+            "reason": "Intent should be traceable to Message Designer output.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Diagram Suitability",
+            "reason": "Diagram candidate should be selected only when it clarifies the slide purpose.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Chart Suitability",
+            "reason": "Chart candidate should require numeric evidence and avoid fake numbers.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readiness",
+            "reason": "Intent should be safe for customer-facing visual planning.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "S",
+        "max_score": 100,
+        "note": "This score evaluates Slide Intent readiness only. It does not evaluate Slide Blueprint generation, layout, diagram rendering, chart rendering, typography, theme, PPTX output, API behavior, or sales outcome.",
+        "total_score": 99,
+        "warning_count": 0
+      },
+      "generated_chart": false,
+      "generated_diagram": false,
+      "generated_pptx": false,
+      "generated_slide_blueprint": false,
+      "information_priority": {
+        "density": "low",
+        "emphasis": "numeric_claim",
+        "muted_content": [],
+        "primary_focus": "顧客が抱える課題を確認済み事実と不足情報に分け、提案の前提を曖昧にしないことが狙いです。",
+        "secondary_focus": [
+          "Problem statement proofを確認する",
+          "Problem impact metricを確認する"
+        ]
+      },
+      "input_fingerprint": "c27a5567dfd2e099e5232fb8b7c4401b02b9ab96",
+      "input_metrics": {
+        "checklist_item_count": 2,
+        "comparison_basis_present": true,
+        "hierarchy_basis_present": false,
+        "image_evidence_present": false,
+        "missing_evidence_count": 0,
+        "numeric_claim_count": 1,
+        "required_evidence_count": 2,
+        "supporting_message_count": 2,
+        "time_sequence_present": true,
+        "total_text_chars": 156
+      },
+      "intent_confidence": "high",
+      "intent_id": "intent-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-02-problem-c27a5567df",
+      "layout_constraint": [
+        "keep_single_message",
+        "no_layout_generated"
+      ],
+      "reading_order": "title_first",
+      "rendering_hint": "Show the slide as callout communicating explain_problem without generating coordinates, fonts, colors, or PowerPoint objects. Visual Director may consider callout.",
+      "schema_version": "pe2_slide_intent_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-02-problem",
+      "slide_intent": "explain_problem",
+      "slide_intent_version": "pe2_slide_intent_v1",
+      "slide_order": 2,
+      "slide_type": "problem",
+      "source_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-02-problem-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-02-problem-02"
+      ],
+      "source_message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-02-problem-5b90318d",
+      "validation_result": {
+        "issues": [],
+        "valid": true
+      },
+      "visual_pattern_candidate": "callout",
+      "warnings": []
+    },
+    {
+      "chart_candidate": "none",
+      "connected_to_runtime": false,
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "diagram_candidate": "matrix",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Intent Clarity",
+            "reason": "Slide Intent must say what the viewer should understand or decide.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Visual Readiness",
+            "reason": "Slide Intent should provide enough abstraction for Visual Director to choose a visual pattern.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Information Hierarchy",
+            "reason": "Primary focus, secondary points, and muted content should be clearly separated.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Reading Flow",
+            "reason": "Reading order should describe how information should be scanned before rendering.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Compatibility",
+            "reason": "Visual intent must respect evidence gaps and avoid hiding missing proof.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Compatibility",
+            "reason": "Intent should be traceable to Message Designer output.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Diagram Suitability",
+            "reason": "Diagram candidate should be selected only when it clarifies the slide purpose.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Chart Suitability",
+            "reason": "Chart candidate should require numeric evidence and avoid fake numbers.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readiness",
+            "reason": "Intent should be safe for customer-facing visual planning.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "S",
+        "max_score": 100,
+        "note": "This score evaluates Slide Intent readiness only. It does not evaluate Slide Blueprint generation, layout, diagram rendering, chart rendering, typography, theme, PPTX output, API behavior, or sales outcome.",
+        "total_score": 99,
+        "warning_count": 0
+      },
+      "generated_chart": false,
+      "generated_diagram": false,
+      "generated_pptx": false,
+      "generated_slide_blueprint": false,
+      "information_priority": {
+        "density": "low",
+        "emphasis": "numeric_claim",
+        "muted_content": [],
+        "primary_focus": "課題の背景と判断材料を結び、単なる機能紹介ではなく選ぶ理由を明確にします。",
+        "secondary_focus": [
+          "Insight supportを確認する",
+          "Industry benchmarkを確認する"
+        ]
+      },
+      "input_fingerprint": "fb088a4ceab8a108ee85334bbd62840f3a74119c",
+      "input_metrics": {
+        "checklist_item_count": 2,
+        "comparison_basis_present": true,
+        "hierarchy_basis_present": false,
+        "image_evidence_present": false,
+        "missing_evidence_count": 0,
+        "numeric_claim_count": 1,
+        "required_evidence_count": 2,
+        "supporting_message_count": 2,
+        "time_sequence_present": true,
+        "total_text_chars": 137
+      },
+      "intent_confidence": "high",
+      "intent_id": "intent-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-03-insight-fb088a4cea",
+      "layout_constraint": [
+        "keep_single_message",
+        "no_layout_generated"
+      ],
+      "reading_order": "z_pattern",
+      "rendering_hint": "Show the slide as matrix communicating share_insight without generating coordinates, fonts, colors, or PowerPoint objects. Visual Director may consider matrix.",
+      "schema_version": "pe2_slide_intent_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-03-insight",
+      "slide_intent": "share_insight",
+      "slide_intent_version": "pe2_slide_intent_v1",
+      "slide_order": 3,
+      "slide_type": "analysis",
+      "source_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-03-insight-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-03-insight-02"
+      ],
+      "source_message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-03-insight-a66a01c3",
+      "validation_result": {
+        "issues": [],
+        "valid": true
+      },
+      "visual_pattern_candidate": "matrix",
+      "warnings": []
+    },
+    {
+      "chart_candidate": "none",
+      "connected_to_runtime": false,
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "diagram_candidate": "comparison_table",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Intent Clarity",
+            "reason": "Slide Intent must say what the viewer should understand or decide.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Visual Readiness",
+            "reason": "Slide Intent should provide enough abstraction for Visual Director to choose a visual pattern.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Information Hierarchy",
+            "reason": "Primary focus, secondary points, and muted content should be clearly separated.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Reading Flow",
+            "reason": "Reading order should describe how information should be scanned before rendering.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Compatibility",
+            "reason": "Visual intent must respect evidence gaps and avoid hiding missing proof.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Compatibility",
+            "reason": "Intent should be traceable to Message Designer output.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Diagram Suitability",
+            "reason": "Diagram candidate should be selected only when it clarifies the slide purpose.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Chart Suitability",
+            "reason": "Chart candidate should require numeric evidence and avoid fake numbers.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readiness",
+            "reason": "Intent should be safe for customer-facing visual planning.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "S",
+        "max_score": 100,
+        "note": "This score evaluates Slide Intent readiness only. It does not evaluate Slide Blueprint generation, layout, diagram rendering, chart rendering, typography, theme, PPTX output, API behavior, or sales outcome.",
+        "total_score": 99,
+        "warning_count": 0
+      },
+      "generated_chart": false,
+      "generated_diagram": false,
+      "generated_pptx": false,
+      "generated_slide_blueprint": false,
+      "information_priority": {
+        "density": "medium",
+        "emphasis": "main_message",
+        "muted_content": [],
+        "primary_focus": "代替案との比較軸を先に定め、価格だけでなく適合性とリスクで判断できるようにします。",
+        "secondary_focus": [
+          "Competitor comparison basisを確認する",
+          "Market alternative evidenceを確認する"
+        ]
+      },
+      "input_fingerprint": "e0852828a6e8b90a1c05100372e6f3dddf7be3b3",
+      "input_metrics": {
+        "checklist_item_count": 2,
+        "comparison_basis_present": true,
+        "hierarchy_basis_present": false,
+        "image_evidence_present": false,
+        "missing_evidence_count": 0,
+        "numeric_claim_count": 0,
+        "required_evidence_count": 2,
+        "supporting_message_count": 2,
+        "time_sequence_present": true,
+        "total_text_chars": 164
+      },
+      "intent_confidence": "high",
+      "intent_id": "intent-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-04-competitor-e0852828a6",
+      "layout_constraint": [
+        "keep_single_message",
+        "no_layout_generated"
+      ],
+      "reading_order": "before_after",
+      "rendering_hint": "Show the slide as comparison communicating compare_options without generating coordinates, fonts, colors, or PowerPoint objects. Visual Director may consider comparison_table.",
+      "schema_version": "pe2_slide_intent_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-04-competitor",
+      "slide_intent": "compare_options",
+      "slide_intent_version": "pe2_slide_intent_v1",
+      "slide_order": 4,
+      "slide_type": "comparison",
+      "source_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-02"
+      ],
+      "source_message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-04-competitor-36570d2e",
+      "validation_result": {
+        "issues": [],
+        "valid": true
+      },
+      "visual_pattern_candidate": "comparison",
+      "warnings": []
+    },
+    {
+      "chart_candidate": "none",
+      "connected_to_runtime": false,
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "diagram_candidate": "callout",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Intent Clarity",
+            "reason": "Slide Intent must say what the viewer should understand or decide.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Visual Readiness",
+            "reason": "Slide Intent should provide enough abstraction for Visual Director to choose a visual pattern.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Information Hierarchy",
+            "reason": "Primary focus, secondary points, and muted content should be clearly separated.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Reading Flow",
+            "reason": "Reading order should describe how information should be scanned before rendering.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Compatibility",
+            "reason": "Visual intent must respect evidence gaps and avoid hiding missing proof.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Compatibility",
+            "reason": "Intent should be traceable to Message Designer output.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Diagram Suitability",
+            "reason": "Diagram candidate should be selected only when it clarifies the slide purpose.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Chart Suitability",
+            "reason": "Chart candidate should require numeric evidence and avoid fake numbers.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readiness",
+            "reason": "Intent should be safe for customer-facing visual planning.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "S",
+        "max_score": 100,
+        "note": "This score evaluates Slide Intent readiness only. It does not evaluate Slide Blueprint generation, layout, diagram rendering, chart rendering, typography, theme, PPTX output, API behavior, or sales outcome.",
+        "total_score": 99,
+        "warning_count": 0
+      },
+      "generated_chart": false,
+      "generated_diagram": false,
+      "generated_pptx": false,
+      "generated_slide_blueprint": false,
+      "information_priority": {
+        "density": "medium",
+        "emphasis": "main_message",
+        "muted_content": [],
+        "primary_focus": "顧客の意思決定者に合わせ、採るべき方針と次に確認すべき条件を明確にします。",
+        "secondary_focus": [
+          "Strategy feasibility basisを確認する",
+          "Strategic priority confirmationを確認する"
+        ]
+      },
+      "input_fingerprint": "c3179465b99ebb6946514b844f26a288cae28869",
+      "input_metrics": {
+        "checklist_item_count": 2,
+        "comparison_basis_present": true,
+        "hierarchy_basis_present": false,
+        "image_evidence_present": false,
+        "missing_evidence_count": 0,
+        "numeric_claim_count": 0,
+        "required_evidence_count": 2,
+        "supporting_message_count": 2,
+        "time_sequence_present": true,
+        "total_text_chars": 162
+      },
+      "intent_confidence": "high",
+      "intent_id": "intent-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-05-strategy-c3179465b9",
+      "layout_constraint": [
+        "keep_single_message",
+        "no_layout_generated"
+      ],
+      "reading_order": "scan_cards",
+      "rendering_hint": "Show the slide as summary_cards communicating recommend_action without generating coordinates, fonts, colors, or PowerPoint objects. Visual Director may consider callout.",
+      "schema_version": "pe2_slide_intent_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-05-strategy",
+      "slide_intent": "recommend_action",
+      "slide_intent_version": "pe2_slide_intent_v1",
+      "slide_order": 5,
+      "slide_type": "proposal",
+      "source_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-02"
+      ],
+      "source_message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-05-strategy-ee8d3d92",
+      "validation_result": {
+        "issues": [],
+        "valid": true
+      },
+      "visual_pattern_candidate": "summary_cards",
+      "warnings": []
+    },
+    {
+      "chart_candidate": "none",
+      "connected_to_runtime": false,
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "diagram_candidate": "process_flow",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Intent Clarity",
+            "reason": "Slide Intent must say what the viewer should understand or decide.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Visual Readiness",
+            "reason": "Slide Intent should provide enough abstraction for Visual Director to choose a visual pattern.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Information Hierarchy",
+            "reason": "Primary focus, secondary points, and muted content should be clearly separated.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Reading Flow",
+            "reason": "Reading order should describe how information should be scanned before rendering.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Compatibility",
+            "reason": "Visual intent must respect evidence gaps and avoid hiding missing proof.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Compatibility",
+            "reason": "Intent should be traceable to Message Designer output.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Diagram Suitability",
+            "reason": "Diagram candidate should be selected only when it clarifies the slide purpose.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Chart Suitability",
+            "reason": "Chart candidate should require numeric evidence and avoid fake numbers.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readiness",
+            "reason": "Intent should be safe for customer-facing visual planning.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "S",
+        "max_score": 100,
+        "note": "This score evaluates Slide Intent readiness only. It does not evaluate Slide Blueprint generation, layout, diagram rendering, chart rendering, typography, theme, PPTX output, API behavior, or sales outcome.",
+        "total_score": 99,
+        "warning_count": 0
+      },
+      "generated_chart": false,
+      "generated_diagram": false,
+      "generated_pptx": false,
+      "generated_slide_blueprint": false,
+      "information_priority": {
+        "density": "medium",
+        "emphasis": "main_message",
+        "muted_content": [],
+        "primary_focus": "提案内容は期待成果と確認条件に接続し、導入後の変化を説明できる形にします。",
+        "secondary_focus": [
+          "Solution feasibility evidenceを確認する",
+          "Implementation outcome evidenceを確認する"
+        ]
+      },
+      "input_fingerprint": "613d3ab1d4006914f4b3f034e995f1a49ed4c740",
+      "input_metrics": {
+        "checklist_item_count": 2,
+        "comparison_basis_present": true,
+        "hierarchy_basis_present": false,
+        "image_evidence_present": false,
+        "missing_evidence_count": 0,
+        "numeric_claim_count": 0,
+        "required_evidence_count": 2,
+        "supporting_message_count": 2,
+        "time_sequence_present": true,
+        "total_text_chars": 163
+      },
+      "intent_confidence": "high",
+      "intent_id": "intent-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-06-solution-613d3ab1d4",
+      "layout_constraint": [
+        "keep_single_message",
+        "no_layout_generated"
+      ],
+      "reading_order": "left_to_right",
+      "rendering_hint": "Show the slide as process communicating recommend_action without generating coordinates, fonts, colors, or PowerPoint objects. Visual Director may consider process_flow.",
+      "schema_version": "pe2_slide_intent_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-06-solution",
+      "slide_intent": "recommend_action",
+      "slide_intent_version": "pe2_slide_intent_v1",
+      "slide_order": 6,
+      "slide_type": "proposal",
+      "source_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-06-solution-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-06-solution-02"
+      ],
+      "source_message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-06-solution-5f8c2a2a",
+      "validation_result": {
+        "issues": [],
+        "valid": true
+      },
+      "visual_pattern_candidate": "process",
+      "warnings": []
+    },
+    {
+      "chart_candidate": "kpi_card",
+      "connected_to_runtime": false,
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "diagram_candidate": "none",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Intent Clarity",
+            "reason": "Slide Intent must say what the viewer should understand or decide.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Visual Readiness",
+            "reason": "Slide Intent should provide enough abstraction for Visual Director to choose a visual pattern.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Information Hierarchy",
+            "reason": "Primary focus, secondary points, and muted content should be clearly separated.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Reading Flow",
+            "reason": "Reading order should describe how information should be scanned before rendering.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Compatibility",
+            "reason": "Visual intent must respect evidence gaps and avoid hiding missing proof.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Compatibility",
+            "reason": "Intent should be traceable to Message Designer output.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Diagram Suitability",
+            "reason": "Diagram candidate should be selected only when it clarifies the slide purpose.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Chart Suitability",
+            "reason": "Chart candidate should require numeric evidence and avoid fake numbers.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readiness",
+            "reason": "Intent should be safe for customer-facing visual planning.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "S",
+        "max_score": 100,
+        "note": "This score evaluates Slide Intent readiness only. It does not evaluate Slide Blueprint generation, layout, diagram rendering, chart rendering, typography, theme, PPTX output, API behavior, or sales outcome.",
+        "total_score": 97,
+        "warning_count": 0
+      },
+      "generated_chart": false,
+      "generated_diagram": false,
+      "generated_pptx": false,
+      "generated_slide_blueprint": false,
+      "information_priority": {
+        "density": "low",
+        "emphasis": "numeric_claim",
+        "muted_content": [],
+        "primary_focus": "成果を主観で語らず、現状値、目標値、判定基準を分けて確認します。",
+        "secondary_focus": [
+          "KPI baseline and targetを確認する",
+          "Measurement formulaを確認する"
+        ]
+      },
+      "input_fingerprint": "a34aca668f0422ea1a8a9199d2a1b9f86af08dbe",
+      "input_metrics": {
+        "checklist_item_count": 2,
+        "comparison_basis_present": true,
+        "hierarchy_basis_present": false,
+        "image_evidence_present": false,
+        "missing_evidence_count": 0,
+        "numeric_claim_count": 1,
+        "required_evidence_count": 2,
+        "supporting_message_count": 2,
+        "time_sequence_present": true,
+        "total_text_chars": 143
+      },
+      "intent_confidence": "high",
+      "intent_id": "intent-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-07-kpi-a34aca668f",
+      "layout_constraint": [
+        "keep_single_message",
+        "no_layout_generated",
+        "require_numeric_evidence",
+        "avoid_fake_numbers"
+      ],
+      "reading_order": "scan_cards",
+      "rendering_hint": "Show the slide as kpi_cards communicating prove_value without generating coordinates, fonts, colors, or PowerPoint objects. Chart planning may consider kpi_card only when numeric evidence is present.",
+      "schema_version": "pe2_slide_intent_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-07-kpi",
+      "slide_intent": "prove_value",
+      "slide_intent_version": "pe2_slide_intent_v1",
+      "slide_order": 7,
+      "slide_type": "kpi",
+      "source_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-02"
+      ],
+      "source_message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-07-kpi-4120a2c5",
+      "validation_result": {
+        "issues": [],
+        "valid": true
+      },
+      "visual_pattern_candidate": "kpi_cards",
+      "warnings": []
+    },
+    {
+      "chart_candidate": "waterfall",
+      "connected_to_runtime": false,
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "diagram_candidate": "none",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Intent Clarity",
+            "reason": "Slide Intent must say what the viewer should understand or decide.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Visual Readiness",
+            "reason": "Slide Intent should provide enough abstraction for Visual Director to choose a visual pattern.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Information Hierarchy",
+            "reason": "Primary focus, secondary points, and muted content should be clearly separated.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Reading Flow",
+            "reason": "Reading order should describe how information should be scanned before rendering.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Compatibility",
+            "reason": "Visual intent must respect evidence gaps and avoid hiding missing proof.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Compatibility",
+            "reason": "Intent should be traceable to Message Designer output.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Diagram Suitability",
+            "reason": "Diagram candidate should be selected only when it clarifies the slide purpose.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Chart Suitability",
+            "reason": "Chart candidate should require numeric evidence and avoid fake numbers.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readiness",
+            "reason": "Intent should be safe for customer-facing visual planning.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "S",
+        "max_score": 100,
+        "note": "This score evaluates Slide Intent readiness only. It does not evaluate Slide Blueprint generation, layout, diagram rendering, chart rendering, typography, theme, PPTX output, API behavior, or sales outcome.",
+        "total_score": 97,
+        "warning_count": 0
+      },
+      "generated_chart": false,
+      "generated_diagram": false,
+      "generated_pptx": false,
+      "generated_slide_blueprint": false,
+      "information_priority": {
+        "density": "low",
+        "emphasis": "numeric_claim",
+        "muted_content": [],
+        "primary_focus": "金額や効果は仮説と確認済み情報を分け、無理なROI断定を避けて判断材料化します。",
+        "secondary_focus": [
+          "ROI modelを確認する",
+          "Current baseline for ROIを確認する"
+        ]
+      },
+      "input_fingerprint": "56325960b846f61b0b0144f1c0e4e1c2307e9e97",
+      "input_metrics": {
+        "checklist_item_count": 2,
+        "comparison_basis_present": true,
+        "hierarchy_basis_present": false,
+        "image_evidence_present": false,
+        "missing_evidence_count": 0,
+        "numeric_claim_count": 1,
+        "required_evidence_count": 2,
+        "supporting_message_count": 2,
+        "time_sequence_present": true,
+        "total_text_chars": 124
+      },
+      "intent_confidence": "high",
+      "intent_id": "intent-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-08-roi-56325960b8",
+      "layout_constraint": [
+        "keep_single_message",
+        "no_layout_generated",
+        "require_numeric_evidence",
+        "avoid_fake_numbers"
+      ],
+      "reading_order": "center_out",
+      "rendering_hint": "Show the slide as number_dominant communicating explain_investment without generating coordinates, fonts, colors, or PowerPoint objects. Chart planning may consider waterfall only when numeric evidence is present.",
+      "schema_version": "pe2_slide_intent_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-08-roi",
+      "slide_intent": "explain_investment",
+      "slide_intent_version": "pe2_slide_intent_v1",
+      "slide_order": 8,
+      "slide_type": "kpi",
+      "source_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-08-roi-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-08-roi-02"
+      ],
+      "source_message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-08-roi-c2a4a8b9",
+      "validation_result": {
+        "issues": [],
+        "valid": true
+      },
+      "visual_pattern_candidate": "number_dominant",
+      "warnings": []
+    },
+    {
+      "chart_candidate": "none",
+      "connected_to_runtime": false,
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "diagram_candidate": "roadmap",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Intent Clarity",
+            "reason": "Slide Intent must say what the viewer should understand or decide.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Visual Readiness",
+            "reason": "Slide Intent should provide enough abstraction for Visual Director to choose a visual pattern.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Information Hierarchy",
+            "reason": "Primary focus, secondary points, and muted content should be clearly separated.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Reading Flow",
+            "reason": "Reading order should describe how information should be scanned before rendering.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Compatibility",
+            "reason": "Visual intent must respect evidence gaps and avoid hiding missing proof.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Compatibility",
+            "reason": "Intent should be traceable to Message Designer output.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Diagram Suitability",
+            "reason": "Diagram candidate should be selected only when it clarifies the slide purpose.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Chart Suitability",
+            "reason": "Chart candidate should require numeric evidence and avoid fake numbers.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readiness",
+            "reason": "Intent should be safe for customer-facing visual planning.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "S",
+        "max_score": 100,
+        "note": "This score evaluates Slide Intent readiness only. It does not evaluate Slide Blueprint generation, layout, diagram rendering, chart rendering, typography, theme, PPTX output, API behavior, or sales outcome.",
+        "total_score": 99,
+        "warning_count": 0
+      },
+      "generated_chart": false,
+      "generated_diagram": false,
+      "generated_pptx": false,
+      "generated_slide_blueprint": false,
+      "information_priority": {
+        "density": "low",
+        "emphasis": "main_message",
+        "muted_content": [],
+        "primary_focus": "検討、PoC、判断、本番化までの流れを分け、どこで何を決めるかを明確にします。",
+        "secondary_focus": [
+          "Roadmap feasibility evidenceを確認する",
+          "Milestone precedentを確認する"
+        ]
+      },
+      "input_fingerprint": "d722f35c680a94c1742f2b693091303a1eed65e6",
+      "input_metrics": {
+        "checklist_item_count": 2,
+        "comparison_basis_present": true,
+        "hierarchy_basis_present": false,
+        "image_evidence_present": false,
+        "missing_evidence_count": 0,
+        "numeric_claim_count": 0,
+        "required_evidence_count": 2,
+        "supporting_message_count": 2,
+        "time_sequence_present": true,
+        "total_text_chars": 154
+      },
+      "intent_confidence": "high",
+      "intent_id": "intent-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-09-roadmap-d722f35c68",
+      "layout_constraint": [
+        "keep_single_message",
+        "no_layout_generated"
+      ],
+      "reading_order": "timeline",
+      "rendering_hint": "Show the slide as roadmap communicating show_plan without generating coordinates, fonts, colors, or PowerPoint objects. Visual Director may consider roadmap.",
+      "schema_version": "pe2_slide_intent_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-09-roadmap",
+      "slide_intent": "show_plan",
+      "slide_intent_version": "pe2_slide_intent_v1",
+      "slide_order": 9,
+      "slide_type": "roadmap",
+      "source_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-02"
+      ],
+      "source_message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-09-roadmap-fa5c952e",
+      "validation_result": {
+        "issues": [],
+        "valid": true
+      },
+      "visual_pattern_candidate": "roadmap",
+      "warnings": []
+    },
+    {
+      "chart_candidate": "none",
+      "connected_to_runtime": false,
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "diagram_candidate": "none",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Intent Clarity",
+            "reason": "Slide Intent must say what the viewer should understand or decide.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Visual Readiness",
+            "reason": "Slide Intent should provide enough abstraction for Visual Director to choose a visual pattern.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Information Hierarchy",
+            "reason": "Primary focus, secondary points, and muted content should be clearly separated.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Reading Flow",
+            "reason": "Reading order should describe how information should be scanned before rendering.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Compatibility",
+            "reason": "Visual intent must respect evidence gaps and avoid hiding missing proof.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Compatibility",
+            "reason": "Intent should be traceable to Message Designer output.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Diagram Suitability",
+            "reason": "Diagram candidate should be selected only when it clarifies the slide purpose.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Chart Suitability",
+            "reason": "Chart candidate should require numeric evidence and avoid fake numbers.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readiness",
+            "reason": "Intent should be safe for customer-facing visual planning.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "S",
+        "max_score": 100,
+        "note": "This score evaluates Slide Intent readiness only. It does not evaluate Slide Blueprint generation, layout, diagram rendering, chart rendering, typography, theme, PPTX output, API behavior, or sales outcome.",
+        "total_score": 99,
+        "warning_count": 0
+      },
+      "generated_chart": false,
+      "generated_diagram": false,
+      "generated_pptx": false,
+      "generated_slide_blueprint": false,
+      "information_priority": {
+        "density": "low",
+        "emphasis": "numeric_claim",
+        "muted_content": [],
+        "primary_focus": "費用は対象範囲、前提条件、未確定事項と一緒に提示し、誤解を防ぎます。",
+        "secondary_focus": [
+          "Pricing basisを確認する",
+          "Scope and cost assumptionを確認する"
+        ]
+      },
+      "input_fingerprint": "babf277a889328f3a1c6e65468e23f813fb45133",
+      "input_metrics": {
+        "checklist_item_count": 2,
+        "comparison_basis_present": true,
+        "hierarchy_basis_present": false,
+        "image_evidence_present": false,
+        "missing_evidence_count": 0,
+        "numeric_claim_count": 1,
+        "required_evidence_count": 2,
+        "supporting_message_count": 2,
+        "time_sequence_present": true,
+        "total_text_chars": 122
+      },
+      "intent_confidence": "high",
+      "intent_id": "intent-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-10-pricing-babf277a88",
+      "layout_constraint": [
+        "keep_single_message",
+        "no_layout_generated",
+        "require_numeric_evidence",
+        "avoid_fake_numbers"
+      ],
+      "reading_order": "left_to_right",
+      "rendering_hint": "Show the slide as table communicating explain_investment without generating coordinates, fonts, colors, or PowerPoint objects.",
+      "schema_version": "pe2_slide_intent_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-10-pricing",
+      "slide_intent": "explain_investment",
+      "slide_intent_version": "pe2_slide_intent_v1",
+      "slide_order": 10,
+      "slide_type": "estimate",
+      "source_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-02"
+      ],
+      "source_message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-10-pricing-7286f96a",
+      "validation_result": {
+        "issues": [],
+        "valid": true
+      },
+      "visual_pattern_candidate": "table",
+      "warnings": []
+    },
+    {
+      "chart_candidate": "none",
+      "connected_to_runtime": false,
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "diagram_candidate": "checklist",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Intent Clarity",
+            "reason": "Slide Intent must say what the viewer should understand or decide.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Visual Readiness",
+            "reason": "Slide Intent should provide enough abstraction for Visual Director to choose a visual pattern.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Information Hierarchy",
+            "reason": "Primary focus, secondary points, and muted content should be clearly separated.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Reading Flow",
+            "reason": "Reading order should describe how information should be scanned before rendering.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Compatibility",
+            "reason": "Visual intent must respect evidence gaps and avoid hiding missing proof.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Compatibility",
+            "reason": "Intent should be traceable to Message Designer output.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Diagram Suitability",
+            "reason": "Diagram candidate should be selected only when it clarifies the slide purpose.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Chart Suitability",
+            "reason": "Chart candidate should require numeric evidence and avoid fake numbers.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readiness",
+            "reason": "Intent should be safe for customer-facing visual planning.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "S",
+        "max_score": 100,
+        "note": "This score evaluates Slide Intent readiness only. It does not evaluate Slide Blueprint generation, layout, diagram rendering, chart rendering, typography, theme, PPTX output, API behavior, or sales outcome.",
+        "total_score": 99,
+        "warning_count": 0
+      },
+      "generated_chart": false,
+      "generated_diagram": false,
+      "generated_pptx": false,
+      "generated_slide_blueprint": false,
+      "information_priority": {
+        "density": "low",
+        "emphasis": "main_message",
+        "muted_content": [],
+        "primary_focus": "次に確認する情報、合意する範囲、担当を明確にし、商談後の停滞を防ぎます。",
+        "secondary_focus": [
+          "Next action agreementを確認する"
+        ]
+      },
+      "input_fingerprint": "2b0bdc2ca720d82a1c1f761ae64f343d67d7783c",
+      "input_metrics": {
+        "checklist_item_count": 1,
+        "comparison_basis_present": true,
+        "hierarchy_basis_present": false,
+        "image_evidence_present": false,
+        "missing_evidence_count": 0,
+        "numeric_claim_count": 0,
+        "required_evidence_count": 1,
+        "supporting_message_count": 1,
+        "time_sequence_present": true,
+        "total_text_chars": 96
+      },
+      "intent_confidence": "high",
+      "intent_id": "intent-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-11-next_action-2b0bdc2ca7",
+      "layout_constraint": [
+        "keep_single_message",
+        "no_layout_generated",
+        "keep_cta_visible"
+      ],
+      "reading_order": "top_to_bottom",
+      "rendering_hint": "Show the slide as checklist communicating close_next_step without generating coordinates, fonts, colors, or PowerPoint objects. Visual Director may consider checklist.",
+      "schema_version": "pe2_slide_intent_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-11-next_action",
+      "slide_intent": "close_next_step",
+      "slide_intent_version": "pe2_slide_intent_v1",
+      "slide_order": 11,
+      "slide_type": "next_action",
+      "source_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-11-next_action-01"
+      ],
+      "source_message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-11-next_action-82a98b8d",
+      "validation_result": {
+        "issues": [],
+        "valid": true
+      },
+      "visual_pattern_candidate": "checklist",
+      "warnings": []
+    }
+  ],
+  "validation_result": {
+    "issues": [],
+    "valid": true
+  },
+  "warnings": []
+}

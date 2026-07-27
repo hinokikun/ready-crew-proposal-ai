@@ -1,0 +1,5715 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "definitions": {
+    "AlignmentType": {
+      "description": "An enumeration.",
+      "enum": [
+        "left",
+        "center",
+        "right",
+        "top",
+        "middle",
+        "bottom"
+      ],
+      "title": "AlignmentType",
+      "type": "string"
+    },
+    "AlphaEvaluationDimension": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "issues": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Issues",
+          "type": "array"
+        },
+        "max_score": {
+          "default": 10,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 320,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "recommendations": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Recommendations",
+          "type": "array"
+        },
+        "score": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Score",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "score",
+        "reason"
+      ],
+      "title": "AlphaEvaluationDimension",
+      "type": "object"
+    },
+    "AlphaEvaluationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking_issue_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Blocking Issue Count",
+          "type": "integer"
+        },
+        "dimensions": {
+          "items": {
+            "$ref": "#/definitions/AlphaEvaluationDimension"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "title": "Dimensions",
+          "type": "array"
+        },
+        "failed_stage_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Failed Stage Count",
+          "type": "integer"
+        },
+        "grade": {
+          "maxLength": 2,
+          "minLength": 1,
+          "title": "Grade",
+          "type": "string"
+        },
+        "max_score": {
+          "default": 100,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "note": {
+          "maxLength": 360,
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        },
+        "overall_score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Overall Score",
+          "type": "integer"
+        },
+        "passed_stage_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Passed Stage Count",
+          "type": "integer"
+        },
+        "phase2d_readiness_status": {
+          "$ref": "#/definitions/Phase2DReadinessStatus"
+        },
+        "warning_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Warning Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "overall_score",
+        "grade",
+        "phase2d_readiness_status",
+        "note"
+      ],
+      "title": "AlphaEvaluationResult",
+      "type": "object"
+    },
+    "AlphaHumanReviewSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "audience": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Audience",
+          "type": "string"
+        },
+        "blocking_issues": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 40,
+          "title": "Blocking Issues",
+          "type": "array"
+        },
+        "case_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Case Id",
+          "type": "string"
+        },
+        "case_name": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Case Name",
+          "type": "string"
+        },
+        "decision_stage": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Decision Stage",
+          "type": "string"
+        },
+        "deck_goal": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Deck Goal",
+          "type": "string"
+        },
+        "good_points": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Good Points",
+          "type": "array"
+        },
+        "headline_summary": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 80,
+          "title": "Headline Summary",
+          "type": "array"
+        },
+        "improvement_candidates": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Improvement Candidates",
+          "type": "array"
+        },
+        "key_warnings": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 40,
+          "title": "Key Warnings",
+          "type": "array"
+        },
+        "missing_evidence_summary": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 80,
+          "title": "Missing Evidence Summary",
+          "type": "array"
+        },
+        "phase2d_readiness": {
+          "$ref": "#/definitions/Phase2DReadinessStatus"
+        },
+        "proposal_context_summary": {
+          "maxLength": 600,
+          "minLength": 1,
+          "title": "Proposal Context Summary",
+          "type": "string"
+        },
+        "required_evidence_summary": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 120,
+          "title": "Required Evidence Summary",
+          "type": "array"
+        },
+        "section_summary": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 40,
+          "title": "Section Summary",
+          "type": "array"
+        },
+        "slide_summary": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 80,
+          "title": "Slide Summary",
+          "type": "array"
+        },
+        "story_arc": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Story Arc",
+          "type": "string"
+        },
+        "unnatural_points": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Unnatural Points",
+          "type": "array"
+        },
+        "weak_sales_points": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Weak Sales Points",
+          "type": "array"
+        }
+      },
+      "required": [
+        "case_id",
+        "case_name",
+        "proposal_context_summary",
+        "audience",
+        "decision_stage",
+        "deck_goal",
+        "story_arc",
+        "phase2d_readiness"
+      ],
+      "title": "AlphaHumanReviewSummary",
+      "type": "object"
+    },
+    "AlphaPipelineStage": {
+      "description": "An enumeration.",
+      "enum": [
+        "input",
+        "deck_planner",
+        "deck_validation",
+        "evidence_planner",
+        "evidence_validation",
+        "message_designer",
+        "message_validation",
+        "cross_module_validation",
+        "evaluation",
+        "reporting"
+      ],
+      "title": "AlphaPipelineStage",
+      "type": "string"
+    },
+    "AlphaValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "case_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Case Id",
+          "type": "string"
+        },
+        "code": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "evidence_id": {
+          "maxLength": 160,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "field_path": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Field Path",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 320,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 320,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/definitions/AlphaValidationSeverity"
+        },
+        "slide_id": {
+          "maxLength": 160,
+          "title": "Slide Id",
+          "type": "string"
+        },
+        "source_module": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Source Module",
+          "type": "string"
+        },
+        "stage": {
+          "$ref": "#/definitions/AlphaPipelineStage"
+        },
+        "suggestion": {
+          "maxLength": 320,
+          "minLength": 1,
+          "title": "Suggestion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "stage",
+        "field_path",
+        "case_id",
+        "message",
+        "reason",
+        "suggestion",
+        "source_module"
+      ],
+      "title": "AlphaValidationIssue",
+      "type": "object"
+    },
+    "AlphaValidationSeverity": {
+      "description": "An enumeration.",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "title": "AlphaValidationSeverity",
+      "type": "string"
+    },
+    "AnimationHint": {
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "appear_by_section",
+        "appear_by_step",
+        "highlight_main_message",
+        "build_timeline",
+        "build_process",
+        "fade_supporting_evidence"
+      ],
+      "title": "AnimationHint",
+      "type": "string"
+    },
+    "ApprovalRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "approval_condition": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Approval Condition",
+          "type": "string"
+        },
+        "approver": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Approver",
+          "type": "string"
+        },
+        "related_slide_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Related Slide Ids",
+          "type": "array"
+        },
+        "requirement_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Requirement Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "approver",
+        "approval_condition"
+      ],
+      "title": "ApprovalRequirement",
+      "type": "object"
+    },
+    "AudienceProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "avoid_topics": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Avoid Topics",
+          "type": "array"
+        },
+        "decision_stage": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DecisionStage"
+            }
+          ],
+          "default": "discovery"
+        },
+        "known_priorities": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Known Priorities",
+          "type": "array"
+        },
+        "primary_audience": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/AudienceType"
+            }
+          ],
+          "default": "general"
+        },
+        "seniority": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/AudienceSeniority"
+            }
+          ],
+          "default": "mixed"
+        }
+      },
+      "title": "AudienceProfile",
+      "type": "object"
+    },
+    "AudienceSeniority": {
+      "description": "An enumeration.",
+      "enum": [
+        "executive",
+        "senior_manager",
+        "manager",
+        "field_leader",
+        "practitioner",
+        "mixed"
+      ],
+      "title": "AudienceSeniority",
+      "type": "string"
+    },
+    "AudienceType": {
+      "description": "An enumeration.",
+      "enum": [
+        "ceo",
+        "executive",
+        "department_head",
+        "manager",
+        "field_leader",
+        "information_systems",
+        "finance",
+        "marketing",
+        "sales",
+        "hr",
+        "procurement",
+        "general"
+      ],
+      "title": "AudienceType",
+      "type": "string"
+    },
+    "BlueprintStatus": {
+      "description": "An enumeration.",
+      "enum": [
+        "draft",
+        "normalized",
+        "validated",
+        "ready_for_render",
+        "needs_review",
+        "invalid"
+      ],
+      "title": "BlueprintStatus",
+      "type": "string"
+    },
+    "CTAConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "cta_detail": {
+          "maxLength": 180,
+          "title": "Cta Detail",
+          "type": "string"
+        },
+        "cta_label": {
+          "maxLength": 80,
+          "title": "Cta Label",
+          "type": "string"
+        },
+        "cta_type": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/CTAType"
+            }
+          ],
+          "default": "none"
+        }
+      },
+      "title": "CTAConfig",
+      "type": "object"
+    },
+    "CTAPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "cta_strategy": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Cta Strategy",
+          "type": "string"
+        },
+        "due_timing": {
+          "maxLength": 80,
+          "title": "Due Timing",
+          "type": "string"
+        },
+        "next_action": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Next Action",
+          "type": "string"
+        },
+        "owner": {
+          "maxLength": 80,
+          "title": "Owner",
+          "type": "string"
+        },
+        "success_condition": {
+          "maxLength": 160,
+          "title": "Success Condition",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cta_strategy",
+        "next_action"
+      ],
+      "title": "CTAPlan",
+      "type": "object"
+    },
+    "CTAType": {
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "approve",
+        "discuss",
+        "decide",
+        "contact",
+        "next_meeting",
+        "start_poc"
+      ],
+      "title": "CTAType",
+      "type": "string"
+    },
+    "ChartRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "chart_type": {
+          "maxLength": 60,
+          "title": "Chart Type",
+          "type": "string"
+        },
+        "data_label": {
+          "maxLength": 120,
+          "title": "Data Label",
+          "type": "string"
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "source_reference_id": {
+          "maxLength": 80,
+          "title": "Source Reference Id",
+          "type": "string"
+        }
+      },
+      "title": "ChartRequirement",
+      "type": "object"
+    },
+    "ColorPalette": {
+      "additionalProperties": false,
+      "properties": {
+        "accent": {
+          "default": "#06B6D4",
+          "title": "Accent",
+          "type": "string"
+        },
+        "background": {
+          "default": "#FFFFFF",
+          "title": "Background",
+          "type": "string"
+        },
+        "danger": {
+          "default": "#EF4444",
+          "title": "Danger",
+          "type": "string"
+        },
+        "muted": {
+          "default": "#E2E8F0",
+          "title": "Muted",
+          "type": "string"
+        },
+        "primary": {
+          "default": "#2563EB",
+          "title": "Primary",
+          "type": "string"
+        },
+        "secondary": {
+          "default": "#64748B",
+          "title": "Secondary",
+          "type": "string"
+        },
+        "success": {
+          "default": "#10B981",
+          "title": "Success",
+          "type": "string"
+        },
+        "text": {
+          "default": "#0F172A",
+          "title": "Text",
+          "type": "string"
+        },
+        "warning": {
+          "default": "#F59E0B",
+          "title": "Warning",
+          "type": "string"
+        }
+      },
+      "title": "ColorPalette",
+      "type": "object"
+    },
+    "ComparisonItem": {
+      "additionalProperties": false,
+      "properties": {
+        "current_state": {
+          "maxLength": 220,
+          "title": "Current State",
+          "type": "string"
+        },
+        "difference": {
+          "maxLength": 220,
+          "title": "Difference",
+          "type": "string"
+        },
+        "item_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Item Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "priority": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/ContentPriority"
+            }
+          ],
+          "default": "medium"
+        },
+        "proposed_state": {
+          "maxLength": 220,
+          "title": "Proposed State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "label"
+      ],
+      "title": "ComparisonItem",
+      "type": "object"
+    },
+    "ContentPriority": {
+      "description": "An enumeration.",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "ContentPriority",
+      "type": "string"
+    },
+    "CrossModuleValidationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "checked_stage_count": {
+          "default": 4,
+          "minimum": 0,
+          "title": "Checked Stage Count",
+          "type": "integer"
+        },
+        "failed_stage_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Failed Stage Count",
+          "type": "integer"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/definitions/AlphaValidationIssue"
+          },
+          "maxItems": 120,
+          "title": "Issues",
+          "type": "array"
+        },
+        "passed_stage_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Passed Stage Count",
+          "type": "integer"
+        },
+        "valid": {
+          "title": "Valid",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "valid"
+      ],
+      "title": "CrossModuleValidationResult",
+      "type": "object"
+    },
+    "DataConfidence": {
+      "description": "An enumeration.",
+      "enum": [
+        "high",
+        "medium",
+        "low",
+        "unknown"
+      ],
+      "title": "DataConfidence",
+      "type": "string"
+    },
+    "DecisionPoint": {
+      "additionalProperties": false,
+      "properties": {
+        "decision_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Decision Id",
+          "type": "string"
+        },
+        "question": {
+          "maxLength": 180,
+          "minLength": 1,
+          "title": "Question",
+          "type": "string"
+        },
+        "related_slide_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Related Slide Ids",
+          "type": "array"
+        },
+        "required_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Required Evidence",
+          "type": "array"
+        },
+        "urgency": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DecisionUrgency"
+            }
+          ],
+          "default": "normal"
+        }
+      },
+      "required": [
+        "decision_id",
+        "question"
+      ],
+      "title": "DecisionPoint",
+      "type": "object"
+    },
+    "DecisionStage": {
+      "description": "An enumeration.",
+      "enum": [
+        "awareness",
+        "discovery",
+        "comparison",
+        "approval",
+        "procurement",
+        "renewal",
+        "internal_alignment"
+      ],
+      "title": "DecisionStage",
+      "type": "string"
+    },
+    "DecisionUrgency": {
+      "description": "An enumeration.",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "immediate"
+      ],
+      "title": "DecisionUrgency",
+      "type": "string"
+    },
+    "DeckBlueprint": {
+      "additionalProperties": false,
+      "properties": {
+        "appendix_allowed": {
+          "default": true,
+          "title": "Appendix Allowed",
+          "type": "boolean"
+        },
+        "approval_requirements": {
+          "items": {
+            "$ref": "#/definitions/ApprovalRequirement"
+          },
+          "maxItems": 8,
+          "title": "Approval Requirements",
+          "type": "array"
+        },
+        "audience_profile": {
+          "$ref": "#/definitions/AudienceProfile"
+        },
+        "audience_seniority": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/AudienceSeniority"
+            }
+          ],
+          "default": "mixed"
+        },
+        "closing_message": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Closing Message",
+          "type": "string"
+        },
+        "confidence": {
+          "default": 0.8,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "constraints": {
+          "items": {
+            "$ref": "#/definitions/DeckConstraint"
+          },
+          "maxItems": 12,
+          "title": "Constraints",
+          "type": "array"
+        },
+        "core_thesis": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Core Thesis",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "created_by": {
+          "maxLength": 120,
+          "title": "Created By",
+          "type": "string"
+        },
+        "cta_plan": {
+          "$ref": "#/definitions/CTAPlan"
+        },
+        "decision_dependencies": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Decision Dependencies",
+          "type": "array"
+        },
+        "decision_points": {
+          "items": {
+            "$ref": "#/definitions/DecisionPoint"
+          },
+          "maxItems": 8,
+          "title": "Decision Points",
+          "type": "array"
+        },
+        "decision_question": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Decision Question",
+          "type": "string"
+        },
+        "decision_stage": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DecisionStage"
+            }
+          ],
+          "default": "discovery"
+        },
+        "decision_urgency": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DecisionUrgency"
+            }
+          ],
+          "default": "normal"
+        },
+        "deck_blueprint_version": {
+          "const": "pe2_deck_blueprint_v1",
+          "default": "pe2_deck_blueprint_v1",
+          "title": "Deck Blueprint Version",
+          "type": "string"
+        },
+        "deck_goal": {
+          "$ref": "#/definitions/DeckGoal"
+        },
+        "deck_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Deck Id",
+          "type": "string"
+        },
+        "deck_length_type": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DeckLengthType"
+            }
+          ],
+          "default": "standard"
+        },
+        "deck_title": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Deck Title",
+          "type": "string"
+        },
+        "deck_type": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DeckType"
+            }
+          ],
+          "default": "sales_proposal"
+        },
+        "desired_decision": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Desired Decision",
+          "type": "string"
+        },
+        "desired_reaction": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Desired Reaction",
+          "type": "string"
+        },
+        "evaluation_result": {
+          "$ref": "#/definitions/DeckEvaluationResult"
+        },
+        "evidence_strategy": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceStrategy"
+            }
+          ],
+          "default": "balanced"
+        },
+        "generation_source": {
+          "default": "offline_fixture",
+          "maxLength": 80,
+          "title": "Generation Source",
+          "type": "string"
+        },
+        "impact_statement": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Impact Statement",
+          "type": "string"
+        },
+        "insight_statement": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Insight Statement",
+          "type": "string"
+        },
+        "key_differentiator": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Key Differentiator",
+          "type": "string"
+        },
+        "key_takeaways": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Key Takeaways",
+          "type": "array"
+        },
+        "language": {
+          "default": "ja",
+          "maxLength": 16,
+          "minLength": 2,
+          "title": "Language",
+          "type": "string"
+        },
+        "maximum_slide_count": {
+          "default": 20,
+          "maximum": 80,
+          "minimum": 1,
+          "title": "Maximum Slide Count",
+          "type": "integer"
+        },
+        "minimum_slide_count": {
+          "default": 5,
+          "maximum": 80,
+          "minimum": 1,
+          "title": "Minimum Slide Count",
+          "type": "integer"
+        },
+        "narrative_summary": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Narrative Summary",
+          "type": "string"
+        },
+        "next_action": {
+          "maxLength": 180,
+          "minLength": 1,
+          "title": "Next Action",
+          "type": "string"
+        },
+        "objection_response": {
+          "$ref": "#/definitions/ObjectionResponse"
+        },
+        "opening_message": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Opening Message",
+          "type": "string"
+        },
+        "optional_sections": {
+          "items": {
+            "$ref": "#/definitions/SectionType"
+          },
+          "maxItems": 12,
+          "type": "array"
+        },
+        "persuasion_strategy": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/PersuasionStrategy"
+            }
+          ],
+          "default": "roi"
+        },
+        "primary_audience": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/AudienceType"
+            }
+          ],
+          "default": "general"
+        },
+        "primary_objection": {
+          "maxLength": 180,
+          "title": "Primary Objection",
+          "type": "string"
+        },
+        "problem_statement": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Problem Statement",
+          "type": "string"
+        },
+        "project_id": {
+          "maxLength": 120,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "recommendation_statement": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Recommendation Statement",
+          "type": "string"
+        },
+        "required_sections": {
+          "items": {
+            "$ref": "#/definitions/SectionType"
+          },
+          "maxItems": 16,
+          "type": "array"
+        },
+        "risk_level": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/RiskLevel"
+            }
+          ],
+          "default": "medium"
+        },
+        "schema_version": {
+          "const": "pe2_deck_blueprint_v1",
+          "default": "pe2_deck_blueprint_v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sections": {
+          "items": {
+            "$ref": "#/definitions/DeckSection"
+          },
+          "maxItems": 18,
+          "minItems": 1,
+          "title": "Sections",
+          "type": "array"
+        },
+        "slide_blueprint_refs": {
+          "items": {
+            "$ref": "#/definitions/SlideBlueprintReference"
+          },
+          "maxItems": 40,
+          "title": "Slide Blueprint Refs",
+          "type": "array"
+        },
+        "slide_plan": {
+          "items": {
+            "$ref": "#/definitions/SlidePlanItem"
+          },
+          "maxItems": 40,
+          "minItems": 1,
+          "title": "Slide Plan",
+          "type": "array"
+        },
+        "source_references": {
+          "items": {
+            "$ref": "#/definitions/DeckSourceReference"
+          },
+          "maxItems": 16,
+          "title": "Source References",
+          "type": "array"
+        },
+        "status": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DeckStatus"
+            }
+          ],
+          "default": "draft"
+        },
+        "story_arc": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/StoryArcType"
+            }
+          ],
+          "default": "problem_solution"
+        },
+        "story_beats": {
+          "items": {
+            "$ref": "#/definitions/StoryBeat"
+          },
+          "maxItems": 16,
+          "title": "Story Beats",
+          "type": "array"
+        },
+        "target_slide_count": {
+          "maximum": 80,
+          "minimum": 1,
+          "title": "Target Slide Count",
+          "type": "integer"
+        },
+        "theme_direction": {
+          "$ref": "#/definitions/DeckThemeDirection"
+        },
+        "transitions": {
+          "items": {
+            "$ref": "#/definitions/DeckTransition"
+          },
+          "maxItems": 40,
+          "title": "Transitions",
+          "type": "array"
+        },
+        "validation_result": {
+          "$ref": "#/definitions/DeckValidationResult"
+        },
+        "value_proposition": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Value Proposition",
+          "type": "string"
+        },
+        "warnings": {
+          "items": {
+            "$ref": "#/definitions/DeckWarning"
+          },
+          "maxItems": 20,
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "deck_id",
+        "deck_title",
+        "deck_goal",
+        "decision_question",
+        "desired_decision",
+        "desired_reaction",
+        "core_thesis",
+        "value_proposition",
+        "key_differentiator",
+        "target_slide_count",
+        "opening_message",
+        "problem_statement",
+        "insight_statement",
+        "recommendation_statement",
+        "impact_statement",
+        "closing_message",
+        "narrative_summary",
+        "cta_plan",
+        "next_action"
+      ],
+      "title": "DeckBlueprint",
+      "type": "object"
+    },
+    "DeckConstraint": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "constraint_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Constraint Id",
+          "type": "string"
+        },
+        "detail": {
+          "maxLength": 240,
+          "title": "Detail",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "constraint_id",
+        "label"
+      ],
+      "title": "DeckConstraint",
+      "type": "object"
+    },
+    "DeckEvaluationDimension": {
+      "additionalProperties": false,
+      "properties": {
+        "issues": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "max_score": {
+          "default": 10,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "recommendations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Recommendations",
+          "type": "array"
+        },
+        "score": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Score",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "score",
+        "reason"
+      ],
+      "title": "DeckEvaluationDimension",
+      "type": "object"
+    },
+    "DeckEvaluationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking_issue_count": {
+          "title": "Blocking Issue Count",
+          "type": "integer"
+        },
+        "dimensions": {
+          "items": {
+            "$ref": "#/definitions/DeckEvaluationDimension"
+          },
+          "title": "Dimensions",
+          "type": "array"
+        },
+        "grade": {
+          "title": "Grade",
+          "type": "string"
+        },
+        "max_score": {
+          "default": 100,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        },
+        "total_score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Total Score",
+          "type": "integer"
+        },
+        "warning_count": {
+          "title": "Warning Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_score",
+        "grade",
+        "dimensions",
+        "blocking_issue_count",
+        "warning_count",
+        "note"
+      ],
+      "title": "DeckEvaluationResult",
+      "type": "object"
+    },
+    "DeckGoal": {
+      "description": "An enumeration.",
+      "enum": [
+        "inform",
+        "diagnose",
+        "persuade",
+        "compare",
+        "recommend",
+        "approve",
+        "sell",
+        "align",
+        "decide"
+      ],
+      "title": "DeckGoal",
+      "type": "string"
+    },
+    "DeckLengthType": {
+      "description": "An enumeration.",
+      "enum": [
+        "short",
+        "standard",
+        "detailed",
+        "executive",
+        "appendix_heavy"
+      ],
+      "title": "DeckLengthType",
+      "type": "string"
+    },
+    "DeckPlannerResult": {
+      "additionalProperties": false,
+      "properties": {
+        "connected_to_runtime": {
+          "default": false,
+          "title": "Connected To Runtime",
+          "type": "boolean"
+        },
+        "context": {
+          "$ref": "#/definitions/ProposalContext"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "decisions": {
+          "items": {
+            "$ref": "#/definitions/PlannerRuleDecision"
+          },
+          "maxItems": 32,
+          "title": "Decisions",
+          "type": "array"
+        },
+        "deck_blueprint": {
+          "$ref": "#/definitions/DeckBlueprint"
+        },
+        "evaluation_result": {
+          "$ref": "#/definitions/DeckEvaluationResult"
+        },
+        "generated_slide_blueprints": {
+          "default": false,
+          "title": "Generated Slide Blueprints",
+          "type": "boolean"
+        },
+        "planner_version": {
+          "const": "pe2_deck_planner_v1",
+          "default": "pe2_deck_planner_v1",
+          "title": "Planner Version",
+          "type": "string"
+        },
+        "slide_recommendations": {
+          "items": {
+            "$ref": "#/definitions/PlannedSlideRecommendation"
+          },
+          "maxItems": 80,
+          "title": "Slide Recommendations",
+          "type": "array"
+        },
+        "warnings": {
+          "items": {
+            "$ref": "#/definitions/DeckPlannerWarning"
+          },
+          "maxItems": 20,
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "context",
+        "deck_blueprint"
+      ],
+      "title": "DeckPlannerResult",
+      "type": "object"
+    },
+    "DeckPlannerWarning": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "suggestion": {
+          "maxLength": 300,
+          "title": "Suggestion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "DeckPlannerWarning",
+      "type": "object"
+    },
+    "DeckSection": {
+      "additionalProperties": false,
+      "properties": {
+        "decision_relevance": {
+          "default": "medium",
+          "maxLength": 40,
+          "title": "Decision Relevance",
+          "type": "string"
+        },
+        "entry_message": {
+          "maxLength": 180,
+          "title": "Entry Message",
+          "type": "string"
+        },
+        "exit_message": {
+          "maxLength": 180,
+          "title": "Exit Message",
+          "type": "string"
+        },
+        "maximum_slides": {
+          "default": 4,
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Maximum Slides",
+          "type": "integer"
+        },
+        "minimum_slides": {
+          "default": 1,
+          "maximum": 20,
+          "minimum": 0,
+          "title": "Minimum Slides",
+          "type": "integer"
+        },
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "section_goal": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Section Goal",
+          "type": "string"
+        },
+        "section_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Section Id",
+          "type": "string"
+        },
+        "section_order": {
+          "maximum": 80,
+          "minimum": 0,
+          "title": "Section Order",
+          "type": "integer"
+        },
+        "section_title": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Section Title",
+          "type": "string"
+        },
+        "section_type": {
+          "$ref": "#/definitions/SectionType"
+        },
+        "slide_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Slide Ids",
+          "type": "array"
+        },
+        "transition_type": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TransitionType"
+            }
+          ],
+          "default": "continue"
+        }
+      },
+      "required": [
+        "section_id",
+        "section_type",
+        "section_title",
+        "section_goal",
+        "section_order"
+      ],
+      "title": "DeckSection",
+      "type": "object"
+    },
+    "DeckSourceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "default": "medium",
+          "maxLength": 20,
+          "title": "Confidence",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "source_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_type": {
+          "default": "user_input",
+          "maxLength": 60,
+          "title": "Source Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "label"
+      ],
+      "title": "DeckSourceReference",
+      "type": "object"
+    },
+    "DeckStatus": {
+      "description": "An enumeration.",
+      "enum": [
+        "draft",
+        "normalized",
+        "validated",
+        "ready_for_story_review",
+        "needs_review",
+        "invalid"
+      ],
+      "title": "DeckStatus",
+      "type": "string"
+    },
+    "DeckThemeDirection": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_density": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceStrategy"
+            }
+          ],
+          "default": "balanced"
+        },
+        "executive_summary_required": {
+          "default": true,
+          "title": "Executive Summary Required",
+          "type": "boolean"
+        },
+        "formality": {
+          "default": "business",
+          "maxLength": 80,
+          "title": "Formality",
+          "type": "string"
+        },
+        "recommended_theme": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/ThemeType"
+            }
+          ],
+          "default": "consulting"
+        },
+        "tone": {
+          "default": "consulting",
+          "maxLength": 80,
+          "title": "Tone",
+          "type": "string"
+        },
+        "visual_density": {
+          "default": "medium",
+          "maxLength": 40,
+          "title": "Visual Density",
+          "type": "string"
+        }
+      },
+      "title": "DeckThemeDirection",
+      "type": "object"
+    },
+    "DeckTransition": {
+      "additionalProperties": false,
+      "properties": {
+        "bridge_message": {
+          "maxLength": 180,
+          "title": "Bridge Message",
+          "type": "string"
+        },
+        "from_slide_id": {
+          "maxLength": 100,
+          "title": "From Slide Id",
+          "type": "string"
+        },
+        "to_slide_id": {
+          "maxLength": 100,
+          "title": "To Slide Id",
+          "type": "string"
+        },
+        "transition_type": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TransitionType"
+            }
+          ],
+          "default": "continue"
+        }
+      },
+      "title": "DeckTransition",
+      "type": "object"
+    },
+    "DeckType": {
+      "description": "An enumeration.",
+      "enum": [
+        "sales_proposal",
+        "executive_proposal",
+        "consulting_proposal",
+        "web_production_proposal",
+        "saas_introduction",
+        "project_plan",
+        "renewal_proposal",
+        "competitive_pitch",
+        "investment_pitch",
+        "internal_approval"
+      ],
+      "title": "DeckType",
+      "type": "string"
+    },
+    "DeckValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "code": {
+          "maxLength": 48,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "field_path": {
+          "maxLength": 180,
+          "minLength": 1,
+          "title": "Field Path",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "related_section_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Related Section Ids",
+          "type": "array"
+        },
+        "related_slide_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Related Slide Ids",
+          "type": "array"
+        },
+        "severity": {
+          "$ref": "#/definitions/DeckValidationSeverity"
+        },
+        "source": {
+          "default": "deck_validator",
+          "maxLength": 80,
+          "title": "Source",
+          "type": "string"
+        },
+        "suggestion": {
+          "maxLength": 280,
+          "title": "Suggestion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "field_path",
+        "message"
+      ],
+      "title": "DeckValidationIssue",
+      "type": "object"
+    },
+    "DeckValidationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "issues": {
+          "items": {
+            "$ref": "#/definitions/DeckValidationIssue"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/definitions/DeckStatus"
+        },
+        "valid": {
+          "title": "Valid",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "valid",
+        "status"
+      ],
+      "title": "DeckValidationResult",
+      "type": "object"
+    },
+    "DeckValidationSeverity": {
+      "description": "An enumeration.",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "title": "DeckValidationSeverity",
+      "type": "string"
+    },
+    "DeckWarning": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "related_slide_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Related Slide Ids",
+          "type": "array"
+        },
+        "warning_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Warning Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "warning_id",
+        "message"
+      ],
+      "title": "DeckWarning",
+      "type": "object"
+    },
+    "DensityLevel": {
+      "description": "An enumeration.",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "DensityLevel",
+      "type": "string"
+    },
+    "DiagramConnector": {
+      "additionalProperties": false,
+      "properties": {
+        "connector_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Connector Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 80,
+          "title": "Label",
+          "type": "string"
+        },
+        "source_node_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Source Node Id",
+          "type": "string"
+        },
+        "target_node_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Target Node Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "connector_id",
+        "source_node_id",
+        "target_node_id"
+      ],
+      "title": "DiagramConnector",
+      "type": "object"
+    },
+    "DiagramDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "axes": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 4,
+          "title": "Axes",
+          "type": "array"
+        },
+        "connectors": {
+          "items": {
+            "$ref": "#/definitions/DiagramConnector"
+          },
+          "maxItems": 20,
+          "title": "Connectors",
+          "type": "array"
+        },
+        "diagram_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Diagram Id",
+          "type": "string"
+        },
+        "diagram_type": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DiagramType"
+            }
+          ],
+          "default": "none"
+        },
+        "legend": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Legend",
+          "type": "array"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/definitions/DiagramNode"
+          },
+          "maxItems": 16,
+          "title": "Nodes",
+          "type": "array"
+        },
+        "reading_order": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "title": "Reading Order",
+          "type": "array"
+        },
+        "title": {
+          "maxLength": 120,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "diagram_id"
+      ],
+      "title": "DiagramDefinition",
+      "type": "object"
+    },
+    "DiagramNode": {
+      "additionalProperties": false,
+      "properties": {
+        "group_id": {
+          "maxLength": 80,
+          "title": "Group Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "node_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Node Id",
+          "type": "string"
+        },
+        "role": {
+          "default": "node",
+          "maxLength": 40,
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node_id",
+        "label"
+      ],
+      "title": "DiagramNode",
+      "type": "object"
+    },
+    "DiagramType": {
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "linear_timeline",
+        "roadmap_lanes",
+        "process_flow",
+        "swimlane_process",
+        "before_after_flow",
+        "matrix_2x2",
+        "risk_matrix",
+        "comparison_table",
+        "feature_matrix",
+        "kpi_dashboard",
+        "metric_cards",
+        "layered_architecture",
+        "data_flow",
+        "system_integration_map",
+        "ai_pipeline",
+        "human_in_the_loop",
+        "feedback_loop",
+        "maturity_model",
+        "stakeholder_map",
+        "roi_bridge",
+        "cost_breakdown",
+        "next_action_board"
+      ],
+      "title": "DiagramType",
+      "type": "string"
+    },
+    "DisclosureType": {
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "assumption",
+        "trial_calculation",
+        "current_hypothesis",
+        "needs_confirmation",
+        "public_information_scope",
+        "confirm_after_conditions"
+      ],
+      "title": "DisclosureType",
+      "type": "string"
+    },
+    "EmphasisLevel": {
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "hero"
+      ],
+      "title": "EmphasisLevel",
+      "type": "string"
+    },
+    "EvidenceAlignmentLevel": {
+      "description": "An enumeration.",
+      "enum": [
+        "evidence_supported",
+        "partially_supported",
+        "assumption_required",
+        "evidence_missing",
+        "not_applicable"
+      ],
+      "title": "EvidenceAlignmentLevel",
+      "type": "string"
+    },
+    "EvidenceBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConfidence"
+            }
+          ],
+          "default": "medium"
+        },
+        "evidence_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "evidence_type": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceType"
+            }
+          ],
+          "default": "user_input"
+        },
+        "is_assumption": {
+          "default": false,
+          "title": "Is Assumption",
+          "type": "boolean"
+        },
+        "source_reference_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 6,
+          "title": "Source Reference Ids",
+          "type": "array"
+        },
+        "text": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "text"
+      ],
+      "title": "EvidenceBlock",
+      "type": "object"
+    },
+    "EvidenceConfidence": {
+      "description": "An enumeration.",
+      "enum": [
+        "verified",
+        "likely",
+        "estimated",
+        "missing",
+        "unknown"
+      ],
+      "title": "EvidenceConfidence",
+      "type": "string"
+    },
+    "EvidenceEvaluationDimension": {
+      "additionalProperties": false,
+      "properties": {
+        "issues": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Issues",
+          "type": "array"
+        },
+        "max_score": {
+          "default": 10,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "recommendations": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Recommendations",
+          "type": "array"
+        },
+        "score": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Score",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "score",
+        "reason"
+      ],
+      "title": "EvidenceEvaluationDimension",
+      "type": "object"
+    },
+    "EvidenceEvaluationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking_warning_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Blocking Warning Count",
+          "type": "integer"
+        },
+        "dimensions": {
+          "items": {
+            "$ref": "#/definitions/EvidenceEvaluationDimension"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "title": "Dimensions",
+          "type": "array"
+        },
+        "grade": {
+          "maxLength": 2,
+          "minLength": 1,
+          "title": "Grade",
+          "type": "string"
+        },
+        "max_score": {
+          "default": 100,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "note": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        },
+        "total_score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Total Score",
+          "type": "integer"
+        },
+        "warning_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Warning Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_score",
+        "grade",
+        "note"
+      ],
+      "title": "EvidenceEvaluationResult",
+      "type": "object"
+    },
+    "EvidencePlannerResult": {
+      "additionalProperties": false,
+      "properties": {
+        "connected_to_runtime": {
+          "default": false,
+          "title": "Connected To Runtime",
+          "type": "boolean"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "deck_blueprint_version": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Deck Blueprint Version",
+          "type": "string"
+        },
+        "deck_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Deck Id",
+          "type": "string"
+        },
+        "evaluation_result": {
+          "$ref": "#/definitions/EvidenceEvaluationResult"
+        },
+        "evidence_planner_version": {
+          "const": "pe2_evidence_planner_v1",
+          "default": "pe2_evidence_planner_v1",
+          "title": "Evidence Planner Version",
+          "type": "string"
+        },
+        "generated_body_text": {
+          "default": false,
+          "title": "Generated Body Text",
+          "type": "boolean"
+        },
+        "generated_headlines": {
+          "default": false,
+          "title": "Generated Headlines",
+          "type": "boolean"
+        },
+        "generated_main_messages": {
+          "default": false,
+          "title": "Generated Main Messages",
+          "type": "boolean"
+        },
+        "generated_slide_blueprints": {
+          "default": false,
+          "title": "Generated Slide Blueprints",
+          "type": "boolean"
+        },
+        "project_id": {
+          "maxLength": 120,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "slide_evidence": {
+          "items": {
+            "$ref": "#/definitions/SlideEvidencePlan"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Slide Evidence",
+          "type": "array"
+        },
+        "warnings": {
+          "items": {
+            "$ref": "#/definitions/EvidencePlannerWarning"
+          },
+          "maxItems": 20,
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "created_at",
+        "deck_id",
+        "deck_blueprint_version"
+      ],
+      "title": "EvidencePlannerResult",
+      "type": "object"
+    },
+    "EvidencePlannerWarning": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "suggestion": {
+          "maxLength": 280,
+          "title": "Suggestion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "EvidencePlannerWarning",
+      "type": "object"
+    },
+    "EvidencePriority": {
+      "description": "An enumeration.",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "EvidencePriority",
+      "type": "string"
+    },
+    "EvidenceRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "case_study_required": {
+          "default": false,
+          "title": "Case Study Required",
+          "type": "boolean"
+        },
+        "confidence": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceConfidence"
+            }
+          ],
+          "default": "unknown"
+        },
+        "customer_proof_required": {
+          "default": false,
+          "title": "Customer Proof Required",
+          "type": "boolean"
+        },
+        "label": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "numeric_required": {
+          "default": false,
+          "title": "Numeric Required",
+          "type": "boolean"
+        },
+        "priority": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidencePriority"
+            }
+          ],
+          "default": "medium"
+        },
+        "rationale": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "requirement_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "source_type": {
+          "$ref": "#/definitions/EvidenceSourceType"
+        },
+        "traceability_required": {
+          "default": true,
+          "title": "Traceability Required",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "label",
+        "source_type",
+        "rationale"
+      ],
+      "title": "EvidenceRequirement",
+      "type": "object"
+    },
+    "EvidenceSourceType": {
+      "description": "An enumeration.",
+      "enum": [
+        "customer_interview",
+        "internal_kpi",
+        "industry_statistics",
+        "market_research",
+        "competitor_analysis",
+        "financial_estimate",
+        "project_experience",
+        "user_feedback",
+        "implementation_result",
+        "public_information",
+        "customer_document",
+        "assumption_log"
+      ],
+      "title": "EvidenceSourceType",
+      "type": "string"
+    },
+    "EvidenceStrategy": {
+      "description": "An enumeration.",
+      "enum": [
+        "light",
+        "balanced",
+        "data_driven",
+        "case_study_driven",
+        "executive_summary"
+      ],
+      "title": "EvidenceStrategy",
+      "type": "string"
+    },
+    "EvidenceType": {
+      "description": "An enumeration.",
+      "enum": [
+        "user_input",
+        "customer_document",
+        "interview",
+        "analysis",
+        "benchmark",
+        "assumption",
+        "missing"
+      ],
+      "title": "EvidenceType",
+      "type": "string"
+    },
+    "EvidenceUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageConfidence"
+            }
+          ],
+          "default": "medium"
+        },
+        "evidence_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "source_type": {
+          "default": "unknown",
+          "maxLength": 80,
+          "title": "Source Type",
+          "type": "string"
+        },
+        "usage": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Usage",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "usage"
+      ],
+      "title": "EvidenceUsage",
+      "type": "object"
+    },
+    "GridSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "columns": {
+          "default": 12,
+          "maximum": 24,
+          "minimum": 1,
+          "title": "Columns",
+          "type": "integer"
+        },
+        "gutter": {
+          "default": 0.16,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Gutter",
+          "type": "number"
+        },
+        "margin": {
+          "$ref": "#/definitions/MarginSpec"
+        },
+        "rows": {
+          "default": 8,
+          "maximum": 16,
+          "minimum": 1,
+          "title": "Rows",
+          "type": "integer"
+        }
+      },
+      "title": "GridSpec",
+      "type": "object"
+    },
+    "HierarchyLevel": {
+      "description": "An enumeration.",
+      "enum": [
+        "primary",
+        "secondary",
+        "tertiary",
+        "supporting"
+      ],
+      "title": "HierarchyLevel",
+      "type": "string"
+    },
+    "ImageRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "maxLength": 180,
+          "title": "Description",
+          "type": "string"
+        },
+        "image_role": {
+          "maxLength": 80,
+          "title": "Image Role",
+          "type": "string"
+        },
+        "license": {
+          "default": "not_applicable",
+          "maxLength": 80,
+          "title": "License",
+          "type": "string"
+        },
+        "replaceable": {
+          "default": true,
+          "title": "Replaceable",
+          "type": "boolean"
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "source_type": {
+          "default": "placeholder",
+          "maxLength": 40,
+          "title": "Source Type",
+          "type": "string"
+        }
+      },
+      "title": "ImageRequirement",
+      "type": "object"
+    },
+    "LayoutDirection": {
+      "description": "An enumeration.",
+      "enum": [
+        "left_to_right",
+        "right_to_left",
+        "top_to_bottom",
+        "bottom_to_top",
+        "radial",
+        "grid"
+      ],
+      "title": "LayoutDirection",
+      "type": "string"
+    },
+    "MarginSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "bottom": {
+          "default": 0.42,
+          "maximum": 2.0,
+          "minimum": 0.0,
+          "title": "Bottom",
+          "type": "number"
+        },
+        "left": {
+          "default": 0.48,
+          "maximum": 2.0,
+          "minimum": 0.0,
+          "title": "Left",
+          "type": "number"
+        },
+        "right": {
+          "default": 0.48,
+          "maximum": 2.0,
+          "minimum": 0.0,
+          "title": "Right",
+          "type": "number"
+        },
+        "top": {
+          "default": 0.42,
+          "maximum": 2.0,
+          "minimum": 0.0,
+          "title": "Top",
+          "type": "number"
+        }
+      },
+      "title": "MarginSpec",
+      "type": "object"
+    },
+    "MessageConfidence": {
+      "description": "An enumeration.",
+      "enum": [
+        "high",
+        "medium",
+        "low",
+        "blocked"
+      ],
+      "title": "MessageConfidence",
+      "type": "string"
+    },
+    "MessageConstraint": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "constraint_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Constraint Id",
+          "type": "string"
+        },
+        "detail": {
+          "maxLength": 260,
+          "title": "Detail",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "constraint_id",
+        "label"
+      ],
+      "title": "MessageConstraint",
+      "type": "object"
+    },
+    "MessageDesignerOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "connected_to_runtime": {
+          "default": false,
+          "title": "Connected To Runtime",
+          "type": "boolean"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "deck_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Deck Id",
+          "type": "string"
+        },
+        "evaluation_result": {
+          "$ref": "#/definitions/MessageEvaluationResult"
+        },
+        "generated_diagrams": {
+          "default": false,
+          "title": "Generated Diagrams",
+          "type": "boolean"
+        },
+        "generated_layouts": {
+          "default": false,
+          "title": "Generated Layouts",
+          "type": "boolean"
+        },
+        "generated_pptx": {
+          "default": false,
+          "title": "Generated Pptx",
+          "type": "boolean"
+        },
+        "generated_slide_blueprints": {
+          "default": false,
+          "title": "Generated Slide Blueprints",
+          "type": "boolean"
+        },
+        "generated_visuals": {
+          "default": false,
+          "title": "Generated Visuals",
+          "type": "boolean"
+        },
+        "message_designer_output_version": {
+          "const": "pe2_message_designer_output_v1",
+          "default": "pe2_message_designer_output_v1",
+          "title": "Message Designer Output Version",
+          "type": "string"
+        },
+        "slide_messages": {
+          "items": {
+            "$ref": "#/definitions/SlideMessageDesign"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Slide Messages",
+          "type": "array"
+        },
+        "warnings": {
+          "items": {
+            "$ref": "#/definitions/MessageWarning"
+          },
+          "maxItems": 40,
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "created_at",
+        "deck_id"
+      ],
+      "title": "MessageDesignerOutput",
+      "type": "object"
+    },
+    "MessageEvaluationDimension": {
+      "additionalProperties": false,
+      "properties": {
+        "issues": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Issues",
+          "type": "array"
+        },
+        "max_score": {
+          "default": 10,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "recommendations": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Recommendations",
+          "type": "array"
+        },
+        "score": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Score",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "score",
+        "reason"
+      ],
+      "title": "MessageEvaluationDimension",
+      "type": "object"
+    },
+    "MessageEvaluationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking_issue_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Blocking Issue Count",
+          "type": "integer"
+        },
+        "dimensions": {
+          "items": {
+            "$ref": "#/definitions/MessageEvaluationDimension"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Dimensions",
+          "type": "array"
+        },
+        "grade": {
+          "maxLength": 2,
+          "minLength": 1,
+          "title": "Grade",
+          "type": "string"
+        },
+        "max_score": {
+          "default": 100,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "note": {
+          "maxLength": 320,
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        },
+        "total_score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Total Score",
+          "type": "integer"
+        },
+        "warning_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Warning Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_score",
+        "grade",
+        "note"
+      ],
+      "title": "MessageEvaluationResult",
+      "type": "object"
+    },
+    "MessageGenerationMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "deterministic": {
+          "default": true,
+          "title": "Deterministic",
+          "type": "boolean"
+        },
+        "generator": {
+          "default": "offline_message_designer_phase2c",
+          "maxLength": 100,
+          "title": "Generator",
+          "type": "string"
+        },
+        "llm_used": {
+          "default": false,
+          "title": "Llm Used",
+          "type": "boolean"
+        },
+        "runtime_connected": {
+          "default": false,
+          "title": "Runtime Connected",
+          "type": "boolean"
+        },
+        "source_contracts": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Source Contracts",
+          "type": "array"
+        }
+      },
+      "title": "MessageGenerationMetadata",
+      "type": "object"
+    },
+    "MessagePurpose": {
+      "description": "An enumeration.",
+      "enum": [
+        "frame_decision",
+        "align_context",
+        "explain_problem",
+        "share_insight",
+        "recommend_action",
+        "prove_value",
+        "compare_options",
+        "explain_investment",
+        "reduce_risk",
+        "close_next_step"
+      ],
+      "title": "MessagePurpose",
+      "type": "string"
+    },
+    "MessageRiskLevel": {
+      "description": "An enumeration.",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "blocking"
+      ],
+      "title": "MessageRiskLevel",
+      "type": "string"
+    },
+    "MessageSourceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "related_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Related Evidence Ids",
+          "type": "array"
+        },
+        "source_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_type": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Source Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "source_type",
+        "label"
+      ],
+      "title": "MessageSourceReference",
+      "type": "object"
+    },
+    "MessageStatus": {
+      "description": "An enumeration.",
+      "enum": [
+        "draft",
+        "normalized",
+        "validated",
+        "needs_review",
+        "invalid"
+      ],
+      "title": "MessageStatus",
+      "type": "string"
+    },
+    "MessageStrength": {
+      "description": "An enumeration.",
+      "enum": [
+        "strong",
+        "clear",
+        "moderate",
+        "weak",
+        "blocked"
+      ],
+      "title": "MessageStrength",
+      "type": "string"
+    },
+    "MessageStyle": {
+      "description": "An enumeration.",
+      "enum": [
+        "executive",
+        "consulting",
+        "sales",
+        "marketing",
+        "technical",
+        "operational",
+        "financial",
+        "strategic",
+        "neutral"
+      ],
+      "title": "MessageStyle",
+      "type": "string"
+    },
+    "MessageStyleProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "avoid": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Avoid",
+          "type": "array"
+        },
+        "headline_rule": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Headline Rule",
+          "type": "string"
+        },
+        "main_message_rule": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Main Message Rule",
+          "type": "string"
+        },
+        "style": {
+          "$ref": "#/definitions/MessageStyle"
+        },
+        "tone": {
+          "$ref": "#/definitions/MessageTone"
+        }
+      },
+      "required": [
+        "style",
+        "tone",
+        "headline_rule",
+        "main_message_rule"
+      ],
+      "title": "MessageStyleProfile",
+      "type": "object"
+    },
+    "MessageTone": {
+      "description": "An enumeration.",
+      "enum": [
+        "formal",
+        "confident",
+        "analytical",
+        "persuasive",
+        "concise",
+        "supportive",
+        "urgent",
+        "cautious"
+      ],
+      "title": "MessageTone",
+      "type": "string"
+    },
+    "MessageValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "code": {
+          "maxLength": 48,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "field_path": {
+          "maxLength": 180,
+          "minLength": 1,
+          "title": "Field Path",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "related_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Related Evidence Ids",
+          "type": "array"
+        },
+        "related_slide_id": {
+          "maxLength": 120,
+          "title": "Related Slide Id",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/definitions/MessageValidationSeverity"
+        },
+        "source": {
+          "default": "message_validator",
+          "maxLength": 80,
+          "title": "Source",
+          "type": "string"
+        },
+        "suggestion": {
+          "maxLength": 280,
+          "title": "Suggestion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "field_path",
+        "message"
+      ],
+      "title": "MessageValidationIssue",
+      "type": "object"
+    },
+    "MessageValidationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "issues": {
+          "items": {
+            "$ref": "#/definitions/MessageValidationIssue"
+          },
+          "maxItems": 40,
+          "title": "Issues",
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/definitions/MessageStatus"
+        },
+        "valid": {
+          "title": "Valid",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "valid",
+        "status"
+      ],
+      "title": "MessageValidationResult",
+      "type": "object"
+    },
+    "MessageValidationSeverity": {
+      "description": "An enumeration.",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "title": "MessageValidationSeverity",
+      "type": "string"
+    },
+    "MessageWarning": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "related_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Related Evidence Ids",
+          "type": "array"
+        },
+        "risk_level": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageRiskLevel"
+            }
+          ],
+          "default": "medium"
+        },
+        "warning_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Warning Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "warning_id",
+        "message"
+      ],
+      "title": "MessageWarning",
+      "type": "object"
+    },
+    "MetricBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConfidence"
+            }
+          ],
+          "default": "medium"
+        },
+        "context": {
+          "maxLength": 160,
+          "title": "Context",
+          "type": "string"
+        },
+        "evidence_id": {
+          "maxLength": 80,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "metric_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 40,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "metric_id",
+        "label",
+        "value"
+      ],
+      "title": "MetricBlock",
+      "type": "object"
+    },
+    "MissingEvidenceDisclosure": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "disclosure_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Disclosure Id",
+          "type": "string"
+        },
+        "disclosure_type": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DisclosureType"
+            }
+          ],
+          "default": "needs_confirmation"
+        },
+        "message": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "related_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Related Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "disclosure_id",
+        "message"
+      ],
+      "title": "MissingEvidenceDisclosure",
+      "type": "object"
+    },
+    "MissingEvidenceSeverity": {
+      "description": "An enumeration.",
+      "enum": [
+        "blocking",
+        "warning",
+        "info"
+      ],
+      "title": "MissingEvidenceSeverity",
+      "type": "string"
+    },
+    "MissingEvidenceWarning": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "maxLength": 260,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "related_requirement_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Related Requirement Ids",
+          "type": "array"
+        },
+        "severity": {
+          "$ref": "#/definitions/MissingEvidenceSeverity"
+        },
+        "suggested_action": {
+          "maxLength": 260,
+          "minLength": 1,
+          "title": "Suggested Action",
+          "type": "string"
+        },
+        "warning_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Warning Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "warning_id",
+        "severity",
+        "message",
+        "suggested_action"
+      ],
+      "title": "MissingEvidenceWarning",
+      "type": "object"
+    },
+    "NarrativeFunction": {
+      "description": "An enumeration.",
+      "enum": [
+        "hook",
+        "frame",
+        "diagnose",
+        "explain",
+        "compare",
+        "prove",
+        "recommend",
+        "quantify",
+        "de_risk",
+        "ask",
+        "close"
+      ],
+      "title": "NarrativeFunction",
+      "type": "string"
+    },
+    "NumericClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "basis_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Basis Evidence Ids",
+          "type": "array"
+        },
+        "claim_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Claim Id",
+          "type": "string"
+        },
+        "confidence": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageConfidence"
+            }
+          ],
+          "default": "medium"
+        },
+        "is_trial_calculation": {
+          "default": false,
+          "title": "Is Trial Calculation",
+          "type": "boolean"
+        },
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 40,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claim_id",
+        "label",
+        "value"
+      ],
+      "title": "NumericClaim",
+      "type": "object"
+    },
+    "ObjectionResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_requirement": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceStrategy"
+            }
+          ],
+          "default": "balanced"
+        },
+        "objection": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Objection",
+          "type": "string"
+        },
+        "objection_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Objection Id",
+          "type": "string"
+        },
+        "related_slide_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Related Slide Ids",
+          "type": "array"
+        },
+        "response": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Response",
+          "type": "string"
+        }
+      },
+      "required": [
+        "objection_id",
+        "objection",
+        "response"
+      ],
+      "title": "ObjectionResponse",
+      "type": "object"
+    },
+    "OverflowStrategy": {
+      "description": "An enumeration.",
+      "enum": [
+        "fit",
+        "compress",
+        "split",
+        "diagramize",
+        "require_review"
+      ],
+      "title": "OverflowStrategy",
+      "type": "string"
+    },
+    "PersuasionStrategy": {
+      "description": "An enumeration.",
+      "enum": [
+        "roi",
+        "risk_reduction",
+        "quality_improvement",
+        "speed",
+        "differentiation",
+        "dx",
+        "ai_adoption",
+        "cost_reduction",
+        "growth"
+      ],
+      "title": "PersuasionStrategy",
+      "type": "string"
+    },
+    "Phase2DReadinessStatus": {
+      "description": "An enumeration.",
+      "enum": [
+        "READY",
+        "READY_WITH_LIMITATIONS",
+        "NOT_READY",
+        "BLOCKED"
+      ],
+      "title": "Phase2DReadinessStatus",
+      "type": "string"
+    },
+    "PlannedSlideRecommendation": {
+      "additionalProperties": false,
+      "properties": {
+        "cta_candidate": {
+          "default": false,
+          "title": "Cta Candidate",
+          "type": "boolean"
+        },
+        "recommended_evidence": {
+          "default": "balanced",
+          "maxLength": 80,
+          "title": "Recommended Evidence",
+          "type": "string"
+        },
+        "recommended_visual": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/VisualType"
+            }
+          ],
+          "default": "text_only"
+        },
+        "section_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Section Id",
+          "type": "string"
+        },
+        "slide_blueprint_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Slide Blueprint Id",
+          "type": "string"
+        },
+        "slide_order": {
+          "maximum": 200,
+          "minimum": 0,
+          "title": "Slide Order",
+          "type": "integer"
+        },
+        "slide_purpose": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Slide Purpose",
+          "type": "string"
+        },
+        "slide_role": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Slide Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slide_blueprint_id",
+        "slide_order",
+        "section_id",
+        "slide_role",
+        "slide_purpose"
+      ],
+      "title": "PlannedSlideRecommendation",
+      "type": "object"
+    },
+    "PlannerRuleDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "default": 0.8,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "reason": {
+          "maxLength": 320,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "rule_name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Rule Name",
+          "type": "string"
+        },
+        "selected_value": {
+          "maxLength": 180,
+          "minLength": 1,
+          "title": "Selected Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_name",
+        "selected_value",
+        "reason"
+      ],
+      "title": "PlannerRuleDecision",
+      "type": "object"
+    },
+    "ProcessStep": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "maxLength": 220,
+          "title": "Description",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "output": {
+          "maxLength": 120,
+          "title": "Output",
+          "type": "string"
+        },
+        "owner": {
+          "maxLength": 80,
+          "title": "Owner",
+          "type": "string"
+        },
+        "step_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Step Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "step_id",
+        "label"
+      ],
+      "title": "ProcessStep",
+      "type": "object"
+    },
+    "ProposalContext": {
+      "additionalProperties": false,
+      "description": "Minimal business context accepted by the offline planner.",
+      "properties": {
+        "budget_range": {
+          "maxLength": 120,
+          "title": "Budget Range",
+          "type": "string"
+        },
+        "competitive_information": {
+          "maxLength": 1200,
+          "title": "Competitive Information",
+          "type": "string"
+        },
+        "decision_maker": {
+          "maxLength": 120,
+          "title": "Decision Maker",
+          "type": "string"
+        },
+        "expected_outcomes": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Expected Outcomes",
+          "type": "array"
+        },
+        "implementation_purpose": {
+          "maxLength": 1200,
+          "title": "Implementation Purpose",
+          "type": "string"
+        },
+        "industry": {
+          "maxLength": 120,
+          "title": "Industry",
+          "type": "string"
+        },
+        "language": {
+          "default": "ja",
+          "maxLength": 16,
+          "minLength": 2,
+          "title": "Language",
+          "type": "string"
+        },
+        "persona": {
+          "maxLength": 120,
+          "title": "Persona",
+          "type": "string"
+        },
+        "problems": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Problems",
+          "type": "array"
+        },
+        "project_id": {
+          "maxLength": 120,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "project_name": {
+          "maxLength": 160,
+          "title": "Project Name",
+          "type": "string"
+        },
+        "project_summary": {
+          "maxLength": 1200,
+          "minLength": 1,
+          "title": "Project Summary",
+          "type": "string"
+        },
+        "proposal_category": {
+          "maxLength": 120,
+          "title": "Proposal Category",
+          "type": "string"
+        },
+        "timeline": {
+          "maxLength": 160,
+          "title": "Timeline",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_summary"
+      ],
+      "title": "ProposalContext",
+      "type": "object"
+    },
+    "RenderingMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "editable_shapes_required": {
+          "default": true,
+          "title": "Editable Shapes Required",
+          "type": "boolean"
+        },
+        "external_assets_allowed": {
+          "default": false,
+          "title": "External Assets Allowed",
+          "type": "boolean"
+        },
+        "footer_required": {
+          "default": false,
+          "title": "Footer Required",
+          "type": "boolean"
+        },
+        "page_number_required": {
+          "default": true,
+          "title": "Page Number Required",
+          "type": "boolean"
+        },
+        "renderer_notes": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Renderer Notes",
+          "type": "array"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "title": "RenderingMetadata",
+      "type": "object"
+    },
+    "RiskLevel": {
+      "description": "An enumeration.",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "title": "RiskLevel",
+      "type": "string"
+    },
+    "SafeAreaSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "h": {
+          "default": 0.88,
+          "maximum": 1.0,
+          "minimum": 0.1,
+          "title": "H",
+          "type": "number"
+        },
+        "w": {
+          "default": 0.92,
+          "maximum": 1.0,
+          "minimum": 0.1,
+          "title": "W",
+          "type": "number"
+        },
+        "x": {
+          "default": 0.04,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "default": 0.05,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "title": "SafeAreaSpec",
+      "type": "object"
+    },
+    "SectionType": {
+      "description": "An enumeration.",
+      "enum": [
+        "cover",
+        "executive_summary",
+        "background",
+        "current_state",
+        "problem",
+        "insight",
+        "opportunity",
+        "market",
+        "competitor",
+        "strategy",
+        "solution",
+        "scope",
+        "deliverables",
+        "approach",
+        "roadmap",
+        "timeline",
+        "team",
+        "case_study",
+        "kpi",
+        "roi",
+        "pricing",
+        "estimate",
+        "risk",
+        "faq",
+        "next_action",
+        "closing",
+        "appendix"
+      ],
+      "title": "SectionType",
+      "type": "string"
+    },
+    "SlideBlueprint": {
+      "additionalProperties": false,
+      "properties": {
+        "alignment": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/AlignmentType"
+            }
+          ],
+          "default": "left"
+        },
+        "animation_hint": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/AnimationHint"
+            }
+          ],
+          "default": "none"
+        },
+        "audience": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/AudienceType"
+            }
+          ],
+          "default": "general"
+        },
+        "background_style": {
+          "default": "clean",
+          "maxLength": 60,
+          "title": "Background Style",
+          "type": "string"
+        },
+        "blueprint_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Blueprint Id",
+          "type": "string"
+        },
+        "blueprint_version": {
+          "const": "pe2_slide_blueprint_v1",
+          "default": "pe2_slide_blueprint_v1",
+          "title": "Blueprint Version",
+          "type": "string"
+        },
+        "body_style": {
+          "$ref": "#/definitions/TypographyStyle"
+        },
+        "border_style": {
+          "default": "subtle",
+          "maxLength": 60,
+          "title": "Border Style",
+          "type": "string"
+        },
+        "caption_style": {
+          "$ref": "#/definitions/TypographyStyle"
+        },
+        "chart_requirement": {
+          "$ref": "#/definitions/ChartRequirement"
+        },
+        "citations": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Citations",
+          "type": "array"
+        },
+        "color_palette": {
+          "$ref": "#/definitions/ColorPalette"
+        },
+        "comparison_items": {
+          "items": {
+            "$ref": "#/definitions/ComparisonItem"
+          },
+          "maxItems": 8,
+          "title": "Comparison Items",
+          "type": "array"
+        },
+        "confidence": {
+          "default": 0.8,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "content_blocks": {
+          "items": {
+            "$ref": "#/definitions/TextBlock"
+          },
+          "maxItems": 8,
+          "title": "Content Blocks",
+          "type": "array"
+        },
+        "content_priority": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/ContentPriority"
+            }
+          ],
+          "default": "high"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "cta": {
+          "$ref": "#/definitions/CTAConfig"
+        },
+        "decision_question": {
+          "maxLength": 180,
+          "title": "Decision Question",
+          "type": "string"
+        },
+        "density": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DensityLevel"
+            }
+          ],
+          "default": "medium"
+        },
+        "desired_reaction": {
+          "maxLength": 180,
+          "title": "Desired Reaction",
+          "type": "string"
+        },
+        "diagram_definition": {
+          "$ref": "#/definitions/DiagramDefinition"
+        },
+        "diagram_type": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DiagramType"
+            }
+          ],
+          "default": "none"
+        },
+        "emphasis": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EmphasisLevel"
+            }
+          ],
+          "default": "medium"
+        },
+        "fallback_visual_type": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/VisualType"
+            }
+          ],
+          "default": "text_only"
+        },
+        "footnote_style": {
+          "$ref": "#/definitions/TypographyStyle"
+        },
+        "gaps": {
+          "default": 0.16,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Gaps",
+          "type": "number"
+        },
+        "generation_source": {
+          "default": "offline_fixture",
+          "maxLength": 80,
+          "title": "Generation Source",
+          "type": "string"
+        },
+        "grid": {
+          "$ref": "#/definitions/GridSpec"
+        },
+        "headline": {
+          "maxLength": 90,
+          "minLength": 1,
+          "title": "Headline",
+          "type": "string"
+        },
+        "hierarchy_level": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/HierarchyLevel"
+            }
+          ],
+          "default": "primary"
+        },
+        "icon_style": {
+          "default": "line",
+          "maxLength": 60,
+          "title": "Icon Style",
+          "type": "string"
+        },
+        "image_requirement": {
+          "$ref": "#/definitions/ImageRequirement"
+        },
+        "layout_direction": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/LayoutDirection"
+            }
+          ],
+          "default": "left_to_right"
+        },
+        "main_message": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Main Message",
+          "type": "string"
+        },
+        "margins": {
+          "$ref": "#/definitions/MarginSpec"
+        },
+        "metric_style": {
+          "$ref": "#/definitions/TypographyStyle"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/definitions/MetricBlock"
+          },
+          "maxItems": 8,
+          "title": "Metrics",
+          "type": "array"
+        },
+        "overflow_strategy": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/OverflowStrategy"
+            }
+          ],
+          "default": "require_review"
+        },
+        "primary_element": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Primary Element",
+          "type": "string"
+        },
+        "process_steps": {
+          "items": {
+            "$ref": "#/definitions/ProcessStep"
+          },
+          "maxItems": 12,
+          "title": "Process Steps",
+          "type": "array"
+        },
+        "reading_order": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "title": "Reading Order",
+          "type": "array"
+        },
+        "rendering_metadata": {
+          "$ref": "#/definitions/RenderingMetadata"
+        },
+        "safe_area": {
+          "$ref": "#/definitions/SafeAreaSpec"
+        },
+        "secondary_elements": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Secondary Elements",
+          "type": "array"
+        },
+        "slide_goal": {
+          "$ref": "#/definitions/SlideGoal"
+        },
+        "slide_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Slide Id",
+          "type": "string"
+        },
+        "slide_index": {
+          "maximum": 200,
+          "minimum": 0,
+          "title": "Slide Index",
+          "type": "integer"
+        },
+        "slide_type": {
+          "$ref": "#/definitions/SlideType"
+        },
+        "source_references": {
+          "items": {
+            "$ref": "#/definitions/SourceReference"
+          },
+          "maxItems": 12,
+          "title": "Source References",
+          "type": "array"
+        },
+        "speaker_note_summary": {
+          "maxLength": 360,
+          "title": "Speaker Note Summary",
+          "type": "string"
+        },
+        "split_allowed": {
+          "default": true,
+          "title": "Split Allowed",
+          "type": "boolean"
+        },
+        "status": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/BlueprintStatus"
+            }
+          ],
+          "default": "draft"
+        },
+        "subtitle_style": {
+          "$ref": "#/definitions/TypographyStyle"
+        },
+        "supporting_evidence": {
+          "items": {
+            "$ref": "#/definitions/EvidenceBlock"
+          },
+          "maxItems": 10,
+          "title": "Supporting Evidence",
+          "type": "array"
+        },
+        "supporting_messages": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 6,
+          "title": "Supporting Messages",
+          "type": "array"
+        },
+        "surface_style": {
+          "default": "card",
+          "maxLength": 60,
+          "title": "Surface Style",
+          "type": "string"
+        },
+        "table_data": {
+          "$ref": "#/definitions/TableData"
+        },
+        "theme": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/ThemeType"
+            }
+          ],
+          "default": "consulting"
+        },
+        "timeline_items": {
+          "items": {
+            "$ref": "#/definitions/TimelineItem"
+          },
+          "maxItems": 12,
+          "title": "Timeline Items",
+          "type": "array"
+        },
+        "title_style": {
+          "$ref": "#/definitions/TypographyStyle"
+        },
+        "validation_result": {
+          "$ref": "#/definitions/ValidationResult"
+        },
+        "visual_rationale": {
+          "maxLength": 220,
+          "title": "Visual Rationale",
+          "type": "string"
+        },
+        "visual_type": {
+          "$ref": "#/definitions/VisualType"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "blueprint_id",
+        "slide_id",
+        "slide_index",
+        "slide_type",
+        "slide_goal",
+        "headline",
+        "main_message",
+        "visual_type",
+        "primary_element"
+      ],
+      "title": "SlideBlueprint",
+      "type": "object"
+    },
+    "SlideBlueprintReference": {
+      "additionalProperties": false,
+      "properties": {
+        "embedded_slide_blueprint": {
+          "$ref": "#/definitions/SlideBlueprint"
+        },
+        "expected_slide_goal": {
+          "$ref": "#/definitions/SlideGoal"
+        },
+        "expected_slide_type": {
+          "$ref": "#/definitions/SlideType"
+        },
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "section_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Section Id",
+          "type": "string"
+        },
+        "slide_blueprint_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Slide Blueprint Id",
+          "type": "string"
+        },
+        "slide_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Slide Id",
+          "type": "string"
+        },
+        "slide_order": {
+          "maximum": 200,
+          "minimum": 0,
+          "title": "Slide Order",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "slide_blueprint_id",
+        "slide_id",
+        "slide_order",
+        "expected_slide_type",
+        "expected_slide_goal",
+        "section_id"
+      ],
+      "title": "SlideBlueprintReference",
+      "type": "object"
+    },
+    "SlideEvidencePlan": {
+      "additionalProperties": false,
+      "properties": {
+        "case_study_required": {
+          "default": false,
+          "title": "Case Study Required",
+          "type": "boolean"
+        },
+        "customer_proof_required": {
+          "default": false,
+          "title": "Customer Proof Required",
+          "type": "boolean"
+        },
+        "evidence_confidence": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceConfidence"
+            }
+          ],
+          "default": "unknown"
+        },
+        "evidence_priority": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidencePriority"
+            }
+          ],
+          "default": "medium"
+        },
+        "evidence_source_types": {
+          "items": {
+            "$ref": "#/definitions/EvidenceSourceType"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "type": "array"
+        },
+        "generated_body_text": {
+          "default": false,
+          "title": "Generated Body Text",
+          "type": "boolean"
+        },
+        "generated_headline": {
+          "default": false,
+          "title": "Generated Headline",
+          "type": "boolean"
+        },
+        "generated_main_message": {
+          "default": false,
+          "title": "Generated Main Message",
+          "type": "boolean"
+        },
+        "generated_slide_blueprint": {
+          "default": false,
+          "title": "Generated Slide Blueprint",
+          "type": "boolean"
+        },
+        "missing_evidence_warnings": {
+          "items": {
+            "$ref": "#/definitions/MissingEvidenceWarning"
+          },
+          "maxItems": 8,
+          "title": "Missing Evidence Warnings",
+          "type": "array"
+        },
+        "numeric_evidence_required": {
+          "default": false,
+          "title": "Numeric Evidence Required",
+          "type": "boolean"
+        },
+        "optional_evidence": {
+          "items": {
+            "$ref": "#/definitions/EvidenceRequirement"
+          },
+          "maxItems": 10,
+          "title": "Optional Evidence",
+          "type": "array"
+        },
+        "required_evidence": {
+          "items": {
+            "$ref": "#/definitions/EvidenceRequirement"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "title": "Required Evidence",
+          "type": "array"
+        },
+        "risk_if_missing": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Risk If Missing",
+          "type": "string"
+        },
+        "section_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Section Id",
+          "type": "string"
+        },
+        "section_type": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Section Type",
+          "type": "string"
+        },
+        "slide_blueprint_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Slide Blueprint Id",
+          "type": "string"
+        },
+        "slide_goal": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Slide Goal",
+          "type": "string"
+        },
+        "slide_order": {
+          "maximum": 200,
+          "minimum": 0,
+          "title": "Slide Order",
+          "type": "integer"
+        },
+        "slide_role": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Slide Role",
+          "type": "string"
+        },
+        "visual_evidence_recommendation": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/VisualEvidenceRecommendation"
+            }
+          ],
+          "default": "none"
+        }
+      },
+      "required": [
+        "slide_blueprint_id",
+        "slide_order",
+        "section_id",
+        "section_type",
+        "slide_role",
+        "slide_goal",
+        "risk_if_missing"
+      ],
+      "title": "SlideEvidencePlan",
+      "type": "object"
+    },
+    "SlideGoal": {
+      "description": "An enumeration.",
+      "enum": [
+        "cover",
+        "agenda",
+        "executive_summary",
+        "problem_sharing",
+        "current_state",
+        "background",
+        "market_context",
+        "customer_insight",
+        "competitive_analysis",
+        "comparison",
+        "roi_explanation",
+        "kpi_definition",
+        "proposal_overview",
+        "solution_detail",
+        "architecture",
+        "process",
+        "roadmap",
+        "timeline",
+        "estimate",
+        "pricing",
+        "risk_handling",
+        "case_study",
+        "team",
+        "implementation_plan",
+        "faq",
+        "next_action",
+        "closing",
+        "appendix"
+      ],
+      "title": "SlideGoal",
+      "type": "string"
+    },
+    "SlideMessageDesign": {
+      "additionalProperties": false,
+      "properties": {
+        "audience": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Audience",
+          "type": "string"
+        },
+        "audience_seniority": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Audience Seniority",
+          "type": "string"
+        },
+        "constraints": {
+          "items": {
+            "$ref": "#/definitions/MessageConstraint"
+          },
+          "maxItems": 12,
+          "title": "Constraints",
+          "type": "array"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "decision_stage": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Decision Stage",
+          "type": "string"
+        },
+        "deck_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Deck Id",
+          "type": "string"
+        },
+        "evaluation_result": {
+          "$ref": "#/definitions/MessageEvaluationResult"
+        },
+        "evidence_alignment_level": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceAlignmentLevel"
+            }
+          ],
+          "default": "not_applicable"
+        },
+        "evidence_alignment_summary": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Evidence Alignment Summary",
+          "type": "string"
+        },
+        "evidence_usage": {
+          "items": {
+            "$ref": "#/definitions/EvidenceUsage"
+          },
+          "maxItems": 20,
+          "title": "Evidence Usage",
+          "type": "array"
+        },
+        "generation_metadata": {
+          "$ref": "#/definitions/MessageGenerationMetadata"
+        },
+        "generation_source": {
+          "default": "offline_message_designer_phase2c",
+          "maxLength": 100,
+          "title": "Generation Source",
+          "type": "string"
+        },
+        "headline": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Headline",
+          "type": "string"
+        },
+        "input_fingerprint": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Input Fingerprint",
+          "type": "string"
+        },
+        "key_takeaway": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Key Takeaway",
+          "type": "string"
+        },
+        "main_message": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Main Message",
+          "type": "string"
+        },
+        "message_confidence": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageConfidence"
+            }
+          ],
+          "default": "medium"
+        },
+        "message_design_id": {
+          "maxLength": 140,
+          "minLength": 1,
+          "title": "Message Design Id",
+          "type": "string"
+        },
+        "message_design_version": {
+          "const": "pe2_slide_message_design_v1",
+          "default": "pe2_slide_message_design_v1",
+          "title": "Message Design Version",
+          "type": "string"
+        },
+        "message_strength": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageStrength"
+            }
+          ],
+          "default": "clear"
+        },
+        "message_style": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageStyle"
+            }
+          ],
+          "default": "neutral"
+        },
+        "message_tone": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageTone"
+            }
+          ],
+          "default": "concise"
+        },
+        "missing_evidence_disclosure": {
+          "items": {
+            "$ref": "#/definitions/MissingEvidenceDisclosure"
+          },
+          "maxItems": 10,
+          "title": "Missing Evidence Disclosure",
+          "type": "array"
+        },
+        "narrative_function": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Narrative Function",
+          "type": "string"
+        },
+        "numeric_claims": {
+          "items": {
+            "$ref": "#/definitions/NumericClaim"
+          },
+          "maxItems": 8,
+          "title": "Numeric Claims",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "pe2_slide_message_design_v1",
+          "default": "pe2_slide_message_design_v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "slide_blueprint_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Slide Blueprint Id",
+          "type": "string"
+        },
+        "slide_goal": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Slide Goal",
+          "type": "string"
+        },
+        "slide_order": {
+          "maximum": 200,
+          "minimum": 0,
+          "title": "Slide Order",
+          "type": "integer"
+        },
+        "slide_plan_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Slide Plan Id",
+          "type": "string"
+        },
+        "slide_role": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Slide Role",
+          "type": "string"
+        },
+        "source_references": {
+          "items": {
+            "$ref": "#/definitions/MessageSourceReference"
+          },
+          "maxItems": 16,
+          "title": "Source References",
+          "type": "array"
+        },
+        "speaker_note_summary": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Speaker Note Summary",
+          "type": "string"
+        },
+        "status": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageStatus"
+            }
+          ],
+          "default": "draft"
+        },
+        "style_profile": {
+          "$ref": "#/definitions/MessageStyleProfile"
+        },
+        "supporting_messages": {
+          "items": {
+            "$ref": "#/definitions/SupportingMessage"
+          },
+          "maxItems": 3,
+          "title": "Supporting Messages",
+          "type": "array"
+        },
+        "unsupported_claims": {
+          "items": {
+            "$ref": "#/definitions/UnsupportedClaim"
+          },
+          "maxItems": 10,
+          "title": "Unsupported Claims",
+          "type": "array"
+        },
+        "unused_required_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Unused Required Evidence Ids",
+          "type": "array"
+        },
+        "used_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Used Evidence Ids",
+          "type": "array"
+        },
+        "validation_result": {
+          "$ref": "#/definitions/MessageValidationResult"
+        },
+        "warnings": {
+          "items": {
+            "$ref": "#/definitions/MessageWarning"
+          },
+          "maxItems": 12,
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "message_design_id",
+        "deck_id",
+        "slide_plan_id",
+        "slide_blueprint_id",
+        "slide_order",
+        "slide_role",
+        "slide_goal",
+        "narrative_function",
+        "audience",
+        "audience_seniority",
+        "decision_stage",
+        "headline",
+        "main_message",
+        "key_takeaway",
+        "speaker_note_summary",
+        "evidence_alignment_summary",
+        "input_fingerprint",
+        "created_at"
+      ],
+      "title": "SlideMessageDesign",
+      "type": "object"
+    },
+    "SlidePlanItem": {
+      "additionalProperties": false,
+      "properties": {
+        "decision_relevance": {
+          "default": "medium",
+          "maxLength": 40,
+          "title": "Decision Relevance",
+          "type": "string"
+        },
+        "evidence_requirement": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceStrategy"
+            }
+          ],
+          "default": "balanced"
+        },
+        "key_message": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Key Message",
+          "type": "string"
+        },
+        "narrative_function": {
+          "$ref": "#/definitions/NarrativeFunction"
+        },
+        "optional": {
+          "default": false,
+          "title": "Optional",
+          "type": "boolean"
+        },
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "section_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Section Id",
+          "type": "string"
+        },
+        "slide_blueprint_id": {
+          "maxLength": 100,
+          "title": "Slide Blueprint Id",
+          "type": "string"
+        },
+        "slide_goal": {
+          "$ref": "#/definitions/SlideGoal"
+        },
+        "slide_order": {
+          "maximum": 200,
+          "minimum": 0,
+          "title": "Slide Order",
+          "type": "integer"
+        },
+        "slide_role": {
+          "$ref": "#/definitions/SlideRole"
+        },
+        "slide_type": {
+          "$ref": "#/definitions/SlideType"
+        },
+        "transition_from_previous": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TransitionType"
+            }
+          ],
+          "default": "continue"
+        },
+        "transition_to_next": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TransitionType"
+            }
+          ],
+          "default": "continue"
+        },
+        "working_title": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Working Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slide_order",
+        "slide_role",
+        "slide_type",
+        "section_id",
+        "slide_goal",
+        "narrative_function",
+        "working_title",
+        "key_message"
+      ],
+      "title": "SlidePlanItem",
+      "type": "object"
+    },
+    "SlideRole": {
+      "description": "An enumeration.",
+      "enum": [
+        "opening",
+        "summary",
+        "context",
+        "problem",
+        "insight",
+        "proof",
+        "recommendation",
+        "plan",
+        "decision",
+        "support",
+        "closing",
+        "appendix"
+      ],
+      "title": "SlideRole",
+      "type": "string"
+    },
+    "SlideType": {
+      "description": "An enumeration.",
+      "enum": [
+        "cover",
+        "agenda",
+        "executive_summary",
+        "key_message",
+        "customer_context",
+        "problem_statement",
+        "current_state",
+        "root_cause",
+        "before_after",
+        "competitive_landscape",
+        "competitor_comparison",
+        "differentiation",
+        "recommended_strategy",
+        "proposal_overview",
+        "solution_concept",
+        "solution_architecture",
+        "ai_workflow",
+        "business_process",
+        "feature_overview",
+        "benefit_overview",
+        "kpi_definition",
+        "roi_estimate",
+        "estimate_overview",
+        "timeline",
+        "roadmap",
+        "implementation_plan",
+        "risk_register",
+        "team_structure",
+        "case_study",
+        "faq",
+        "next_action",
+        "closing",
+        "appendix"
+      ],
+      "title": "SlideType",
+      "type": "string"
+    },
+    "SourceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConfidence"
+            }
+          ],
+          "default": "medium"
+        },
+        "label": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "page": {
+          "maxLength": 40,
+          "title": "Page",
+          "type": "string"
+        },
+        "source_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_type": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceType"
+            }
+          ],
+          "default": "user_input"
+        },
+        "url": {
+          "maxLength": 500,
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "label"
+      ],
+      "title": "SourceReference",
+      "type": "object"
+    },
+    "StoryArcType": {
+      "description": "An enumeration.",
+      "enum": [
+        "problem_solution",
+        "current_future",
+        "why_what_how",
+        "insight_recommendation",
+        "opportunity_solution_impact",
+        "diagnosis_strategy_execution",
+        "executive_decision",
+        "custom"
+      ],
+      "title": "StoryArcType",
+      "type": "string"
+    },
+    "StoryBeat": {
+      "additionalProperties": false,
+      "properties": {
+        "beat_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Beat Id",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "narrative_function": {
+          "$ref": "#/definitions/NarrativeFunction"
+        },
+        "related_section_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Related Section Ids",
+          "type": "array"
+        },
+        "related_slide_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Related Slide Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "beat_id",
+        "narrative_function",
+        "message"
+      ],
+      "title": "StoryBeat",
+      "type": "object"
+    },
+    "SupportingMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "purpose": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessagePurpose"
+            }
+          ],
+          "default": "prove_value"
+        },
+        "supporting_message_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Supporting Message Id",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "supporting_message_id",
+        "text"
+      ],
+      "title": "SupportingMessage",
+      "type": "object"
+    },
+    "TableColumn": {
+      "additionalProperties": false,
+      "properties": {
+        "alignment": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/AlignmentType"
+            }
+          ],
+          "default": "left"
+        },
+        "column_id": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Column Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "value_type": {
+          "default": "text",
+          "maxLength": 40,
+          "title": "Value Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "column_id",
+        "label"
+      ],
+      "title": "TableColumn",
+      "type": "object"
+    },
+    "TableData": {
+      "additionalProperties": false,
+      "properties": {
+        "columns": {
+          "items": {
+            "$ref": "#/definitions/TableColumn"
+          },
+          "maxItems": 5,
+          "title": "Columns",
+          "type": "array"
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/definitions/TableRow"
+          },
+          "maxItems": 10,
+          "title": "Rows",
+          "type": "array"
+        }
+      },
+      "title": "TableData",
+      "type": "object"
+    },
+    "TableRow": {
+      "additionalProperties": false,
+      "properties": {
+        "cells": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Cells",
+          "type": "object"
+        },
+        "row_id": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Row Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "row_id"
+      ],
+      "title": "TableRow",
+      "type": "object"
+    },
+    "TextBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "block_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Block Id",
+          "type": "string"
+        },
+        "emphasis": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EmphasisLevel"
+            }
+          ],
+          "default": "none"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 6,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "priority": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/ContentPriority"
+            }
+          ],
+          "default": "medium"
+        },
+        "role": {
+          "default": "body",
+          "maxLength": 40,
+          "minLength": 1,
+          "title": "Role",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 520,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "block_id",
+        "text"
+      ],
+      "title": "TextBlock",
+      "type": "object"
+    },
+    "ThemeType": {
+      "description": "An enumeration.",
+      "enum": [
+        "corporate",
+        "consulting",
+        "executive",
+        "agency",
+        "modern",
+        "minimal",
+        "startup",
+        "investor"
+      ],
+      "title": "ThemeType",
+      "type": "string"
+    },
+    "TimelineItem": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "maxLength": 220,
+          "title": "Description",
+          "type": "string"
+        },
+        "item_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Item Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "milestone": {
+          "default": false,
+          "title": "Milestone",
+          "type": "boolean"
+        },
+        "period": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Period",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "label",
+        "period"
+      ],
+      "title": "TimelineItem",
+      "type": "object"
+    },
+    "TransitionType": {
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "continue",
+        "contrast",
+        "cause_effect",
+        "problem_to_solution",
+        "value_to_price",
+        "risk_to_mitigation",
+        "summary_to_action"
+      ],
+      "title": "TransitionType",
+      "type": "string"
+    },
+    "TypographyStyle": {
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "maxLength": 20,
+          "title": "Color",
+          "type": "string"
+        },
+        "font_family": {
+          "default": "Noto Sans JP",
+          "maxLength": 80,
+          "title": "Font Family",
+          "type": "string"
+        },
+        "font_size_pt": {
+          "default": 18,
+          "maximum": 80,
+          "minimum": 8,
+          "title": "Font Size Pt",
+          "type": "integer"
+        },
+        "font_weight": {
+          "default": 400,
+          "maximum": 900,
+          "minimum": 100,
+          "title": "Font Weight",
+          "type": "integer"
+        },
+        "line_height": {
+          "default": 1.25,
+          "maximum": 2.0,
+          "minimum": 1.0,
+          "title": "Line Height",
+          "type": "number"
+        }
+      },
+      "title": "TypographyStyle",
+      "type": "object"
+    },
+    "UnsupportedClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "claim_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Claim Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "recommended_action": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Recommended Action",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claim_id",
+        "text",
+        "reason",
+        "recommended_action"
+      ],
+      "title": "UnsupportedClaim",
+      "type": "object"
+    },
+    "ValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "code": {
+          "maxLength": 40,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "field_path": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Field Path",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 260,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/definitions/ValidationSeverity"
+        },
+        "source": {
+          "default": "validator",
+          "maxLength": 80,
+          "title": "Source",
+          "type": "string"
+        },
+        "suggestion": {
+          "maxLength": 260,
+          "title": "Suggestion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "field_path",
+        "message"
+      ],
+      "title": "ValidationIssue",
+      "type": "object"
+    },
+    "ValidationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "issues": {
+          "items": {
+            "$ref": "#/definitions/ValidationIssue"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/definitions/BlueprintStatus"
+        },
+        "valid": {
+          "title": "Valid",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "valid",
+        "status"
+      ],
+      "title": "ValidationResult",
+      "type": "object"
+    },
+    "ValidationSeverity": {
+      "description": "An enumeration.",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "title": "ValidationSeverity",
+      "type": "string"
+    },
+    "VisualEvidenceRecommendation": {
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "metric_card",
+        "kpi_table",
+        "comparison_table",
+        "timeline",
+        "roadmap",
+        "risk_matrix",
+        "case_study_card",
+        "quote",
+        "screenshot_placeholder",
+        "process_evidence"
+      ],
+      "title": "VisualEvidenceRecommendation",
+      "type": "string"
+    },
+    "VisualType": {
+      "description": "An enumeration.",
+      "enum": [
+        "hero",
+        "text_only",
+        "two_column",
+        "three_column",
+        "comparison_table",
+        "kpi_dashboard",
+        "timeline",
+        "roadmap",
+        "process_flow",
+        "architecture_map",
+        "matrix_2x2",
+        "pyramid",
+        "funnel",
+        "tree",
+        "swimlane",
+        "risk_matrix",
+        "heatmap",
+        "chart",
+        "table",
+        "metric_cards",
+        "image_placeholder",
+        "quote",
+        "closing"
+      ],
+      "title": "VisualType",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "blocking_issues": {
+      "items": {
+        "$ref": "#/definitions/AlphaValidationIssue"
+      },
+      "maxItems": 80,
+      "title": "Blocking Issues",
+      "type": "array"
+    },
+    "case_name": {
+      "maxLength": 160,
+      "minLength": 1,
+      "title": "Case Name",
+      "type": "string"
+    },
+    "connected_to_runtime": {
+      "default": false,
+      "title": "Connected To Runtime",
+      "type": "boolean"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "cross_module_validation_result": {
+      "$ref": "#/definitions/CrossModuleValidationResult"
+    },
+    "deck_planner_result": {
+      "$ref": "#/definitions/DeckPlannerResult"
+    },
+    "deck_validation_result": {
+      "$ref": "#/definitions/DeckValidationResult"
+    },
+    "evidence_planner_result": {
+      "$ref": "#/definitions/EvidencePlannerResult"
+    },
+    "evidence_validation_result": {
+      "$ref": "#/definitions/CrossModuleValidationResult"
+    },
+    "generated_pptx": {
+      "default": false,
+      "title": "Generated Pptx",
+      "type": "boolean"
+    },
+    "generated_slide_blueprints": {
+      "default": false,
+      "title": "Generated Slide Blueprints",
+      "type": "boolean"
+    },
+    "human_review_summary": {
+      "$ref": "#/definitions/AlphaHumanReviewSummary"
+    },
+    "improvement_candidates": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 40,
+      "title": "Improvement Candidates",
+      "type": "array"
+    },
+    "input_fingerprint": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Input Fingerprint",
+      "type": "string"
+    },
+    "integration_case_id": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Integration Case Id",
+      "type": "string"
+    },
+    "integration_output_version": {
+      "const": "pe2_alpha_integration_output_v1",
+      "default": "pe2_alpha_integration_output_v1",
+      "title": "Integration Output Version",
+      "type": "string"
+    },
+    "message_designer_result": {
+      "$ref": "#/definitions/MessageDesignerOutput"
+    },
+    "message_validation_result": {
+      "$ref": "#/definitions/MessageValidationResult"
+    },
+    "phase2d_readiness": {
+      "$ref": "#/definitions/Phase2DReadinessStatus"
+    },
+    "pipeline_evaluation_result": {
+      "$ref": "#/definitions/AlphaEvaluationResult"
+    },
+    "proposal_context_summary": {
+      "maxLength": 600,
+      "minLength": 1,
+      "title": "Proposal Context Summary",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "pe2_alpha_integration_output_v1",
+      "default": "pe2_alpha_integration_output_v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "used_external_ai": {
+      "default": false,
+      "title": "Used External Ai",
+      "type": "boolean"
+    },
+    "warnings": {
+      "items": {
+        "$ref": "#/definitions/AlphaValidationIssue"
+      },
+      "maxItems": 120,
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "created_at",
+    "integration_case_id",
+    "case_name",
+    "proposal_context_summary",
+    "deck_planner_result",
+    "deck_validation_result",
+    "evidence_planner_result",
+    "evidence_validation_result",
+    "message_designer_result",
+    "message_validation_result",
+    "cross_module_validation_result",
+    "pipeline_evaluation_result",
+    "human_review_summary",
+    "phase2d_readiness",
+    "input_fingerprint"
+  ],
+  "title": "Presentation Engine 2.0 Alpha Integration Case Output",
+  "type": "object",
+  "x-phase": "alpha-integration"
+}

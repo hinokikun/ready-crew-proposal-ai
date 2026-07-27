@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "definitions": {
+    "AlphaEvaluationDimension": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "issues": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Issues",
+          "type": "array"
+        },
+        "max_score": {
+          "default": 10,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 320,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "recommendations": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Recommendations",
+          "type": "array"
+        },
+        "score": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Score",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "score",
+        "reason"
+      ],
+      "title": "AlphaEvaluationDimension",
+      "type": "object"
+    },
+    "Phase2DReadinessStatus": {
+      "description": "An enumeration.",
+      "enum": [
+        "READY",
+        "READY_WITH_LIMITATIONS",
+        "NOT_READY",
+        "BLOCKED"
+      ],
+      "title": "Phase2DReadinessStatus",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "blocking_issue_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Blocking Issue Count",
+      "type": "integer"
+    },
+    "dimensions": {
+      "items": {
+        "$ref": "#/definitions/AlphaEvaluationDimension"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Dimensions",
+      "type": "array"
+    },
+    "failed_stage_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Failed Stage Count",
+      "type": "integer"
+    },
+    "grade": {
+      "maxLength": 2,
+      "minLength": 1,
+      "title": "Grade",
+      "type": "string"
+    },
+    "max_score": {
+      "default": 100,
+      "title": "Max Score",
+      "type": "integer"
+    },
+    "note": {
+      "maxLength": 360,
+      "minLength": 1,
+      "title": "Note",
+      "type": "string"
+    },
+    "overall_score": {
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Overall Score",
+      "type": "integer"
+    },
+    "passed_stage_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Passed Stage Count",
+      "type": "integer"
+    },
+    "phase2d_readiness_status": {
+      "$ref": "#/definitions/Phase2DReadinessStatus"
+    },
+    "warning_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Warning Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "overall_score",
+    "grade",
+    "phase2d_readiness_status",
+    "note"
+  ],
+  "title": "Presentation Engine 2.0 Alpha Integration Evaluation",
+  "type": "object",
+  "x-phase": "alpha-integration"
+}

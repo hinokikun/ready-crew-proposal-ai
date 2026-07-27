@@ -101,8 +101,10 @@ def test_alembic_upgrade_empty_sqlite_creates_workspace_schema(monkeypatch, tmp_
         assert {"organization_id", "workspace_id"}.issubset(columns)
         user_columns = {row[1] for row in db.execute("PRAGMA table_info(users)").fetchall()}
         assert {"display_name", "last_login_at", "password_change_required", "deleted_at"}.issubset(user_columns)
+        report_columns = {row[1] for row in db.execute("PRAGMA table_info(business_improvement_reports)").fetchall()}
+        assert {"ai_input_minutes", "ai_wait_minutes", "is_demo"}.issubset(report_columns)
         version = db.execute("SELECT version_num FROM alembic_version").fetchone()[0]
-        assert version == "20260715_2400"
+        assert version == "20260722_7100"
 
 
 def test_alembic_migrates_legacy_quality_gate_unique(monkeypatch, tmp_path: Path) -> None:

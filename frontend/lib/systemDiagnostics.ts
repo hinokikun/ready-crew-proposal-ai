@@ -1,5 +1,5 @@
 import { getAuthHeaders } from "@/lib/auth";
-import { fetchJson } from "@/client-api/client";
+import { fetchBlob, fetchJson } from "@/client-api/client";
 import { API_BASE_URL } from "@/lib/config";
 
 export type SystemDiagnosticStatus = "ok" | "warning" | "error" | "skipped" | "unknown";
@@ -109,11 +109,23 @@ export type ProposalGenerationHistoryItem = {
   provider: string;
   status: string;
   duration_ms: number;
+  proposal_generation_duration_ms?: number;
+  powerpoint_generation_duration_ms?: number;
+  beautiful_ai_generation_duration_ms?: number;
+  pdf_generation_duration_ms?: number;
+  total_generation_duration_ms?: number;
   error_type: string;
   downloadable: boolean;
   external_url_available: boolean;
   open_url: string;
   summary: string;
+};
+
+export type ProposalGenerationStats = {
+  total_count: number;
+  average_generation_duration_ms: number;
+  min_generation_duration_ms: number;
+  max_generation_duration_ms: number;
 };
 
 export type PaginatedResponse<T> = {
@@ -172,4 +184,12 @@ export async function getProposalGenerationHistory(page = 1, pageSize = 20) {
   return fetchJson<PaginatedResponse<ProposalGenerationHistoryItem>>(
     `/api/admin/proposal-generation-history?page=${page}&page_size=${pageSize}`
   );
+}
+
+export async function getProposalGenerationStats() {
+  return fetchJson<{ stats: ProposalGenerationStats }>("/api/admin/proposal-generation-history/stats");
+}
+
+export async function downloadProposalGenerationHistoryCsv() {
+  return fetchBlob("/api/admin/proposal-generation-history.csv");
 }

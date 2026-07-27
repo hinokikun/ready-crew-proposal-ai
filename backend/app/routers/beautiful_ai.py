@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth import ensure_not_maintenance_mode, require_roles
@@ -57,9 +59,11 @@ async def get_status(_: dict = Depends(require_roles("admin", "manager", "member
 @router.post("/presentations", dependencies=[Depends(rate_limit_dependency("generation"))])
 async def create_presentation(payload: BeautifulAiPresentationRequest, user: dict = Depends(require_roles("admin", "member"))) -> dict:
     ensure_not_maintenance_mode()
+    started = time.perf_counter()
     with get_db() as db:
         try:
             response = await create_beautiful_ai_presentation(db, request=payload, user_id=int(user["id"]))
+            duration_ms = max(0, round((time.perf_counter() - started) * 1000))
             create_history_log(
                 db,
                 int(user["id"]),
@@ -69,9 +73,12 @@ async def create_presentation(payload: BeautifulAiPresentationRequest, user: dic
                 _beautiful_ai_input_length(payload),
                 "beautiful-ai",
                 "success",
+                project_name=payload.powerpoint_generation_data.deck_title,
+                beautiful_ai_generation_duration_ms=duration_ms,
             )
             return response.dict()
         except BeautifulAiServiceError as exc:
+            duration_ms = max(0, round((time.perf_counter() - started) * 1000))
             create_history_log(
                 db,
                 int(user["id"]),
@@ -82,6 +89,8 @@ async def create_presentation(payload: BeautifulAiPresentationRequest, user: dic
                 "beautiful-ai",
                 "failure",
                 exc.error_type,
+                project_name=payload.powerpoint_generation_data.deck_title,
+                beautiful_ai_generation_duration_ms=duration_ms,
             )
             error = BeautifulAiSafeError(
                 error_type=exc.error_type,

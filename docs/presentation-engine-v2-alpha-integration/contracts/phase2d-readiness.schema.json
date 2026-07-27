@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "enum": [
+    "READY",
+    "READY_WITH_LIMITATIONS",
+    "NOT_READY",
+    "BLOCKED"
+  ],
+  "title": "Presentation Engine 2.0 Phase 2D Readiness",
+  "type": "string"
+}

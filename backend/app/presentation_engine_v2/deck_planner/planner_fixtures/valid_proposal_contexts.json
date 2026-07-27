@@ -1,0 +1,664 @@
+[
+  {
+    "budget_range": "8M to 12M JPY",
+    "competitive_information": "Alternative web agencies are being compared.",
+    "decision_maker": "Marketing department head",
+    "expected_outcomes": [
+      "Higher qualified inquiries",
+      "Clearer product story"
+    ],
+    "implementation_purpose": "Improve customer acquisition and product explanation.",
+    "industry": "Manufacturing",
+    "language": "ja",
+    "persona": "Marketing manager",
+    "problems": [
+      "Product strengths are hard to understand",
+      "Inquiry quality is inconsistent"
+    ],
+    "project_id": "planner-fixture-web-01",
+    "project_name": "Manufacturing Website Renewal",
+    "project_summary": "Renew a corporate website to improve lead quality and product understanding.",
+    "proposal_category": "Web production",
+    "timeline": "Launch in six months"
+  },
+  {
+    "budget_range": "Up to 10M JPY",
+    "competitive_information": "Internal manual operation remains the default alternative.",
+    "decision_maker": "Operations executive",
+    "expected_outcomes": [
+      "Shorter checking time",
+      "Clear PoC accuracy criteria",
+      "Reusable review history"
+    ],
+    "implementation_purpose": "Reduce manual checking effort while keeping human final review.",
+    "industry": "Wholesale",
+    "language": "ja",
+    "persona": "Quality assurance and operations leaders",
+    "problems": [
+      "Manual image checking delays peak operations",
+      "Classification quality depends on staff experience"
+    ],
+    "project_id": "planner-fixture-ai-vision-01",
+    "project_name": "Flower Auction Image Recognition PoC",
+    "project_summary": "Use AI image recognition to support flower type, color, grade, and condition checking.",
+    "proposal_category": "AI image recognition",
+    "timeline": "Target introduction around May 2027"
+  },
+  {
+    "budget_range": "PoC budget available",
+    "competitive_information": null,
+    "decision_maker": "Finance department head",
+    "expected_outcomes": [
+      "Lower data entry time",
+      "Measured recognition accuracy",
+      "Clear exception handling"
+    ],
+    "implementation_purpose": "Reduce manual invoice entry and checking workload.",
+    "industry": "Back office",
+    "language": "ja",
+    "persona": "Accounting manager",
+    "problems": [
+      "Manual entry takes time",
+      "Correction history is not reusable"
+    ],
+    "project_id": "planner-fixture-ocr-01",
+    "project_name": "Invoice AI-OCR Introduction",
+    "project_summary": "Introduce AI-OCR to read invoice images and connect results to the accounting workflow.",
+    "proposal_category": "AI-OCR",
+    "timeline": "PoC in Q2"
+  },
+  {
+    "budget_range": "5M JPY range",
+    "competitive_information": null,
+    "decision_maker": "Operations manager",
+    "expected_outcomes": [
+      "Reduced manual operation time",
+      "Fewer status update delays"
+    ],
+    "implementation_purpose": "Stabilize back-office processing during peak periods.",
+    "industry": "Retail",
+    "language": "ja",
+    "persona": "Field leader",
+    "problems": [
+      "Manual copy-and-paste work is frequent",
+      "Processing delay increases during campaigns"
+    ],
+    "project_id": "planner-fixture-rpa-01",
+    "project_name": "Order Entry Automation",
+    "project_summary": "Automate repetitive order entry and status update tasks with RPA.",
+    "proposal_category": "RPA automation",
+    "timeline": null
+  },
+  {
+    "budget_range": "Annual subscription budget under review",
+    "competitive_information": "Existing spreadsheet operation is the main alternative.",
+    "decision_maker": "Sales director",
+    "expected_outcomes": [
+      "Pipeline visibility",
+      "Higher follow-up consistency"
+    ],
+    "implementation_purpose": "Improve sales management and forecast accuracy.",
+    "industry": "SaaS",
+    "language": "ja",
+    "persona": "Sales manager",
+    "problems": [
+      "Sales activity is scattered",
+      "Forecasts depend on individual reports"
+    ],
+    "project_id": "planner-fixture-crm-01",
+    "project_name": "CRM Pipeline Visibility",
+    "project_summary": "Introduce CRM/SFA usage rules to improve pipeline visibility and follow-up quality.",
+    "proposal_category": "CRM SFA",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": null,
+    "decision_maker": "Plant manager",
+    "expected_outcomes": [
+      "Standardized reporting",
+      "Faster issue escalation"
+    ],
+    "implementation_purpose": "Improve decision speed using shared operational data.",
+    "industry": "Manufacturing",
+    "language": "ja",
+    "persona": "Factory operations leader",
+    "problems": [
+      "Reports are created manually",
+      "Daily status is hard to compare"
+    ],
+    "project_id": "planner-fixture-dx-01",
+    "project_name": "Factory DX Roadmap",
+    "project_summary": "Create a DX roadmap for production reporting and daily operations.",
+    "proposal_category": "DX",
+    "timeline": "Start small in the next quarter"
+  },
+  {
+    "budget_range": "Initial PoC budget defined",
+    "competitive_information": null,
+    "decision_maker": "Support department head",
+    "expected_outcomes": [
+      "Lower first response load",
+      "More consistent answers"
+    ],
+    "implementation_purpose": "Reduce repetitive inquiries and improve response consistency.",
+    "industry": "Customer support",
+    "language": "ja",
+    "persona": "Support operations manager",
+    "problems": [
+      "Similar inquiries are repeated",
+      "New staff need time to answer correctly"
+    ],
+    "project_id": "planner-fixture-chatbot-01",
+    "project_name": "Customer Support AI Chatbot",
+    "project_summary": "Deploy an AI chatbot to support first-response handling and FAQ routing.",
+    "proposal_category": "AI chatbot",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": null,
+    "decision_maker": "Information systems manager",
+    "expected_outcomes": [
+      "Faster search",
+      "Improved reuse of approved materials"
+    ],
+    "implementation_purpose": "Make internal knowledge easier to find and reuse.",
+    "industry": "IT services",
+    "language": "ja",
+    "persona": "Information systems and operations",
+    "problems": [
+      "Documents are scattered",
+      "Experienced staff are asked the same questions"
+    ],
+    "project_id": "planner-fixture-knowledge-01",
+    "project_name": "Internal Knowledge Search",
+    "project_summary": "Build internal knowledge search over manuals, proposals, and support documents.",
+    "proposal_category": "Generative AI knowledge search",
+    "timeline": null
+  },
+  {
+    "budget_range": "10M JPY range",
+    "competitive_information": "Several agencies are under comparison.",
+    "decision_maker": "EC business owner",
+    "expected_outcomes": [
+      "Improved conversion",
+      "Clearer product discovery"
+    ],
+    "implementation_purpose": "Increase online sales and campaign performance.",
+    "industry": "Retail",
+    "language": "ja",
+    "persona": "Marketing manager",
+    "problems": [
+      "Drop-off is high",
+      "Product value is hard to compare"
+    ],
+    "project_id": "planner-fixture-ec-01",
+    "project_name": "EC Growth Improvement",
+    "project_summary": "Improve EC purchase flow, product pages, and campaign landing pages.",
+    "proposal_category": "EC website",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": "Recruitment media improvement is also considered.",
+    "decision_maker": "HR department head",
+    "expected_outcomes": [
+      "Better candidate understanding",
+      "Improved interview efficiency"
+    ],
+    "implementation_purpose": "Improve candidate quality and reduce mismatch.",
+    "industry": "Human resources",
+    "language": "ja",
+    "persona": "Recruiting manager",
+    "problems": [
+      "Job appeal is not clear",
+      "Candidate questions repeat in interviews"
+    ],
+    "project_id": "planner-fixture-hiring-01",
+    "project_name": "Recruiting Site Renewal",
+    "project_summary": "Renew recruiting content to improve candidate understanding and entry quality.",
+    "proposal_category": "Hiring branding",
+    "timeline": null
+  },
+  {
+    "budget_range": "Executive approval required",
+    "competitive_information": null,
+    "decision_maker": "CEO",
+    "expected_outcomes": [
+      "Consistent message",
+      "Better executive-level first impression"
+    ],
+    "implementation_purpose": "Clarify positioning for a new target market.",
+    "industry": "Professional services",
+    "language": "ja",
+    "persona": "Executive",
+    "problems": [
+      "Positioning is hard to explain",
+      "Sales materials vary by person"
+    ],
+    "project_id": "planner-fixture-branding-01",
+    "project_name": "Corporate Brand Refresh",
+    "project_summary": "Refresh corporate message and sales materials for a new market segment.",
+    "proposal_category": "Branding",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": null,
+    "decision_maker": "Customer success director",
+    "expected_outcomes": [
+      "Shorter onboarding time",
+      "Higher activation rate"
+    ],
+    "implementation_purpose": "Shorten time to value and reduce onboarding workload.",
+    "industry": "SaaS",
+    "language": "ja",
+    "persona": "CS manager",
+    "problems": [
+      "Onboarding differs by担当",
+      "Users stop before setup completion"
+    ],
+    "project_id": "planner-fixture-saas-01",
+    "project_name": "SaaS Onboarding Improvement",
+    "project_summary": "Improve onboarding process for a BtoB SaaS product.",
+    "proposal_category": "Customer success DX",
+    "timeline": null
+  },
+  {
+    "budget_range": "Small pilot budget",
+    "competitive_information": null,
+    "decision_maker": "Clinic owner",
+    "expected_outcomes": [
+      "Lower phone workload",
+      "Fewer missed appointments"
+    ],
+    "implementation_purpose": "Reduce phone workload and missed appointments.",
+    "industry": "Medical",
+    "language": "ja",
+    "persona": "Operations lead",
+    "problems": [
+      "Phone calls concentrate at specific times",
+      "Reminder operation is manual"
+    ],
+    "project_id": "planner-fixture-medical-01",
+    "project_name": "Clinic Reservation Workflow",
+    "project_summary": "Improve reservation and reminder operations for clinics.",
+    "proposal_category": "Workflow automation",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": null,
+    "decision_maker": "School executive",
+    "expected_outcomes": [
+      "Earlier intervention",
+      "Shared progress view"
+    ],
+    "implementation_purpose": "Improve learning support decisions.",
+    "industry": "Education",
+    "language": "ja",
+    "persona": "Education manager",
+    "problems": [
+      "Progress differs by class",
+      "Interventions are late"
+    ],
+    "project_id": "planner-fixture-education-01",
+    "project_name": "Learning Progress Dashboard",
+    "project_summary": "Create a dashboard to visualize learner progress and support interventions.",
+    "proposal_category": "DX dashboard",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": null,
+    "decision_maker": "Site operations head",
+    "expected_outcomes": [
+      "Shorter report creation time",
+      "Improved site status sharing"
+    ],
+    "implementation_purpose": "Reduce report workload and improve field visibility.",
+    "industry": "Construction",
+    "language": "ja",
+    "persona": "Field leader",
+    "problems": [
+      "Daily reports are duplicated",
+      "Photos and comments are hard to search"
+    ],
+    "project_id": "planner-fixture-construction-01",
+    "project_name": "Construction Site Report Automation",
+    "project_summary": "Digitize site reports and automate daily summary creation.",
+    "proposal_category": "Automation DX",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": "Existing CRM customization is being compared.",
+    "decision_maker": "Sales department head",
+    "expected_outcomes": [
+      "Faster follow-up",
+      "Higher matching quality"
+    ],
+    "implementation_purpose": "Improve lead response speed and proposal quality.",
+    "industry": "Real estate",
+    "language": "ja",
+    "persona": "Sales manager",
+    "problems": [
+      "Follow-up timing varies",
+      "Property recommendations are not logged"
+    ],
+    "project_id": "planner-fixture-realestate-01",
+    "project_name": "Real Estate Lead Management",
+    "project_summary": "Improve lead follow-up and property matching using CRM operations.",
+    "proposal_category": "CRM",
+    "timeline": null
+  },
+  {
+    "budget_range": "PoC budget under review",
+    "competitive_information": null,
+    "decision_maker": "Operations executive",
+    "expected_outcomes": [
+      "Reduced planning rework",
+      "Clear evaluation criteria"
+    ],
+    "implementation_purpose": "Improve route planning quality and reduce rework.",
+    "industry": "Logistics",
+    "language": "ja",
+    "persona": "Logistics manager",
+    "problems": [
+      "Route planning depends on experienced staff",
+      "Last-minute changes are hard to handle"
+    ],
+    "project_id": "planner-fixture-logistics-01",
+    "project_name": "Logistics Routing Optimization PoC",
+    "project_summary": "Evaluate data-driven routing recommendations for daily delivery planning.",
+    "proposal_category": "AI optimization",
+    "timeline": null
+  },
+  {
+    "budget_range": "Approval needed",
+    "competitive_information": null,
+    "decision_maker": "CFO",
+    "expected_outcomes": [
+      "Better exception detection",
+      "More consistent review trail"
+    ],
+    "implementation_purpose": "Improve compliance and reduce checking workload.",
+    "industry": "Finance",
+    "language": "ja",
+    "persona": "Finance executive",
+    "problems": [
+      "Exception checking takes time",
+      "Audit trail quality differs"
+    ],
+    "project_id": "planner-fixture-finance-01",
+    "project_name": "Expense Review Automation",
+    "project_summary": "Use rules and AI support to classify expenses and flag exceptions.",
+    "proposal_category": "AI automation",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": null,
+    "decision_maker": "Information systems executive",
+    "expected_outcomes": [
+      "Shorter review cycle",
+      "Standardized evidence"
+    ],
+    "implementation_purpose": "Reduce assessment delays and improve governance.",
+    "industry": "IT",
+    "language": "ja",
+    "persona": "Security manager",
+    "problems": [
+      "Assessment requests pile up",
+      "Evidence collection is manual"
+    ],
+    "project_id": "planner-fixture-security-01",
+    "project_name": "Security Assessment Workflow",
+    "project_summary": "Standardize security assessment workflow and reporting.",
+    "proposal_category": "DX workflow",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": null,
+    "decision_maker": "Sales director",
+    "expected_outcomes": [
+      "Faster ramp-up",
+      "More consistent proposal quality"
+    ],
+    "implementation_purpose": "Improve new sales staff ramp-up and proposal consistency.",
+    "industry": "Sales",
+    "language": "ja",
+    "persona": "Sales enablement manager",
+    "problems": [
+      "Good examples are hard to find",
+      "Training depends on senior staff"
+    ],
+    "project_id": "planner-fixture-sales-training-01",
+    "project_name": "Sales Enablement Knowledge Pack",
+    "project_summary": "Create reusable sales enablement materials and searchable proposal examples.",
+    "proposal_category": "Knowledge AI",
+    "timeline": null
+  },
+  {
+    "budget_range": "Board approval required",
+    "competitive_information": "Competitors are moving into adjacent services.",
+    "decision_maker": "CEO",
+    "expected_outcomes": [
+      "Clear investment criteria",
+      "Decision-ready roadmap"
+    ],
+    "implementation_purpose": "Decide whether to start the next investment phase.",
+    "industry": "Technology",
+    "language": "ja",
+    "persona": "Executive committee",
+    "problems": [
+      "Market opportunity is not organized",
+      "Risk and cost are not comparable"
+    ],
+    "project_id": "planner-fixture-investor-01",
+    "project_name": "New Service Investment Review",
+    "project_summary": "Prepare an executive proposal for a new service investment decision.",
+    "proposal_category": "Investment DX",
+    "timeline": null
+  },
+  {
+    "budget_range": "Procurement budget defined",
+    "competitive_information": "Multiple vendors are being compared.",
+    "decision_maker": "Procurement manager",
+    "expected_outcomes": [
+      "Clear vendor comparison",
+      "Lower selection risk"
+    ],
+    "implementation_purpose": "Select a partner based on fit, risk, and value.",
+    "industry": "Enterprise",
+    "language": "ja",
+    "persona": "Procurement and department heads",
+    "problems": [
+      "Evaluation criteria are unclear",
+      "Price and value are hard to compare"
+    ],
+    "project_id": "planner-fixture-procurement-01",
+    "project_name": "Vendor Selection Proposal",
+    "project_summary": "Compare implementation partners for a workflow modernization project.",
+    "proposal_category": "Vendor comparison",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": null,
+    "decision_maker": "Founder",
+    "expected_outcomes": [
+      "More consistent story",
+      "Better objection handling"
+    ],
+    "implementation_purpose": "Make enterprise value easier to explain.",
+    "industry": "Startup",
+    "language": "ja",
+    "persona": "Founder and sales lead",
+    "problems": [
+      "Story changes by meeting",
+      "Enterprise concerns are not addressed"
+    ],
+    "project_id": "planner-fixture-startup-01",
+    "project_name": "Startup Sales Material Refresh",
+    "project_summary": "Improve sales deck structure for a startup entering enterprise sales.",
+    "proposal_category": "Sales material",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": null,
+    "decision_maker": "Department head",
+    "expected_outcomes": [
+      "Shorter creation time",
+      "More stable proposal quality"
+    ],
+    "implementation_purpose": "Improve proposal quality and reduce creation time.",
+    "industry": "Agency",
+    "language": "ja",
+    "persona": "Project managers",
+    "problems": [
+      "Proposal quality differs by creator",
+      "Reusable knowledge is scattered"
+    ],
+    "project_id": "planner-fixture-agency-01",
+    "project_name": "Agency Proposal Standardization",
+    "project_summary": "Standardize proposal creation process across project managers.",
+    "proposal_category": "Proposal DX",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": null,
+    "decision_maker": "Store operations manager",
+    "expected_outcomes": [
+      "Fewer missed tasks",
+      "Clearer daily operations"
+    ],
+    "implementation_purpose": "Reduce missed tasks and improve handover quality.",
+    "industry": "Retail",
+    "language": "ja",
+    "persona": "Field leader",
+    "problems": [
+      "Tasks are not visible",
+      "Handover notes vary by staff"
+    ],
+    "project_id": "planner-fixture-retail-store-01",
+    "project_name": "Store Operation Improvement",
+    "project_summary": "Improve store task management and shift communication.",
+    "proposal_category": "Workflow automation",
+    "timeline": null
+  },
+  {
+    "budget_range": "Mid-size project budget",
+    "competitive_information": null,
+    "decision_maker": "Quality assurance head",
+    "expected_outcomes": [
+      "Faster root-cause analysis",
+      "Better traceability"
+    ],
+    "implementation_purpose": "Improve quality analysis speed and traceability.",
+    "industry": "Manufacturing",
+    "language": "ja",
+    "persona": "Quality manager",
+    "problems": [
+      "Inspection logs are separate",
+      "Defect trends are hard to see"
+    ],
+    "project_id": "planner-fixture-manufacturing-qa-01",
+    "project_name": "Quality Inspection Data Platform",
+    "project_summary": "Create a data platform for inspection logs and defect analysis.",
+    "proposal_category": "DX analytics",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": null,
+    "decision_maker": "Support manager",
+    "expected_outcomes": [
+      "Lower response load",
+      "Clear escalation quality"
+    ],
+    "implementation_purpose": "Reduce repeated inquiry workload.",
+    "industry": "Travel",
+    "language": "ja",
+    "persona": "Customer support leader",
+    "problems": [
+      "Peak inquiries overwhelm staff",
+      "Escalation rules are not standardized"
+    ],
+    "project_id": "planner-fixture-travel-01",
+    "project_name": "Travel Customer Support Automation",
+    "project_summary": "Automate repetitive travel inquiry handling and escalation routing.",
+    "proposal_category": "AI chatbot",
+    "timeline": null
+  },
+  {
+    "budget_range": "PoC first",
+    "competitive_information": null,
+    "decision_maker": "Operations executive",
+    "expected_outcomes": [
+      "Faster classification",
+      "Lower routing error"
+    ],
+    "implementation_purpose": "Reduce document sorting and checking workload.",
+    "industry": "Insurance",
+    "language": "ja",
+    "persona": "Back-office operations",
+    "problems": [
+      "Document types vary",
+      "Manual routing causes delay"
+    ],
+    "project_id": "planner-fixture-insurance-01",
+    "project_name": "Insurance Document Classification",
+    "project_summary": "Classify submitted documents and route exceptions for review.",
+    "proposal_category": "AI-OCR document classification",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": null,
+    "decision_maker": "Business owner",
+    "expected_outcomes": [
+      "More repeat visits",
+      "Lower follow-up workload"
+    ],
+    "implementation_purpose": "Improve repeat visits and reduce manual follow-up.",
+    "industry": "Restaurant",
+    "language": "ja",
+    "persona": "Store manager",
+    "problems": [
+      "Reservation history is not used",
+      "Follow-up messages are manual"
+    ],
+    "project_id": "planner-fixture-restaurant-01",
+    "project_name": "Restaurant Reservation Optimization",
+    "project_summary": "Improve reservation operations and campaign follow-up.",
+    "proposal_category": "CRM automation",
+    "timeline": null
+  },
+  {
+    "budget_range": null,
+    "competitive_information": null,
+    "decision_maker": "Department manager",
+    "expected_outcomes": [
+      "Clearer priorities",
+      "Actionable next meeting agenda"
+    ],
+    "implementation_purpose": "Agree on improvement priorities and next action.",
+    "industry": "General business",
+    "language": "ja",
+    "persona": "Mixed business audience",
+    "problems": [
+      "Current issues are not prioritized",
+      "Next actions are unclear"
+    ],
+    "project_id": "planner-fixture-generic-01",
+    "project_name": "Operations Improvement Proposal",
+    "project_summary": "Improve daily operations by organizing issues, process, responsibilities, and success criteria.",
+    "proposal_category": "Business improvement",
+    "timeline": null
+  }
+]

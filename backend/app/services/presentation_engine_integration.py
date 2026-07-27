@@ -6,7 +6,7 @@ from typing import Any, TYPE_CHECKING
 
 from app.config import settings
 from app.models import PptxDownloadRequest
-from app.services.pptx_service import build_pptx_bytes
+from app.services.pptx_service import build_pptx_result
 
 if TYPE_CHECKING:
     from app.strategy_engine.models import HumanReviewReport, PresentationContext
@@ -24,6 +24,7 @@ class PresentationEngineResult:
     pptx_bytes: bytes
     engine_mode: str
     presentation_context: Any | None = None
+    quality_report: dict[str, Any] | None = None
 
 
 def resolve_engine_mode(value: str | None = None) -> str:
@@ -42,15 +43,21 @@ def build_pptx_bytes_for_engine(
     mode = resolve_engine_mode(engine_mode)
     if mode == ENGINE_MODE_LEGACY:
         _log_engine_selection(mode)
-        return PresentationEngineResult(pptx_bytes=build_pptx_bytes(payload), engine_mode=mode)
+        result = build_pptx_result(payload)
+        return PresentationEngineResult(
+            pptx_bytes=result.pptx_bytes,
+            engine_mode=mode,
+            quality_report=result.quality_report.to_dict(),
+        )
 
     presentation_context = _presentation_context_from_review_report(payload.strategy_review_report)
     _log_engine_selection(mode, presentation_context)
-    pptx_bytes = build_pptx_bytes(payload, presentation_context=presentation_context)
+    result = build_pptx_result(payload, presentation_context=presentation_context)
     return PresentationEngineResult(
-        pptx_bytes=pptx_bytes,
+        pptx_bytes=result.pptx_bytes,
         engine_mode=mode,
         presentation_context=presentation_context,
+        quality_report=result.quality_report.to_dict(),
     )
 
 

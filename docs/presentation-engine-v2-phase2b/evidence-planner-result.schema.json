@@ -1,0 +1,556 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "definitions": {
+    "EvidenceConfidence": {
+      "description": "An enumeration.",
+      "enum": [
+        "verified",
+        "likely",
+        "estimated",
+        "missing",
+        "unknown"
+      ],
+      "title": "EvidenceConfidence",
+      "type": "string"
+    },
+    "EvidenceEvaluationDimension": {
+      "additionalProperties": false,
+      "properties": {
+        "issues": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Issues",
+          "type": "array"
+        },
+        "max_score": {
+          "default": 10,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "recommendations": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Recommendations",
+          "type": "array"
+        },
+        "score": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Score",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "score",
+        "reason"
+      ],
+      "title": "EvidenceEvaluationDimension",
+      "type": "object"
+    },
+    "EvidenceEvaluationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking_warning_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Blocking Warning Count",
+          "type": "integer"
+        },
+        "dimensions": {
+          "items": {
+            "$ref": "#/definitions/EvidenceEvaluationDimension"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "title": "Dimensions",
+          "type": "array"
+        },
+        "grade": {
+          "maxLength": 2,
+          "minLength": 1,
+          "title": "Grade",
+          "type": "string"
+        },
+        "max_score": {
+          "default": 100,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "note": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        },
+        "total_score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Total Score",
+          "type": "integer"
+        },
+        "warning_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Warning Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_score",
+        "grade",
+        "note"
+      ],
+      "title": "EvidenceEvaluationResult",
+      "type": "object"
+    },
+    "EvidencePlannerWarning": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "suggestion": {
+          "maxLength": 280,
+          "title": "Suggestion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "EvidencePlannerWarning",
+      "type": "object"
+    },
+    "EvidencePriority": {
+      "description": "An enumeration.",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "EvidencePriority",
+      "type": "string"
+    },
+    "EvidenceRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "case_study_required": {
+          "default": false,
+          "title": "Case Study Required",
+          "type": "boolean"
+        },
+        "confidence": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceConfidence"
+            }
+          ],
+          "default": "unknown"
+        },
+        "customer_proof_required": {
+          "default": false,
+          "title": "Customer Proof Required",
+          "type": "boolean"
+        },
+        "label": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "numeric_required": {
+          "default": false,
+          "title": "Numeric Required",
+          "type": "boolean"
+        },
+        "priority": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidencePriority"
+            }
+          ],
+          "default": "medium"
+        },
+        "rationale": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "requirement_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "source_type": {
+          "$ref": "#/definitions/EvidenceSourceType"
+        },
+        "traceability_required": {
+          "default": true,
+          "title": "Traceability Required",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "label",
+        "source_type",
+        "rationale"
+      ],
+      "title": "EvidenceRequirement",
+      "type": "object"
+    },
+    "EvidenceSourceType": {
+      "description": "An enumeration.",
+      "enum": [
+        "customer_interview",
+        "internal_kpi",
+        "industry_statistics",
+        "market_research",
+        "competitor_analysis",
+        "financial_estimate",
+        "project_experience",
+        "user_feedback",
+        "implementation_result",
+        "public_information",
+        "customer_document",
+        "assumption_log"
+      ],
+      "title": "EvidenceSourceType",
+      "type": "string"
+    },
+    "MissingEvidenceSeverity": {
+      "description": "An enumeration.",
+      "enum": [
+        "blocking",
+        "warning",
+        "info"
+      ],
+      "title": "MissingEvidenceSeverity",
+      "type": "string"
+    },
+    "MissingEvidenceWarning": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "maxLength": 260,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "related_requirement_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Related Requirement Ids",
+          "type": "array"
+        },
+        "severity": {
+          "$ref": "#/definitions/MissingEvidenceSeverity"
+        },
+        "suggested_action": {
+          "maxLength": 260,
+          "minLength": 1,
+          "title": "Suggested Action",
+          "type": "string"
+        },
+        "warning_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Warning Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "warning_id",
+        "severity",
+        "message",
+        "suggested_action"
+      ],
+      "title": "MissingEvidenceWarning",
+      "type": "object"
+    },
+    "SlideEvidencePlan": {
+      "additionalProperties": false,
+      "properties": {
+        "case_study_required": {
+          "default": false,
+          "title": "Case Study Required",
+          "type": "boolean"
+        },
+        "customer_proof_required": {
+          "default": false,
+          "title": "Customer Proof Required",
+          "type": "boolean"
+        },
+        "evidence_confidence": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceConfidence"
+            }
+          ],
+          "default": "unknown"
+        },
+        "evidence_priority": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidencePriority"
+            }
+          ],
+          "default": "medium"
+        },
+        "evidence_source_types": {
+          "items": {
+            "$ref": "#/definitions/EvidenceSourceType"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "type": "array"
+        },
+        "generated_body_text": {
+          "default": false,
+          "title": "Generated Body Text",
+          "type": "boolean"
+        },
+        "generated_headline": {
+          "default": false,
+          "title": "Generated Headline",
+          "type": "boolean"
+        },
+        "generated_main_message": {
+          "default": false,
+          "title": "Generated Main Message",
+          "type": "boolean"
+        },
+        "generated_slide_blueprint": {
+          "default": false,
+          "title": "Generated Slide Blueprint",
+          "type": "boolean"
+        },
+        "missing_evidence_warnings": {
+          "items": {
+            "$ref": "#/definitions/MissingEvidenceWarning"
+          },
+          "maxItems": 8,
+          "title": "Missing Evidence Warnings",
+          "type": "array"
+        },
+        "numeric_evidence_required": {
+          "default": false,
+          "title": "Numeric Evidence Required",
+          "type": "boolean"
+        },
+        "optional_evidence": {
+          "items": {
+            "$ref": "#/definitions/EvidenceRequirement"
+          },
+          "maxItems": 10,
+          "title": "Optional Evidence",
+          "type": "array"
+        },
+        "required_evidence": {
+          "items": {
+            "$ref": "#/definitions/EvidenceRequirement"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "title": "Required Evidence",
+          "type": "array"
+        },
+        "risk_if_missing": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Risk If Missing",
+          "type": "string"
+        },
+        "section_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Section Id",
+          "type": "string"
+        },
+        "section_type": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Section Type",
+          "type": "string"
+        },
+        "slide_blueprint_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Slide Blueprint Id",
+          "type": "string"
+        },
+        "slide_goal": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Slide Goal",
+          "type": "string"
+        },
+        "slide_order": {
+          "maximum": 200,
+          "minimum": 0,
+          "title": "Slide Order",
+          "type": "integer"
+        },
+        "slide_role": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Slide Role",
+          "type": "string"
+        },
+        "visual_evidence_recommendation": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/VisualEvidenceRecommendation"
+            }
+          ],
+          "default": "none"
+        }
+      },
+      "required": [
+        "slide_blueprint_id",
+        "slide_order",
+        "section_id",
+        "section_type",
+        "slide_role",
+        "slide_goal",
+        "risk_if_missing"
+      ],
+      "title": "SlideEvidencePlan",
+      "type": "object"
+    },
+    "VisualEvidenceRecommendation": {
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "metric_card",
+        "kpi_table",
+        "comparison_table",
+        "timeline",
+        "roadmap",
+        "risk_matrix",
+        "case_study_card",
+        "quote",
+        "screenshot_placeholder",
+        "process_evidence"
+      ],
+      "title": "VisualEvidenceRecommendation",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "connected_to_runtime": {
+      "default": false,
+      "title": "Connected To Runtime",
+      "type": "boolean"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "deck_blueprint_version": {
+      "maxLength": 80,
+      "minLength": 1,
+      "title": "Deck Blueprint Version",
+      "type": "string"
+    },
+    "deck_id": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Deck Id",
+      "type": "string"
+    },
+    "evaluation_result": {
+      "$ref": "#/definitions/EvidenceEvaluationResult"
+    },
+    "evidence_planner_version": {
+      "const": "pe2_evidence_planner_v1",
+      "default": "pe2_evidence_planner_v1",
+      "title": "Evidence Planner Version",
+      "type": "string"
+    },
+    "generated_body_text": {
+      "default": false,
+      "title": "Generated Body Text",
+      "type": "boolean"
+    },
+    "generated_headlines": {
+      "default": false,
+      "title": "Generated Headlines",
+      "type": "boolean"
+    },
+    "generated_main_messages": {
+      "default": false,
+      "title": "Generated Main Messages",
+      "type": "boolean"
+    },
+    "generated_slide_blueprints": {
+      "default": false,
+      "title": "Generated Slide Blueprints",
+      "type": "boolean"
+    },
+    "project_id": {
+      "maxLength": 120,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "slide_evidence": {
+      "items": {
+        "$ref": "#/definitions/SlideEvidencePlan"
+      },
+      "maxItems": 80,
+      "minItems": 1,
+      "title": "Slide Evidence",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "$ref": "#/definitions/EvidencePlannerWarning"
+      },
+      "maxItems": 20,
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "created_at",
+    "deck_id",
+    "deck_blueprint_version"
+  ],
+  "title": "Presentation Engine 2.0 Evidence Planner Result",
+  "type": "object",
+  "x-phase": "2B"
+}

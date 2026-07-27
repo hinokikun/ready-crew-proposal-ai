@@ -3692,3 +3692,1289 @@
     grid-template-columns: 1fr;
   }
 }
+
+.business-report-panel {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.business-report-panel.is-dark {
+  background: #07111f;
+  color: #f8fafc;
+  border-color: rgba(125, 211, 252, 0.28);
+}
+
+.business-report-panel.is-dark p,
+.business-report-panel.is-dark span,
+.business-report-panel.is-dark label,
+.business-report-panel.is-dark td {
+  color: #dbeafe;
+}
+
+.business-report-panel.is-dark h2,
+.business-report-panel.is-dark h3,
+.business-report-panel.is-dark strong,
+.business-report-panel.is-dark th {
+  color: #ffffff;
+}
+
+.business-report-panel.is-dark .operation-summary-grid article,
+.business-report-panel.is-dark .training-chart-card,
+.business-report-panel.is-dark .training-generated-report {
+  background: rgba(15, 23, 42, 0.94);
+  border-color: rgba(125, 211, 252, 0.24);
+}
+
+.training-dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.training-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.training-chart-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(16, 42, 67, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  background: #ffffff;
+}
+
+.training-chart-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.training-chart-heading span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.training-chart-heading strong {
+  color: var(--text);
+  font-size: 20px;
+}
+
+.training-chart-card svg {
+  width: 100%;
+  min-height: 140px;
+}
+
+.training-chart-card line {
+  stroke: rgba(16, 42, 67, 0.15);
+  stroke-width: 2;
+}
+
+.training-chart-card polyline {
+  stroke: #2563eb;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.training-chart-card circle,
+.training-chart-card rect {
+  fill: #06b6d4;
+}
+
+.training-live-calculation {
+  margin-top: 14px;
+}
+
+.demo-data-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 0 10px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.training-generated-report {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  border: 1px solid rgba(16, 42, 67, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  background: #ffffff;
+}
+
+.training-generated-report pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  border-radius: var(--radius-md);
+  padding: 14px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.business-report-panel.is-screenshot {
+  padding: 28px;
+}
+
+.business-report-panel.is-screenshot .training-dashboard-actions {
+  opacity: 0.9;
+}
+
+.business-report-panel.is-screenshot .training-live-calculation {
+  display: none;
+}
+
+.empty-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .training-chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .training-dashboard-actions {
+    justify-content: flex-start;
+  }
+}
+
+.proposal-agent-dashboard {
+  display: grid;
+  gap: 18px;
+  width: min(1180px, calc(100% - 32px));
+  margin: 24px auto;
+}
+
+.proposal-agent-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px;
+  gap: 18px;
+  align-items: stretch;
+  border: 1px solid rgba(16, 42, 67, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  background:
+    linear-gradient(135deg, rgba(239, 246, 255, 0.98), rgba(255, 255, 255, 0.96)),
+    #ffffff;
+}
+
+.proposal-agent-hero h1 {
+  margin: 4px 0 8px;
+  color: var(--text);
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.proposal-agent-hero p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.proposal-agent-hero-score {
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  border-radius: var(--radius-lg);
+  background: #0f172a;
+  color: #ffffff;
+  padding: 18px;
+  text-align: center;
+}
+
+.proposal-agent-hero-score span,
+.proposal-agent-hero-score small {
+  color: #bfdbfe;
+  font-size: 12px;
+}
+
+.proposal-agent-hero-score strong {
+  color: #ffffff;
+  font-size: 48px;
+  line-height: 1;
+}
+
+.proposal-agent-toolbar,
+.proposal-agent-status-grid,
+.proposal-agent-layout,
+.proposal-agent-score-grid,
+.proposal-agent-summary-grid,
+.proposal-agent-export-actions,
+.proposal-agent-kpi-grid,
+.proposal-agent-competitor-grid,
+.proposal-agent-action-grid,
+.proposal-agent-health-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.proposal-agent-toolbar {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.proposal-agent-export-actions {
+  grid-template-columns: repeat(4, auto);
+  justify-content: start;
+}
+
+.proposal-agent-status-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.proposal-agent-status,
+.proposal-agent-panel,
+.proposal-agent-score-card,
+.proposal-agent-summary-card,
+.proposal-agent-memory-list article,
+.proposal-agent-kpi-grid article,
+.proposal-agent-intel-list article,
+.proposal-agent-competitor-grid article,
+.proposal-agent-action-grid article,
+.proposal-agent-health-grid article {
+  border: 1px solid rgba(16, 42, 67, 0.1);
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+}
+
+.proposal-agent-status {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+}
+
+.proposal-agent-status span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.proposal-agent-status strong {
+  color: var(--text);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.proposal-agent-status.ok {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(236, 253, 245, 0.96);
+}
+
+.proposal-agent-status.warn {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(255, 251, 235, 0.96);
+}
+
+.proposal-agent-status.info {
+  border-color: rgba(59, 130, 246, 0.28);
+  background: rgba(239, 246, 255, 0.96);
+}
+
+.proposal-agent-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.proposal-agent-panel {
+  padding: 18px;
+}
+
+.proposal-agent-panel h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 20px;
+}
+
+.proposal-agent-panel p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.proposal-agent-kpi-grid {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.proposal-agent-kpi-grid article {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  background: #f8fafc;
+}
+
+.proposal-agent-kpi-grid span,
+.proposal-agent-intel-list span,
+.proposal-agent-competitor-grid span,
+.proposal-agent-action-grid span,
+.proposal-agent-health-grid span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.proposal-agent-kpi-grid strong,
+.proposal-agent-intel-list strong,
+.proposal-agent-action-grid strong,
+.proposal-agent-health-grid strong {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.proposal-agent-intel-list {
+  display: grid;
+  gap: 12px;
+}
+
+.proposal-agent-intel-list article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 14px;
+}
+
+.proposal-agent-intel-list b {
+  align-self: start;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 18px;
+}
+
+.proposal-agent-intel-list p {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.proposal-agent-health-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.proposal-agent-health-grid article {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.proposal-agent-health-grid article.healthy {
+  border-color: rgba(16, 185, 129, 0.28);
+  background: rgba(236, 253, 245, 0.92);
+}
+
+.proposal-agent-health-grid article.warning {
+  border-color: rgba(245, 158, 11, 0.28);
+  background: rgba(255, 251, 235, 0.94);
+}
+
+.proposal-agent-health-grid article.critical {
+  border-color: rgba(248, 113, 113, 0.28);
+  background: rgba(254, 242, 242, 0.94);
+}
+
+.proposal-agent-insights {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.proposal-agent-insights li {
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: #f8fafc;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.proposal-agent-todo,
+.proposal-agent-review-block ul,
+.proposal-agent-score-card ul,
+.proposal-agent-timeline {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.proposal-agent-todo li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: flex-start;
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.proposal-agent-todo input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+
+.proposal-agent-todo strong,
+.proposal-agent-review-block strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.proposal-agent-todo span {
+  display: inline-flex;
+  margin-left: 8px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.proposal-agent-todo p,
+.proposal-agent-review-block li,
+.proposal-agent-score-card li {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.proposal-agent-todo li.done {
+  opacity: 0.72;
+}
+
+.proposal-agent-review-block {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.proposal-agent-review-block li,
+.proposal-agent-score-card li {
+  position: relative;
+  padding-left: 14px;
+}
+
+.proposal-agent-review-block li::before,
+.proposal-agent-score-card li::before {
+  position: absolute;
+  left: 0;
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin-top: 7px;
+  border-radius: 999px;
+  background: #06b6d4;
+}
+
+.proposal-agent-score-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.proposal-agent-score-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.proposal-agent-score-card h3 {
+  margin: 3px 0 0;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.proposal-agent-score-card > strong {
+  justify-self: start;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 24px;
+}
+
+.proposal-agent-score-card span,
+.proposal-agent-timeline small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.proposal-agent-score-bars {
+  display: grid;
+  gap: 8px;
+}
+
+.proposal-agent-score-bars label {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr) 32px;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.proposal-agent-score-bars meter {
+  width: 100%;
+  height: 10px;
+}
+
+.proposal-agent-timeline li {
+  position: relative;
+  border-left: 3px solid rgba(59, 130, 246, 0.28);
+  padding: 0 0 12px 14px;
+}
+
+.proposal-agent-timeline li span {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.proposal-agent-timeline li strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--text);
+}
+
+.proposal-agent-memory-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.proposal-agent-memory-form textarea,
+.proposal-agent-memory-form input,
+.proposal-agent-memory-form select {
+  width: 100%;
+  border: 1px solid rgba(16, 42, 67, 0.14);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  background: #ffffff;
+  color: var(--text);
+  font: inherit;
+}
+
+.proposal-agent-memory-form textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.proposal-agent-memory-form button,
+.proposal-agent-memory-form textarea {
+  grid-column: 1 / -1;
+}
+
+.proposal-agent-memory-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.proposal-agent-competitor-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.proposal-agent-competitor-grid article {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.proposal-agent-competitor-grid h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 17px;
+}
+
+.proposal-agent-competitor-grid div {
+  display: grid;
+  gap: 5px;
+}
+
+.proposal-agent-competitor-grid ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.proposal-agent-action-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.proposal-agent-action-grid article {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  background: #f8fafc;
+}
+
+.proposal-agent-action-grid small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.proposal-agent-memory-list article,
+.proposal-agent-summary-card {
+  padding: 14px;
+}
+
+.proposal-agent-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.proposal-agent-summary-card h3 {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.proposal-agent-summary-card p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 1100px) {
+  .proposal-agent-status-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .proposal-agent-kpi-grid,
+  .proposal-agent-competitor-grid,
+  .proposal-agent-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .proposal-agent-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .proposal-agent-dashboard {
+    width: min(100% - 20px, 1180px);
+    margin-top: 16px;
+  }
+
+  .proposal-agent-hero,
+  .proposal-agent-layout,
+  .proposal-agent-score-grid,
+  .proposal-agent-memory-form,
+  .proposal-agent-memory-list,
+  .proposal-agent-toolbar,
+  .proposal-agent-kpi-grid,
+  .proposal-agent-competitor-grid,
+  .proposal-agent-action-grid,
+  .proposal-agent-health-grid,
+  .proposal-agent-export-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .proposal-agent-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.proposal-copilot-enterprise {
+  position: relative;
+  isolation: isolate;
+  width: min(1240px, calc(100% - 32px));
+  margin: 24px auto;
+  padding: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 12% 2%, rgba(34, 211, 238, 0.2), transparent 28%),
+    radial-gradient(circle at 86% 12%, rgba(59, 130, 246, 0.18), transparent 32%),
+    linear-gradient(145deg, rgba(248, 250, 252, 0.98), rgba(239, 246, 255, 0.9));
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.13);
+}
+
+.proposal-copilot-enterprise::before {
+  position: absolute;
+  inset: 18px;
+  z-index: -1;
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08));
+  content: "";
+  pointer-events: none;
+}
+
+.proposal-copilot-enterprise.is-enterprise-dark {
+  color: #e5f3ff;
+  background:
+    radial-gradient(circle at 8% 4%, rgba(34, 211, 238, 0.18), transparent 30%),
+    radial-gradient(circle at 88% 10%, rgba(37, 99, 235, 0.25), transparent 34%),
+    linear-gradient(145deg, #07111f, #0f1f38);
+}
+
+.proposal-copilot-topbar,
+.proposal-copilot-hero,
+.proposal-copilot-composer,
+.proposal-agent-panel,
+.proposal-agent-status,
+.proposal-agent-score-card,
+.proposal-agent-summary-card,
+.proposal-agent-kpi-grid article,
+.proposal-agent-intel-list article,
+.proposal-agent-competitor-grid article,
+.proposal-agent-action-grid article,
+.proposal-agent-health-grid article {
+  backdrop-filter: blur(18px);
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16px 46px rgba(15, 23, 42, 0.08);
+}
+
+.is-enterprise-dark .proposal-copilot-topbar,
+.is-enterprise-dark .proposal-copilot-hero,
+.is-enterprise-dark .proposal-copilot-composer,
+.is-enterprise-dark .proposal-agent-panel,
+.is-enterprise-dark .proposal-agent-status,
+.is-enterprise-dark .proposal-agent-score-card,
+.is-enterprise-dark .proposal-agent-summary-card,
+.is-enterprise-dark .proposal-agent-kpi-grid article,
+.is-enterprise-dark .proposal-agent-intel-list article,
+.is-enterprise-dark .proposal-agent-competitor-grid article,
+.is-enterprise-dark .proposal-agent-action-grid article,
+.is-enterprise-dark .proposal-agent-health-grid article {
+  border-color: rgba(125, 211, 252, 0.18);
+  background: rgba(15, 23, 42, 0.62);
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.28);
+}
+
+.proposal-copilot-topbar {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 24px;
+  padding: 18px;
+}
+
+.proposal-copilot-topbar h1,
+.proposal-copilot-hero h2,
+.proposal-agent-panel h2 {
+  color: #0f172a;
+}
+
+.is-enterprise-dark .proposal-copilot-topbar h1,
+.is-enterprise-dark .proposal-copilot-hero h2,
+.is-enterprise-dark .proposal-agent-panel h2,
+.is-enterprise-dark .proposal-agent-panel strong,
+.is-enterprise-dark .proposal-agent-score-card h3,
+.is-enterprise-dark .proposal-agent-kpi-grid strong,
+.is-enterprise-dark .proposal-agent-intel-list strong,
+.is-enterprise-dark .proposal-agent-action-grid strong,
+.is-enterprise-dark .proposal-agent-health-grid strong {
+  color: #f8fafc;
+}
+
+.proposal-copilot-topbar h1 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1.08;
+}
+
+.proposal-copilot-topbar p,
+.proposal-copilot-hero p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 15px;
+}
+
+.is-enterprise-dark .proposal-copilot-topbar p,
+.is-enterprise-dark .proposal-copilot-hero p,
+.is-enterprise-dark .proposal-agent-panel p,
+.is-enterprise-dark .proposal-agent-score-card span,
+.is-enterprise-dark .proposal-agent-timeline small {
+  color: #bad3ea;
+}
+
+.proposal-copilot-actions,
+.proposal-agent-export-actions,
+.proposal-template-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.icon-button,
+.icon-text-button,
+.proposal-template-strip button,
+.proposal-pinned-projects button,
+.proposal-command-palette button,
+.proposal-copilot-suggestions button,
+.proposal-recent-project-card button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #0f172a;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.icon-button {
+  width: 42px;
+  padding: 0;
+}
+
+.icon-text-button,
+.proposal-template-strip button,
+.proposal-pinned-projects button {
+  padding: 0 14px;
+}
+
+.proposal-notification-panel {
+  position: absolute;
+  top: 72px;
+  right: 18px;
+  z-index: 10;
+  display: grid;
+  gap: 8px;
+  width: min(340px, calc(100vw - 40px));
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+}
+
+.proposal-notification-panel p {
+  margin: 0;
+  border-radius: 12px;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.proposal-copilot-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 26px;
+  padding: 28px;
+}
+
+.proposal-copilot-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(14, 165, 233, 0.12);
+  color: #0369a1;
+  font-weight: 900;
+}
+
+.proposal-copilot-hero h2 {
+  margin: 14px 0 0;
+  font-size: clamp(28px, 5vw, 58px);
+  line-height: 1;
+}
+
+.proposal-copilot-score {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  border-radius: 26px;
+  padding: 18px;
+  background: linear-gradient(150deg, #0f172a, #1d4ed8 58%, #22d3ee);
+  color: #ffffff;
+  text-align: center;
+}
+
+.proposal-copilot-score strong {
+  font-size: 64px;
+  line-height: 1;
+}
+
+.proposal-copilot-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+  gap: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 24px;
+  padding: 18px;
+}
+
+.proposal-copilot-composer textarea,
+.proposal-command-palette input,
+.proposal-copilot-panel input {
+  width: 100%;
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #0f172a;
+  font: inherit;
+}
+
+.proposal-one-click-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 14px;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1d4ed8, #0891b2);
+  color: #ffffff;
+  font-weight: 900;
+  box-shadow: 0 18px 36px rgba(37, 99, 235, 0.24);
+  cursor: pointer;
+}
+
+.proposal-one-click-button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.proposal-copilot-progress {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.proposal-copilot-progress li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(248, 250, 252, 0.72);
+}
+
+.proposal-copilot-progress li > span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.proposal-copilot-progress li.running > span {
+  background: #dbeafe;
+  color: #1d4ed8;
+  animation: pulse-soft 1.2s ease-in-out infinite;
+}
+
+.proposal-copilot-progress li.done > span {
+  background: #dcfce7;
+  color: #047857;
+}
+
+.proposal-copilot-progress li.blocked > span {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.proposal-copilot-progress li.error > span {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.proposal-copilot-progress strong,
+.proposal-copilot-progress p {
+  margin: 0;
+}
+
+.proposal-pinned-projects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.proposal-pinned-projects strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.proposal-recent-project-card {
+  position: relative;
+}
+
+.proposal-recent-project-card button {
+  justify-self: start;
+  padding: 0 12px;
+}
+
+.proposal-beautiful-preview {
+  display: grid;
+  gap: 16px;
+}
+
+.proposal-beautiful-preview-status {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border-radius: 18px;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.8), rgba(207, 250, 254, 0.76));
+}
+
+.proposal-slide-thumbnails {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.proposal-slide-thumbnails article {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  border-radius: 16px;
+  padding: 12px;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.08), transparent 46%),
+    rgba(255, 255, 255, 0.84);
+}
+
+.proposal-slide-thumbnails span {
+  display: inline-flex;
+  margin-bottom: 8px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.proposal-slide-thumbnails strong,
+.proposal-slide-thumbnails p {
+  display: block;
+  margin: 0;
+}
+
+.proposal-slide-thumbnails p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.proposal-command-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: start center;
+  padding-top: 12vh;
+  background: rgba(15, 23, 42, 0.34);
+}
+
+.proposal-command-palette {
+  display: grid;
+  gap: 10px;
+  width: min(560px, calc(100vw - 32px));
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 24px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.26);
+}
+
+.proposal-command-palette label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.proposal-command-palette input {
+  border: 0;
+  padding: 10px 0;
+  outline: none;
+}
+
+.proposal-command-palette button {
+  justify-content: flex-start;
+  padding: 0 14px;
+}
+
+.proposal-copilot-chat {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 50;
+  display: grid;
+  justify-items: end;
+  gap: 12px;
+}
+
+.proposal-copilot-launcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 18px;
+  background: linear-gradient(135deg, #0f172a, #2563eb);
+  color: #ffffff;
+  font-weight: 900;
+  box-shadow: 0 18px 46px rgba(37, 99, 235, 0.35);
+  cursor: pointer;
+}
+
+.proposal-copilot-panel {
+  display: grid;
+  gap: 12px;
+  width: min(380px, calc(100vw - 28px));
+  max-height: min(660px, calc(100vh - 110px));
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 24px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.2);
+}
+
+.proposal-copilot-chat-header,
+.proposal-copilot-panel form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.proposal-copilot-chat-header button,
+.proposal-copilot-panel form button {
+  border: 0;
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+.proposal-copilot-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.proposal-copilot-suggestions button {
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.proposal-copilot-messages {
+  display: grid;
+  gap: 8px;
+  overflow: auto;
+  max-height: 280px;
+}
+
+.proposal-copilot-messages p {
+  margin: 0;
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.proposal-copilot-messages p.user {
+  justify-self: end;
+  background: #dbeafe;
+}
+
+.proposal-copilot-messages p.assistant {
+  justify-self: start;
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proposal-copilot-progress li.running > span {
+    animation: none;
+  }
+}
+
+@media (max-width: 1060px) {
+  .proposal-copilot-hero,
+  .proposal-copilot-composer,
+  .proposal-slide-thumbnails {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .proposal-copilot-enterprise {
+    width: min(100% - 18px, 1240px);
+    padding: 14px;
+    border-radius: 22px;
+  }
+
+  .proposal-copilot-topbar,
+  .proposal-copilot-hero,
+  .proposal-copilot-composer,
+  .proposal-slide-thumbnails {
+    grid-template-columns: 1fr;
+  }
+
+  .proposal-copilot-actions {
+    justify-content: flex-start;
+  }
+
+  .proposal-copilot-chat {
+    right: 12px;
+    bottom: 12px;
+  }
+}

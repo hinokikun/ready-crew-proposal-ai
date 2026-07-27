@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ready-crew.local/schemas/v81/story-plan.schema.json",
+  "title": "StoryPlan",
+  "type": "object",
+  "required": ["schema_version", "story_type", "main_thesis", "slides"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "v1" },
+    "story_type": { "type": "string" },
+    "selection_reason": { "type": "string", "maxLength": 600 },
+    "main_thesis": { "type": "string", "maxLength": 180 },
+    "audience": { "type": "object" },
+    "slides": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 18,
+      "items": { "$ref": "#/$defs/slide_plan" }
+    },
+    "missing_evidence": { "type": "array", "items": { "type": "string", "maxLength": 240 } },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+  },
+  "$defs": {
+    "slide_plan": {
+      "type": "object",
+      "required": ["slide_id", "slide_type", "objective", "core_message"],
+      "properties": {
+        "slide_id": { "type": "string", "maxLength": 64 },
+        "slide_type": { "type": "string", "maxLength": 80 },
+        "objective": { "type": "string", "maxLength": 240 },
+        "core_message": { "type": "string", "maxLength": 240 },
+        "visual_intent": { "type": "string", "maxLength": 240 },
+        "evidence": { "type": "array", "items": { "type": "string", "maxLength": 240 } },
+        "risk": { "type": "string", "maxLength": 240 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
+

@@ -1,0 +1,2970 @@
+{
+  "connected_to_runtime": false,
+  "created_at": "2026-07-27 00:00:00+00:00",
+  "deck_id": "deck-plan-0ee17cfe60a9",
+  "evaluation_result": {
+    "blocking_issue_count": 0,
+    "dimensions": [
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Contract Validity",
+        "reason": "Average contract validity across 12 slide messages.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Headline Quality",
+        "reason": "Average headline quality across 12 slide messages.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Message Clarity",
+        "reason": "Average message clarity across 12 slide messages.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "One-slide-one-message",
+        "reason": "Average one-slide-one-message across 12 slide messages.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Evidence Alignment",
+        "reason": "Average evidence alignment across 12 slide messages.",
+        "recommendations": [],
+        "score": 9
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Numeric Integrity Readiness",
+        "reason": "Average numeric integrity readiness across 12 slide messages.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Narrative Consistency",
+        "reason": "Average narrative consistency across 12 slide messages.",
+        "recommendations": [],
+        "score": 9
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Audience Fit",
+        "reason": "Average audience fit across 12 slide messages.",
+        "recommendations": [],
+        "score": 9
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Decision Relevance",
+        "reason": "Average decision relevance across 12 slide messages.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Customer-facing Readability",
+        "reason": "Average customer-facing readability across 12 slide messages.",
+        "recommendations": [],
+        "score": 10
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Executive Readiness",
+        "reason": "Average executive readiness across 12 slide messages.",
+        "recommendations": [],
+        "score": 8
+      },
+      {
+        "issues": [],
+        "max_score": 10,
+        "name": "Sales Persuasiveness",
+        "reason": "Average sales persuasiveness across 12 slide messages.",
+        "recommendations": [],
+        "score": 10
+      }
+    ],
+    "grade": "A",
+    "max_score": 100,
+    "note": "This score evaluates message design readiness only. It does not evaluate Slide Blueprints, diagrams, layouts, theme tokens, typography, PPTX rendering, Beautiful.ai output, or final sales outcome.",
+    "total_score": 96,
+    "warning_count": 1
+  },
+  "generated_diagrams": false,
+  "generated_layouts": false,
+  "generated_pptx": false,
+  "generated_slide_blueprints": false,
+  "generated_visuals": false,
+  "message_designer_output_version": "pe2_message_designer_output_v1",
+  "slide_messages": [
+    {
+      "audience": "department_head",
+      "audience_seniority": "senior_manager",
+      "constraints": [
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-slide-blueprint",
+          "detail": "Phase 2C can emit message fields only.",
+          "label": "Slide Blueprint generation is out of scope."
+        },
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-visual-rendering",
+          "detail": "Renderer-facing details are reserved for later phases.",
+          "label": "Visual, diagram, layout, theme, typography, and PPTX are out of scope."
+        }
+      ],
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "decision_stage": "comparison",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Contract Validity",
+            "reason": "Message output must satisfy the Phase 2C schema and validation contract.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Headline Quality",
+            "reason": "Headline should state a conclusion or decision implication within 60 characters.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Clarity",
+            "reason": "Main message, supporting points, and takeaway should each have distinct roles.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "One-slide-one-message",
+            "reason": "A slide should retain one core message and no more than three support points.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Alignment",
+            "reason": "Message strength should match available Evidence Planner requirements.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Numeric Integrity Readiness",
+            "reason": "Numeric, ROI, ratio, currency, and period claims require traceable basis evidence.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Narrative Consistency",
+            "reason": "Message should respect Deck Blueprint slide role, slide goal, and narrative function.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Audience Fit",
+            "reason": "Style and detail level should match audience seniority and decision stage.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Decision Relevance",
+            "reason": "Customer-facing proposal messages should help the next decision.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readability",
+            "reason": "Messages should avoid placeholders, internal labels, and vague language.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Executive Readiness",
+            "reason": "Executive-ready messages separate conclusion, evidence, risk, and next action.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Sales Persuasiveness",
+            "reason": "Message should be useful for a sales conversation while remaining evidence-safe.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "A",
+        "max_score": 100,
+        "note": "This score evaluates message design readiness only. It does not evaluate Slide Blueprints, diagrams, layouts, theme tokens, typography, PPTX rendering, Beautiful.ai output, or final sales outcome.",
+        "total_score": 95,
+        "warning_count": 0
+      },
+      "evidence_alignment_level": "partially_supported",
+      "evidence_alignment_summary": "Some evidence is usable, but additional confirmation can improve persuasiveness.",
+      "evidence_usage": [
+        {
+          "confidence": "medium",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-00-cover-01",
+          "source_type": "customer_interview",
+          "usage": "Customer context confirmationを主張の裏付けとして参照"
+        }
+      ],
+      "generation_metadata": {
+        "deterministic": true,
+        "generator": "offline_message_designer_phase2c",
+        "llm_used": false,
+        "runtime_connected": false,
+        "source_contracts": [
+          "deck_blueprint_v1",
+          "proposal_context_v1",
+          "evidence_planner_result_v1"
+        ]
+      },
+      "generation_source": "offline_message_designer_phase2c",
+      "headline": "Manufacturing Website…の判断軸を明確にする",
+      "input_fingerprint": "60073de2620abaffb3b72ca65d9bb24f22255e5f",
+      "key_takeaway": "Problem and decision context are explicit.",
+      "main_message": "この資料では、案件の目的、検討理由、次の判断事項を営業説明しやすい順に整理します。",
+      "message_confidence": "medium",
+      "message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-00-cover-60073de2",
+      "message_design_version": "pe2_slide_message_design_v1",
+      "message_strength": "clear",
+      "message_style": "neutral",
+      "message_tone": "formal",
+      "missing_evidence_disclosure": [],
+      "narrative_function": "hook",
+      "numeric_claims": [],
+      "schema_version": "pe2_slide_message_design_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-00-cover",
+      "slide_goal": "cover",
+      "slide_order": 0,
+      "slide_plan_id": "slide-plan-00",
+      "slide_role": "opening",
+      "source_references": [
+        {
+          "label": "Customer context confirmation",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-00-cover-01"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-00-cover-01",
+          "source_type": "customer_interview"
+        }
+      ],
+      "speaker_note_summary": "営業担当は、顧客の関心に合わせて見出し、判断材料、次の確認事項の順で説明してください。数値や比較は根拠がある範囲だけを扱います。",
+      "status": "validated",
+      "style_profile": {
+        "avoid": [
+          "decorative wording",
+          "unsupported claims"
+        ],
+        "headline_rule": "State the slide purpose clearly.",
+        "main_message_rule": "Keep the message factual and reviewable.",
+        "style": "neutral",
+        "tone": "formal"
+      },
+      "supporting_messages": [
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-00-cover-01"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-00-cover-01",
+          "text": "Customer context confirmationを確認する"
+        }
+      ],
+      "unsupported_claims": [],
+      "unused_required_evidence_ids": [],
+      "used_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-00-cover-01"
+      ],
+      "validation_result": {
+        "issues": [],
+        "status": "validated",
+        "valid": true
+      },
+      "warnings": []
+    },
+    {
+      "audience": "department_head",
+      "audience_seniority": "senior_manager",
+      "constraints": [
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-slide-blueprint",
+          "detail": "Phase 2C can emit message fields only.",
+          "label": "Slide Blueprint generation is out of scope."
+        },
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-visual-rendering",
+          "detail": "Renderer-facing details are reserved for later phases.",
+          "label": "Visual, diagram, layout, theme, typography, and PPTX are out of scope."
+        }
+      ],
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "decision_stage": "comparison",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Contract Validity",
+            "reason": "Message output must satisfy the Phase 2C schema and validation contract.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Headline Quality",
+            "reason": "Headline should state a conclusion or decision implication within 60 characters.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Clarity",
+            "reason": "Main message, supporting points, and takeaway should each have distinct roles.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "One-slide-one-message",
+            "reason": "A slide should retain one core message and no more than three support points.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Alignment",
+            "reason": "Message strength should match available Evidence Planner requirements.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Numeric Integrity Readiness",
+            "reason": "Numeric, ROI, ratio, currency, and period claims require traceable basis evidence.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Narrative Consistency",
+            "reason": "Message should respect Deck Blueprint slide role, slide goal, and narrative function.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Audience Fit",
+            "reason": "Style and detail level should match audience seniority and decision stage.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Decision Relevance",
+            "reason": "Customer-facing proposal messages should help the next decision.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readability",
+            "reason": "Messages should avoid placeholders, internal labels, and vague language.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Executive Readiness",
+            "reason": "Executive-ready messages separate conclusion, evidence, risk, and next action.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Sales Persuasiveness",
+            "reason": "Message should be useful for a sales conversation while remaining evidence-safe.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "A",
+        "max_score": 100,
+        "note": "This score evaluates message design readiness only. It does not evaluate Slide Blueprints, diagrams, layouts, theme tokens, typography, PPTX rendering, Beautiful.ai output, or final sales outcome.",
+        "total_score": 97,
+        "warning_count": 0
+      },
+      "evidence_alignment_level": "evidence_supported",
+      "evidence_alignment_summary": "Required evidence is available enough to support the message direction.",
+      "evidence_usage": [
+        {
+          "confidence": "high",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-01",
+          "source_type": "internal_kpi",
+          "usage": "Executive-level success criteriaを主張の裏付けとして参照"
+        },
+        {
+          "confidence": "high",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-02",
+          "source_type": "financial_estimate",
+          "usage": "Investment or value summaryを主張の裏付けとして参照"
+        }
+      ],
+      "generation_metadata": {
+        "deterministic": true,
+        "generator": "offline_message_designer_phase2c",
+        "llm_used": false,
+        "runtime_connected": false,
+        "source_contracts": [
+          "deck_blueprint_v1",
+          "proposal_context_v1",
+          "evidence_planner_result_v1"
+        ]
+      },
+      "generation_source": "offline_message_designer_phase2c",
+      "headline": "結論と判断材料を先にそろえる",
+      "input_fingerprint": "b53ff831aabd26a7fe083c3be3b323f78a4947a2",
+      "key_takeaway": "Problem and decision context are explicit.",
+      "main_message": "意思決定に必要な課題、提案方針、期待成果、次のアクションを先に確認できる構成です。",
+      "message_confidence": "high",
+      "message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-01-executive_summary-b53ff831",
+      "message_design_version": "pe2_slide_message_design_v1",
+      "message_strength": "clear",
+      "message_style": "neutral",
+      "message_tone": "formal",
+      "missing_evidence_disclosure": [],
+      "narrative_function": "frame",
+      "numeric_claims": [
+        {
+          "basis_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-01"
+          ],
+          "claim_id": "num-deck-plan-0ee17cfe60a9-slide-01-executive_summary-budget",
+          "confidence": "medium",
+          "is_trial_calculation": true,
+          "label": "予算・費用前提",
+          "unit": null,
+          "value": "8M to 12M JPY"
+        }
+      ],
+      "schema_version": "pe2_slide_message_design_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-01-executive_summary",
+      "slide_goal": "executive_summary",
+      "slide_order": 1,
+      "slide_plan_id": "slide-plan-01",
+      "slide_role": "summary",
+      "source_references": [
+        {
+          "label": "Executive-level success criteria",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-01"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-01",
+          "source_type": "internal_kpi"
+        },
+        {
+          "label": "Investment or value summary",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-02"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-02",
+          "source_type": "financial_estimate"
+        }
+      ],
+      "speaker_note_summary": "営業担当は、顧客の関心に合わせて見出し、判断材料、次の確認事項の順で説明してください。数値や比較は根拠がある範囲だけを扱います。",
+      "status": "validated",
+      "style_profile": {
+        "avoid": [
+          "decorative wording",
+          "unsupported claims"
+        ],
+        "headline_rule": "State the slide purpose clearly.",
+        "main_message_rule": "Keep the message factual and reviewable.",
+        "style": "neutral",
+        "tone": "formal"
+      },
+      "supporting_messages": [
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-01"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-01-executive_summary-01",
+          "text": "Executive-level success criteriaを確認する"
+        },
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-02"
+          ],
+          "purpose": "explain_investment",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-01-executive_summary-02",
+          "text": "Investment or value summaryを確認する"
+        }
+      ],
+      "unsupported_claims": [],
+      "unused_required_evidence_ids": [],
+      "used_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-01-executive_summary-02"
+      ],
+      "validation_result": {
+        "issues": [],
+        "status": "validated",
+        "valid": true
+      },
+      "warnings": []
+    },
+    {
+      "audience": "department_head",
+      "audience_seniority": "senior_manager",
+      "constraints": [
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-slide-blueprint",
+          "detail": "Phase 2C can emit message fields only.",
+          "label": "Slide Blueprint generation is out of scope."
+        },
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-visual-rendering",
+          "detail": "Renderer-facing details are reserved for later phases.",
+          "label": "Visual, diagram, layout, theme, typography, and PPTX are out of scope."
+        }
+      ],
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "decision_stage": "comparison",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Contract Validity",
+            "reason": "Message output must satisfy the Phase 2C schema and validation contract.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Headline Quality",
+            "reason": "Headline should state a conclusion or decision implication within 60 characters.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Clarity",
+            "reason": "Main message, supporting points, and takeaway should each have distinct roles.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "One-slide-one-message",
+            "reason": "A slide should retain one core message and no more than three support points.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Alignment",
+            "reason": "Message strength should match available Evidence Planner requirements.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Numeric Integrity Readiness",
+            "reason": "Numeric, ROI, ratio, currency, and period claims require traceable basis evidence.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Narrative Consistency",
+            "reason": "Message should respect Deck Blueprint slide role, slide goal, and narrative function.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Audience Fit",
+            "reason": "Style and detail level should match audience seniority and decision stage.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Decision Relevance",
+            "reason": "Customer-facing proposal messages should help the next decision.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readability",
+            "reason": "Messages should avoid placeholders, internal labels, and vague language.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Executive Readiness",
+            "reason": "Executive-ready messages separate conclusion, evidence, risk, and next action.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Sales Persuasiveness",
+            "reason": "Message should be useful for a sales conversation while remaining evidence-safe.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "A",
+        "max_score": 100,
+        "note": "This score evaluates message design readiness only. It does not evaluate Slide Blueprints, diagrams, layouts, theme tokens, typography, PPTX rendering, Beautiful.ai output, or final sales outcome.",
+        "total_score": 97,
+        "warning_count": 0
+      },
+      "evidence_alignment_level": "evidence_supported",
+      "evidence_alignment_summary": "Required evidence is available enough to support the message direction.",
+      "evidence_usage": [
+        {
+          "confidence": "high",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-02-problem-01",
+          "source_type": "customer_interview",
+          "usage": "Problem statement proofを主張の裏付けとして参照"
+        },
+        {
+          "confidence": "high",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-02-problem-02",
+          "source_type": "internal_kpi",
+          "usage": "Problem impact metricを主張の裏付けとして参照"
+        }
+      ],
+      "generation_metadata": {
+        "deterministic": true,
+        "generator": "offline_message_designer_phase2c",
+        "llm_used": false,
+        "runtime_connected": false,
+        "source_contracts": [
+          "deck_blueprint_v1",
+          "proposal_context_v1",
+          "evidence_planner_result_v1"
+        ]
+      },
+      "generation_source": "offline_message_designer_phase2c",
+      "headline": "課題の影響を事実ベースで共有する",
+      "input_fingerprint": "5b90318d98a539c2c743f691efc217bc1141050a",
+      "key_takeaway": "Problem and decision context are explicit.",
+      "main_message": "顧客が抱える課題を確認済み事実と不足情報に分け、提案の前提を曖昧にしないことが狙いです。",
+      "message_confidence": "high",
+      "message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-02-problem-5b90318d",
+      "message_design_version": "pe2_slide_message_design_v1",
+      "message_strength": "clear",
+      "message_style": "neutral",
+      "message_tone": "formal",
+      "missing_evidence_disclosure": [],
+      "narrative_function": "diagnose",
+      "numeric_claims": [
+        {
+          "basis_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-02-problem-02"
+          ],
+          "claim_id": "num-deck-plan-0ee17cfe60a9-slide-02-problem-budget",
+          "confidence": "medium",
+          "is_trial_calculation": true,
+          "label": "予算・費用前提",
+          "unit": null,
+          "value": "8M to 12M JPY"
+        }
+      ],
+      "schema_version": "pe2_slide_message_design_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-02-problem",
+      "slide_goal": "problem_sharing",
+      "slide_order": 2,
+      "slide_plan_id": "slide-plan-02",
+      "slide_role": "problem",
+      "source_references": [
+        {
+          "label": "Problem statement proof",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-02-problem-01"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-02-problem-01",
+          "source_type": "customer_interview"
+        },
+        {
+          "label": "Problem impact metric",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-02-problem-02"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-02-problem-02",
+          "source_type": "internal_kpi"
+        }
+      ],
+      "speaker_note_summary": "営業担当は、顧客の関心に合わせて見出し、判断材料、次の確認事項の順で説明してください。数値や比較は根拠がある範囲だけを扱います。",
+      "status": "validated",
+      "style_profile": {
+        "avoid": [
+          "decorative wording",
+          "unsupported claims"
+        ],
+        "headline_rule": "State the slide purpose clearly.",
+        "main_message_rule": "Keep the message factual and reviewable.",
+        "style": "neutral",
+        "tone": "formal"
+      },
+      "supporting_messages": [
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-02-problem-01"
+          ],
+          "purpose": "explain_problem",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-02-problem-01",
+          "text": "Problem statement proofを確認する"
+        },
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-02-problem-02"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-02-problem-02",
+          "text": "Problem impact metricを確認する"
+        }
+      ],
+      "unsupported_claims": [],
+      "unused_required_evidence_ids": [],
+      "used_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-02-problem-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-02-problem-02"
+      ],
+      "validation_result": {
+        "issues": [],
+        "status": "validated",
+        "valid": true
+      },
+      "warnings": []
+    },
+    {
+      "audience": "department_head",
+      "audience_seniority": "senior_manager",
+      "constraints": [
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-slide-blueprint",
+          "detail": "Phase 2C can emit message fields only.",
+          "label": "Slide Blueprint generation is out of scope."
+        },
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-visual-rendering",
+          "detail": "Renderer-facing details are reserved for later phases.",
+          "label": "Visual, diagram, layout, theme, typography, and PPTX are out of scope."
+        }
+      ],
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "decision_stage": "comparison",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Contract Validity",
+            "reason": "Message output must satisfy the Phase 2C schema and validation contract.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Headline Quality",
+            "reason": "Headline should state a conclusion or decision implication within 60 characters.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Clarity",
+            "reason": "Main message, supporting points, and takeaway should each have distinct roles.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "One-slide-one-message",
+            "reason": "A slide should retain one core message and no more than three support points.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Alignment",
+            "reason": "Message strength should match available Evidence Planner requirements.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Numeric Integrity Readiness",
+            "reason": "Numeric, ROI, ratio, currency, and period claims require traceable basis evidence.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Narrative Consistency",
+            "reason": "Message should respect Deck Blueprint slide role, slide goal, and narrative function.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Audience Fit",
+            "reason": "Style and detail level should match audience seniority and decision stage.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Decision Relevance",
+            "reason": "Customer-facing proposal messages should help the next decision.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [
+              "PE2-MSG-QUALITY-001"
+            ],
+            "max_score": 10,
+            "name": "Customer-facing Readability",
+            "reason": "Messages should avoid placeholders, internal labels, and vague language.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Executive Readiness",
+            "reason": "Executive-ready messages separate conclusion, evidence, risk, and next action.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Sales Persuasiveness",
+            "reason": "Message should be useful for a sales conversation while remaining evidence-safe.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "A",
+        "max_score": 100,
+        "note": "This score evaluates message design readiness only. It does not evaluate Slide Blueprints, diagrams, layouts, theme tokens, typography, PPTX rendering, Beautiful.ai output, or final sales outcome.",
+        "total_score": 94,
+        "warning_count": 1
+      },
+      "evidence_alignment_level": "partially_supported",
+      "evidence_alignment_summary": "Some evidence is usable, but additional confirmation can improve persuasiveness.",
+      "evidence_usage": [
+        {
+          "confidence": "medium",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-03-insight-01",
+          "source_type": "market_research",
+          "usage": "Insight supportを主張の裏付けとして参照"
+        },
+        {
+          "confidence": "high",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-03-insight-02",
+          "source_type": "industry_statistics",
+          "usage": "Industry benchmarkを主張の裏付けとして参照"
+        }
+      ],
+      "generation_metadata": {
+        "deterministic": true,
+        "generator": "offline_message_designer_phase2c",
+        "llm_used": false,
+        "runtime_connected": false,
+        "source_contracts": [
+          "deck_blueprint_v1",
+          "proposal_context_v1",
+          "evidence_planner_result_v1"
+        ]
+      },
+      "generation_source": "offline_message_designer_phase2c",
+      "headline": "課題の背景から提案方向を定める",
+      "input_fingerprint": "a66a01c3576bd199dc0264f8c32766c7e079c207",
+      "key_takeaway": "Problem and decision context are explicit.",
+      "main_message": "課題の背景と判断材料を結び、単なる機能紹介ではなく選ぶ理由を明確にします。",
+      "message_confidence": "medium",
+      "message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-03-insight-a66a01c3",
+      "message_design_version": "pe2_slide_message_design_v1",
+      "message_strength": "clear",
+      "message_style": "consulting",
+      "message_tone": "analytical",
+      "missing_evidence_disclosure": [],
+      "narrative_function": "explain",
+      "numeric_claims": [
+        {
+          "basis_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-03-insight-02"
+          ],
+          "claim_id": "num-deck-plan-0ee17cfe60a9-slide-03-insight-budget",
+          "confidence": "medium",
+          "is_trial_calculation": true,
+          "label": "予算・費用前提",
+          "unit": null,
+          "value": "8M to 12M JPY"
+        }
+      ],
+      "schema_version": "pe2_slide_message_design_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-03-insight",
+      "slide_goal": "customer_insight",
+      "slide_order": 3,
+      "slide_plan_id": "slide-plan-03",
+      "slide_role": "insight",
+      "source_references": [
+        {
+          "label": "Insight support",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-03-insight-01"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-03-insight-01",
+          "source_type": "market_research"
+        },
+        {
+          "label": "Industry benchmark",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-03-insight-02"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-03-insight-02",
+          "source_type": "industry_statistics"
+        }
+      ],
+      "speaker_note_summary": "営業担当は、顧客の関心に合わせて見出し、判断材料、次の確認事項の順で説明してください。数値や比較は根拠がある範囲だけを扱います。",
+      "status": "needs_review",
+      "style_profile": {
+        "avoid": [
+          "assertion without basis",
+          "loose reasoning"
+        ],
+        "headline_rule": "State the insight or cause-and-effect relationship.",
+        "main_message_rule": "Connect problem, evidence, and recommendation.",
+        "style": "consulting",
+        "tone": "analytical"
+      },
+      "supporting_messages": [
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-03-insight-01"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-03-insight-01",
+          "text": "Insight supportを確認する"
+        },
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-03-insight-02"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-03-insight-02",
+          "text": "Industry benchmarkを確認する"
+        }
+      ],
+      "unsupported_claims": [],
+      "unused_required_evidence_ids": [],
+      "used_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-03-insight-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-03-insight-02"
+      ],
+      "validation_result": {
+        "issues": [
+          {
+            "blocking": false,
+            "code": "PE2-MSG-QUALITY-001",
+            "field_path": "message",
+            "message": "Weak language detected: support",
+            "related_evidence_ids": [],
+            "related_slide_id": "deck-plan-0ee17cfe60a9-slide-03-insight",
+            "severity": "warning",
+            "source": "message_validator",
+            "suggestion": "Pair abstract wording with specific target, change, or evidence."
+          }
+        ],
+        "status": "validated",
+        "valid": true
+      },
+      "warnings": []
+    },
+    {
+      "audience": "department_head",
+      "audience_seniority": "senior_manager",
+      "constraints": [
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-slide-blueprint",
+          "detail": "Phase 2C can emit message fields only.",
+          "label": "Slide Blueprint generation is out of scope."
+        },
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-visual-rendering",
+          "detail": "Renderer-facing details are reserved for later phases.",
+          "label": "Visual, diagram, layout, theme, typography, and PPTX are out of scope."
+        }
+      ],
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "decision_stage": "comparison",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Contract Validity",
+            "reason": "Message output must satisfy the Phase 2C schema and validation contract.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Headline Quality",
+            "reason": "Headline should state a conclusion or decision implication within 60 characters.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Clarity",
+            "reason": "Main message, supporting points, and takeaway should each have distinct roles.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "One-slide-one-message",
+            "reason": "A slide should retain one core message and no more than three support points.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Alignment",
+            "reason": "Message strength should match available Evidence Planner requirements.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Numeric Integrity Readiness",
+            "reason": "Numeric, ROI, ratio, currency, and period claims require traceable basis evidence.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Narrative Consistency",
+            "reason": "Message should respect Deck Blueprint slide role, slide goal, and narrative function.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Audience Fit",
+            "reason": "Style and detail level should match audience seniority and decision stage.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Decision Relevance",
+            "reason": "Customer-facing proposal messages should help the next decision.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readability",
+            "reason": "Messages should avoid placeholders, internal labels, and vague language.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Executive Readiness",
+            "reason": "Executive-ready messages separate conclusion, evidence, risk, and next action.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Sales Persuasiveness",
+            "reason": "Message should be useful for a sales conversation while remaining evidence-safe.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "A",
+        "max_score": 100,
+        "note": "This score evaluates message design readiness only. It does not evaluate Slide Blueprints, diagrams, layouts, theme tokens, typography, PPTX rendering, Beautiful.ai output, or final sales outcome.",
+        "total_score": 96,
+        "warning_count": 0
+      },
+      "evidence_alignment_level": "partially_supported",
+      "evidence_alignment_summary": "Some evidence is usable, but additional confirmation can improve persuasiveness.",
+      "evidence_usage": [
+        {
+          "confidence": "high",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-01",
+          "source_type": "competitor_analysis",
+          "usage": "Competitor comparison basisを主張の裏付けとして参照"
+        },
+        {
+          "confidence": "medium",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-02",
+          "source_type": "market_research",
+          "usage": "Market alternative evidenceを主張の裏付けとして参照"
+        }
+      ],
+      "generation_metadata": {
+        "deterministic": true,
+        "generator": "offline_message_designer_phase2c",
+        "llm_used": false,
+        "runtime_connected": false,
+        "source_contracts": [
+          "deck_blueprint_v1",
+          "proposal_context_v1",
+          "evidence_planner_result_v1"
+        ]
+      },
+      "generation_source": "offline_message_designer_phase2c",
+      "headline": "比較軸をそろえて選定リスクを下げる",
+      "input_fingerprint": "36570d2e9bc23401a1bb3ccf19dd6aa65aca552f",
+      "key_takeaway": "Problem and decision context are explicit.",
+      "main_message": "代替案との比較軸を先に定め、価格だけでなく適合性とリスクで判断できるようにします。",
+      "message_confidence": "medium",
+      "message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-04-competitor-36570d2e",
+      "message_design_version": "pe2_slide_message_design_v1",
+      "message_strength": "clear",
+      "message_style": "consulting",
+      "message_tone": "analytical",
+      "missing_evidence_disclosure": [],
+      "narrative_function": "compare",
+      "numeric_claims": [],
+      "schema_version": "pe2_slide_message_design_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-04-competitor",
+      "slide_goal": "competitive_analysis",
+      "slide_order": 4,
+      "slide_plan_id": "slide-plan-04",
+      "slide_role": "proof",
+      "source_references": [
+        {
+          "label": "Competitor comparison basis",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-01"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-01",
+          "source_type": "competitor_analysis"
+        },
+        {
+          "label": "Market alternative evidence",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-02"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-02",
+          "source_type": "market_research"
+        }
+      ],
+      "speaker_note_summary": "営業担当は、顧客の関心に合わせて見出し、判断材料、次の確認事項の順で説明してください。数値や比較は根拠がある範囲だけを扱います。",
+      "status": "validated",
+      "style_profile": {
+        "avoid": [
+          "assertion without basis",
+          "loose reasoning"
+        ],
+        "headline_rule": "State the insight or cause-and-effect relationship.",
+        "main_message_rule": "Connect problem, evidence, and recommendation.",
+        "style": "consulting",
+        "tone": "analytical"
+      },
+      "supporting_messages": [
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-01"
+          ],
+          "purpose": "compare_options",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-04-competitor-01",
+          "text": "Competitor comparison basisを確認する"
+        },
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-02"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-04-competitor-02",
+          "text": "Market alternative evidenceを確認する"
+        }
+      ],
+      "unsupported_claims": [],
+      "unused_required_evidence_ids": [],
+      "used_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-04-competitor-02"
+      ],
+      "validation_result": {
+        "issues": [],
+        "status": "validated",
+        "valid": true
+      },
+      "warnings": []
+    },
+    {
+      "audience": "department_head",
+      "audience_seniority": "senior_manager",
+      "constraints": [
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-slide-blueprint",
+          "detail": "Phase 2C can emit message fields only.",
+          "label": "Slide Blueprint generation is out of scope."
+        },
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-visual-rendering",
+          "detail": "Renderer-facing details are reserved for later phases.",
+          "label": "Visual, diagram, layout, theme, typography, and PPTX are out of scope."
+        }
+      ],
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "decision_stage": "comparison",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Contract Validity",
+            "reason": "Message output must satisfy the Phase 2C schema and validation contract.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Headline Quality",
+            "reason": "Headline should state a conclusion or decision implication within 60 characters.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Clarity",
+            "reason": "Main message, supporting points, and takeaway should each have distinct roles.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "One-slide-one-message",
+            "reason": "A slide should retain one core message and no more than three support points.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Alignment",
+            "reason": "Message strength should match available Evidence Planner requirements.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Numeric Integrity Readiness",
+            "reason": "Numeric, ROI, ratio, currency, and period claims require traceable basis evidence.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Narrative Consistency",
+            "reason": "Message should respect Deck Blueprint slide role, slide goal, and narrative function.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Audience Fit",
+            "reason": "Style and detail level should match audience seniority and decision stage.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Decision Relevance",
+            "reason": "Customer-facing proposal messages should help the next decision.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readability",
+            "reason": "Messages should avoid placeholders, internal labels, and vague language.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Executive Readiness",
+            "reason": "Executive-ready messages separate conclusion, evidence, risk, and next action.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Sales Persuasiveness",
+            "reason": "Message should be useful for a sales conversation while remaining evidence-safe.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "A",
+        "max_score": 100,
+        "note": "This score evaluates message design readiness only. It does not evaluate Slide Blueprints, diagrams, layouts, theme tokens, typography, PPTX rendering, Beautiful.ai output, or final sales outcome.",
+        "total_score": 95,
+        "warning_count": 0
+      },
+      "evidence_alignment_level": "partially_supported",
+      "evidence_alignment_summary": "Some evidence is usable, but additional confirmation can improve persuasiveness.",
+      "evidence_usage": [
+        {
+          "confidence": "medium",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-01",
+          "source_type": "project_experience",
+          "usage": "Strategy feasibility basisを主張の裏付けとして参照"
+        },
+        {
+          "confidence": "high",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-02",
+          "source_type": "customer_interview",
+          "usage": "Strategic priority confirmationを主張の裏付けとして参照"
+        }
+      ],
+      "generation_metadata": {
+        "deterministic": true,
+        "generator": "offline_message_designer_phase2c",
+        "llm_used": false,
+        "runtime_connected": false,
+        "source_contracts": [
+          "deck_blueprint_v1",
+          "proposal_context_v1",
+          "evidence_planner_result_v1"
+        ]
+      },
+      "generation_source": "offline_message_designer_phase2c",
+      "headline": "採るべき方針を意思決定へつなげる",
+      "input_fingerprint": "ee8d3d929b41c0c31d28e04f31500b784604b8ac",
+      "key_takeaway": "Problem and decision context are explicit.",
+      "main_message": "顧客の意思決定者に合わせ、採るべき方針と次に確認すべき条件を明確にします。",
+      "message_confidence": "medium",
+      "message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-05-strategy-ee8d3d92",
+      "message_design_version": "pe2_slide_message_design_v1",
+      "message_strength": "clear",
+      "message_style": "sales",
+      "message_tone": "persuasive",
+      "missing_evidence_disclosure": [],
+      "narrative_function": "recommend",
+      "numeric_claims": [],
+      "schema_version": "pe2_slide_message_design_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-05-strategy",
+      "slide_goal": "proposal_overview",
+      "slide_order": 5,
+      "slide_plan_id": "slide-plan-05",
+      "slide_role": "recommendation",
+      "source_references": [
+        {
+          "label": "Strategy feasibility basis",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-01"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-01",
+          "source_type": "project_experience"
+        },
+        {
+          "label": "Strategic priority confirmation",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-02"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-02",
+          "source_type": "customer_interview"
+        }
+      ],
+      "speaker_note_summary": "営業担当は、顧客の関心に合わせて見出し、判断材料、次の確認事項の順で説明してください。数値や比較は根拠がある範囲だけを扱います。",
+      "status": "validated",
+      "style_profile": {
+        "avoid": [
+          "unqualified promises",
+          "vendor-centered wording"
+        ],
+        "headline_rule": "Make customer value and action clear.",
+        "main_message_rule": "Show the change the customer can expect after adoption.",
+        "style": "sales",
+        "tone": "persuasive"
+      },
+      "supporting_messages": [
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-01"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-05-strategy-01",
+          "text": "Strategy feasibility basisを確認する"
+        },
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-02"
+          ],
+          "purpose": "explain_problem",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-05-strategy-02",
+          "text": "Strategic priority confirmationを確認する"
+        }
+      ],
+      "unsupported_claims": [],
+      "unused_required_evidence_ids": [],
+      "used_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-05-strategy-02"
+      ],
+      "validation_result": {
+        "issues": [],
+        "status": "validated",
+        "valid": true
+      },
+      "warnings": []
+    },
+    {
+      "audience": "department_head",
+      "audience_seniority": "senior_manager",
+      "constraints": [
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-slide-blueprint",
+          "detail": "Phase 2C can emit message fields only.",
+          "label": "Slide Blueprint generation is out of scope."
+        },
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-visual-rendering",
+          "detail": "Renderer-facing details are reserved for later phases.",
+          "label": "Visual, diagram, layout, theme, typography, and PPTX are out of scope."
+        }
+      ],
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "decision_stage": "comparison",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Contract Validity",
+            "reason": "Message output must satisfy the Phase 2C schema and validation contract.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Headline Quality",
+            "reason": "Headline should state a conclusion or decision implication within 60 characters.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Clarity",
+            "reason": "Main message, supporting points, and takeaway should each have distinct roles.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "One-slide-one-message",
+            "reason": "A slide should retain one core message and no more than three support points.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Alignment",
+            "reason": "Message strength should match available Evidence Planner requirements.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Numeric Integrity Readiness",
+            "reason": "Numeric, ROI, ratio, currency, and period claims require traceable basis evidence.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Narrative Consistency",
+            "reason": "Message should respect Deck Blueprint slide role, slide goal, and narrative function.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Audience Fit",
+            "reason": "Style and detail level should match audience seniority and decision stage.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Decision Relevance",
+            "reason": "Customer-facing proposal messages should help the next decision.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readability",
+            "reason": "Messages should avoid placeholders, internal labels, and vague language.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Executive Readiness",
+            "reason": "Executive-ready messages separate conclusion, evidence, risk, and next action.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Sales Persuasiveness",
+            "reason": "Message should be useful for a sales conversation while remaining evidence-safe.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "A",
+        "max_score": 100,
+        "note": "This score evaluates message design readiness only. It does not evaluate Slide Blueprints, diagrams, layouts, theme tokens, typography, PPTX rendering, Beautiful.ai output, or final sales outcome.",
+        "total_score": 95,
+        "warning_count": 0
+      },
+      "evidence_alignment_level": "partially_supported",
+      "evidence_alignment_summary": "Some evidence is usable, but additional confirmation can improve persuasiveness.",
+      "evidence_usage": [
+        {
+          "confidence": "medium",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-06-solution-01",
+          "source_type": "project_experience",
+          "usage": "Solution feasibility evidenceを主張の裏付けとして参照"
+        },
+        {
+          "confidence": "medium",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-06-solution-02",
+          "source_type": "implementation_result",
+          "usage": "Implementation outcome evidenceを主張の裏付けとして参照"
+        }
+      ],
+      "generation_metadata": {
+        "deterministic": true,
+        "generator": "offline_message_designer_phase2c",
+        "llm_used": false,
+        "runtime_connected": false,
+        "source_contracts": [
+          "deck_blueprint_v1",
+          "proposal_context_v1",
+          "evidence_planner_result_v1"
+        ]
+      },
+      "generation_source": "offline_message_designer_phase2c",
+      "headline": "提案内容を実行判断へつなげる",
+      "input_fingerprint": "5f8c2a2a88d975319dfdc47c294cedcc69b9bd58",
+      "key_takeaway": "Problem and decision context are explicit.",
+      "main_message": "提案内容は期待成果と確認条件に接続し、導入後の変化を説明できる形にします。",
+      "message_confidence": "medium",
+      "message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-06-solution-5f8c2a2a",
+      "message_design_version": "pe2_slide_message_design_v1",
+      "message_strength": "clear",
+      "message_style": "technical",
+      "message_tone": "analytical",
+      "missing_evidence_disclosure": [],
+      "narrative_function": "recommend",
+      "numeric_claims": [],
+      "schema_version": "pe2_slide_message_design_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-06-solution",
+      "slide_goal": "proposal_overview",
+      "slide_order": 6,
+      "slide_plan_id": "slide-plan-06",
+      "slide_role": "recommendation",
+      "source_references": [
+        {
+          "label": "Solution feasibility evidence",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-06-solution-01"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-06-solution-01",
+          "source_type": "project_experience"
+        },
+        {
+          "label": "Implementation outcome evidence",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-06-solution-02"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-06-solution-02",
+          "source_type": "implementation_result"
+        }
+      ],
+      "speaker_note_summary": "営業担当は、顧客の関心に合わせて見出し、判断材料、次の確認事項の順で説明してください。数値や比較は根拠がある範囲だけを扱います。",
+      "status": "validated",
+      "style_profile": {
+        "avoid": [
+          "vague business slogans",
+          "unsupported technical certainty"
+        ],
+        "headline_rule": "Clarify mechanism, condition, or feasibility.",
+        "main_message_rule": "State constraints and implementation basis without over-selling.",
+        "style": "technical",
+        "tone": "analytical"
+      },
+      "supporting_messages": [
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-06-solution-01"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-06-solution-01",
+          "text": "Solution feasibility evidenceを確認する"
+        },
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-06-solution-02"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-06-solution-02",
+          "text": "Implementation outcome evidenceを確認する"
+        }
+      ],
+      "unsupported_claims": [],
+      "unused_required_evidence_ids": [],
+      "used_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-06-solution-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-06-solution-02"
+      ],
+      "validation_result": {
+        "issues": [],
+        "status": "validated",
+        "valid": true
+      },
+      "warnings": []
+    },
+    {
+      "audience": "department_head",
+      "audience_seniority": "senior_manager",
+      "constraints": [
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-slide-blueprint",
+          "detail": "Phase 2C can emit message fields only.",
+          "label": "Slide Blueprint generation is out of scope."
+        },
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-visual-rendering",
+          "detail": "Renderer-facing details are reserved for later phases.",
+          "label": "Visual, diagram, layout, theme, typography, and PPTX are out of scope."
+        }
+      ],
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "decision_stage": "comparison",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Contract Validity",
+            "reason": "Message output must satisfy the Phase 2C schema and validation contract.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Headline Quality",
+            "reason": "Headline should state a conclusion or decision implication within 60 characters.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Clarity",
+            "reason": "Main message, supporting points, and takeaway should each have distinct roles.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "One-slide-one-message",
+            "reason": "A slide should retain one core message and no more than three support points.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Alignment",
+            "reason": "Message strength should match available Evidence Planner requirements.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Numeric Integrity Readiness",
+            "reason": "Numeric, ROI, ratio, currency, and period claims require traceable basis evidence.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Narrative Consistency",
+            "reason": "Message should respect Deck Blueprint slide role, slide goal, and narrative function.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Audience Fit",
+            "reason": "Style and detail level should match audience seniority and decision stage.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Decision Relevance",
+            "reason": "Customer-facing proposal messages should help the next decision.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readability",
+            "reason": "Messages should avoid placeholders, internal labels, and vague language.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Executive Readiness",
+            "reason": "Executive-ready messages separate conclusion, evidence, risk, and next action.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Sales Persuasiveness",
+            "reason": "Message should be useful for a sales conversation while remaining evidence-safe.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "A",
+        "max_score": 100,
+        "note": "This score evaluates message design readiness only. It does not evaluate Slide Blueprints, diagrams, layouts, theme tokens, typography, PPTX rendering, Beautiful.ai output, or final sales outcome.",
+        "total_score": 98,
+        "warning_count": 0
+      },
+      "evidence_alignment_level": "evidence_supported",
+      "evidence_alignment_summary": "Required evidence is available enough to support the message direction.",
+      "evidence_usage": [
+        {
+          "confidence": "high",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-01",
+          "source_type": "internal_kpi",
+          "usage": "KPI baseline and targetを主張の裏付けとして参照"
+        },
+        {
+          "confidence": "high",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-02",
+          "source_type": "financial_estimate",
+          "usage": "Measurement formulaを主張の裏付けとして参照"
+        }
+      ],
+      "generation_metadata": {
+        "deterministic": true,
+        "generator": "offline_message_designer_phase2c",
+        "llm_used": false,
+        "runtime_connected": false,
+        "source_contracts": [
+          "deck_blueprint_v1",
+          "proposal_context_v1",
+          "evidence_planner_result_v1"
+        ]
+      },
+      "generation_source": "offline_message_designer_phase2c",
+      "headline": "評価指標を先に決めて効果を確認する",
+      "input_fingerprint": "4120a2c52ec308c48d840ae99702a6500057f5ef",
+      "key_takeaway": "Problem and decision context are explicit.",
+      "main_message": "成果を主観で語らず、現状値、目標値、判定基準を分けて確認します。",
+      "message_confidence": "high",
+      "message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-07-kpi-4120a2c5",
+      "message_design_version": "pe2_slide_message_design_v1",
+      "message_strength": "clear",
+      "message_style": "consulting",
+      "message_tone": "analytical",
+      "missing_evidence_disclosure": [],
+      "narrative_function": "quantify",
+      "numeric_claims": [
+        {
+          "basis_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-01"
+          ],
+          "claim_id": "num-deck-plan-0ee17cfe60a9-slide-07-kpi-budget",
+          "confidence": "medium",
+          "is_trial_calculation": true,
+          "label": "予算・費用前提",
+          "unit": null,
+          "value": "8M to 12M JPY"
+        }
+      ],
+      "schema_version": "pe2_slide_message_design_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-07-kpi",
+      "slide_goal": "kpi_definition",
+      "slide_order": 7,
+      "slide_plan_id": "slide-plan-07",
+      "slide_role": "proof",
+      "source_references": [
+        {
+          "label": "KPI baseline and target",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-01"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-01",
+          "source_type": "internal_kpi"
+        },
+        {
+          "label": "Measurement formula",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-02"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-02",
+          "source_type": "financial_estimate"
+        }
+      ],
+      "speaker_note_summary": "営業担当は、顧客の関心に合わせて見出し、判断材料、次の確認事項の順で説明してください。数値や比較は根拠がある範囲だけを扱います。",
+      "status": "validated",
+      "style_profile": {
+        "avoid": [
+          "assertion without basis",
+          "loose reasoning"
+        ],
+        "headline_rule": "State the insight or cause-and-effect relationship.",
+        "main_message_rule": "Connect problem, evidence, and recommendation.",
+        "style": "consulting",
+        "tone": "analytical"
+      },
+      "supporting_messages": [
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-01"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-07-kpi-01",
+          "text": "KPI baseline and targetを確認する"
+        },
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-02"
+          ],
+          "purpose": "explain_investment",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-07-kpi-02",
+          "text": "Measurement formulaを確認する"
+        }
+      ],
+      "unsupported_claims": [],
+      "unused_required_evidence_ids": [],
+      "used_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-07-kpi-02"
+      ],
+      "validation_result": {
+        "issues": [],
+        "status": "validated",
+        "valid": true
+      },
+      "warnings": []
+    },
+    {
+      "audience": "department_head",
+      "audience_seniority": "senior_manager",
+      "constraints": [
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-slide-blueprint",
+          "detail": "Phase 2C can emit message fields only.",
+          "label": "Slide Blueprint generation is out of scope."
+        },
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-visual-rendering",
+          "detail": "Renderer-facing details are reserved for later phases.",
+          "label": "Visual, diagram, layout, theme, typography, and PPTX are out of scope."
+        }
+      ],
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "decision_stage": "comparison",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Contract Validity",
+            "reason": "Message output must satisfy the Phase 2C schema and validation contract.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Headline Quality",
+            "reason": "Headline should state a conclusion or decision implication within 60 characters.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Clarity",
+            "reason": "Main message, supporting points, and takeaway should each have distinct roles.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "One-slide-one-message",
+            "reason": "A slide should retain one core message and no more than three support points.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Alignment",
+            "reason": "Message strength should match available Evidence Planner requirements.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Numeric Integrity Readiness",
+            "reason": "Numeric, ROI, ratio, currency, and period claims require traceable basis evidence.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Narrative Consistency",
+            "reason": "Message should respect Deck Blueprint slide role, slide goal, and narrative function.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Audience Fit",
+            "reason": "Style and detail level should match audience seniority and decision stage.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Decision Relevance",
+            "reason": "Customer-facing proposal messages should help the next decision.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readability",
+            "reason": "Messages should avoid placeholders, internal labels, and vague language.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Executive Readiness",
+            "reason": "Executive-ready messages separate conclusion, evidence, risk, and next action.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Sales Persuasiveness",
+            "reason": "Message should be useful for a sales conversation while remaining evidence-safe.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "A",
+        "max_score": 100,
+        "note": "This score evaluates message design readiness only. It does not evaluate Slide Blueprints, diagrams, layouts, theme tokens, typography, PPTX rendering, Beautiful.ai output, or final sales outcome.",
+        "total_score": 98,
+        "warning_count": 0
+      },
+      "evidence_alignment_level": "evidence_supported",
+      "evidence_alignment_summary": "Required evidence is available enough to support the message direction.",
+      "evidence_usage": [
+        {
+          "confidence": "high",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-08-roi-01",
+          "source_type": "financial_estimate",
+          "usage": "ROI modelを主張の裏付けとして参照"
+        },
+        {
+          "confidence": "high",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-08-roi-02",
+          "source_type": "internal_kpi",
+          "usage": "Current baseline for ROIを主張の裏付けとして参照"
+        }
+      ],
+      "generation_metadata": {
+        "deterministic": true,
+        "generator": "offline_message_designer_phase2c",
+        "llm_used": false,
+        "runtime_connected": false,
+        "source_contracts": [
+          "deck_blueprint_v1",
+          "proposal_context_v1",
+          "evidence_planner_result_v1"
+        ]
+      },
+      "generation_source": "offline_message_designer_phase2c",
+      "headline": "投資対効果は前提を分けて判断する",
+      "input_fingerprint": "c2a4a8b98f8b3c7bb82184f9ec4a259f3de060cf",
+      "key_takeaway": "金額・効果は前提条件と確認事項を分けて判断します。",
+      "main_message": "金額や効果は仮説と確認済み情報を分け、無理なROI断定を避けて判断材料化します。",
+      "message_confidence": "high",
+      "message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-08-roi-c2a4a8b9",
+      "message_design_version": "pe2_slide_message_design_v1",
+      "message_strength": "clear",
+      "message_style": "financial",
+      "message_tone": "cautious",
+      "missing_evidence_disclosure": [],
+      "narrative_function": "quantify",
+      "numeric_claims": [
+        {
+          "basis_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-08-roi-01"
+          ],
+          "claim_id": "num-deck-plan-0ee17cfe60a9-slide-08-roi-budget",
+          "confidence": "medium",
+          "is_trial_calculation": true,
+          "label": "予算・費用前提",
+          "unit": null,
+          "value": "8M to 12M JPY"
+        }
+      ],
+      "schema_version": "pe2_slide_message_design_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-08-roi",
+      "slide_goal": "roi_explanation",
+      "slide_order": 8,
+      "slide_plan_id": "slide-plan-08",
+      "slide_role": "proof",
+      "source_references": [
+        {
+          "label": "ROI model",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-08-roi-01"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-08-roi-01",
+          "source_type": "financial_estimate"
+        },
+        {
+          "label": "Current baseline for ROI",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-08-roi-02"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-08-roi-02",
+          "source_type": "internal_kpi"
+        }
+      ],
+      "speaker_note_summary": "営業担当は、顧客の関心に合わせて見出し、判断材料、次の確認事項の順で説明してください。数値や比較は根拠がある範囲だけを扱います。",
+      "status": "validated",
+      "style_profile": {
+        "avoid": [
+          "unsupported ROI",
+          "currency without basis",
+          "mixed actual and trial values"
+        ],
+        "headline_rule": "Separate assumption, estimate, and confirmed value.",
+        "main_message_rule": "Explain amount, ratio, period, and condition when evidence exists.",
+        "style": "financial",
+        "tone": "cautious"
+      },
+      "supporting_messages": [
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-08-roi-01"
+          ],
+          "purpose": "explain_investment",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-08-roi-01",
+          "text": "ROI modelを確認する"
+        },
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-08-roi-02"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-08-roi-02",
+          "text": "Current baseline for ROIを確認する"
+        }
+      ],
+      "unsupported_claims": [],
+      "unused_required_evidence_ids": [],
+      "used_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-08-roi-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-08-roi-02"
+      ],
+      "validation_result": {
+        "issues": [],
+        "status": "validated",
+        "valid": true
+      },
+      "warnings": []
+    },
+    {
+      "audience": "department_head",
+      "audience_seniority": "senior_manager",
+      "constraints": [
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-slide-blueprint",
+          "detail": "Phase 2C can emit message fields only.",
+          "label": "Slide Blueprint generation is out of scope."
+        },
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-visual-rendering",
+          "detail": "Renderer-facing details are reserved for later phases.",
+          "label": "Visual, diagram, layout, theme, typography, and PPTX are out of scope."
+        }
+      ],
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "decision_stage": "comparison",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Contract Validity",
+            "reason": "Message output must satisfy the Phase 2C schema and validation contract.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Headline Quality",
+            "reason": "Headline should state a conclusion or decision implication within 60 characters.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Clarity",
+            "reason": "Main message, supporting points, and takeaway should each have distinct roles.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "One-slide-one-message",
+            "reason": "A slide should retain one core message and no more than three support points.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Alignment",
+            "reason": "Message strength should match available Evidence Planner requirements.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Numeric Integrity Readiness",
+            "reason": "Numeric, ROI, ratio, currency, and period claims require traceable basis evidence.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Narrative Consistency",
+            "reason": "Message should respect Deck Blueprint slide role, slide goal, and narrative function.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Audience Fit",
+            "reason": "Style and detail level should match audience seniority and decision stage.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Decision Relevance",
+            "reason": "Customer-facing proposal messages should help the next decision.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readability",
+            "reason": "Messages should avoid placeholders, internal labels, and vague language.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Executive Readiness",
+            "reason": "Executive-ready messages separate conclusion, evidence, risk, and next action.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Sales Persuasiveness",
+            "reason": "Message should be useful for a sales conversation while remaining evidence-safe.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "A",
+        "max_score": 100,
+        "note": "This score evaluates message design readiness only. It does not evaluate Slide Blueprints, diagrams, layouts, theme tokens, typography, PPTX rendering, Beautiful.ai output, or final sales outcome.",
+        "total_score": 95,
+        "warning_count": 0
+      },
+      "evidence_alignment_level": "partially_supported",
+      "evidence_alignment_summary": "Some evidence is usable, but additional confirmation can improve persuasiveness.",
+      "evidence_usage": [
+        {
+          "confidence": "medium",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-01",
+          "source_type": "project_experience",
+          "usage": "Roadmap feasibility evidenceを主張の裏付けとして参照"
+        },
+        {
+          "confidence": "medium",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-02",
+          "source_type": "implementation_result",
+          "usage": "Milestone precedentを主張の裏付けとして参照"
+        }
+      ],
+      "generation_metadata": {
+        "deterministic": true,
+        "generator": "offline_message_designer_phase2c",
+        "llm_used": false,
+        "runtime_connected": false,
+        "source_contracts": [
+          "deck_blueprint_v1",
+          "proposal_context_v1",
+          "evidence_planner_result_v1"
+        ]
+      },
+      "generation_source": "offline_message_designer_phase2c",
+      "headline": "導入判断から実行手順までを見通す",
+      "input_fingerprint": "fa5c952eab56ef9e9bbdd92afbac53fcdf7c3eb0",
+      "key_takeaway": "Problem and decision context are explicit.",
+      "main_message": "検討、PoC、判断、本番化までの流れを分け、どこで何を決めるかを明確にします。",
+      "message_confidence": "medium",
+      "message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-09-roadmap-fa5c952e",
+      "message_design_version": "pe2_slide_message_design_v1",
+      "message_strength": "clear",
+      "message_style": "operational",
+      "message_tone": "supportive",
+      "missing_evidence_disclosure": [],
+      "narrative_function": "explain",
+      "numeric_claims": [],
+      "schema_version": "pe2_slide_message_design_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-09-roadmap",
+      "slide_goal": "roadmap",
+      "slide_order": 9,
+      "slide_plan_id": "slide-plan-09",
+      "slide_role": "plan",
+      "source_references": [
+        {
+          "label": "Roadmap feasibility evidence",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-01"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-01",
+          "source_type": "project_experience"
+        },
+        {
+          "label": "Milestone precedent",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-02"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-02",
+          "source_type": "implementation_result"
+        }
+      ],
+      "speaker_note_summary": "営業担当は、顧客の関心に合わせて見出し、判断材料、次の確認事項の順で説明してください。数値や比較は根拠がある範囲だけを扱います。",
+      "status": "validated",
+      "style_profile": {
+        "avoid": [
+          "abstract transformation claims",
+          "executive-only wording"
+        ],
+        "headline_rule": "Show operational change and review point.",
+        "main_message_rule": "Connect current workflow, constraint, and next practical step.",
+        "style": "operational",
+        "tone": "supportive"
+      },
+      "supporting_messages": [
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-01"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-09-roadmap-01",
+          "text": "Roadmap feasibility evidenceを確認する"
+        },
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-02"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-09-roadmap-02",
+          "text": "Milestone precedentを確認する"
+        }
+      ],
+      "unsupported_claims": [],
+      "unused_required_evidence_ids": [],
+      "used_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-09-roadmap-02"
+      ],
+      "validation_result": {
+        "issues": [],
+        "status": "validated",
+        "valid": true
+      },
+      "warnings": []
+    },
+    {
+      "audience": "department_head",
+      "audience_seniority": "senior_manager",
+      "constraints": [
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-slide-blueprint",
+          "detail": "Phase 2C can emit message fields only.",
+          "label": "Slide Blueprint generation is out of scope."
+        },
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-visual-rendering",
+          "detail": "Renderer-facing details are reserved for later phases.",
+          "label": "Visual, diagram, layout, theme, typography, and PPTX are out of scope."
+        }
+      ],
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "decision_stage": "comparison",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Contract Validity",
+            "reason": "Message output must satisfy the Phase 2C schema and validation contract.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Headline Quality",
+            "reason": "Headline should state a conclusion or decision implication within 60 characters.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Clarity",
+            "reason": "Main message, supporting points, and takeaway should each have distinct roles.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "One-slide-one-message",
+            "reason": "A slide should retain one core message and no more than three support points.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Alignment",
+            "reason": "Message strength should match available Evidence Planner requirements.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Numeric Integrity Readiness",
+            "reason": "Numeric, ROI, ratio, currency, and period claims require traceable basis evidence.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Narrative Consistency",
+            "reason": "Message should respect Deck Blueprint slide role, slide goal, and narrative function.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Audience Fit",
+            "reason": "Style and detail level should match audience seniority and decision stage.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Decision Relevance",
+            "reason": "Customer-facing proposal messages should help the next decision.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readability",
+            "reason": "Messages should avoid placeholders, internal labels, and vague language.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Executive Readiness",
+            "reason": "Executive-ready messages separate conclusion, evidence, risk, and next action.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Sales Persuasiveness",
+            "reason": "Message should be useful for a sales conversation while remaining evidence-safe.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "A",
+        "max_score": 100,
+        "note": "This score evaluates message design readiness only. It does not evaluate Slide Blueprints, diagrams, layouts, theme tokens, typography, PPTX rendering, Beautiful.ai output, or final sales outcome.",
+        "total_score": 96,
+        "warning_count": 0
+      },
+      "evidence_alignment_level": "partially_supported",
+      "evidence_alignment_summary": "Some evidence is usable, but additional confirmation can improve persuasiveness.",
+      "evidence_usage": [
+        {
+          "confidence": "high",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-01",
+          "source_type": "financial_estimate",
+          "usage": "Pricing basisを主張の裏付けとして参照"
+        },
+        {
+          "confidence": "medium",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-02",
+          "source_type": "project_experience",
+          "usage": "Scope and cost assumptionを主張の裏付けとして参照"
+        }
+      ],
+      "generation_metadata": {
+        "deterministic": true,
+        "generator": "offline_message_designer_phase2c",
+        "llm_used": false,
+        "runtime_connected": false,
+        "source_contracts": [
+          "deck_blueprint_v1",
+          "proposal_context_v1",
+          "evidence_planner_result_v1"
+        ]
+      },
+      "generation_source": "offline_message_designer_phase2c",
+      "headline": "費用は範囲と前提条件で判断する",
+      "input_fingerprint": "7286f96a21f952d4903f6bf52c4a8ab8a9e2edc1",
+      "key_takeaway": "金額・効果は前提条件と確認事項を分けて判断します。",
+      "main_message": "費用は対象範囲、前提条件、未確定事項と一緒に提示し、誤解を防ぎます。",
+      "message_confidence": "medium",
+      "message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-10-pricing-7286f96a",
+      "message_design_version": "pe2_slide_message_design_v1",
+      "message_strength": "clear",
+      "message_style": "financial",
+      "message_tone": "cautious",
+      "missing_evidence_disclosure": [],
+      "narrative_function": "quantify",
+      "numeric_claims": [
+        {
+          "basis_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-01"
+          ],
+          "claim_id": "num-deck-plan-0ee17cfe60a9-slide-10-pricing-budget",
+          "confidence": "medium",
+          "is_trial_calculation": true,
+          "label": "予算・費用前提",
+          "unit": null,
+          "value": "8M to 12M JPY"
+        }
+      ],
+      "schema_version": "pe2_slide_message_design_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-10-pricing",
+      "slide_goal": "pricing",
+      "slide_order": 10,
+      "slide_plan_id": "slide-plan-10",
+      "slide_role": "decision",
+      "source_references": [
+        {
+          "label": "Pricing basis",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-01"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-01",
+          "source_type": "financial_estimate"
+        },
+        {
+          "label": "Scope and cost assumption",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-02"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-02",
+          "source_type": "project_experience"
+        }
+      ],
+      "speaker_note_summary": "営業担当は、顧客の関心に合わせて見出し、判断材料、次の確認事項の順で説明してください。数値や比較は根拠がある範囲だけを扱います。",
+      "status": "validated",
+      "style_profile": {
+        "avoid": [
+          "unsupported ROI",
+          "currency without basis",
+          "mixed actual and trial values"
+        ],
+        "headline_rule": "Separate assumption, estimate, and confirmed value.",
+        "main_message_rule": "Explain amount, ratio, period, and condition when evidence exists.",
+        "style": "financial",
+        "tone": "cautious"
+      },
+      "supporting_messages": [
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-01"
+          ],
+          "purpose": "explain_investment",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-10-pricing-01",
+          "text": "Pricing basisを確認する"
+        },
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-02"
+          ],
+          "purpose": "prove_value",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-10-pricing-02",
+          "text": "Scope and cost assumptionを確認する"
+        }
+      ],
+      "unsupported_claims": [],
+      "unused_required_evidence_ids": [],
+      "used_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-01",
+        "ev-deck-plan-0ee17cfe60a9-slide-10-pricing-02"
+      ],
+      "validation_result": {
+        "issues": [],
+        "status": "validated",
+        "valid": true
+      },
+      "warnings": []
+    },
+    {
+      "audience": "department_head",
+      "audience_seniority": "senior_manager",
+      "constraints": [
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-slide-blueprint",
+          "detail": "Phase 2C can emit message fields only.",
+          "label": "Slide Blueprint generation is out of scope."
+        },
+        {
+          "blocking": true,
+          "constraint_id": "msg-boundary-no-visual-rendering",
+          "detail": "Renderer-facing details are reserved for later phases.",
+          "label": "Visual, diagram, layout, theme, typography, and PPTX are out of scope."
+        }
+      ],
+      "created_at": "2026-07-27 00:00:00+00:00",
+      "decision_stage": "comparison",
+      "deck_id": "deck-plan-0ee17cfe60a9",
+      "evaluation_result": {
+        "blocking_issue_count": 0,
+        "dimensions": [
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Contract Validity",
+            "reason": "Message output must satisfy the Phase 2C schema and validation contract.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Headline Quality",
+            "reason": "Headline should state a conclusion or decision implication within 60 characters.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Message Clarity",
+            "reason": "Main message, supporting points, and takeaway should each have distinct roles.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "One-slide-one-message",
+            "reason": "A slide should retain one core message and no more than three support points.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Evidence Alignment",
+            "reason": "Message strength should match available Evidence Planner requirements.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Numeric Integrity Readiness",
+            "reason": "Numeric, ROI, ratio, currency, and period claims require traceable basis evidence.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Narrative Consistency",
+            "reason": "Message should respect Deck Blueprint slide role, slide goal, and narrative function.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Audience Fit",
+            "reason": "Style and detail level should match audience seniority and decision stage.",
+            "recommendations": [],
+            "score": 9
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Decision Relevance",
+            "reason": "Customer-facing proposal messages should help the next decision.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Customer-facing Readability",
+            "reason": "Messages should avoid placeholders, internal labels, and vague language.",
+            "recommendations": [],
+            "score": 10
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Executive Readiness",
+            "reason": "Executive-ready messages separate conclusion, evidence, risk, and next action.",
+            "recommendations": [],
+            "score": 8
+          },
+          {
+            "issues": [],
+            "max_score": 10,
+            "name": "Sales Persuasiveness",
+            "reason": "Message should be useful for a sales conversation while remaining evidence-safe.",
+            "recommendations": [],
+            "score": 10
+          }
+        ],
+        "grade": "A",
+        "max_score": 100,
+        "note": "This score evaluates message design readiness only. It does not evaluate Slide Blueprints, diagrams, layouts, theme tokens, typography, PPTX rendering, Beautiful.ai output, or final sales outcome.",
+        "total_score": 97,
+        "warning_count": 0
+      },
+      "evidence_alignment_level": "evidence_supported",
+      "evidence_alignment_summary": "Required evidence is available enough to support the message direction.",
+      "evidence_usage": [
+        {
+          "confidence": "high",
+          "evidence_id": "ev-deck-plan-0ee17cfe60a9-slide-11-next_action-01",
+          "source_type": "customer_interview",
+          "usage": "Next action agreementを主張の裏付けとして参照"
+        }
+      ],
+      "generation_metadata": {
+        "deterministic": true,
+        "generator": "offline_message_designer_phase2c",
+        "llm_used": false,
+        "runtime_connected": false,
+        "source_contracts": [
+          "deck_blueprint_v1",
+          "proposal_context_v1",
+          "evidence_planner_result_v1"
+        ]
+      },
+      "generation_source": "offline_message_designer_phase2c",
+      "headline": "次回合意すべき行動を明確にする",
+      "input_fingerprint": "82a98b8da186457c8c9cef39bd9516a69990c78b",
+      "key_takeaway": "次に合意する情報と担当を明確にします。",
+      "main_message": "次に確認する情報、合意する範囲、担当を明確にし、商談後の停滞を防ぎます。",
+      "message_confidence": "high",
+      "message_design_id": "msg-deck-plan-0ee17cfe60a9-deck-plan-0ee17cfe60a9-slide-11-next_action-82a98b8d",
+      "message_design_version": "pe2_slide_message_design_v1",
+      "message_strength": "clear",
+      "message_style": "sales",
+      "message_tone": "persuasive",
+      "missing_evidence_disclosure": [],
+      "narrative_function": "ask",
+      "numeric_claims": [],
+      "schema_version": "pe2_slide_message_design_v1",
+      "slide_blueprint_id": "deck-plan-0ee17cfe60a9-slide-11-next_action",
+      "slide_goal": "next_action",
+      "slide_order": 11,
+      "slide_plan_id": "slide-plan-11",
+      "slide_role": "closing",
+      "source_references": [
+        {
+          "label": "Next action agreement",
+          "related_evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-11-next_action-01"
+          ],
+          "source_id": "ev-deck-plan-0ee17cfe60a9-slide-11-next_action-01",
+          "source_type": "customer_interview"
+        }
+      ],
+      "speaker_note_summary": "営業担当は、顧客の関心に合わせて見出し、判断材料、次の確認事項の順で説明してください。数値や比較は根拠がある範囲だけを扱います。",
+      "status": "validated",
+      "style_profile": {
+        "avoid": [
+          "unqualified promises",
+          "vendor-centered wording"
+        ],
+        "headline_rule": "Make customer value and action clear.",
+        "main_message_rule": "Show the change the customer can expect after adoption.",
+        "style": "sales",
+        "tone": "persuasive"
+      },
+      "supporting_messages": [
+        {
+          "evidence_ids": [
+            "ev-deck-plan-0ee17cfe60a9-slide-11-next_action-01"
+          ],
+          "purpose": "explain_problem",
+          "supporting_message_id": "support-deck-plan-0ee17cfe60a9-slide-11-next_action-01",
+          "text": "Next action agreementを確認する"
+        }
+      ],
+      "unsupported_claims": [],
+      "unused_required_evidence_ids": [],
+      "used_evidence_ids": [
+        "ev-deck-plan-0ee17cfe60a9-slide-11-next_action-01"
+      ],
+      "validation_result": {
+        "issues": [],
+        "status": "validated",
+        "valid": true
+      },
+      "warnings": []
+    }
+  ],
+  "warnings": []
+}

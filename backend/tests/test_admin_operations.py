@@ -136,6 +136,115 @@ def test_creation_history_is_scoped_and_readable(client: TestClient, admin_heade
     assert any(item["created_by_email"] == "history-member@example.com" for item in admin_history.json()["items"])
 
 
+def test_business_improvement_report_calculates_savings_and_exports_csv(client: TestClient, admin_headers: dict[str, str]) -> None:
+    member_headers = _create_user_and_login(client, admin_headers, "improvement-report@example.com", "member")
+
+    create_response = client.post(
+        "/api/logs/business-improvement-reports",
+        headers=member_headers,
+        json={
+            "project_name": "研修用AI-OCR案件",
+            "before_minutes": 120,
+            "after_minutes": 45,
+            "revision_minutes": 10,
+            "review_minutes": 5,
+            "quality_score": 4,
+            "mistake_count": 1,
+            "comment": "研修提出用",
+        },
+    )
+    assert create_response.status_code == 200
+    report = create_response.json()["report"]
+    assert report["total_after_minutes"] == 60
+    assert report["saved_minutes"] == 60
+    assert report["reduction_rate"] == 50
+
+    list_response = client.get("/api/logs/business-improvement-reports", headers=member_headers)
+    assert list_response.status_code == 200
+    body = list_response.json()
+    assert body["summary"]["total_saved_minutes"] == 60
+    assert body["summary"]["average_reduction_rate"] == 50
+    assert body["summary"]["total_mistake_count"] == 1
+
+    csv_response = client.get("/api/logs/business-improvement-reports.csv", headers=member_headers)
+    assert csv_response.status_code == 200
+    csv_body = csv_response.content.decode("utf-8-sig")
+    assert "測定日" in csv_body
+    assert "使用前時間" in csv_body
+    assert "研修用AI-OCR案件" in csv_body
+
+    split_response = client.post(
+        "/api/logs/business-improvement-reports",
+        headers=member_headers,
+        json={
+            "project_name": "研修用分割計測案件",
+            "before_minutes": 100,
+            "ai_input_minutes": 10,
+            "ai_wait_minutes": 20,
+            "revision_minutes": 5,
+            "review_minutes": 15,
+            "quality_score": 5,
+            "mistake_count": 0,
+            "comment": "=CSV注入確認",
+        },
+    )
+    assert split_response.status_code == 200
+    split_report = split_response.json()["report"]
+    assert split_report["total_after_minutes"] == 50
+    assert split_report["saved_minutes"] == 50
+    assert split_report["reduction_rate"] == 50
+
+    invalid_response = client.post(
+        "/api/logs/business-improvement-reports",
+        headers=member_headers,
+        json={
+            "project_name": "不正値",
+            "before_minutes": 0,
+            "ai_input_minutes": 1,
+            "ai_wait_minutes": 1,
+            "revision_minutes": 1,
+            "review_minutes": 1,
+            "quality_score": 4,
+            "mistake_count": 0,
+            "comment": "保存されない",
+        },
+    )
+    assert invalid_response.status_code == 400
+
+
+def test_business_improvement_demo_data_creates_reports_and_history(client: TestClient, admin_headers: dict[str, str]) -> None:
+    member_headers = _create_user_and_login(client, admin_headers, "improvement-demo@example.com", "member")
+
+    demo_response = client.post("/api/logs/business-improvement-reports/demo-data", headers=member_headers)
+    assert demo_response.status_code == 200
+    demo_body = demo_response.json()
+    assert demo_body["created"] >= 4
+    assert demo_body["history_created"] >= 4
+    assert demo_body["summary"]["total_count"] >= 4
+    assert demo_body["summary"]["total_saved_minutes"] > 0
+
+    reports_response = client.get("/api/logs/business-improvement-reports", headers=member_headers)
+    assert reports_response.status_code == 200
+    report_names = {item["project_name"] for item in reports_response.json()["items"]}
+    assert "AI-OCR請求書処理" not in report_names
+
+    reports_with_demo_response = client.get("/api/logs/business-improvement-reports?include_demo=true", headers=member_headers)
+    assert reports_with_demo_response.status_code == 200
+    report_names = {item["project_name"] for item in reports_with_demo_response.json()["items"]}
+    assert "AI-OCR請求書処理" in report_names
+    assert any(item["is_demo"] for item in reports_with_demo_response.json()["items"])
+
+    history_response = client.get("/api/logs/creation-history", headers=member_headers)
+    assert history_response.status_code == 200
+    history_names = {item["project_name"] for item in history_response.json()["items"]}
+    assert "AI-OCR請求書処理" not in history_names
+
+    history_with_demo_response = client.get("/api/logs/creation-history?include_demo=true", headers=member_headers)
+    assert history_with_demo_response.status_code == 200
+    history_names = {item["project_name"] for item in history_with_demo_response.json()["items"]}
+    assert "AI-OCR請求書処理" in history_names
+
+
 def test_trial_report_operation_readiness_and_improvement_dashboard_are_admin_only(
     client: TestClient,
     admin_headers: dict[str, str],

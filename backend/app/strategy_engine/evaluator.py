@@ -10,6 +10,7 @@ from .rules import (
     estimate_pack_for,
     kpi_pack_for,
 )
+from .sales_strategy import generate_sales_strategy_brief
 from .term_guard import build_term_rules, find_prohibited_terms
 
 
@@ -29,6 +30,7 @@ OPTIONAL_SLIDES = ["risk", "roadmap", "appendix"]
 
 
 def evaluate_strategy(strategy_input: ProposalStrategyInput) -> StrategyBrief:
+    sales_strategy_brief = generate_sales_strategy_brief(strategy_input)
     text = strategy_input.combined_text()
     category, secondary_category, category_reasons, category_conflict = choose_category(text)
     persona, secondary_personas, decision_maker, persona_reasons, persona_unknown = choose_persona(
@@ -108,8 +110,8 @@ def evaluate_strategy(strategy_input: ProposalStrategyInput) -> StrategyBrief:
         prohibited_terms=prohibited_terms,
         human_review_required=human_review_required,
         human_review_reasons=human_review_reasons,
+        sales_strategy_brief=sales_strategy_brief,
     )
-
 
 def _evidence_summary(strategy_input: ProposalStrategyInput) -> Dict[str, EvidenceLevel]:
     summary: Dict[str, EvidenceLevel] = {

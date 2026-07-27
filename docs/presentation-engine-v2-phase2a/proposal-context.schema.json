@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Minimal business context accepted by the offline planner.",
+  "properties": {
+    "budget_range": {
+      "maxLength": 120,
+      "title": "Budget Range",
+      "type": "string"
+    },
+    "competitive_information": {
+      "maxLength": 1200,
+      "title": "Competitive Information",
+      "type": "string"
+    },
+    "decision_maker": {
+      "maxLength": 120,
+      "title": "Decision Maker",
+      "type": "string"
+    },
+    "expected_outcomes": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 12,
+      "title": "Expected Outcomes",
+      "type": "array"
+    },
+    "implementation_purpose": {
+      "maxLength": 1200,
+      "title": "Implementation Purpose",
+      "type": "string"
+    },
+    "industry": {
+      "maxLength": 120,
+      "title": "Industry",
+      "type": "string"
+    },
+    "language": {
+      "default": "ja",
+      "maxLength": 16,
+      "minLength": 2,
+      "title": "Language",
+      "type": "string"
+    },
+    "persona": {
+      "maxLength": 120,
+      "title": "Persona",
+      "type": "string"
+    },
+    "problems": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 12,
+      "title": "Problems",
+      "type": "array"
+    },
+    "project_id": {
+      "maxLength": 120,
+      "title": "Project Id",
+      "type": "string"
+    },
+    "project_name": {
+      "maxLength": 160,
+      "title": "Project Name",
+      "type": "string"
+    },
+    "project_summary": {
+      "maxLength": 1200,
+      "minLength": 1,
+      "title": "Project Summary",
+      "type": "string"
+    },
+    "proposal_category": {
+      "maxLength": 120,
+      "title": "Proposal Category",
+      "type": "string"
+    },
+    "timeline": {
+      "maxLength": 160,
+      "title": "Timeline",
+      "type": "string"
+    }
+  },
+  "required": [
+    "project_summary"
+  ],
+  "title": "Presentation Engine 2.0 Proposal Context",
+  "type": "object",
+  "x-phase": "2A"
+}

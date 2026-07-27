@@ -67,6 +67,12 @@ export type CreationHistoryItem = {
   output_formats: string;
   status: string;
   error_type: string;
+  proposal_generation_duration_ms?: number;
+  powerpoint_generation_duration_ms?: number;
+  beautiful_ai_generation_duration_ms?: number;
+  pdf_generation_duration_ms?: number;
+  total_generation_duration_ms?: number;
+  is_demo?: number | boolean;
   organization_id: number;
   workspace_id: number;
   organization_name: string;
@@ -74,6 +80,170 @@ export type CreationHistoryItem = {
   beautiful_ai_url?: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type BusinessImprovementReport = {
+  id: number;
+  user_id: number | null;
+  project_id: number | null;
+  project_name: string;
+  before_minutes: number;
+  after_minutes: number;
+  ai_input_minutes: number;
+  ai_wait_minutes: number;
+  revision_minutes: number;
+  review_minutes: number;
+  total_after_minutes: number;
+  saved_minutes: number;
+  reduction_rate: number;
+  quality_score: number;
+  mistake_count: number;
+  comment: string;
+  is_demo?: number | boolean;
+  created_by_name?: string;
+  created_by_email?: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BusinessImprovementSummary = {
+  total_count: number;
+  total_before_minutes: number;
+  total_after_minutes: number;
+  total_saved_minutes: number;
+  average_reduction_rate: number;
+  average_quality: number;
+  total_mistake_count: number;
+};
+
+export type ProposalAgentStatusCard = {
+  key: string;
+  label: string;
+  count: number;
+  tone: "ok" | "warn" | "info" | string;
+};
+
+export type ProposalAgentTodo = {
+  label: string;
+  reason: string;
+  priority: "高" | "中" | "低" | string;
+  checked: boolean;
+};
+
+export type ProposalAgentScoreCriterion = {
+  label: string;
+  score: number;
+  improvement: string;
+};
+
+export type ProposalAgentProjectScore = {
+  project_id: number;
+  project_name: string;
+  customer_name: string;
+  score: number;
+  criteria: ProposalAgentScoreCriterion[];
+  improvements: string[];
+};
+
+export type ProposalAgentPriority = {
+  project_id: number;
+  project_name: string;
+  priority_score: number;
+  grade: "A" | "B" | "C" | "D" | "E" | string;
+  stars: string;
+  criteria: Array<{ label: string; score: number; reason: string }>;
+  reasons: string[];
+};
+
+export type ProposalAgentWinProbability = {
+  project_id: number;
+  project_name: string;
+  probability: number;
+  reasons: string[];
+};
+
+export type ProposalAgentCompetitor = {
+  project_id: number;
+  project_name: string;
+  competitor_name: string;
+  strengths: string[];
+  weaknesses: string[];
+  differentiation: string[];
+  cautions: string[];
+};
+
+export type ProposalAgentSalesAction = {
+  project_id: number;
+  project_name: string;
+  action: string;
+  priority: string;
+  reason: string;
+};
+
+export type ProposalAgentHealth = {
+  project_id: number;
+  project_name: string;
+  status: "Healthy" | "Warning" | "Critical" | string;
+  reason: string;
+};
+
+export type ProposalAgentKpi = {
+  proposal_count: number;
+  proposal_success_rate: number;
+  average_proposal_score: number;
+  average_win_probability: number;
+  average_generation_time_seconds: number;
+  total_saved_minutes: number;
+  beautiful_ai_count: number;
+};
+
+export type ProposalAgentTimelineItem = {
+  project_id: number;
+  project_name: string;
+  label: string;
+  detail: string;
+  created_at: string;
+};
+
+export type ProposalAgentMemory = {
+  id: number;
+  user_id: number | null;
+  project_id: number | null;
+  project_name: string;
+  hearing_notes: string;
+  confirmation_items: string;
+  proposal_content: string;
+  competitor_analysis: string;
+  improvement_history: string;
+  created_by_name?: string;
+  created_by_email?: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProposalAgentDashboardData = {
+  status_cards: ProposalAgentStatusCard[];
+  todo: ProposalAgentTodo[];
+  scores: ProposalAgentProjectScore[];
+  timeline: ProposalAgentTimelineItem[];
+  memories: ProposalAgentMemory[];
+  review: {
+    improvements: string[];
+    risks: string[];
+    missing_information: string[];
+  };
+  summaries: {
+    executive_30s: string;
+    sales_3m: string;
+    detail: string;
+  };
+  priorities: ProposalAgentPriority[];
+  win_probabilities: ProposalAgentWinProbability[];
+  competitors: ProposalAgentCompetitor[];
+  sales_actions: ProposalAgentSalesAction[];
+  health: ProposalAgentHealth[];
+  kpi: ProposalAgentKpi;
+  insights: string[];
 };
 
 export type WorkspaceContextItem = {

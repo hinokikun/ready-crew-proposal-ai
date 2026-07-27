@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from io import BytesIO
 import logging
 import re
@@ -97,26 +98,47 @@ from app.services.pptx_parts.slides import (
     resolve_slide_kind,
 )
 from app.services.pptx_design.validators import validate_premium_deck
+from app.services.pptx_layout_integration import apply_layout_decisions_to_slides
+from app.services.pptx_quality import PptxQualityReport, merge_layout_integration_report, run_pptx_quality_pipeline, validate_rendered_pptx
 from app.services.pptx_theme import MEDIA_TYPE, SLIDE_HEIGHT, SLIDE_WIDTH
 
 
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class PptxBuildResult:
+    pptx_bytes: bytes
+    quality_report: PptxQualityReport
+
+
 def build_pptx_bytes(payload: PptxDownloadRequest, presentation_context: Any | None = None) -> bytes:
-    return _build_pptx_bytes(payload, summary_mode=payload.summary, presentation_context=presentation_context)
+    return build_pptx_result(payload, presentation_context=presentation_context).pptx_bytes
 
 
 def build_summary_pptx_bytes(payload: PptxDownloadRequest, presentation_context: Any | None = None) -> bytes:
-    return _build_pptx_bytes(payload, summary_mode=True, presentation_context=presentation_context)
+    return build_pptx_result(payload, summary_mode=True, presentation_context=presentation_context).pptx_bytes
 
 
-def _build_pptx_bytes(
+def build_pptx_result(
+    payload: PptxDownloadRequest,
+    *,
+    summary_mode: bool | None = None,
+    presentation_context: Any | None = None,
+) -> PptxBuildResult:
+    return _build_pptx_result(
+        payload,
+        summary_mode=payload.summary if summary_mode is None else summary_mode,
+        presentation_context=presentation_context,
+    )
+
+
+def _build_pptx_result(
     payload: PptxDownloadRequest,
     *,
     summary_mode: bool,
     presentation_context: Any | None = None,
-) -> bytes:
+) -> PptxBuildResult:
     try:
         prs = Presentation()
         prs.slide_width = Inches(SLIDE_WIDTH)
@@ -134,12 +156,45 @@ def _build_pptx_bytes(
         else:
             slides = normalize_detailed_slides(slides)
 
+        # Version81 Phase2 investigation: /api/download-pptx, detailed decks, and
+        # summary decks all converge here, so this is the narrowest compatible
+        # insertion point for quality rules without changing Proposal generation.
+        quality_result = run_pptx_quality_pipeline(
+            slides,
+            context,
+            summary_mode=summary_mode,
+            presentation_quality_state=payload.presentation_quality_state,
+        )
+        slides = quality_result.slides
+        quality_report = quality_result.report
+        layout_result = apply_layout_decisions_to_slides(
+            slides,
+            payload.presentation_layout_decisions,
+            template=context.design_template or "corporate_clean",
+            summary_mode=summary_mode,
+            predicted_score=quality_report.overall_score,
+        )
+        slides = layout_result.slides
+        quality_report = merge_layout_integration_report(
+            quality_report,
+            findings=layout_result.findings,
+            layout_decisions=layout_result.layout_decisions,
+            layout_fallbacks=layout_result.layout_fallbacks,
+            preview_pptx_differences=layout_result.preview_pptx_differences,
+            predicted_score=layout_result.predicted_score,
+            unsupported_layouts=layout_result.unsupported_layouts,
+            numeric_integrity=layout_result.numeric_integrity,
+            template_token_application=layout_result.template_token_application,
+            human_review_items=layout_result.human_review_items,
+        )
+
         display_slide_no = 1
         for index, slide_data in enumerate(slides):
             numbered_slide = slide_data.copy(update={"slide_no": display_slide_no})
             add_designed_slide(prs, numbered_slide, data, index, context)
             display_slide_no += 1
 
+        quality_report = validate_rendered_pptx(prs, quality_report)
         issues = validate_premium_deck(prs)
         if issues:
             logger.info(
@@ -149,7 +204,7 @@ def _build_pptx_bytes(
 
         buffer = BytesIO()
         prs.save(buffer)
-        return buffer.getvalue()
+        return PptxBuildResult(pptx_bytes=buffer.getvalue(), quality_report=quality_report)
     except Exception:
         logger.exception("Failed to build proposal PowerPoint deck.")
         raise
@@ -211,6 +266,8 @@ def build_pptx_context(
         estimate=estimate,
         confirmation_items=extract_confirmation_items(all_input),
         win_probability=payload.win_probability,
+        design_template=payload.design_template or "corporate_clean",
+        brand_settings=payload.brand_settings or None,
     )
 
 

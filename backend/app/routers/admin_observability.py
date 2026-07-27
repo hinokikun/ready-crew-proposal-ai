@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import csv
 import re
 from datetime import datetime
+from io import StringIO
 from sqlite3 import Connection
 from typing import Any
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import Response
 
 from app.auth import require_roles
 from app.db import get_db
@@ -79,6 +82,88 @@ async def get_admin_proposal_generation_history(
         page_items, total = _paginate(filtered, page, page_size)
         create_audit_log(db, int(user["id"]), "view_proposal_generation_history", "proposal_histories", "", "success", "sanitized=true")
     return {"items": page_items, "total": total, "page": page, "page_size": page_size}
+
+
+@router.get("/proposal-generation-history/stats")
+async def get_admin_proposal_generation_stats(user: dict = Depends(require_roles("admin"))) -> dict[str, Any]:
+    with get_db() as db:
+        organization_id, workspace_id = get_user_context_ids(db, int(user["id"]))
+        items = _collect_proposal_history(db, organization_id, workspace_id)
+        create_audit_log(db, int(user["id"]), "view_proposal_generation_stats", "proposal_histories", "", "success", "sanitized=true")
+    durations = [int(item.get("total_generation_duration_ms") or 0) for item in items if int(item.get("total_generation_duration_ms") or 0) > 0]
+    return {
+        "stats": {
+            "total_count": len(items),
+            "average_generation_duration_ms": round(sum(durations) / len(durations), 1) if durations else 0,
+            "min_generation_duration_ms": min(durations) if durations else 0,
+            "max_generation_duration_ms": max(durations) if durations else 0,
+        }
+    }
+
+
+@router.get("/proposal-generation-history.csv")
+async def download_admin_proposal_generation_history_csv(
+    date_from: str = "",
+    date_to: str = "",
+    user_id: int | None = None,
+    project_id: str = "",
+    output_type: str = "",
+    provider: str = "",
+    status: str = "",
+    user: dict = Depends(require_roles("admin")),
+) -> Response:
+    with get_db() as db:
+        organization_id, workspace_id = get_user_context_ids(db, int(user["id"]))
+        items = _filter_rows(
+            _collect_proposal_history(db, organization_id, workspace_id),
+            date_from=date_from,
+            date_to=date_to,
+            provider=provider,
+            operation=output_type,
+            status=status,
+            user_id=user_id,
+            project_id=project_id,
+        )
+        create_audit_log(db, int(user["id"]), "download_proposal_generation_history_csv", "proposal_histories", "", "success", "sanitized=true")
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(
+        [
+            "案件名",
+            "生成日時",
+            "生成者",
+            "提案書生成時間(ms)",
+            "PowerPoint生成時間(ms)",
+            "Beautiful.ai生成時間(ms)",
+            "PDF生成時間(ms)",
+            "合計生成時間(ms)",
+            "出力形式",
+            "ステータス",
+            "エラー種別",
+        ]
+    )
+    for item in items:
+        writer.writerow(
+            [
+                item.get("project_title", ""),
+                item.get("created_at", ""),
+                item.get("user", ""),
+                item.get("proposal_generation_duration_ms", 0),
+                item.get("powerpoint_generation_duration_ms", 0),
+                item.get("beautiful_ai_generation_duration_ms", 0),
+                item.get("pdf_generation_duration_ms", 0),
+                item.get("total_generation_duration_ms", 0),
+                item.get("output_type", ""),
+                item.get("status", ""),
+                item.get("error_type", ""),
+            ]
+        )
+    return Response(
+        content=f"\ufeff{output.getvalue()}",
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=admin-proposal-generation-history.csv"},
+    )
 
 
 def _collect_ai_logs(db: Connection, organization_id: int, workspace_id: int) -> list[dict[str, Any]]:
@@ -235,8 +320,13 @@ def _collect_proposal_history(db: Connection, organization_id: int, workspace_id
         """
         SELECT
             h.id, h.created_at, h.user_id, COALESCE(u.email, '') AS user_email,
-            h.project_id, COALESCE(p.name, '') AS project_title, h.feature_name,
+            h.project_id, COALESCE(NULLIF(h.project_name, ''), p.name, '') AS project_title, h.feature_name,
             h.output_type, h.status, h.error_type,
+            h.proposal_generation_duration_ms,
+            h.powerpoint_generation_duration_ms,
+            h.beautiful_ai_generation_duration_ms,
+            h.pdf_generation_duration_ms,
+            h.total_generation_duration_ms,
             (
                 SELECT editor_url FROM beautiful_ai_presentations b
                 WHERE b.organization_id = h.organization_id
@@ -264,7 +354,7 @@ def _collect_proposal_history(db: Connection, organization_id: int, workspace_id
         FROM proposal_histories h
         LEFT JOIN users u ON u.id = h.user_id
         LEFT JOIN projects p ON p.id = h.project_id
-        WHERE h.organization_id = ? AND h.workspace_id = ?
+        WHERE h.organization_id = ? AND h.workspace_id = ? AND COALESCE(h.is_demo, 0) = 0
         ORDER BY h.created_at DESC, h.id DESC
         LIMIT 600
         """,
@@ -290,7 +380,12 @@ def _collect_proposal_history(db: Connection, organization_id: int, workspace_id
                 "output_type": _safe_token(output_type),
                 "provider": _provider_from_output(output_type),
                 "status": _status_label(str(row["status"] or "")),
-                "duration_ms": 0,
+                "duration_ms": int(row["total_generation_duration_ms"] or 0),
+                "proposal_generation_duration_ms": int(row["proposal_generation_duration_ms"] or 0),
+                "powerpoint_generation_duration_ms": int(row["powerpoint_generation_duration_ms"] or 0),
+                "beautiful_ai_generation_duration_ms": int(row["beautiful_ai_generation_duration_ms"] or 0),
+                "pdf_generation_duration_ms": int(row["pdf_generation_duration_ms"] or 0),
+                "total_generation_duration_ms": int(row["total_generation_duration_ms"] or 0),
                 "error_type": _safe_token(str(row["error_type"] or "")),
                 "downloadable": False,
                 "external_url_available": bool(open_url),

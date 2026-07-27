@@ -21,6 +21,82 @@ type DownloadPptxPayload = {
   past_proposal_template?: string;
   case_studies?: string;
   summary?: boolean;
+  design_template?: string;
+  brand_settings?: Record<string, string>;
+  presentation_quality_state?: PresentationQualityRequestState;
+  presentation_layout_decisions?: PresentationLayoutDecisionRequest[];
+};
+
+type PowerPointDesignOptions = {
+  designTemplate?: string;
+  brandSettings?: Record<string, string>;
+  qualityState?: PresentationQualityRequestState;
+  layoutDecisions?: PresentationLayoutDecisionRequest[];
+};
+
+export type PresentationQualityRequestState = {
+  applied_fixes: string[];
+  rejected_fixes: string[];
+  pending_fix_count: number;
+  source: "proposal_studio" | "legacy";
+};
+
+export type PresentationLayoutDecisionRequest = {
+  slide_id: string;
+  slide_index?: number;
+  slide_type: string;
+  selected_layout_id: string;
+  recommended_layout_ids: string[];
+  selection_reason: string;
+  expected_effect: string;
+  template_id: string;
+  design_token_id: string;
+  applied_by: "user" | "designer_ai" | "quality_engine" | "backend_fallback";
+  status: "suggested" | "applied" | "rejected" | "backend_fallback" | "unsupported";
+  confidence: number;
+  human_review_required: boolean;
+};
+
+export type PresentationQualityDownloadReport = {
+  overall_score: number;
+  category_scores: Record<string, number>;
+  findings: Array<{
+    rule_id: string;
+    category: string;
+    severity: "info" | "warning" | "critical";
+    message: string;
+    recommendation: string;
+    slide_no?: number | null;
+    slide_title?: string;
+    auto_fixable?: boolean;
+    human_review_required?: boolean;
+  }>;
+  auto_fixes_applied: Array<{ rule_id: string; message: string; slide_title?: string }>;
+  warnings: string[];
+  human_review_required: boolean;
+  slide_count_before: number;
+  slide_count_after: number;
+  template: string;
+  generation_duration: number;
+  layout_decisions?: Array<Record<string, unknown>>;
+  layout_fallbacks?: Array<Record<string, unknown>>;
+  preview_pptx_differences?: Array<Record<string, unknown>>;
+  predicted_score?: number | null;
+  rendered_score?: number | null;
+  score_delta?: number | null;
+  unsupported_layouts?: string[];
+  numeric_integrity?: {
+    preserved?: boolean;
+    checked_slide_count?: number;
+    mismatches?: Array<Record<string, unknown>>;
+  };
+  template_token_application?: Record<string, unknown>;
+  human_review_items?: string[];
+};
+
+export type PowerPointDownloadResult = {
+  filename: string;
+  qualityReport: PresentationQualityDownloadReport | null;
 };
 
 export async function downloadProposalPowerPoint(
@@ -40,9 +116,10 @@ export async function downloadProposalPowerPoint(
   budgetRange = "",
   ownServiceInfo = "",
   pastProposalTemplate = "",
-  caseStudies = ""
-) {
-  await downloadPowerPoint(
+  caseStudies = "",
+  options: PowerPointDesignOptions = {}
+): Promise<PowerPointDownloadResult> {
+  return downloadPowerPoint(
     data,
     winProbability,
     projectBrief,
@@ -60,7 +137,8 @@ export async function downloadProposalPowerPoint(
     ownServiceInfo,
     pastProposalTemplate,
     caseStudies,
-    false
+    false,
+    options
   );
 }
 
@@ -81,9 +159,10 @@ export async function downloadSummaryProposalPowerPoint(
   budgetRange = "",
   ownServiceInfo = "",
   pastProposalTemplate = "",
-  caseStudies = ""
-) {
-  await downloadPowerPoint(
+  caseStudies = "",
+  options: PowerPointDesignOptions = {}
+): Promise<PowerPointDownloadResult> {
+  return downloadPowerPoint(
     data,
     winProbability,
     projectBrief,
@@ -101,7 +180,8 @@ export async function downloadSummaryProposalPowerPoint(
     ownServiceInfo,
     pastProposalTemplate,
     caseStudies,
-    true
+    true,
+    options
   );
 }
 
@@ -123,7 +203,8 @@ async function downloadPowerPoint(
   ownServiceInfo = "",
   pastProposalTemplate = "",
   caseStudies = "",
-  summary = false
+  summary = false,
+  options: PowerPointDesignOptions = {}
 ) {
   const response = await fetch(`${API_BASE_URL}/api/download-pptx`, {
     method: "POST",
@@ -149,7 +230,11 @@ async function downloadPowerPoint(
       own_service_info: ownServiceInfo,
       past_proposal_template: pastProposalTemplate,
       case_studies: caseStudies,
-      summary
+      summary,
+      design_template: options.designTemplate,
+      brand_settings: options.brandSettings,
+      presentation_quality_state: options.qualityState,
+      presentation_layout_decisions: options.layoutDecisions
     } satisfies DownloadPptxPayload)
   });
 
@@ -171,12 +256,14 @@ async function downloadPowerPoint(
   const blob = await response.blob();
   const fallbackTitle = summary ? `${data.deck_title}_要約版` : data.deck_title;
   const filename = getDownloadFilename(response.headers.get("Content-Disposition"), fallbackTitle);
+  const qualityReport = getQualityReport(response.headers.get("X-Presentation-Quality-Report"));
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
   anchor.click();
   URL.revokeObjectURL(url);
+  return { filename, qualityReport };
 }
 
 function getDownloadFilename(contentDisposition: string | null, fallbackTitle: string) {
@@ -200,4 +287,13 @@ function sanitizeFileName(value: string) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 80);
+}
+
+function getQualityReport(value: string | null): PresentationQualityDownloadReport | null {
+  if (!value) return null;
+  try {
+    return JSON.parse(decodeURIComponent(value)) as PresentationQualityDownloadReport;
+  } catch {
+    return null;
+  }
 }

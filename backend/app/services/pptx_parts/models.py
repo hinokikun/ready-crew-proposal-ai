@@ -51,3 +51,5 @@ class PptxContext:
     estimate: EstimateSummary
     confirmation_items: list[str]
     win_probability: WinProbability | None
+    design_template: str = "corporate_clean"
+    brand_settings: dict[str, str] | None = None

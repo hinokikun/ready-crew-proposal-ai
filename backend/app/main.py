@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from io import BytesIO
+import json
 import logging
 import time
 from typing import Any
@@ -109,7 +110,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Organization-ID", "X-Workspace-ID"],
-    expose_headers=["Content-Disposition", "X-Request-ID"],
+    expose_headers=["Content-Disposition", "X-Request-ID", "X-Presentation-Quality-Report"],
 )
 
 
@@ -241,8 +242,10 @@ async def analyze(
     _: None = Depends(rate_limit_dependency("generation")),
 ) -> AnalysisResponse:
     ensure_not_maintenance_mode()
+    started = time.perf_counter()
     try:
         response = await generate_proposal(payload)
+        duration_ms = perf_counter_ms(started)
         with get_db() as db:
             knowledge_insights = search_similar_knowledge(db, response.analysis.project_summary or payload.project_brief, "", 4)
             response.knowledge_insights = {
@@ -303,11 +306,26 @@ async def analyze(
                 proposal_input_length(payload),
                 "markdown+pptx-data",
                 "success",
+                project_name=response.powerpoint_generation_data.deck_title or response.analysis.project_summary,
+                proposal_generation_duration_ms=duration_ms,
             )
         return response
     except OpenAIServiceError as exc:
+        duration_ms = perf_counter_ms(started)
         with get_db() as db:
-            create_history_log(db, int(user["id"]), None, None, "提案書生成", proposal_input_length(payload), "markdown", "failure", "OpenAI API")
+            create_history_log(
+                db,
+                int(user["id"]),
+                None,
+                None,
+                "提案書生成",
+                proposal_input_length(payload),
+                "markdown",
+                "failure",
+                "OpenAI API",
+                project_name=payload.project_brief[:120],
+                proposal_generation_duration_ms=duration_ms,
+            )
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
@@ -318,9 +336,12 @@ async def download_pptx(
     _: None = Depends(rate_limit_dependency("generation")),
 ) -> StreamingResponse:
     ensure_not_maintenance_mode()
+    started = time.perf_counter()
     try:
         engine_result = build_pptx_bytes_for_engine(payload)
+        duration_ms = perf_counter_ms(started)
         pptx_bytes = engine_result.pptx_bytes
+        quality_report = engine_result.quality_report or {}
         filename = build_pptx_filename(
             payload.powerpoint_generation_data,
             payload.client_company_info,
@@ -337,6 +358,8 @@ async def download_pptx(
                 pptx_input_length(payload),
                 "summary-pptx" if payload.summary else "pptx",
                 "success",
+                project_name=payload.powerpoint_generation_data.deck_title,
+                powerpoint_generation_duration_ms=duration_ms,
             )
     except Exception as exc:
         logger.exception("Failed to generate PowerPoint download. summary=%s", payload.summary)
@@ -352,6 +375,10 @@ async def download_pptx(
         media_type=MEDIA_TYPE,
         headers={
             "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}",
+            "X-Presentation-Quality-Report": quote(
+                json.dumps(quality_report, ensure_ascii=False, separators=(",", ":")),
+                safe="",
+            ),
         },
     )
 
@@ -374,12 +401,25 @@ async def download_estimate_pdf(
     _: None = Depends(rate_limit_dependency("generation")),
 ) -> StreamingResponse:
     ensure_not_maintenance_mode()
+    started = time.perf_counter()
     try:
         pdf_bytes = build_estimate_pdf_bytes(payload)
+        duration_ms = perf_counter_ms(started)
         filename = build_estimate_pdf_filename(payload)
         encoded_filename = quote(filename)
         with get_db() as db:
-            create_history_log(db, int(user["id"]), None, None, "見積書PDF", pptx_input_length(payload), "estimate-pdf", "success")
+            create_history_log(
+                db,
+                int(user["id"]),
+                None,
+                None,
+                "見積書PDF",
+                pptx_input_length(payload),
+                "estimate-pdf",
+                "success",
+                project_name=payload.powerpoint_generation_data.deck_title,
+                pdf_generation_duration_ms=duration_ms,
+            )
     except Exception as exc:
         logger.exception("Failed to generate estimate PDF download.")
         raise HTTPException(

@@ -1,0 +1,259 @@
+{
+  "blueprint_version": "pe2_slide_blueprint_v1",
+  "blueprint_id": "bp-ai-ocr-before-after",
+  "slide_id": "slide-before-after",
+  "slide_index": 3,
+  "slide_type": "before_after",
+  "status": "validated",
+  "slide_goal": "comparison",
+  "audience": "department_head",
+  "decision_question": "AI-OCR導入で確認作業をどう変えるか",
+  "desired_reaction": "人の確認を残しながら効率化できると理解する",
+  "headline": "AI候補提示により、確認作業を人手中心からレビュー中心へ変える",
+  "main_message": "AIが候補を提示し、担当者が最終確認することで、処理時間と判定ばらつきの低減を目指します。",
+  "supporting_messages": [
+    "完全自動化ではなく人の判断を残す",
+    "判定履歴を再学習データとして活用する"
+  ],
+  "supporting_evidence": [
+    {
+      "evidence_id": "ev-user-input-001",
+      "evidence_type": "user_input",
+      "text": "商品画像と商品データの対応確認を人手で行っている",
+      "confidence": "high",
+      "source_reference_ids": [
+        "src-project-input"
+      ],
+      "is_assumption": false
+    }
+  ],
+  "speaker_note_summary": "現場担当者の確認責任を残す設計であることを説明する。",
+  "visual_type": "two_column",
+  "diagram_type": "before_after_flow",
+  "layout_direction": "left_to_right",
+  "visual_rationale": "BeforeとAfterの業務変化を並べて説明するため。",
+  "image_requirement": {
+    "required": false
+  },
+  "chart_requirement": {
+    "required": false
+  },
+  "content_blocks": [
+    {
+      "block_id": "block-before",
+      "role": "before",
+      "text": "商品画像を人が目視し、商品データと照合する",
+      "priority": "high",
+      "emphasis": "medium",
+      "evidence_ids": [
+        "ev-user-input-001"
+      ]
+    },
+    {
+      "block_id": "block-after",
+      "role": "after",
+      "text": "AIが候補を提示し、担当者が確認して商品管理システムへ連携する",
+      "priority": "critical",
+      "emphasis": "high",
+      "evidence_ids": []
+    }
+  ],
+  "metrics": [
+    {
+      "metric_id": "metric-review-time",
+      "label": "確認時間",
+      "value": "PoCで測定",
+      "unit": null,
+      "context": "目標値はPoCで確定",
+      "evidence_id": "ev-user-input-001",
+      "confidence": "medium"
+    }
+  ],
+  "comparison_items": [
+    {
+      "item_id": "cmp-before",
+      "label": "Before",
+      "current_state": "人が目視で確認",
+      "proposed_state": null,
+      "difference": "作業負荷と判定差が発生しやすい",
+      "priority": "high"
+    },
+    {
+      "item_id": "cmp-after",
+      "label": "After",
+      "current_state": null,
+      "proposed_state": "AI候補提示と人の最終確認",
+      "difference": "確認作業をレビュー中心へ移行",
+      "priority": "critical"
+    }
+  ],
+  "timeline_items": [],
+  "process_steps": [],
+  "table_data": null,
+  "citations": [],
+  "source_references": [
+    {
+      "source_id": "src-project-input",
+      "source_type": "user_input",
+      "label": "案件入力",
+      "url": null,
+      "page": null,
+      "confidence": "high"
+    }
+  ],
+  "primary_element": "headline",
+  "secondary_elements": [
+    "before_after_flow",
+    "review_message"
+  ],
+  "content_priority": "high",
+  "emphasis": "high",
+  "reading_order": [
+    "headline",
+    "block-before",
+    "block-after",
+    "main_message"
+  ],
+  "hierarchy_level": "primary",
+  "theme": "consulting",
+  "color_palette": {
+    "background": "#FFFFFF",
+    "text": "#0F172A",
+    "primary": "#2563EB",
+    "secondary": "#64748B",
+    "accent": "#06B6D4",
+    "muted": "#E2E8F0",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "danger": "#EF4444"
+  },
+  "background_style": "clean",
+  "surface_style": "card",
+  "border_style": "subtle",
+  "icon_style": "line",
+  "title_style": {
+    "font_family": "Noto Sans JP",
+    "font_size_pt": 36,
+    "font_weight": 700,
+    "line_height": 1.15,
+    "color": "#0F172A"
+  },
+  "subtitle_style": {
+    "font_family": "Noto Sans JP",
+    "font_size_pt": 22,
+    "font_weight": 500,
+    "line_height": 1.2,
+    "color": "#475569"
+  },
+  "body_style": {
+    "font_family": "Noto Sans JP",
+    "font_size_pt": 18,
+    "font_weight": 400,
+    "line_height": 1.35,
+    "color": "#0F172A"
+  },
+  "metric_style": {
+    "font_family": "Inter",
+    "font_size_pt": 48,
+    "font_weight": 700,
+    "line_height": 1.05,
+    "color": "#2563EB"
+  },
+  "caption_style": {
+    "font_family": "Noto Sans JP",
+    "font_size_pt": 12,
+    "font_weight": 400,
+    "line_height": 1.2,
+    "color": "#64748B"
+  },
+  "footnote_style": {
+    "font_family": "Noto Sans JP",
+    "font_size_pt": 10,
+    "font_weight": 400,
+    "line_height": 1.2,
+    "color": "#64748B"
+  },
+  "grid": {
+    "columns": 12,
+    "rows": 8,
+    "gutter": 0.16,
+    "margin": {
+      "top": 0.42,
+      "right": 0.48,
+      "bottom": 0.42,
+      "left": 0.48
+    }
+  },
+  "safe_area": {
+    "x": 0.04,
+    "y": 0.05,
+    "w": 0.92,
+    "h": 0.88
+  },
+  "margins": {
+    "top": 0.42,
+    "right": 0.48,
+    "bottom": 0.42,
+    "left": 0.48
+  },
+  "gaps": 0.16,
+  "alignment": "left",
+  "density": "medium",
+  "overflow_strategy": "require_review",
+  "split_allowed": true,
+  "fallback_visual_type": "text_only",
+  "animation_hint": "appear_by_step",
+  "cta": {
+    "cta_type": "none",
+    "cta_label": null,
+    "cta_detail": null
+  },
+  "generation_source": "offline_fixture",
+  "confidence": 0.86,
+  "warnings": [],
+  "validation_result": null,
+  "rendering_metadata": {
+    "editable_shapes_required": true,
+    "external_assets_allowed": false,
+    "page_number_required": true,
+    "footer_required": false,
+    "warnings": [],
+    "renderer_notes": [
+      "Blueprint readiness does not guarantee final visual quality."
+    ]
+  },
+  "diagram_definition": {
+    "diagram_id": "diagram-before-after",
+    "diagram_type": "before_after_flow",
+    "title": "Before / After",
+    "nodes": [
+      {
+        "node_id": "node-before",
+        "label": "人が目視確認",
+        "role": "before",
+        "group_id": null
+      },
+      {
+        "node_id": "node-after",
+        "label": "AI候補提示 + 人の最終確認",
+        "role": "after",
+        "group_id": null
+      }
+    ],
+    "connectors": [
+      {
+        "connector_id": "conn-change",
+        "source_node_id": "node-before",
+        "target_node_id": "node-after",
+        "label": "移行"
+      }
+    ],
+    "axes": [],
+    "legend": [],
+    "reading_order": [
+      "node-before",
+      "node-after"
+    ]
+  },
+  "created_at": "2026-07-27T00:00:00Z"
+}

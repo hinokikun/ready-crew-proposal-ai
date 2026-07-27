@@ -1,0 +1,62 @@
+{
+  "audience_tendency": {
+    "department_head": 94.0,
+    "executive": 94.3
+  },
+  "average_overall_score": 94.2,
+  "case_count": 20,
+  "decision_stage_tendency": {
+    "approval": 94.8,
+    "comparison": 96.0,
+    "discovery": 91.6
+  },
+  "grade_distribution": {
+    "A": 7,
+    "S": 13
+  },
+  "industry_tendency": {
+    "Back office": 96.0,
+    "Construction": 96.0,
+    "Customer support": 96.0,
+    "Education": 91.0,
+    "Finance": 96.0,
+    "Human resources": 90.0,
+    "IT": 91.0,
+    "IT services": 91.0,
+    "Logistics": 96.0,
+    "Manufacturing": 93.5,
+    "Medical": 96.0,
+    "Professional services": 96.0,
+    "Real estate": 91.0,
+    "Retail": 96.0,
+    "SaaS": 96.0,
+    "Sales": 91.0,
+    "Wholesale": 96.0
+  },
+  "max_overall_score": 96,
+  "min_overall_score": 90,
+  "most_frequent_blocking_issues": [],
+  "most_frequent_warnings": [
+    "PE2-ALPHA-MESSAGE-001: 26",
+    "PE2-ALPHA-EVIDENCE-001: 22",
+    "PE2-ALPHA-DECK-001: 5"
+  ],
+  "note": "Fixture evaluation only. This does not guarantee real sales outcome.",
+  "readiness_distribution": {
+    "READY": 20
+  },
+  "strongest_dimensions": [
+    "Contract Integrity",
+    "Proposal Context Coverage",
+    "Deck Structure Quality",
+    "Decision Flow",
+    "Evidence Traceability"
+  ],
+  "weakest_dimensions": [
+    "Evidence and Message Alignment",
+    "Numeric Integrity",
+    "Evidence Completeness",
+    "Audience Fit",
+    "Message Clarity"
+  ]
+}

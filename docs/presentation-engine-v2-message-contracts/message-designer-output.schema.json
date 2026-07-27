@@ -1,0 +1,1099 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "definitions": {
+    "DisclosureType": {
+      "description": "An enumeration.",
+      "enum": [
+        "none",
+        "assumption",
+        "trial_calculation",
+        "current_hypothesis",
+        "needs_confirmation",
+        "public_information_scope",
+        "confirm_after_conditions"
+      ],
+      "title": "DisclosureType",
+      "type": "string"
+    },
+    "EvidenceAlignmentLevel": {
+      "description": "An enumeration.",
+      "enum": [
+        "evidence_supported",
+        "partially_supported",
+        "assumption_required",
+        "evidence_missing",
+        "not_applicable"
+      ],
+      "title": "EvidenceAlignmentLevel",
+      "type": "string"
+    },
+    "EvidenceUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageConfidence"
+            }
+          ],
+          "default": "medium"
+        },
+        "evidence_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "source_type": {
+          "default": "unknown",
+          "maxLength": 80,
+          "title": "Source Type",
+          "type": "string"
+        },
+        "usage": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Usage",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "usage"
+      ],
+      "title": "EvidenceUsage",
+      "type": "object"
+    },
+    "MessageConfidence": {
+      "description": "An enumeration.",
+      "enum": [
+        "high",
+        "medium",
+        "low",
+        "blocked"
+      ],
+      "title": "MessageConfidence",
+      "type": "string"
+    },
+    "MessageConstraint": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "constraint_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Constraint Id",
+          "type": "string"
+        },
+        "detail": {
+          "maxLength": 260,
+          "title": "Detail",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "constraint_id",
+        "label"
+      ],
+      "title": "MessageConstraint",
+      "type": "object"
+    },
+    "MessageEvaluationDimension": {
+      "additionalProperties": false,
+      "properties": {
+        "issues": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Issues",
+          "type": "array"
+        },
+        "max_score": {
+          "default": 10,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "recommendations": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Recommendations",
+          "type": "array"
+        },
+        "score": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Score",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "score",
+        "reason"
+      ],
+      "title": "MessageEvaluationDimension",
+      "type": "object"
+    },
+    "MessageEvaluationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking_issue_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Blocking Issue Count",
+          "type": "integer"
+        },
+        "dimensions": {
+          "items": {
+            "$ref": "#/definitions/MessageEvaluationDimension"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Dimensions",
+          "type": "array"
+        },
+        "grade": {
+          "maxLength": 2,
+          "minLength": 1,
+          "title": "Grade",
+          "type": "string"
+        },
+        "max_score": {
+          "default": 100,
+          "title": "Max Score",
+          "type": "integer"
+        },
+        "note": {
+          "maxLength": 320,
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        },
+        "total_score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Total Score",
+          "type": "integer"
+        },
+        "warning_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Warning Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_score",
+        "grade",
+        "note"
+      ],
+      "title": "MessageEvaluationResult",
+      "type": "object"
+    },
+    "MessageGenerationMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "deterministic": {
+          "default": true,
+          "title": "Deterministic",
+          "type": "boolean"
+        },
+        "generator": {
+          "default": "offline_message_designer_phase2c",
+          "maxLength": 100,
+          "title": "Generator",
+          "type": "string"
+        },
+        "llm_used": {
+          "default": false,
+          "title": "Llm Used",
+          "type": "boolean"
+        },
+        "runtime_connected": {
+          "default": false,
+          "title": "Runtime Connected",
+          "type": "boolean"
+        },
+        "source_contracts": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Source Contracts",
+          "type": "array"
+        }
+      },
+      "title": "MessageGenerationMetadata",
+      "type": "object"
+    },
+    "MessagePurpose": {
+      "description": "An enumeration.",
+      "enum": [
+        "frame_decision",
+        "align_context",
+        "explain_problem",
+        "share_insight",
+        "recommend_action",
+        "prove_value",
+        "compare_options",
+        "explain_investment",
+        "reduce_risk",
+        "close_next_step"
+      ],
+      "title": "MessagePurpose",
+      "type": "string"
+    },
+    "MessageRiskLevel": {
+      "description": "An enumeration.",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "blocking"
+      ],
+      "title": "MessageRiskLevel",
+      "type": "string"
+    },
+    "MessageSourceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "related_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Related Evidence Ids",
+          "type": "array"
+        },
+        "source_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_type": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Source Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "source_type",
+        "label"
+      ],
+      "title": "MessageSourceReference",
+      "type": "object"
+    },
+    "MessageStatus": {
+      "description": "An enumeration.",
+      "enum": [
+        "draft",
+        "normalized",
+        "validated",
+        "needs_review",
+        "invalid"
+      ],
+      "title": "MessageStatus",
+      "type": "string"
+    },
+    "MessageStrength": {
+      "description": "An enumeration.",
+      "enum": [
+        "strong",
+        "clear",
+        "moderate",
+        "weak",
+        "blocked"
+      ],
+      "title": "MessageStrength",
+      "type": "string"
+    },
+    "MessageStyle": {
+      "description": "An enumeration.",
+      "enum": [
+        "executive",
+        "consulting",
+        "sales",
+        "marketing",
+        "technical",
+        "operational",
+        "financial",
+        "strategic",
+        "neutral"
+      ],
+      "title": "MessageStyle",
+      "type": "string"
+    },
+    "MessageStyleProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "avoid": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Avoid",
+          "type": "array"
+        },
+        "headline_rule": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Headline Rule",
+          "type": "string"
+        },
+        "main_message_rule": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Main Message Rule",
+          "type": "string"
+        },
+        "style": {
+          "$ref": "#/definitions/MessageStyle"
+        },
+        "tone": {
+          "$ref": "#/definitions/MessageTone"
+        }
+      },
+      "required": [
+        "style",
+        "tone",
+        "headline_rule",
+        "main_message_rule"
+      ],
+      "title": "MessageStyleProfile",
+      "type": "object"
+    },
+    "MessageTone": {
+      "description": "An enumeration.",
+      "enum": [
+        "formal",
+        "confident",
+        "analytical",
+        "persuasive",
+        "concise",
+        "supportive",
+        "urgent",
+        "cautious"
+      ],
+      "title": "MessageTone",
+      "type": "string"
+    },
+    "MessageValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "code": {
+          "maxLength": 48,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "field_path": {
+          "maxLength": 180,
+          "minLength": 1,
+          "title": "Field Path",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 280,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "related_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Related Evidence Ids",
+          "type": "array"
+        },
+        "related_slide_id": {
+          "maxLength": 120,
+          "title": "Related Slide Id",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/definitions/MessageValidationSeverity"
+        },
+        "source": {
+          "default": "message_validator",
+          "maxLength": 80,
+          "title": "Source",
+          "type": "string"
+        },
+        "suggestion": {
+          "maxLength": 280,
+          "title": "Suggestion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "field_path",
+        "message"
+      ],
+      "title": "MessageValidationIssue",
+      "type": "object"
+    },
+    "MessageValidationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "issues": {
+          "items": {
+            "$ref": "#/definitions/MessageValidationIssue"
+          },
+          "maxItems": 40,
+          "title": "Issues",
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/definitions/MessageStatus"
+        },
+        "valid": {
+          "title": "Valid",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "valid",
+        "status"
+      ],
+      "title": "MessageValidationResult",
+      "type": "object"
+    },
+    "MessageValidationSeverity": {
+      "description": "An enumeration.",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "title": "MessageValidationSeverity",
+      "type": "string"
+    },
+    "MessageWarning": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "related_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Related Evidence Ids",
+          "type": "array"
+        },
+        "risk_level": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageRiskLevel"
+            }
+          ],
+          "default": "medium"
+        },
+        "warning_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Warning Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "warning_id",
+        "message"
+      ],
+      "title": "MessageWarning",
+      "type": "object"
+    },
+    "MissingEvidenceDisclosure": {
+      "additionalProperties": false,
+      "properties": {
+        "blocking": {
+          "default": false,
+          "title": "Blocking",
+          "type": "boolean"
+        },
+        "disclosure_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Disclosure Id",
+          "type": "string"
+        },
+        "disclosure_type": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DisclosureType"
+            }
+          ],
+          "default": "needs_confirmation"
+        },
+        "message": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "related_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Related Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "disclosure_id",
+        "message"
+      ],
+      "title": "MissingEvidenceDisclosure",
+      "type": "object"
+    },
+    "NumericClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "basis_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Basis Evidence Ids",
+          "type": "array"
+        },
+        "claim_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Claim Id",
+          "type": "string"
+        },
+        "confidence": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageConfidence"
+            }
+          ],
+          "default": "medium"
+        },
+        "is_trial_calculation": {
+          "default": false,
+          "title": "Is Trial Calculation",
+          "type": "boolean"
+        },
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 40,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claim_id",
+        "label",
+        "value"
+      ],
+      "title": "NumericClaim",
+      "type": "object"
+    },
+    "SlideMessageDesign": {
+      "additionalProperties": false,
+      "properties": {
+        "audience": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Audience",
+          "type": "string"
+        },
+        "audience_seniority": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Audience Seniority",
+          "type": "string"
+        },
+        "constraints": {
+          "items": {
+            "$ref": "#/definitions/MessageConstraint"
+          },
+          "maxItems": 12,
+          "title": "Constraints",
+          "type": "array"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "decision_stage": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Decision Stage",
+          "type": "string"
+        },
+        "deck_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Deck Id",
+          "type": "string"
+        },
+        "evaluation_result": {
+          "$ref": "#/definitions/MessageEvaluationResult"
+        },
+        "evidence_alignment_level": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/EvidenceAlignmentLevel"
+            }
+          ],
+          "default": "not_applicable"
+        },
+        "evidence_alignment_summary": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Evidence Alignment Summary",
+          "type": "string"
+        },
+        "evidence_usage": {
+          "items": {
+            "$ref": "#/definitions/EvidenceUsage"
+          },
+          "maxItems": 20,
+          "title": "Evidence Usage",
+          "type": "array"
+        },
+        "generation_metadata": {
+          "$ref": "#/definitions/MessageGenerationMetadata"
+        },
+        "generation_source": {
+          "default": "offline_message_designer_phase2c",
+          "maxLength": 100,
+          "title": "Generation Source",
+          "type": "string"
+        },
+        "headline": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Headline",
+          "type": "string"
+        },
+        "input_fingerprint": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Input Fingerprint",
+          "type": "string"
+        },
+        "key_takeaway": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Key Takeaway",
+          "type": "string"
+        },
+        "main_message": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Main Message",
+          "type": "string"
+        },
+        "message_confidence": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageConfidence"
+            }
+          ],
+          "default": "medium"
+        },
+        "message_design_id": {
+          "maxLength": 140,
+          "minLength": 1,
+          "title": "Message Design Id",
+          "type": "string"
+        },
+        "message_design_version": {
+          "const": "pe2_slide_message_design_v1",
+          "default": "pe2_slide_message_design_v1",
+          "title": "Message Design Version",
+          "type": "string"
+        },
+        "message_strength": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageStrength"
+            }
+          ],
+          "default": "clear"
+        },
+        "message_style": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageStyle"
+            }
+          ],
+          "default": "neutral"
+        },
+        "message_tone": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageTone"
+            }
+          ],
+          "default": "concise"
+        },
+        "missing_evidence_disclosure": {
+          "items": {
+            "$ref": "#/definitions/MissingEvidenceDisclosure"
+          },
+          "maxItems": 10,
+          "title": "Missing Evidence Disclosure",
+          "type": "array"
+        },
+        "narrative_function": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Narrative Function",
+          "type": "string"
+        },
+        "numeric_claims": {
+          "items": {
+            "$ref": "#/definitions/NumericClaim"
+          },
+          "maxItems": 8,
+          "title": "Numeric Claims",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "pe2_slide_message_design_v1",
+          "default": "pe2_slide_message_design_v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "slide_blueprint_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Slide Blueprint Id",
+          "type": "string"
+        },
+        "slide_goal": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Slide Goal",
+          "type": "string"
+        },
+        "slide_order": {
+          "maximum": 200,
+          "minimum": 0,
+          "title": "Slide Order",
+          "type": "integer"
+        },
+        "slide_plan_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Slide Plan Id",
+          "type": "string"
+        },
+        "slide_role": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Slide Role",
+          "type": "string"
+        },
+        "source_references": {
+          "items": {
+            "$ref": "#/definitions/MessageSourceReference"
+          },
+          "maxItems": 16,
+          "title": "Source References",
+          "type": "array"
+        },
+        "speaker_note_summary": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Speaker Note Summary",
+          "type": "string"
+        },
+        "status": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessageStatus"
+            }
+          ],
+          "default": "draft"
+        },
+        "style_profile": {
+          "$ref": "#/definitions/MessageStyleProfile"
+        },
+        "supporting_messages": {
+          "items": {
+            "$ref": "#/definitions/SupportingMessage"
+          },
+          "maxItems": 3,
+          "title": "Supporting Messages",
+          "type": "array"
+        },
+        "unsupported_claims": {
+          "items": {
+            "$ref": "#/definitions/UnsupportedClaim"
+          },
+          "maxItems": 10,
+          "title": "Unsupported Claims",
+          "type": "array"
+        },
+        "unused_required_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Unused Required Evidence Ids",
+          "type": "array"
+        },
+        "used_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Used Evidence Ids",
+          "type": "array"
+        },
+        "validation_result": {
+          "$ref": "#/definitions/MessageValidationResult"
+        },
+        "warnings": {
+          "items": {
+            "$ref": "#/definitions/MessageWarning"
+          },
+          "maxItems": 12,
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "message_design_id",
+        "deck_id",
+        "slide_plan_id",
+        "slide_blueprint_id",
+        "slide_order",
+        "slide_role",
+        "slide_goal",
+        "narrative_function",
+        "audience",
+        "audience_seniority",
+        "decision_stage",
+        "headline",
+        "main_message",
+        "key_takeaway",
+        "speaker_note_summary",
+        "evidence_alignment_summary",
+        "input_fingerprint",
+        "created_at"
+      ],
+      "title": "SlideMessageDesign",
+      "type": "object"
+    },
+    "SupportingMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "purpose": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/MessagePurpose"
+            }
+          ],
+          "default": "prove_value"
+        },
+        "supporting_message_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Supporting Message Id",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "supporting_message_id",
+        "text"
+      ],
+      "title": "SupportingMessage",
+      "type": "object"
+    },
+    "UnsupportedClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "claim_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Claim Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "recommended_action": {
+          "maxLength": 220,
+          "minLength": 1,
+          "title": "Recommended Action",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claim_id",
+        "text",
+        "reason",
+        "recommended_action"
+      ],
+      "title": "UnsupportedClaim",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "connected_to_runtime": {
+      "default": false,
+      "title": "Connected To Runtime",
+      "type": "boolean"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "deck_id": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Deck Id",
+      "type": "string"
+    },
+    "evaluation_result": {
+      "$ref": "#/definitions/MessageEvaluationResult"
+    },
+    "generated_diagrams": {
+      "default": false,
+      "title": "Generated Diagrams",
+      "type": "boolean"
+    },
+    "generated_layouts": {
+      "default": false,
+      "title": "Generated Layouts",
+      "type": "boolean"
+    },
+    "generated_pptx": {
+      "default": false,
+      "title": "Generated Pptx",
+      "type": "boolean"
+    },
+    "generated_slide_blueprints": {
+      "default": false,
+      "title": "Generated Slide Blueprints",
+      "type": "boolean"
+    },
+    "generated_visuals": {
+      "default": false,
+      "title": "Generated Visuals",
+      "type": "boolean"
+    },
+    "message_designer_output_version": {
+      "const": "pe2_message_designer_output_v1",
+      "default": "pe2_message_designer_output_v1",
+      "title": "Message Designer Output Version",
+      "type": "string"
+    },
+    "slide_messages": {
+      "items": {
+        "$ref": "#/definitions/SlideMessageDesign"
+      },
+      "maxItems": 80,
+      "minItems": 1,
+      "title": "Slide Messages",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "$ref": "#/definitions/MessageWarning"
+      },
+      "maxItems": 40,
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "created_at",
+    "deck_id"
+  ],
+  "title": "Presentation Engine 2.0 Message Designer Output",
+  "type": "object",
+  "x-phase": "2C"
+}
