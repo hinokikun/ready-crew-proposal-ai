@@ -43,16 +43,42 @@ def _layout_hint(title: str, original_layout: str) -> str:
     if any(keyword in joined for keyword in ["課題", "issue", "risk", "problem"]):
         return "priority issue cards with muted accent labels"
     if any(keyword in joined for keyword in ["競合", "比較", "competition", "competitor", "comparison"]):
-        return "competitive comparison table with clear winning points"
+        return "comparison cards, not a dense table: current state, issue, improved state, winning point"
     if any(keyword in joined for keyword in ["schedule", "スケジュール", "工程", "timeline", "process"]):
-        return "simple timeline or gantt style process"
+        return "gantt-style timeline with phases, decision gates, and owner-friendly milestones"
     if any(keyword in joined for keyword in ["費用", "見積", "estimate", "budget", "cost"]):
-        return "estimate overview table with highlighted total range"
+        return "estimate cards split into required, recommended, optional, and ROI rationale"
     if any(keyword in joined for keyword in ["kpi", "効果", "effect", "roi"]):
-        return "KPI cards with measurable outcomes"
+        return "SMART KPI cards with current state, target, measurement method, timing, and owner"
     if any(keyword in joined for keyword in ["サイトマップ", "構成", "sitemap", "structure"]):
         return "sitemap diagram with hierarchy"
     return "clean two-column business proposal slide"
+
+
+def _v11_beautiful_ai_design_brief() -> list[str]:
+    return [
+        "Design the deck as a customer-facing consulting proposal, not an internal memo.",
+        "The first two slides must explain background, issue, conclusion, expected impact, and success image within two minutes.",
+        "Use this story arc: current state -> issue -> root cause -> solution -> implementation -> impact -> next step.",
+        "Reduce bullet-heavy slides. Prefer editable cards, flows, timelines, comparison cards, KPI dashboards, roadmaps, matrices, and process diagrams.",
+        "For competition, separate hypotheses from confirmation items. Do not present unsupported assumptions as facts.",
+        "For KPI, use SMART framing: current state, target, measurement method, timing, owner.",
+        "For estimate, separate required, recommended, optional scope and include ROI rationale.",
+        "Use concise Japanese business wording that a sales representative can explain directly to the customer.",
+    ]
+
+
+def _category_specific_prompt_lines(category_label: str) -> list[str]:
+    if "AI-OCR" in category_label or "OCR" in category_label:
+        return [
+            "AI-OCRではPoC、AIモデル学習、API/CSV連携、OCR精度改善、例外確認フロー、運用支援を含める。",
+            "AI-OCRでは帳票種類、抽出項目、正解データ、精度評価、人の確認フローを中心に扱う。",
+        ]
+    if "Web" in category_label:
+        return ["Web改善ではCMS、SEO、サイトマップ、問い合わせ導線、更新運用を必要に応じて扱う。"]
+    if "CRM" in category_label or "SFA" in category_label:
+        return ["CRM/SFAでは商談管理、顧客データ、営業プロセス、入力定着、KPIを中心に扱う。"]
+    return ["案件カテゴリに応じた業務課題、導入手順、KPI、見積項目を優先する。"]
 
 
 def _image_prompt(title: str, visual_suggestion: str, client_name: str) -> str:
@@ -102,6 +128,90 @@ def _deck_outline(title: str, slides: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def _slide_design_metadata_lines(slides: list[dict[str, Any]]) -> list[str]:
+    lines: list[str] = []
+    for index, slide in enumerate(slides, start=1):
+        title = _safe_text(str(slide.get("title") or f"Slide {index}"), 120)
+        body = _safe_text(" ".join(_slide_items(slide)), 260)
+        layout = _layout_hint(title, "")
+        visual_type = _visual_type_for(title, body)
+        hypothesis_label = "hypothesis" if _contains_hypothesis(body) else "source_or_basis_required"
+        lines.append(
+            "; ".join(
+                [
+                    f"slide_number={index}",
+                    f"slide_purpose={_slide_purpose(title, body)}",
+                    f"takeaway={title}",
+                    f"title={title}",
+                    "audience=customer decision maker and sales representative",
+                    f"content={body}",
+                    f"preferred_layout={layout}",
+                    f"visual_type={visual_type}",
+                    f"key_metric={_extract_key_metric(body)}",
+                    "emphasis=one message per slide",
+                    f"hypothesis_label={hypothesis_label}",
+                    "speaker_note=explain the main conclusion first, then supporting evidence",
+                    "avoid=dense bullets, unsupported facts, tiny text, internal notes",
+                    "source_or_basis=input facts, assumptions, or confirmation items only",
+                ]
+            )
+        )
+    return lines
+
+
+def _slide_items(slide: dict[str, Any]) -> list[str]:
+    items: list[str] = []
+    for block in slide.get("blocks", []):
+        if block.get("type") == "bulleted_list":
+            items.extend(str(item) for item in block.get("items", []))
+        elif block.get("content"):
+            items.append(str(block.get("content")))
+    return items
+
+
+def _slide_purpose(title: str, body: str) -> str:
+    text = f"{title} {body}".lower()
+    if any(keyword in text for keyword in ["summary", "サマリー", "結論"]):
+        return "executive summary"
+    if any(keyword in text for keyword in ["競合", "比較", "competitor", "comparison"]):
+        return "comparison and differentiation"
+    if any(keyword in text for keyword in ["kpi", "roi", "効果"]):
+        return "impact and measurement"
+    if any(keyword in text for keyword in ["見積", "費用", "budget", "estimate"]):
+        return "pricing explanation"
+    if any(keyword in text for keyword in ["スケジュール", "工程", "timeline"]):
+        return "implementation timeline"
+    if any(keyword in text for keyword in ["リスク", "risk"]):
+        return "risk handling"
+    if any(keyword in text for keyword in ["次", "action", "アクション"]):
+        return "next action"
+    return "proposal story"
+
+
+def _visual_type_for(title: str, body: str) -> str:
+    text = f"{title} {body}".lower()
+    if any(keyword in text for keyword in ["比較", "競合", "before", "after"]):
+        return "comparison_cards"
+    if any(keyword in text for keyword in ["kpi", "roi", "%", "効果"]):
+        return "kpi_cards"
+    if any(keyword in text for keyword in ["スケジュール", "工程", "phase", "timeline"]):
+        return "gantt_timeline"
+    if any(keyword in text for keyword in ["リスク", "優先度"]):
+        return "risk_matrix"
+    if any(keyword in text for keyword in ["流れ", "導入", "process"]):
+        return "process_flow"
+    return "clean_cards"
+
+
+def _extract_key_metric(text: str) -> str:
+    match = re.search(r"\d+(?:\.\d+)?\s*(?:%|万円|円|件|時間|日|週|か月|ヶ月)", text)
+    return match.group(0) if match else "none_or_confirm_later"
+
+
+def _contains_hypothesis(text: str) -> bool:
+    return any(keyword in text for keyword in ["仮説", "想定", "初期案", "assumption", "hypothesis"])
+
+
 def _build_prompt(
     request: BeautifulAiPresentationRequest,
     *,
@@ -134,6 +244,9 @@ def _build_prompt(
         profile,
     )
     lines = [
+        "Version 1.1 design direction:",
+        *[f"- {line}" for line in _v11_beautiful_ai_design_brief()],
+        "",
         "日本語で、法人向けの洗練された営業提案書プレゼンテーションを作成してください。",
         "デザインは上品で信頼感があり、B2B提案に適した余白・見出し・図解を使ってください。",
         "入力されていない数値、実績、契約条件、事実は勝手に作らないでください。不明な点は要確認として扱ってください。",
@@ -151,8 +264,12 @@ def _build_prompt(
         "スライドごとのタイトルと本文:",
         outline,
         "",
+        "Slide design metadata:",
+        *[f"- {line}" for line in _slide_design_metadata_lines(slides)],
+        "",
         "次のアクション:",
     ]
+    lines.extend(f"カテゴリ別必須要素: {line}" for line in _category_specific_prompt_lines(profile.label))
     if next_actions:
         lines.extend(f"- {_safe_text(action, 240)}" for action in next_actions[:5])
     else:

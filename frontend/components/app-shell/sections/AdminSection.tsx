@@ -82,12 +82,12 @@ export function AdminSection({
   const readinessItems = [
     {
       label: "ログイン状態",
-      detail: currentUser ? `${currentUser.email} でログイン中` : "ログイン状態を確認してください",
+      detail: currentUser ? "管理者としてログイン中です" : "ログイン状態を確認してください",
       ok: Boolean(currentUser)
     },
     {
       label: "Backend接続",
-      detail: healthSnapshot?.backendOk ? "正常に接続しています" : "接続状態を確認してください",
+      detail: healthSnapshot?.backendOk ? "Backendに接続できています" : "Backendの起動状態を確認してください",
       ok: Boolean(healthSnapshot?.backendOk)
     },
     {
@@ -96,12 +96,12 @@ export function AdminSection({
       ok: Boolean(healthSnapshot?.dbStatus && !healthSnapshot.dbStatus.includes("未"))
     },
     {
-      label: "OpenAI状態",
+      label: "OpenAI設定",
       detail: healthSnapshot?.aiStatus || "未確認",
       ok: Boolean(healthSnapshot?.aiStatus && !healthSnapshot.aiStatus.includes("未"))
     },
     {
-      label: "権限管理",
+      label: "ユーザー管理",
       detail: `${managedUsers.length}件のユーザーを確認できます`,
       ok: managedUsers.length > 0
     },
@@ -140,12 +140,12 @@ export function AdminSection({
           <PermissionNotice role={currentUser?.role} />
           <SystemDiagnosticsPanel />
 
-          <section className="trial-check-panel" aria-label="運用準備チェック">
+          <section className="trial-check-panel" aria-label="管理者ダッシュボード">
             <div className="section-heading">
               <div>
-                <p className="eyebrow">Admin Console</p>
-                <h2>運用準備チェック</h2>
-                <p>正式運用に必要な接続、権限、ログの状態を確認します。秘密情報は表示しません。</p>
+                <p className="eyebrow">管理コンソール</p>
+                <h2>管理者ダッシュボード</h2>
+                <p>今日確認すべき接続、権限、ログ、利用状況をまとめています。秘密情報は表示しません。</p>
               </div>
               <span>管理者向け</span>
             </div>
@@ -162,11 +162,7 @@ export function AdminSection({
             </div>
           </section>
 
-          <p className="admin-menu-category-label">運用管理</p>
-          <details className="advanced-foldout">
-            <summary>運用準備チェック</summary>
-            <AdminOperationReadinessPanel />
-          </details>
+          <p className="admin-menu-category-label">ユーザーと組織</p>
           <details className="advanced-foldout" id="admin-users-panel">
             <summary>ユーザー管理</summary>
             <AdminUsersPanel
@@ -178,23 +174,21 @@ export function AdminSection({
               onUpdateUser={handleUpdateUser}
             />
           </details>
-          <details className="advanced-foldout" id="admin-pilot-dashboard-panel">
-            <summary>Pilot Dashboard</summary>
-            <AdminPilotDashboardPanel />
-          </details>
-          <details className="advanced-foldout" id="admin-audit-log-panel">
-            <summary>監査ログ</summary>
-            <AdminAuditLogPanel logs={auditLogs} />
-          </details>
           <details className="advanced-foldout">
-            <summary>フィードバック一覧</summary>
-            <AdminFeedbackPanel feedback={feedbackEntries} summary={feedbackSummary} />
+            <summary>権限・Workspace設定</summary>
+            <SettingsPanel
+              health={healthSnapshot}
+              isAuthenticated
+              usageLogs={usageLogs}
+              currentUser={currentUser}
+              dbLogCount={dbLogCount}
+            />
           </details>
 
-          <p className="admin-menu-category-label">改善分析</p>
-          <details className="advanced-foldout">
-            <summary>改善提案ダッシュボード</summary>
-            <AdminImprovementDashboardPanel />
+          <p className="admin-menu-category-label">利用状況とレポート</p>
+          <details className="advanced-foldout" id="admin-product-analytics-panel">
+            <summary>Product Analytics</summary>
+            <AdminProductAnalyticsPanel />
           </details>
           <details className="advanced-foldout">
             <summary>利用状況ダッシュボード</summary>
@@ -204,10 +198,56 @@ export function AdminSection({
               onDownloadCsv={() => void handleDownloadUsageCsv()}
             />
           </details>
-          <details className="advanced-foldout" id="admin-product-analytics-panel">
-            <summary>Product Analytics</summary>
-            <AdminProductAnalyticsPanel />
+          <details className="advanced-foldout">
+            <summary>業務改善ダッシュボード</summary>
+            <AdminImprovementDashboardPanel />
           </details>
+          <details className="advanced-foldout" id="admin-pilot-dashboard-panel">
+            <summary>Pilot Dashboard</summary>
+            <AdminPilotDashboardPanel />
+          </details>
+
+          <p className="admin-menu-category-label">セキュリティと監査</p>
+          <details className="advanced-foldout" id="admin-audit-log-panel">
+            <summary>監査ログ</summary>
+            <AdminAuditLogPanel logs={auditLogs} />
+          </details>
+          <details className="advanced-foldout">
+            <summary>フィードバック一覧</summary>
+            <AdminFeedbackPanel feedback={feedbackEntries} summary={feedbackSummary} />
+          </details>
+
+          <p className="admin-menu-category-label">外部連携と診断</p>
+          <details className="advanced-foldout" id="admin-integration-panel">
+            <summary>Beautiful.ai / OpenAI 診断</summary>
+            <ExternalIntegrationsPanel currentRole={currentUser?.role} showSettings />
+          </details>
+          <details className="advanced-foldout">
+            <summary>システム診断</summary>
+            <SystemDiagnosticsPanel />
+          </details>
+
+          <p className="admin-menu-category-label">運用・リリース</p>
+          <details className="advanced-foldout">
+            <summary>運用準備チェック</summary>
+            <AdminOperationReadinessPanel />
+          </details>
+          <details className="advanced-foldout">
+            <summary>試験導入レポート</summary>
+            <AdminTrialReportPanel />
+          </details>
+
+          <p className="admin-menu-category-label">AI運用・高度機能</p>
+          <details className="advanced-foldout" id="admin-prompt-studio-panel">
+            <summary>Prompt Studio</summary>
+            <PromptStudio />
+          </details>
+          {SALES_ASSISTANT_FRONTEND_ENABLED && (
+            <details className="advanced-foldout" id="admin-sales-assistant-panel">
+              <summary>AI Sales Assistant</summary>
+              <AdminSalesAssistantPanel />
+            </details>
+          )}
           <details className="advanced-foldout" id="admin-queue-monitor-panel">
             <summary>AI Queue Monitor</summary>
             <QueueMonitor />
@@ -216,35 +256,9 @@ export function AdminSection({
             <summary>AI Learning Dashboard</summary>
             <LearningDashboard />
           </details>
-
-          <p className="admin-menu-category-label">AI実験 / Prompt管理</p>
-          <details className="advanced-foldout" id="admin-prompt-studio-panel">
-            <summary>Prompt Studio</summary>
-            <PromptStudio />
-          </details>
-          {SALES_ASSISTANT_FRONTEND_ENABLED && (
-            <details className="advanced-foldout" id="admin-sales-assistant-panel">
-              <summary>AI Sales Assistant / AI営業アシスタント</summary>
-              <AdminSalesAssistantPanel />
-            </details>
-          )}
-
-          <p className="admin-menu-category-label">外部連携</p>
-          <details className="advanced-foldout" id="admin-integration-panel">
-            <summary>Integration / Dry Run</summary>
-            <ExternalIntegrationsPanel currentRole={currentUser?.role} showSettings />
-          </details>
-
-          <p className="admin-menu-category-label">ナレッジ管理</p>
           <details className="advanced-foldout" id="admin-knowledge-panel">
             <summary>Knowledge Intelligence</summary>
             <AdminKnowledgePanel />
-          </details>
-
-          <p className="admin-menu-category-label">社内展開 / 監査</p>
-          <details className="advanced-foldout">
-            <summary>試験導入レポート</summary>
-            <AdminTrialReportPanel />
           </details>
         </>
       )}

@@ -37,7 +37,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <div>
               <p className="eyebrow">エラー</p>
               <h1>画面の一部を表示できませんでした</h1>
-              <p>再読み込みしても解決しない場合は、Backend接続状態とVercelのビルドログを確認してください。</p>
+              <p>一時的な通信または画面表示の問題が発生しました。再読み込みしても解決しない場合は、管理者へお問い合わせください。</p>
               <button className="primary-button" type="button" onClick={() => window.location.reload()}>
                 <RotateCcw size={16} aria-hidden="true" />
                 再読み込み

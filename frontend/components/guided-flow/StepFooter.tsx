@@ -11,6 +11,7 @@ type StepFooterProps = {
   onBack?: () => void;
   onNext?: () => void;
   primaryLabel: string;
+  primaryTestId?: string;
 };
 
 function StepFooterBase({
@@ -20,7 +21,8 @@ function StepFooterBase({
   isLoading = false,
   onBack,
   onNext,
-  primaryLabel
+  primaryLabel,
+  primaryTestId
 }: StepFooterProps) {
   return (
     <div className="guided-step-footer">
@@ -34,7 +36,7 @@ function StepFooterBase({
       )}
       <div className="guided-footer-main">
         {helpText && <p aria-live="polite">{helpText}</p>}
-        <button className="primary-button guided-next-button" disabled={disabled || isLoading} onClick={onNext} type="button">
+        <button className="primary-button guided-next-button" data-testid={primaryTestId} disabled={disabled || isLoading} onClick={onNext} type="button">
           {isLoading ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <ArrowRight size={18} aria-hidden="true" />}
           {primaryLabel}
         </button>

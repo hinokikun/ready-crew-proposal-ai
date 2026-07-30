@@ -78,6 +78,15 @@ class PptxQualityReport:
     numeric_integrity: dict[str, Any] = field(default_factory=dict)
     template_token_application: dict[str, Any] = field(default_factory=dict)
     human_review_items: list[str] = field(default_factory=list)
+    customer_ready_status: str = ""
+    customer_ready_score: int | None = None
+    customer_ready_reasons: list[str] = field(default_factory=list)
+    customer_ready_blockers: list[str] = field(default_factory=list)
+    customer_ready_auto_fixes: list[str] = field(default_factory=list)
+    customer_ready_excluded_internal_items: list[str] = field(default_factory=list)
+    customer_ready_sales_summary: list[str] = field(default_factory=list)
+    customer_ready_expected_questions: list[dict[str, str]] = field(default_factory=list)
+    customer_ready_rubric: dict[str, int] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)

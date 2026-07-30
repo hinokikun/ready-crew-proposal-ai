@@ -58,6 +58,24 @@ export function toFriendlyError(error: unknown): FriendlyError {
   const message = error instanceof Error ? error.message : String(error ?? "");
   const normalized = message.toLowerCase();
 
+  if (/maintenance|maintenance_mode|メンテナンス|新規作成.*停止/.test(normalized)) {
+    return {
+      category: "メンテナンス中",
+      title: "現在、新規作成は一時停止中です",
+      cause: "管理者の設定により、新しい提案書作成が一時的に停止されています。",
+      action: "履歴確認はできます。管理者の解除後にもう一度お試しください。"
+    };
+  }
+
+  if (/429|rate|limit|quota|利用上限/.test(normalized)) {
+    return {
+      category: "利用上限",
+      title: "AI APIの利用上限に達した可能性があります",
+      cause: "短時間に処理が集中しているか、APIの利用上限に達している可能性があります。",
+      action: "少し時間を置いてからもう一度お試しください。"
+    };
+  }
+
   if (/beautiful\.ai|beautiful_ai/.test(normalized)) {
     if (/invalid_api_key|401|api key|apiキー/.test(normalized)) {
       return {

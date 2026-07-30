@@ -27,10 +27,13 @@ coverage/
 .coverage
 *.log
 *.db
+*.db-journal
 *.sqlite
 *.sqlite3
 backend/app.db
 .pytest-tmp/
+backend/.pytest-tmp-*/
+backend/Usersh_umitsuAppDataLocalTempready-crew-pytest-*/
 .npm-cache/
 playwright-report/
 test-results/
@@ -43,5 +46,13 @@ frontend/test-results/
 tmp/
 outputs/
 .pip-wheel-check-*/
+
+# Generated release/rendering evidence: keep Markdown/CSV/JSON reports trackable.
+artifacts/**/*.pptx
+artifacts/**/*.pdf
+artifacts/**/*.png
+artifacts/customer_ready_v22/_render_probe/
+artifacts/customer_ready_v22/case_*/
+artifacts/customer_ready_v22/libreoffice_real_render_*/case_*/
 
 

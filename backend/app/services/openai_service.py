@@ -17,6 +17,12 @@ from app.proposal_profiles import (
     get_proposal_profile,
 )
 from app.schemas.proposal import PROPOSAL_ANALYSIS_SCHEMA
+from app.services.sales_consultant_engine import (
+    SalesConsultantBrief,
+    build_sales_consultant_brief,
+    build_sales_consultant_prompt_section,
+    enrich_analysis_with_sales_consultant_strategy,
+)
 from app.utils.markdown import build_markdown
 
 
@@ -28,10 +34,13 @@ class OpenAIServiceError(Exception):
 
 
 async def generate_proposal(payload: ProposalRequest) -> AnalysisResponse:
+    consultant_brief = build_sales_consultant_brief(payload)
     if settings.use_mock_ai:
         analysis = _build_mock_analysis(payload)
     else:
-        analysis = await run_in_threadpool(_generate_with_openai, payload)
+        analysis = await run_in_threadpool(_generate_with_openai, payload, consultant_brief)
+
+    analysis = enrich_analysis_with_sales_consultant_strategy(analysis, consultant_brief)
 
     markdown = build_markdown(analysis)
     return AnalysisResponse(
@@ -41,7 +50,7 @@ async def generate_proposal(payload: ProposalRequest) -> AnalysisResponse:
     )
 
 
-def _generate_with_openai(payload: ProposalRequest) -> ProposalAnalysis:
+def _generate_with_openai(payload: ProposalRequest, consultant_brief: SalesConsultantBrief) -> ProposalAnalysis:
     if not settings.openai_api_key:
         raise OpenAIServiceError(
             "OPENAI_API_KEY が未設定です。ローカルでは backend/.env、RenderではSecretsにAPIキーを設定してください。",
@@ -57,7 +66,7 @@ def _generate_with_openai(payload: ProposalRequest) -> ProposalAnalysis:
         response = client.responses.create(
             model=settings.openai_model,
             instructions=SYSTEM_PROMPT,
-            input=build_user_prompt(payload),
+            input=_build_strategy_enriched_prompt(payload, consultant_brief),
             text={
                 "format": {
                     "type": "json_schema",
@@ -88,6 +97,24 @@ def _generate_with_openai(payload: ProposalRequest) -> ProposalAnalysis:
         raise OpenAIServiceError("AIの出力をJSONとして解析できませんでした。再実行してください。") from exc
     except ValidationError as exc:
         raise OpenAIServiceError("AIの出力形式が想定と異なります。再実行してください。") from exc
+
+
+def _build_strategy_enriched_prompt(payload: ProposalRequest, consultant_brief: SalesConsultantBrief) -> str:
+    return "\n\n".join(
+        [
+            build_user_prompt(payload),
+            build_sales_consultant_prompt_section(consultant_brief),
+            (
+                "## Version 2.0 output instruction\n"
+                "- Before writing slides, use the internal strategy context to decide customer analysis, industry analysis, "
+                "decision maker concerns, competitive winning strategy, story order, ROI/KPI, objections, and roadmap.\n"
+                "- Do not expose internal engine names to the user or customer.\n"
+                "- Separate input facts, derived facts, hypotheses, recommendations, and requires_confirmation items.\n"
+                "- The first 2-3 slides must let an executive understand the proposal in two minutes.\n"
+                "- Customer-facing slides must not contain unsupported facts, fake ROI, or generic TBD-heavy content."
+            ),
+        ]
+    )
 
 
 def _extract_output_text(response: Any) -> str:

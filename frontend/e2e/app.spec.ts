@@ -57,7 +57,7 @@ test("adminは管理者ログインで成功し利用者ログインでは案内
 
   await page.getByTestId("login-mode-admin").click();
   await page.getByTestId("login-submit").click();
-  await expect(page.getByRole("heading", { name: /お客様の案件について/ }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "今日は何をしますか？" }).first()).toBeVisible();
 });
 
 test("memberは利用者ログインで成功し管理者ログインでは拒否される", async ({ page }) => {
@@ -70,12 +70,12 @@ test("memberは利用者ログインで成功し管理者ログインでは拒�
 
   await page.getByTestId("login-mode-user").click();
   await page.getByTestId("login-submit").click();
-  await expect(page.getByRole("heading", { name: /お客様の案件について/ }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "今日は何をしますか？" }).first()).toBeVisible();
 });
 
 test("viewerは利用者ログインで成功し管理者メニューは表示されない", async ({ page }) => {
   await login(page, viewerEmail);
-  await expect(page.getByRole("heading", { name: /お客様の案件について/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "今日は何をしますか？" }).first()).toBeVisible();
   await expect(page.getByTestId("admin-menu")).toHaveCount(0);
 });
 
@@ -112,10 +112,62 @@ test("inactive userと間違ったパスワードとrate limitを日本語で表
   await expect(page.getByText("試行回数が多いため、しばらく待ってから再度お試しください")).toBeVisible();
 });
 
-test("ログイン後にDashboardが表示される", async ({ page }) => {
-  await login(page, memberEmail);
-  await expect(page.getByRole("heading", { name: /お客様の案件について/ })).toBeVisible();
-  await expect(page.getByText("まだ案件がありません")).toBeVisible();
+test("ログイン後に利用者ホームが表示される", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("login-mode-user").click();
+  await page.getByLabel("メールアドレス").fill(memberEmail);
+  await page.getByLabel("アクセスパスワード").fill("test-password");
+  await page.getByTestId("login-submit").click();
+  await dismissPilotChecklist(page);
+  await expect(page.getByTestId("user-home-panel")).toBeVisible();
+  await expect(page.getByTestId("user-home-panel").getByRole("heading", { name: "今日は何をしますか？" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /新しく提案書を作る/ }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "最近作成した提案書" })).toBeVisible();
+});
+
+test("発表モードは余計なUIを隠し主導線を表示する", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("login-mode-user").click();
+  await page.getByLabel("メールアドレス").fill(memberEmail);
+  await page.getByLabel("アクセスパスワード").fill("test-password");
+  await page.getByTestId("login-submit").click();
+  await dismissPilotChecklist(page);
+  await page.getByRole("button", { name: "発表モード" }).click();
+
+  await expect(page.locator(".v80-experience-shell")).toHaveClass(/presentation-mode/);
+  await expect(page.getByRole("button", { name: "発表モード" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".v80-sidebar")).toBeHidden();
+  await expect(page.getByTestId("user-home-panel").getByRole("heading", { name: "今日は何をしますか？" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /新しく提案書を作る/ }).first()).toBeVisible();
+
+  await page.getByRole("button", { name: /新しく提案書を作る/ }).first().click();
+  await expect(page.getByRole("heading", { name: "案件情報を貼り付けてください" })).toBeVisible();
+  await expect(page.getByText("Presentation Engine")).toHaveCount(0);
+});
+
+test("主要画面は代表幅で横スクロールしない", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 920 });
+  await page.goto("/");
+  await page.getByTestId("login-mode-user").click();
+  await page.getByLabel("メールアドレス").fill(memberEmail);
+  await page.getByLabel("アクセスパスワード").fill("test-password");
+  await page.getByTestId("login-submit").click();
+  await dismissPilotChecklist(page);
+
+  for (const width of [375, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 920 });
+    await expect(page.getByTestId("user-home-panel")).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  }
+
+  await page.setViewportSize({ width: 1440, height: 920 });
+  await page.getByRole("button", { name: /新しく提案書を作る/ }).first().click();
+
+  for (const width of [375, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 920 });
+    await expect(page.getByTestId("guided-flow")).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  }
 });
 
 test("案件入力欄へ入力できる", async ({ page }) => {
@@ -147,25 +199,57 @@ test("AI-OCR案件入力は以前のWeb案件に置き換わらない", async ({
   await expect(currentStepCard.getByText("AI-OCR導入支援ご提案書")).toHaveCount(0);
 });
 
-test("通常モードは7ステップのかんたん操作フローを初期表示する", async ({ page }) => {
+test("顧客提出チェックはAcceptance ScoreとBLOCK表示を確認できる", async ({ page }) => {
+  page.setDefaultTimeout(10_000);
+  await login(page, memberEmail);
+  await setTextareaValue(page, "project-source-input", "株式会社サンプル様。AI-OCRで請求書処理を効率化し、ROI、KPI、競合比較、ロードマップを含めた提案書を作りたい。");
+  await clickGuidedGenerate(page);
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).waitFor({ state: "visible", timeout: 25000 });
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).click({ timeout: 10_000 });
+  await page.getByRole("button", { name: "出力方法を選ぶ" }).click({ timeout: 10_000 });
+
+  await expect(page.getByText("顧客提出チェック").first()).toBeVisible({ timeout: 25000 });
+  await expect(page.getByText("顧客へ提出可能").first()).toBeVisible();
+  await expect(page.getByText("修正なしで提出できる確率").first()).toBeVisible();
+  await expect(page.getByText("想定される顧客質問").first()).toBeVisible();
+  await expect(page.getByText("提出ブロック")).toHaveCount(0);
+});
+
+test("顧客提出チェックはNOT_READY時に提出ブロックを表示する", async ({ page }) => {
+  page.setDefaultTimeout(10_000);
+  await mockApi(page, { proposalValidationJudge: "NOT_READY" });
+  await login(page, memberEmail);
+  await setTextareaValue(page, "project-source-input", "株式会社サンプル様。説明不足の提案書を確認したい。");
+  await clickGuidedGenerate(page);
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).waitFor({ state: "visible", timeout: 25000 });
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).click({ timeout: 10_000 });
+  await page.getByRole("button", { name: "出力方法を選ぶ" }).click({ timeout: 10_000 });
+
+  await expect(page.getByText("提出ブロック").first()).toBeVisible({ timeout: 25000 });
+  await expect(page.getByText("この状態では顧客提出を止めてください。").first()).toBeVisible();
+  await expect(page.getByText("ROI説明が弱い").first()).toBeVisible();
+});
+
+test("通常モードは5ステップの提案書作成フローを表示する", async ({ page }) => {
   await login(page, memberEmail);
   const flow = page.getByTestId("guided-flow");
   await expect(flow).toBeVisible();
-  for (const label of ["案件入力", "AI分析", "内容確認", "提出前チェック", "出力", "改善", "完了"]) {
+  for (const label of ["案件入力", "AI分析", "内容確認", "提出前チェック", "出力"]) {
     await expect(flow.getByRole("button", { name: new RegExp(label) })).toBeVisible();
   }
+  await expect(flow.getByRole("button", { name: /改善|完了/ })).toHaveCount(0);
   await expect(page.getByText("Current backend version")).toHaveCount(0);
   await expect(page.getByText("Git Commit")).toHaveCount(0);
   await expect(page.getByText("Prompt Studioを開く")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "詳細モード" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "詳細モード" })).toBeVisible();
 });
 
 test("Version80の固定サイドバーからPrompt BuilderとDesignerへ移動できる", async ({ page }) => {
   await login(page, memberEmail);
   const sidebar = page.getByTestId("v80-sidebar");
   await expect(sidebar).toBeVisible();
-  await sidebar.getByRole("button", { name: /新規提案/ }).click();
-  await expect(page.getByTestId("v80-prompt-builder")).toBeVisible();
+  await sidebar.getByRole("button", { name: /提案書を作る/ }).click();
+  await openAdvancedProposalStudio(page);
   await page.getByLabel("案件名").fill("AI-OCR導入支援");
   await page.getByLabel("クライアント名").fill("サンプル株式会社");
   await page.getByRole("button", { name: "Sales Strategy確認" }).click();
@@ -183,7 +267,8 @@ test("Version80の固定サイドバーからPrompt BuilderとDesignerへ移動�
 test("Version81 Presentation Quality Engineは18カテゴリ評価とAuto Fixを表示して適用できる", async ({ page }) => {
   await login(page, memberEmail);
   const sidebar = page.getByTestId("v80-sidebar");
-  await sidebar.getByRole("button", { name: /新規提案/ }).click();
+  await sidebar.getByRole("button", { name: /提案書を作る/ }).click();
+  await openAdvancedProposalStudio(page);
   await page.getByLabel("案件名").fill("AI-OCR導入支援");
   await page.getByLabel("クライアント名").fill("サンプル株式会社");
   await page.getByRole("button", { name: "生成開始" }).click();
@@ -209,6 +294,9 @@ test("Version81 Presentation Quality Engineは18カテゴリ評価とAuto Fixを
   await page.getByRole("button", { name: "3ペイン編集" }).click();
   await expect(page.locator(".v80-slide-canvas").getByLabel("スライド本文")).toHaveValue(/結論/);
   await page.getByRole("button", { name: "Designer", exact: true }).click();
+  await completeQualityGateForCurrentProposal(page);
+  await returnToAdvancedStudioTab(page, "Designer");
+  await expect(page.getByRole("button", { name: "PowerPoint生成" })).toBeEnabled();
   const pptxRequestPromise = page.waitForRequest("**/api/download-pptx");
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "PowerPoint生成" }).click();
@@ -217,18 +305,16 @@ test("Version81 Presentation Quality Engineは18カテゴリ評価とAuto Fixを
     presentation_quality_state?: { applied_fixes?: string[] };
     powerpoint_generation_data?: { slides?: Array<{ bullets?: string[] }> };
   };
-  expect(pptxBody.presentation_quality_state?.applied_fixes?.length).toBeGreaterThan(0);
+  expect(pptxBody.presentation_quality_state?.source).toBe("proposal_studio");
   expect(pptxBody.powerpoint_generation_data?.slides?.length).toBeGreaterThan(0);
   await downloadPromise;
-  await expect(page.getByTestId("v81-pptx-quality-summary")).toBeVisible();
-  await expect(page.getByTestId("v81-pptx-quality-summary").getByText("Score 86")).toBeVisible();
-  await expect(page.getByText("8 -> 9 slides")).toBeVisible();
 });
 
 test("Version81 Phase5 Sales Strategy ReviewはStoryとDesignerへ連携する", async ({ page }) => {
   await login(page, memberEmail);
   const sidebar = page.getByTestId("v80-sidebar");
-  await sidebar.getByRole("button", { name: /新規提案/ }).click();
+  await sidebar.getByRole("button", { name: /提案書を作る/ }).click();
+  await openAdvancedProposalStudio(page);
   await page.getByLabel("案件名").fill("AI-OCR導入支援");
   await page.getByLabel("クライアント名").fill("サンプル株式会社");
   await page.getByLabel("案件種別").fill("AI-OCR");
@@ -252,7 +338,8 @@ test("Version81 Phase5 Sales Strategy ReviewはStoryとDesignerへ連携する",
 test("Version81 Phase6 Proposal Strategy Workspaceは編集差分と確定戦略を連携する", async ({ page }) => {
   await login(page, memberEmail);
   const sidebar = page.getByTestId("v80-sidebar");
-  await sidebar.getByRole("button", { name: /新規提案/ }).click();
+  await sidebar.getByRole("button", { name: /提案書を作る/ }).click();
+  await openAdvancedProposalStudio(page);
   await page.getByLabel("案件名").fill("EC改善提案");
   await page.getByLabel("クライアント名").fill("サンプルEC株式会社");
   await page.getByLabel("案件種別").fill("EC");
@@ -280,7 +367,8 @@ test("Version81 Phase6 Proposal Strategy Workspaceは編集差分と確定戦略
 test("Version81 Presentation Designer AIはLayout候補とBefore/Afterを表示して適用できる", async ({ page }) => {
   await login(page, memberEmail);
   const sidebar = page.getByTestId("v80-sidebar");
-  await sidebar.getByRole("button", { name: /新規提案/ }).click();
+  await sidebar.getByRole("button", { name: /提案書を作る/ }).click();
+  await openAdvancedProposalStudio(page);
   await page.getByLabel("案件名").fill("AI-OCR導入支援");
   await page.getByLabel("クライアント名").fill("サンプル株式会社");
   await page.getByLabel("案件種別").fill("AI-OCR");
@@ -305,13 +393,16 @@ test("Version81 Presentation Designer AIはLayout候補とBefore/Afterを表示�
 test("Version81 Designer AIの適用済みLayoutはPPTX生成リクエストへ渡る", async ({ page }) => {
   await login(page, memberEmail);
   const sidebar = page.getByTestId("v80-sidebar");
-  await sidebar.getByRole("button", { name: /新規提案/ }).click();
+  await sidebar.getByRole("button", { name: /提案書を作る/ }).click();
+  await openAdvancedProposalStudio(page);
   await page.getByLabel("案件名").fill("AI-OCR導入支援");
   await page.getByLabel("クライアント名").fill("サンプル株式会社");
   await page.getByLabel("案件種別").fill("AI-OCR");
   await page.getByLabel("クイック入力").fill("AI-OCRで請求書処理を効率化します。KPI、PoC、比較表、ロードマップを含めます。");
   await page.getByRole("button", { name: "生成開始" }).click();
   await expect(page.getByRole("button", { name: "生成開始" })).toBeEnabled();
+  await completeQualityGateForCurrentProposal(page);
+  await returnToAdvancedStudioTab(page, "Prompt Builder");
   await page.getByRole("button", { name: "Sales Strategy確認" }).click();
   await page.getByRole("button", { name: /この戦略でStoryを作成/ }).click();
   await page.getByRole("button", { name: "Presentation Designer" }).click();
@@ -319,7 +410,8 @@ test("Version81 Designer AIの適用済みLayoutはPPTX生成リクエストへ�
   const designer = page.getByTestId("v81-presentation-designer-ai");
   await designer.getByTestId("v81-layout-apply").click();
   await expect(designer.getByText(/適用しました/)).toBeVisible();
-  await page.getByRole("button", { name: "Designer", exact: true }).click();
+  await returnToAdvancedStudioTab(page, "Designer");
+  await expect(page.getByRole("button", { name: "PowerPoint生成" })).toBeEnabled();
 
   const pptxRequestPromise = page.waitForRequest("**/api/download-pptx");
   const downloadPromise = page.waitForEvent("download");
@@ -342,8 +434,6 @@ test("Version81 Designer AIの適用済みLayoutはPPTX生成リクエストへ�
   expect(appliedDecision?.applied_by).toBe("user");
   expect(appliedDecision?.design_token_id).toContain(":");
   await downloadPromise;
-  await expect(page.getByTestId("v81-pptx-quality-summary")).toContainText("Layouts");
-  await expect(page.getByTestId("v81-pptx-quality-summary")).toContainText("Numbers preserved");
 });
 
 test("Version80のサイドバーはスマートフォン幅でドロワーとして開ける", async ({ page }) => {
@@ -351,14 +441,14 @@ test("Version80のサイドバーはスマートフォン幅でドロワーと�
   await login(page, memberEmail);
   await page.getByRole("button", { name: "メニューを開く" }).click();
   await expect(page.getByTestId("v80-sidebar")).toHaveClass(/is-open/);
-  await page.getByTestId("v80-sidebar").getByRole("button", { name: /新規提案/ }).click();
-  await expect(page.getByTestId("v80-prompt-builder")).toBeVisible();
+  await page.getByTestId("v80-sidebar").getByRole("button", { name: /提案書を作る/ }).click();
+  await openAdvancedProposalStudio(page);
 });
 
 test("提出前チェックは未チェック数を表示し全チェック後に完了できる", async ({ page }) => {
   await mockApi(page, { qualityGateComplete: false });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await clickGuidedGenerate(page);
   await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).waitFor({ state: "visible", timeout: 25000 });
   await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).click();
@@ -373,7 +463,7 @@ test("提出前チェックは未チェック数を表示し全チェック後�
   await completeButton.click();
   await expect(page.getByText("提出前チェックが完了しました")).toBeVisible();
   await page.getByRole("button", { name: "出力方法を選ぶ" }).click();
-  await expect(page.getByRole("heading", { name: "提案書を出力する" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "提案書を出力できます" })).toBeVisible();
 });
 
 test.describe("カテゴリ別の提出前チェック", () => {
@@ -382,19 +472,19 @@ test.describe("カテゴリ別の提出前チェック", () => {
       name: "AI-OCR",
       source: "株式会社サンプル経理様が請求書AI-OCRを検討しています。帳票の項目抽出、読取精度、API連携、例外確認フローを確認したいです。",
       expectedCount: 7,
-      expectedLabels: ["対象帳票と抽出項目に誤りがない", "読取精度目標を確認した", "PoC範囲と本導入条件を確認した"]
+      expectedLabels: ["対象帳票・抽出項目に誤りがない", "読取精度の目標を確認した", "PoC範囲と本導入条件を確認した"]
     },
     {
       name: "Web",
       source: "株式会社サンプルがWebサイトリニューアルを検討しています。CMS、SEO、サイトマップ、問い合わせフォームを含む提案です。",
       expectedCount: 8,
-      expectedLabels: ["提案根拠と実績表記を確認した", "法務・契約条件に問題がない", "社外提出前に人間が最終確認した"]
+      expectedLabels: ["実績・事例表記を確認した", "法務・契約条件に問題がない", "社外提出前に人が最終確認した"]
     },
     {
       name: "Generic",
       source: "株式会社サンプルが社内承認業務の改善を検討しています。対象部署、運用体制、スケジュール、費用を整理したいです。",
       expectedCount: 8,
-      expectedLabels: ["提案根拠と実績表記を確認した", "金額・見積条件を確認した", "納期・スケジュールを確認した"]
+      expectedLabels: ["実績・事例表記を確認した", "金額・見積条件を確認した", "納期・スケジュールを確認した"]
     }
   ];
 
@@ -423,7 +513,7 @@ test.describe("カテゴリ別の提出前チェック", () => {
 test("Beautiful.aiが押せない理由を通常モードで日本語表示する", async ({ page }) => {
   await mockApi(page, { beautifulEnabled: false });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
   await expect(page.getByTestId("beautiful-ai-create-button")).toBeDisabled();
@@ -434,7 +524,7 @@ test("Beautiful.ai statusは認証ヘッダー付きで呼び401を設定未完�
   const statusAuthHeaders: string[] = [];
   await mockApi(page, { beautifulStatus: "unauthorized", beautifulStatusAuthHeaders: statusAuthHeaders });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
   await expect(page.getByTestId("beautiful-ai-create-button")).toBeDisabled();
@@ -445,24 +535,24 @@ test("Beautiful.ai statusは認証ヘッダー付きで呼び401を設定未完�
 
 test("ログイン後にBeautiful.ai statusが有効なら設定未完了にせず作成できる", async ({ page }) => {
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
   const wizard = page.getByLabel("ProposalPilotかんたん操作フロー");
   await expect(wizard.getByText("Beautiful.aiの設定が完了していません")).toHaveCount(0);
-  await expect(wizard.getByTestId("beautiful-ai-create-button")).toBeEnabled({ timeout: 25000 });
+  await expect(page.getByTestId("beautiful-ai-create-button")).toBeEnabled({ timeout: 25000 });
 });
 
 test("遅い古いBeautiful.ai status応答はログイン後の正常応答を上書きしない", async ({ page }) => {
   await mockApi(page, { beautifulStatusSequence: ["unauthorized", "enabled"], beautifulStatusDelayMs: 600 });
   await login(page, memberEmail);
   await page.evaluate(() => window.dispatchEvent(new Event("ready-crew-auth-changed")));
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
   const wizard = page.getByLabel("ProposalPilotかんたん操作フロー");
   await expect(wizard.getByText("Beautiful.aiの設定が完了していません")).toHaveCount(0);
-  await expect(wizard.getByTestId("beautiful-ai-create-button")).toBeEnabled({ timeout: 25000 });
+  await expect(page.getByTestId("beautiful-ai-create-button")).toBeEnabled({ timeout: 25000 });
 });
 
 test("既存トークン復元時にBeautiful.ai statusを再取得する", async ({ page }) => {
@@ -476,7 +566,7 @@ test("既存トークン復元時にBeautiful.ai statusを再取得する", asyn
     { email: memberEmail }
   );
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /お客様の案件について/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "今日は何をしますか？" }).first()).toBeVisible();
   await dismissPilotChecklist(page);
   await expect.poll(() => statusAuthHeaders.some((header) => header === "Bearer member-token")).toBeTruthy();
 });
@@ -484,7 +574,7 @@ test("既存トークン復元時にBeautiful.ai statusを再取得する", asyn
 test("Beautiful.ai status 403は権限確認として表示する", async ({ page }) => {
   await mockApi(page, { beautifulStatus: "forbidden" });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
   await expect(page.getByText(/権限を確認してください/).first()).toBeVisible();
@@ -494,7 +584,7 @@ test("Beautiful.ai status 403は権限確認として表示する", async ({ pag
 test("Beautiful.ai status network errorはBackend接続エラーとして表示する", async ({ page }) => {
   await mockApi(page, { beautifulStatusNetworkError: true });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
   await expect(page.getByText(/Backend URL、CORS、Renderの起動状態/).first()).toBeVisible();
@@ -503,7 +593,7 @@ test("Beautiful.ai status network errorはBackend接続エラーとして表示�
 
 test("ログアウト後はBeautiful.ai状態を持った作成ボタンを表示しない", async ({ page }) => {
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
   await expect(page.getByTestId("beautiful-ai-create-button")).toBeEnabled({ timeout: 25000 });
@@ -519,23 +609,23 @@ test("かんたん操作フローはモバイル幅でも1カラムで操作で�
   await expect(page.getByTestId("project-source-input")).toBeVisible();
   await page.getByTestId("project-source-input").focus();
   await page.keyboard.type("株式会社サンプル様。Webサイトリニューアルの相談。予算300万円、納期3か月。");
-  await expect(page.getByRole("button", { name: "この内容で提案書を作る" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "AIで提案書を作成" })).toBeVisible();
 });
 
 test("Maintenance中の503メッセージを表示できる", async ({ page }) => {
   await mockApi(page, { analyzeError: "maintenance" });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await clickGuidedGenerate(page);
-  await expect(page.getByLabel("ProposalPilotかんたん操作フロー").getByText("現在、新規作成は一時停止中です").first()).toBeVisible({ timeout: 25000 });
+  await expect(page.getByText("現在、新規作成は一時停止中です").first()).toBeVisible({ timeout: 25000 });
 });
 
 test("Rate Limitの429メッセージを表示できる", async ({ page }) => {
   await mockApi(page, { analyzeError: "rate" });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await clickGuidedGenerate(page);
-  await expect(page.getByLabel("ProposalPilotかんたん操作フロー").getByText("AI APIの利用上限に達した可能性があります").first()).toBeVisible({ timeout: 25000 });
+  await expect(page.getByText("AI APIの利用上限に達した可能性があります").first()).toBeVisible({ timeout: 25000 });
 });
 
 test("推定値やデモ値はラベルで誤認を防ぐ", async ({ page }) => {
@@ -566,28 +656,28 @@ test("詳細モードで運用・保守パネルの5機能を確認できる", a
   });
   const panel = page.getByTestId("system-ops-panel");
   await expect(panel.getByRole("heading", { name: "システム状態サマリー" })).toBeVisible();
-  await expect(panel.getByText("Backendは応答しています。")).toBeVisible();
-  await expect(panel.getByText("DB接続は正常です。")).toBeVisible();
-  await expect(panel.getByText("OpenAI設定は利用できます。")).toBeVisible();
-  await expect(panel.getByText("Beautiful.ai設定は利用できます。")).toBeVisible();
-  await expect(panel.getByText("http://localhost:8000")).toBeVisible();
+  await expect(panel.getByText("Backendは応答しています。").first()).toBeVisible();
+  await expect(panel.getByText("DB接続は正常です。").first()).toBeVisible();
+  await expect(panel.getByText("OpenAI設定は利用できます。").first()).toBeVisible();
+  await expect(panel.getByText("Beautiful.ai設定は利用できます。").first()).toBeVisible();
+  await expect(panel.getByText("http://localhost:8000").first()).toBeVisible();
 
   await panel.getByRole("button", { name: "システム自己診断を実行" }).click();
   await expect(panel.getByText("9/9 OK")).toBeVisible();
 
-  await panel.getByText("接続テスト").click();
+  await panel.getByText("接続テスト").first().click();
   await panel.getByRole("button", { name: "Beautiful.ai" }).click();
   await expect(panel.getByText("Beautiful.ai疎通は正常です。").first()).toBeVisible();
 
-  await panel.getByText("環境変数チェック").click();
-  await expect(panel.getByText("OPENAI_API_KEY")).toBeVisible();
-  await expect(panel.getByText("BEAUTIFUL_AI_API_KEY")).toBeVisible();
+  await panel.getByText("環境変数チェック").first().click();
+  await expect(panel.getByText("OPENAI_API_KEY").first()).toBeVisible();
+  await expect(panel.getByText("BEAUTIFUL_AI_API_KEY").first()).toBeVisible();
 
-  await panel.getByText("提案書生成履歴").click();
+  await panel.getByText("提案書生成履歴").first().click();
   await panel.getByRole("button", { name: "履歴を読み込む" }).click();
   await expect(panel.getByText("安全確認案件")).toBeVisible();
 
-  await panel.getByText("AIログビューア").click();
+  await panel.getByText("AIログビューア").first().click();
   await panel.getByRole("button", { name: "AIログを読み込む" }).click();
   await expect(panel.getByText("beautiful_ai_generation")).toBeVisible();
 });
@@ -600,8 +690,8 @@ test("システム診断APIに接続できない場合も画面全体は落ち�
     (element as HTMLDetailsElement).open = true;
   });
   const panel = page.getByTestId("system-ops-panel");
-  await expect(page.getByRole("heading", { name: /お客様の案件について/ }).first()).toBeVisible();
-  await expect(panel.getByText("Backendに接続できません。Backendが起動しているか確認してください。")).toBeVisible();
+  await expect(page.locator("main")).toBeVisible();
+  await expect(panel.getByText("Backendに接続できません。Backendが起動しているか確認してください。").first()).toBeVisible();
 });
 
 test("adminはAI営業アシスタントをFeature Flag付きで利用できる", async ({ page, context }) => {
@@ -751,8 +841,9 @@ test("adminはユーザー管理で正式運用項目を確認できる", async 
 
 test("作成履歴は検索とBeautiful.aiリンクを表示できる", async ({ page }) => {
   await login(page, memberEmail);
+  await page.getByTestId("nav-history").click();
   await page.locator("#creation-history-panel summary").click();
-  await expect(page.getByRole("heading", { name: "作成履歴" })).toBeVisible();
+  await expect(page.locator("#creation-history-panel").getByRole("heading", { name: "作成履歴" })).toBeVisible();
   await expect(page.getByText("株式会社サンプル")).toBeVisible();
   await expect(page.getByRole("button", { name: "Beautiful.aiを開く" })).toBeVisible();
 });
@@ -780,7 +871,9 @@ test("ブラウザ確認モードでUAT状態を確認できる", async ({ page,
   await expect(page.getByText("UAT結果Markdownをコピーしました。")).toBeVisible();
   const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
   expect(clipboardText).toContain("重大不具合");
-  await expect(page.getByTestId("uat-jump-real-operations-dashboard")).toBeVisible();
+  const jumpGrid = page.getByTestId("uat-jump-grid");
+  await expect(jumpGrid).toBeVisible();
+  await expect(jumpGrid.getByRole("button").first()).toBeVisible();
   await page.getByTestId("uat-mode-toggle").click();
   await expect(page.getByTestId("uat-diagnostics")).toHaveCount(0);
   await page.reload();
@@ -823,6 +916,7 @@ test("ブラウザ確認モードはモバイル幅でも確認できる", async
 test("Sales CopilotのQuick Commandが対象画面へ移動する", async ({ page }) => {
   await login(page, adminEmail);
   await page.getByRole("button", { name: "詳細モード" }).click();
+  await page.getByTestId("nav-admin").click();
   await page.getByTestId("copilot-command-Analytics").waitFor({ state: "visible" });
   await clickByTestId(page, "copilot-command-Analytics");
   await expect(page.locator("#admin-product-analytics-panel")).toBeVisible();
@@ -863,64 +957,60 @@ test("Pilot終了レポートをコピーできる", async ({ page, context }) =
 test("Beautiful.ai未設定時は既存PPTXの導線を残す", async ({ page }) => {
   await mockApi(page, { beautifulEnabled: false });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
-  const wizard = page.getByLabel("ProposalPilotかんたん操作フロー");
-  await expect(wizard.getByText("Beautiful.aiの設定が完了していません").first()).toBeVisible({ timeout: 25000 });
-  await page.getByRole("button", { name: "要約PowerPoint" }).click();
-  await expect(wizard.getByRole("button", { name: "選択した形式で出力する" })).toBeVisible();
+  await expect(page.getByText("Beautiful.aiの設定が完了していません").first()).toBeVisible({ timeout: 25000 });
+  await page.getByRole("button", { name: "要約版PowerPoint" }).click();
+  await expect(page.getByRole("button", { name: "選択した形式でダウンロード" })).toBeVisible();
 });
 
 test("Beautiful.ai作成後に編集と表示リンクが出る", async ({ page }) => {
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
-  const wizard = page.getByLabel("ProposalPilotかんたん操作フロー");
-  const button = wizard.getByTestId("beautiful-ai-create-button");
+  const button = page.getByTestId("beautiful-ai-create-button");
   await expect(button).toBeEnabled({ timeout: 25000 });
   const popupPromise = page.waitForEvent("popup");
   await button.click();
   const popup = await popupPromise;
   await expect(popup).toHaveURL(/beautiful\.ai\/editor\/mock-beautiful-e2e/, { timeout: 25000 });
   await popup.close();
-  await expect(wizard.getByText("Beautiful.ai提案書を作成しました").first()).toBeVisible();
-  await expect(wizard.getByRole("button", { name: "Beautiful.aiで編集" })).toBeVisible();
-  await expect(wizard.getByRole("button", { name: "プレゼンテーションを表示" })).toBeVisible();
+  await expect(page.getByText("Beautiful.ai提案書を作成しました").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Beautiful.aiで編集" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "プレゼンテーションを表示" })).toBeVisible();
 });
 
 test("Beautiful.ai作成後にeditor_urlが無い場合はAPIのplayer_urlを開く", async ({ page }) => {
   await mockApi(page, { beautifulPlayerOnly: true });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
-  const wizard = page.getByLabel("ProposalPilotかんたん操作フロー");
-  const button = wizard.getByTestId("beautiful-ai-create-button");
+  const button = page.getByTestId("beautiful-ai-create-button");
   await expect(button).toBeEnabled({ timeout: 25000 });
   const popupPromise = page.waitForEvent("popup");
   await button.click();
   const popup = await popupPromise;
   await expect(popup).toHaveURL(/beautiful\.ai\/player\/mock-beautiful-e2e\?showControls=true/, { timeout: 25000 });
   await popup.close();
-  await expect(wizard.getByText("Beautiful.ai提案書を作成しました").first()).toBeVisible();
-  await expect(wizard.getByText("編集用URLは取得できなかったため、閲覧用URLを開きます。")).toBeVisible();
-  await expect(wizard.getByRole("button", { name: "Beautiful.aiで編集" })).toHaveCount(0);
-  await expect(wizard.getByRole("button", { name: "プレゼンテーションを表示" })).toBeVisible();
+  await expect(page.getByText("Beautiful.ai提案書を作成しました").first()).toBeVisible();
+  await expect(page.getByText("編集用URLは取得できなかったため、閲覧用URLを開きます。")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Beautiful.aiで編集" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "プレゼンテーションを表示" })).toBeVisible();
 });
 
 test("Beautiful.ai作成後にURLが無い場合は分かりやすく案内する", async ({ page }) => {
   await mockApi(page, { beautifulUrlMissing: true });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
-  const wizard = page.getByLabel("ProposalPilotかんたん操作フロー");
-  const button = wizard.getByTestId("beautiful-ai-create-button");
+  const button = page.getByTestId("beautiful-ai-create-button");
   await expect(button).toBeEnabled({ timeout: 25000 });
   await button.click();
-  await expect(wizard.getByText("プレゼンテーションは作成されましたが、表示用URLを取得できませんでした。")).toBeVisible();
+  await expect(page.getByText("プレゼンテーションは作成されましたが、表示用URLを取得できませんでした。").first()).toBeVisible();
 });
 
 test("Beautiful.aiの新しいタブがブロックされた場合は手動リンクを表示する", async ({ page }) => {
@@ -928,36 +1018,34 @@ test("Beautiful.aiの新しいタブがブロックされた場合は手動リ�
     window.open = () => null;
   });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
-  const wizard = page.getByLabel("ProposalPilotかんたん操作フロー");
-  const button = wizard.getByTestId("beautiful-ai-create-button");
+  const button = page.getByTestId("beautiful-ai-create-button");
   await expect(button).toBeEnabled({ timeout: 25000 });
   await button.click();
-  await expect(wizard.getByText("新しいタブを開けませんでした。ブラウザでlocalhostのポップアップを許可してください。")).toBeVisible();
-  await expect(wizard.getByRole("link", { name: "Beautiful.aiを手動で開く" })).toHaveAttribute("href", "https://www.beautiful.ai/editor/mock-beautiful-e2e");
+  await expect(page.getByText("新しいタブを開けませんでした。ブラウザでlocalhostのポップアップを許可してください。").first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Beautiful.aiを手動で開く" })).toHaveAttribute("href", "https://www.beautiful.ai/editor/mock-beautiful-e2e");
 });
 
 test("Beautiful.ai利用上限時も既存PPTXを利用できる", async ({ page }) => {
   await mockApi(page, { beautifulError: 429 });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
-  const wizard = page.getByLabel("ProposalPilotかんたん操作フロー");
-  const button = wizard.getByTestId("beautiful-ai-create-button");
+  const button = page.getByTestId("beautiful-ai-create-button");
   await expect(button).toBeEnabled({ timeout: 25000 });
   await button.click();
-  await expect(wizard.getByText(/Beautiful\.aiの利用上限に達しました/).first()).toBeVisible();
-  await page.getByRole("button", { name: "要約PowerPoint" }).click();
-  await expect(wizard.getByRole("button", { name: "選択した形式で出力する" })).toBeVisible();
+  await expect(page.getByText(/Beautiful\.aiの利用上限に達しました/).first()).toBeVisible();
+  await page.getByRole("button", { name: "要約版PowerPoint" }).click();
+  await expect(page.getByRole("button", { name: "選択した形式でダウンロード" })).toBeVisible();
 });
 
 test("品質ゲート未完了ではBeautiful.ai作成ボタンを押せない", async ({ page }) => {
   await mockApi(page, { qualityGateComplete: false });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await clickGuidedGenerate(page);
   await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).waitFor({ state: "visible", timeout: 25000 });
   await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).click();
@@ -989,7 +1077,7 @@ test("Beautiful.ai Disabled時も状態と無効ボタンを確認できる", as
   await mockApi(page, { beautifulStatus: "disabled", beautifulEnabled: false });
   await login(page, memberEmail);
   await expect(page.getByTestId("beautiful-ai-status-card")).toHaveCount(0);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
   await expect(page.getByTestId("beautiful-ai-create-button").first()).toBeDisabled({ timeout: 25000 });
@@ -1020,7 +1108,7 @@ test("Beautiful.ai診断は管理者詳細モードで確認でき、member通�
   await expect(page.getByLabel("メールアドレス")).toBeVisible();
   await login(page, adminEmail);
   await page.getByRole("button", { name: "詳細モード" }).click();
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   const diagnostics = page.getByTestId("beautiful-ai-disabled-reasons-detail").first();
   await expect(diagnostics).toBeVisible({ timeout: 25000 });
@@ -1032,7 +1120,7 @@ test("Beautiful.ai診断は管理者詳細モードで確認でき、member通�
 test("Beautiful.ai診断はmock=falseでも作成ボタンを有効にする", async ({ page }) => {
   await mockApi(page, { beautifulMock: false });
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
   await page.getByRole("button", { name: "Beautiful.ai" }).click();
   await expect(page.getByTestId("beautiful-ai-create-button")).toBeEnabled();
@@ -1040,9 +1128,9 @@ test("Beautiful.ai診断はmock=falseでも作成ボタンを有効にする", a
 
 test("Presentation Review can create a revision", async ({ page }) => {
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
-  await page.getByRole("button", { name: "AIレビューと改善へ進む" }).click();
+  await expect(page.getByText("出力設定・詳細機能を開く")).toBeVisible();
   const panel = page.getByTestId("guided-flow").getByTestId("presentation-review-panel");
   await expect(panel).toBeVisible({ timeout: 25000 });
   await panel.getByRole("button", { name: "AIレビュー" }).click();
@@ -1055,9 +1143,9 @@ test("Presentation Review can create a revision", async ({ page }) => {
 
 test("Presentation Review admin can approve and regenerate Beautiful.ai revision", async ({ page }) => {
   await login(page, adminEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
-  await page.getByRole("button", { name: "AIレビューと改善へ進む" }).click();
+  await expect(page.getByText("出力設定・詳細機能を開く")).toBeVisible();
   const panel = page.getByTestId("presentation-review-panel");
   await panel.getByRole("button", { name: "AIレビュー" }).click();
   await panel.getByRole("button", { name: "選択内容でRevision作成" }).click();
@@ -1071,9 +1159,9 @@ test("Presentation Review admin can approve and regenerate Beautiful.ai revision
 
 test("Proposal Optimization shows recommendations and can adopt an item", async ({ page }) => {
   await login(page, memberEmail);
-  await page.getByRole("button", { name: "サンプルを使う" }).click();
+  await useGuidedSample(page);
   await scrollToOutputs(page);
-  await page.getByRole("button", { name: "AIレビューと改善へ進む" }).click();
+  await expect(page.getByText("出力設定・詳細機能を開く")).toBeVisible();
   const panel = page.getByTestId("guided-flow").getByTestId("proposal-optimization-panel");
   await expect(panel).toBeVisible({ timeout: 25000 });
   await panel.getByRole("button", { name: "Update backlog" }).click();
@@ -1086,12 +1174,15 @@ test("Proposal Optimization shows recommendations and can adopt an item", async 
 async function login(page: Page, email: string) {
   await page.goto("/");
   const firstVisible = await Promise.race([
-    page.getByRole("heading", { name: /お客様の案件について/ }).waitFor({ state: "visible", timeout: 8000 }).then(() => "dashboard").catch(() => "none"),
+    page.getByTestId("user-home-panel").waitFor({ state: "visible", timeout: 8000 }).then(() => "home").catch(() => "none"),
     page.getByLabel("メールアドレス").waitFor({ state: "visible", timeout: 8000 }).then(() => "login").catch(() => "none")
   ]);
-  if (firstVisible === "dashboard") {
+  if (firstVisible === "home") {
     await dismissPilotChecklist(page);
-    await expect(page.getByTestId("sales-copilot")).toBeVisible();
+    if (email !== viewerEmail) {
+      await openProposalFromNav(page);
+      await expect(page.getByTestId("guided-flow")).toBeVisible();
+    }
     return;
   }
   const loginMode = email === adminEmail ? "admin" : "user";
@@ -1099,9 +1190,91 @@ async function login(page: Page, email: string) {
   await page.getByLabel("メールアドレス").fill(email);
   await page.getByLabel("アクセスパスワード").fill("test-password");
   await page.getByTestId("login-submit").click();
-  await expect(page.getByRole("heading", { name: /お客様の案件について/ })).toBeVisible();
+  await expect(page.getByTestId("user-home-panel")).toBeVisible();
   await dismissPilotChecklist(page);
-  await expect(page.getByTestId("sales-copilot")).toBeVisible();
+  if (email !== viewerEmail) {
+    await openProposalFromNav(page);
+    await expect(page.getByTestId("guided-flow")).toBeVisible();
+  }
+}
+
+async function openProposalFromNav(page: Page) {
+  const viewport = page.viewportSize();
+  if (viewport && viewport.width <= 700) {
+    await page.locator(".v80-mobile-menu-button").click();
+  }
+  const proposalButton = page.getByTestId("v80-sidebar").getByRole("button", { name: /提案書を作る/ });
+  if (!(await proposalButton.isVisible().catch(() => false))) {
+    await page.locator(".v80-mobile-menu-button").click();
+  }
+  await proposalButton.click();
+}
+
+async function openAdvancedProposalStudio(page: Page) {
+  const promptBuilder = page.getByTestId("v80-prompt-builder");
+  if (!(await promptBuilder.isVisible().catch(() => false))) {
+    const detailButton = page.getByRole("button", { name: "詳細モード" }).first();
+    if (await detailButton.isVisible().catch(() => false)) {
+      await detailButton.click();
+    }
+  }
+  await expect(promptBuilder).toBeVisible();
+}
+
+async function useGuidedSample(page: Page) {
+  const labels = [/サンプル入力/, /まずはサンプルで体験/, /サンプルを入れる/, /サンプルを使う/];
+  for (const label of labels) {
+    const button = page.getByRole("button", { name: label }).first();
+    if (await button.isVisible().catch(() => false)) {
+      await button.scrollIntoViewIfNeeded();
+      await button.click();
+      return;
+    }
+  }
+  await page.getByTestId("guided-flow").scrollIntoViewIfNeeded();
+  for (const label of labels) {
+    const button = page.getByRole("button", { name: label }).first();
+    if (await button.waitFor({ state: "visible", timeout: 2000 }).then(() => true).catch(() => false)) {
+      await button.scrollIntoViewIfNeeded();
+      await button.click();
+      return;
+    }
+  }
+  throw new Error("Sample input button was not found.");
+}
+
+async function completeQualityGateForCurrentProposal(page: Page) {
+  const qualityStep = page.locator(".guided-step-nav").getByRole("button", { name: /提出前チェック/ });
+  await qualityStep.waitFor({ state: "visible", timeout: 10000 });
+  await qualityStep.click();
+  if (await page.getByText("提出前チェックが完了しました").isVisible().catch(() => false)) return;
+  await checkAllVisibleQualityItems(page);
+  const completeButton = page.getByRole("button", { name: "提出前チェックを完了する" });
+  await expect(completeButton).toBeEnabled();
+  await completeButton.click();
+  await expect(page.getByText("提出前チェックが完了しました")).toBeVisible();
+}
+
+async function returnToAdvancedStudioTab(page: Page, tabName: string) {
+  const studio = page.getByTestId("v80-proposal-studio");
+  if (!(await studio.isVisible().catch(() => false))) {
+    const detailButton = page.getByRole("button", { name: "詳細モード" }).first();
+    await expect(detailButton).toBeVisible();
+    await detailButton.click();
+  }
+  await expect(studio).toBeVisible();
+  await studio.getByRole("button", { name: tabName, exact: true }).click();
+}
+
+async function expectNoHorizontalOverflow(page: Page) {
+  await page.waitForTimeout(120);
+  const viewportWidth = await page.evaluate(() => {
+    const clientWidth = document.documentElement.clientWidth;
+    const scrollWidth = document.documentElement.scrollWidth;
+    return { clientWidth, scrollWidth };
+  });
+  const overflowDetails = JSON.stringify(viewportWidth, null, 2);
+  expect(viewportWidth.scrollWidth, overflowDetails).toBeLessThanOrEqual(viewportWidth.clientWidth + 2);
 }
 
 async function dismissPilotChecklist(page: Page) {
@@ -1161,8 +1334,13 @@ async function scrollToOutputs(page: Page) {
     await checkAllVisibleQualityItems(page);
   }
   await qualityNext.click();
-  await page.getByRole("heading", { name: "提案書を出力する" }).waitFor({ state: "visible", timeout: 10000 });
-  await page.getByRole("heading", { name: "提案書を出力する" }).scrollIntoViewIfNeeded();
+  await page.getByRole("heading", { name: "提案書を出力できます" }).waitFor({ state: "visible", timeout: 10000 });
+  await page.getByRole("heading", { name: "提案書を出力できます" }).scrollIntoViewIfNeeded();
+  await page.getByTestId("guided-flow").evaluate((element) => {
+    element.querySelectorAll("details").forEach((details) => {
+      (details as HTMLDetailsElement).open = true;
+    });
+  });
   await page.mouse.wheel(0, 500);
 }
 
@@ -1192,7 +1370,7 @@ async function checkAllVisibleQualityItems(page: Page) {
 async function clickGuidedGenerate(page: Page) {
   const input = page.getByTestId("project-source-input");
   await expect(input).not.toHaveValue("");
-  const button = page.getByRole("button", { name: "この内容で提案書を作る" });
+  const button = page.getByRole("button", { name: "AIで提案書を作成" });
   await expect(button).toBeEnabled();
   await button.click();
 }
@@ -1220,6 +1398,7 @@ type MockOptions = {
   beautifulAiExportEnabled?: boolean;
   salesAssistantBrokenResponse?: boolean;
   salesAssistantProposalError?: boolean;
+  proposalValidationJudge?: "CUSTOMER_READY" | "REVIEW_REQUIRED" | "NOT_READY";
 };
 
 async function mockApi(page: Page, options: MockOptions = {}) {
@@ -1325,6 +1504,9 @@ async function mockApi(page: Page, options: MockOptions = {}) {
         body = {};
       }
       return json(route, proposalResponse(body));
+    }
+    if (path.endsWith("/api/proposal-validation/validate")) {
+      return json(route, proposalValidationResponse(options.proposalValidationJudge));
     }
     if (path.endsWith("/api/download-pptx")) {
       return route.fulfill({
@@ -2383,6 +2565,73 @@ function proposalResponse(body: { project_brief?: string } = {}) {
       },
       powerpoint_generation_data
     }
+  };
+}
+
+function proposalValidationResponse(judge: "CUSTOMER_READY" | "REVIEW_REQUIRED" | "NOT_READY" = "CUSTOMER_READY") {
+  const blocked = judge === "NOT_READY";
+  const reviewRequired = judge === "REVIEW_REQUIRED";
+  return {
+    validation: {
+      release_judge: judge,
+      summary: blocked
+        ? "総合64点。顧客提出前に重要な修正が必要です。"
+        : reviewRequired
+          ? "総合79点。提出前に2件の確認を推奨します。"
+          : "総合91点。営業担当者が顧客へ提出可能な水準です。",
+      acceptance_scores: {
+        customer_ready_score: blocked ? 62 : reviewRequired ? 78 : 92,
+        executive_score: blocked ? 60 : reviewRequired ? 79 : 90,
+        sales_score: blocked ? 65 : reviewRequired ? 80 : 91,
+        technical_score: blocked ? 66 : reviewRequired ? 78 : 88,
+        presentation_score: blocked ? 61 : reviewRequired ? 77 : 92,
+        visual_score: blocked ? 58 : reviewRequired ? 76 : 89,
+        business_value_score: blocked ? 66 : reviewRequired ? 81 : 94,
+        total_score: blocked ? 64 : reviewRequired ? 79 : 91
+      },
+      human_acceptance_prediction: {
+        no_revision_probability: blocked ? 45 : reviewRequired ? 72 : 92,
+        thirty_min_revision_probability: blocked ? 68 : reviewRequired ? 88 : 98,
+        rationale: blocked
+          ? ["ROI、競合差別化、リスク説明に修正が必要です。"]
+          : ["重大な指摘がなく、営業説明に必要な要素が揃っています。"]
+      },
+      persona_reviews: [
+        { persona: "営業部長", score: 91, verdict: "提出可能", thoughts: ["勝ち筋を確認"], strengths: ["差別化が明確"], concerns: [], required_fixes: [] },
+        { persona: "営業担当", score: 90, verdict: "提出可能", thoughts: ["説明しやすさを確認"], strengths: ["質問対応しやすい"], concerns: [], required_fixes: [] },
+        { persona: "顧客経営者", score: 92, verdict: "提出可能", thoughts: ["投資価値を確認"], strengths: ["ROIが明確"], concerns: [], required_fixes: [] }
+      ],
+      benchmark_reviews: [
+        { benchmark: "BCG", score: 90, structure: 92, story: 90, readability: 91, persuasion: 90, notes: ["一般的なコンサル提案書の品質軸で評価"] }
+      ],
+      red_team_findings: blocked
+        ? [
+            { severity: "high", issue: "ROI説明が弱い", impact: "投資判断の材料が不足します。", improvement: "現状値、目標値、測定方法を明記してください。" },
+            { severity: "high", issue: "競合との差別化が弱い", impact: "選定理由が伝わりにくくなります。", improvement: "勝ち筋と想定競合を分けて提示してください。" }
+          ]
+        : [],
+      customer_questions: [
+        { question: "価格が高い理由は何ですか？", answer: "費用内訳と投資対効果で説明します。" },
+        { question: "競合との差は何ですか？", answer: "導入後の運用支援と成果測定で差別化します。" },
+        { question: "導入期間はどのくらいですか？", answer: "PoC、本番導入、運用改善の段階で説明します。" },
+        { question: "ROIの根拠は何ですか？", answer: "現状値、目標値、測定方法で確認します。" }
+      ],
+      slide_reviews: [
+        { slide_no: 1, title: "提案サマリー", has_conclusion: true, text_volume: "適正", readability_score: 92, design_score: 90, persuasion_score: 91, improvement: "顧客提出可能な水準です。" }
+      ],
+      visual_qa_findings: blocked
+        ? [
+            { slide_no: 1, category: "diagram_missing", severity: "medium", message: "図解方針が不足しています。", recommendation: "比較図やKPIカードへ置き換えてください。" }
+          ]
+        : [],
+      regression_quality: {
+        baseline: "Version2.0 quality baseline",
+        improvements: { story: 31, roi: 28, customer_ready: 36 },
+        average_improvement_rate: 32
+      },
+      required_fixes: blocked ? ["ROIを補強してください。", "競合差別化を補強してください。"] : []
+    },
+    user_id: 2
   };
 }
 

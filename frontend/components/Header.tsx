@@ -1,15 +1,17 @@
 "use client";
 
 import { memo } from "react";
-import { CheckCircle2, LogOut, Moon, Sun } from "lucide-react";
+import { CheckCircle2, LogOut, MonitorPlay, Moon, Sun } from "lucide-react";
 
 type HeaderProps = {
   isDarkMode: boolean;
+  isPresentationMode?: boolean;
+  onTogglePresentationMode?: () => void;
   onToggleDarkMode: () => void;
   onLogout: () => void;
 };
 
-function HeaderBase({ isDarkMode, onToggleDarkMode, onLogout }: HeaderProps) {
+function HeaderBase({ isDarkMode, isPresentationMode = false, onTogglePresentationMode, onToggleDarkMode, onLogout }: HeaderProps) {
   return (
     <section className="workspace-header" aria-label="アプリ概要">
       <div>
@@ -17,6 +19,17 @@ function HeaderBase({ isDarkMode, onToggleDarkMode, onLogout }: HeaderProps) {
         <h1>AI営業秘書</h1>
       </div>
       <div className="header-actions">
+        {onTogglePresentationMode && (
+          <button
+            className={`status-pill mode-toggle ${isPresentationMode ? "is-active" : ""}`}
+            type="button"
+            onClick={onTogglePresentationMode}
+            aria-pressed={isPresentationMode}
+          >
+            <MonitorPlay size={16} aria-hidden="true" />
+            発表モード
+          </button>
+        )}
         <button className="status-pill mode-toggle" type="button" onClick={onToggleDarkMode}>
           {isDarkMode ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
           {isDarkMode ? "ライト" : "ダーク"}

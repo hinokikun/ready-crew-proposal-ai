@@ -19,6 +19,7 @@ from app.routers import projects as projects_router
 from app.routers import proposal_agent as proposal_agent_router
 from app.routers import prompts as prompts_router
 from app.routers import proposal_optimization as proposal_optimization_router
+from app.routers import proposal_validation as proposal_validation_router
 from app.routers import quality_gates as quality_gates_router
 from app.routers import releases as releases_router
 from app.routers import reviews as reviews_router
@@ -47,6 +48,7 @@ def include_application_routers(app: FastAPI) -> None:
     app.include_router(learning_router.router)
     app.include_router(prompts_router.router)
     app.include_router(proposal_optimization_router.router)
+    app.include_router(proposal_validation_router.router)
     app.include_router(presentation_review_router.router)
     app.include_router(workspace_router.router)
     app.include_router(reviews_router.router)

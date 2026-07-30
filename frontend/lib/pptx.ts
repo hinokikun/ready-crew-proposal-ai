@@ -92,6 +92,15 @@ export type PresentationQualityDownloadReport = {
   };
   template_token_application?: Record<string, unknown>;
   human_review_items?: string[];
+  customer_ready_status?: "READY" | "REVIEW_REQUIRED" | "BLOCKED" | "";
+  customer_ready_score?: number | null;
+  customer_ready_reasons?: string[];
+  customer_ready_blockers?: string[];
+  customer_ready_auto_fixes?: string[];
+  customer_ready_excluded_internal_items?: string[];
+  customer_ready_sales_summary?: string[];
+  customer_ready_expected_questions?: Array<{ question: string; answer: string }>;
+  customer_ready_rubric?: Record<string, number>;
 };
 
 export type PowerPointDownloadResult = {
@@ -239,6 +248,11 @@ async function downloadPowerPoint(
   });
 
   if (!response.ok) {
+    const friendlyMessage = await readPowerPointErrorMessage(response.clone(), response.status);
+    if (friendlyMessage) {
+      throw new Error(friendlyMessage);
+    }
+
     let message = `PowerPointの生成に失敗しました。status=${response.status}`;
 
     try {
@@ -264,6 +278,33 @@ async function downloadPowerPoint(
   anchor.click();
   URL.revokeObjectURL(url);
   return { filename, qualityReport };
+}
+
+type CustomerReadyBlockedDetail = {
+  error_code?: string;
+  status?: string;
+  score?: number;
+  reasons?: string[];
+  blockers?: string[];
+};
+
+async function readPowerPointErrorMessage(response: Response, status: number): Promise<string | null> {
+  try {
+    const errorBody = (await response.json()) as { detail?: string | CustomerReadyBlockedDetail };
+    const detail = errorBody.detail;
+    if (!detail) return null;
+    if (typeof detail === "string") {
+      return `PowerPointの生成に失敗しました。status=${status}: ${detail}`;
+    }
+    if (detail.error_code === "CUSTOMER_READY_BLOCKED") {
+      const blockerText = detail.blockers?.length ? ` 確認事項: ${detail.blockers.slice(0, 2).join(" / ")}` : "";
+      const reasonText = detail.reasons?.length ? ` 理由: ${detail.reasons.slice(0, 2).join(" / ")}` : "";
+      return `顧客提出チェックで停止しました。スコア ${detail.score ?? "-"}点。${blockerText || reasonText || "内容を確認してください。"}`;
+    }
+  } catch {
+    return null;
+  }
+  return null;
 }
 
 function getDownloadFilename(contentDisposition: string | null, fallbackTitle: string) {

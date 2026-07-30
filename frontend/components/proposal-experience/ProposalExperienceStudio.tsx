@@ -1093,10 +1093,14 @@ function PptxQualityDownloadSummary({ report }: { report: NonNullable<ProposalEx
   const fallbackCount = report.layout_fallbacks?.length ?? 0;
   const unsupportedCount = report.unsupported_layouts?.length ?? 0;
   const numericPreserved = report.numeric_integrity?.preserved ?? true;
+  const customerReadyStatus = report.customer_ready_status || "未確認";
+  const customerReadyScore = typeof report.customer_ready_score === "number" ? `${report.customer_ready_score}点` : "未採点";
   return (
     <div className="v81-pptx-quality-summary" data-testid="v81-pptx-quality-summary">
       <strong>PPTX Quality Report</strong>
       <span>Score {report.overall_score}</span>
+      <span>顧客提出チェック {customerReadyStatus}</span>
+      <span>{customerReadyScore}</span>
       {typeof report.predicted_score === "number" && <span>Predicted {report.predicted_score}</span>}
       {typeof report.rendered_score === "number" && <span>Rendered {report.rendered_score}</span>}
       {typeof report.score_delta === "number" && <span>Score Delta {report.score_delta >= 0 ? "+" : ""}{report.score_delta}</span>}
@@ -1106,6 +1110,8 @@ function PptxQualityDownloadSummary({ report }: { report: NonNullable<ProposalEx
       <span>Unsupported {unsupportedCount}</span>
       <span>{numericPreserved ? "Numbers preserved" : "Numbers require review"}</span>
       <span>{report.human_review_required ? "Human review required" : "Rendered check OK"}</span>
+      {(report.customer_ready_reasons ?? []).slice(0, 2).map((item) => <small key={item}>{item}</small>)}
+      {(report.customer_ready_sales_summary ?? []).slice(0, 2).map((item) => <small key={item}>{item}</small>)}
       {(report.human_review_items ?? []).slice(0, 2).map((item) => <small key={item}>{item}</small>)}
       {report.warnings.slice(0, 3).map((warning) => <small key={warning}>{warning}</small>)}
     </div>

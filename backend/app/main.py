@@ -31,6 +31,7 @@ from app.services.company_research_service import build_company_research_respons
 from app.services.openai_service import OpenAIServiceError, generate_proposal
 from app.services.pdf_service import PDF_MEDIA_TYPE, build_estimate_pdf_bytes, build_estimate_pdf_filename
 from app.services.pptx_service import MEDIA_TYPE, build_pptx_filename
+from app.services.customer_ready_quality import CustomerReadyBlockedError
 from app.services.presentation_engine_integration import build_pptx_bytes_for_engine
 from app.services.proposal_metadata_service import extract_contact_person, extract_customer_name, proposal_input_length, pptx_input_length
 
@@ -361,6 +362,25 @@ async def download_pptx(
                 project_name=payload.powerpoint_generation_data.deck_title,
                 powerpoint_generation_duration_ms=duration_ms,
             )
+    except CustomerReadyBlockedError as exc:
+        logger.info(
+            "customer_ready_quality_gate_blocked",
+            extra={
+                "status": exc.result.status,
+                "score": exc.result.score,
+                "blocker_count": len(exc.result.blockers),
+            },
+        )
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error_code": "CUSTOMER_READY_BLOCKED",
+                "status": exc.result.status,
+                "score": exc.result.score,
+                "reasons": exc.result.reasons,
+                "blockers": exc.result.blockers,
+            },
+        ) from exc
     except Exception as exc:
         logger.exception("Failed to generate PowerPoint download. summary=%s", payload.summary)
         detail = (

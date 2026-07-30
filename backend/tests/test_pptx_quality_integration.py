@@ -65,6 +65,9 @@ def test_download_pptx_returns_quality_report_header(
     assert report["slide_count_after"] >= report["slide_count_before"]
     assert report["template"] == "corporate_clean"
     assert "findings" in report
+    assert report["customer_ready_status"] in {"READY", "REVIEW_REQUIRED"}
+    assert report["customer_ready_score"] >= 70
+    assert report["customer_ready_expected_questions"]
 
 
 def test_summary_pptx_uses_quality_rules_without_breaking_download(

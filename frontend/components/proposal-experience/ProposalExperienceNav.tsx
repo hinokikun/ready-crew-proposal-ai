@@ -2,13 +2,11 @@
 
 import {
   BarChart3,
-  BookOpen,
   Briefcase,
   ChevronLeft,
   ChevronRight,
   FileClock,
   Home,
-  LayoutTemplate,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
@@ -16,7 +14,8 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
-  Wand2
+  Wand2,
+  Wrench
 } from "lucide-react";
 import type { ProposalExperienceView } from "@/components/proposal-experience/types";
 import { isAdminRole, isManagerCompatibleRole } from "@/lib/roles";
@@ -42,19 +41,34 @@ type NavItem = {
   adminOnly?: boolean;
 };
 
-const navItems: NavItem[] = [
-  { id: "home", label: "ホーム", description: "今日の提案状況", icon: Home },
-  { id: "new-proposal", label: "新規提案", description: "Prompt Builder", icon: Wand2 },
-  { id: "editor", label: "提案エディター", description: "Storyとスライド編集", icon: PenTool },
-  { id: "history", label: "提案履歴", description: "作成履歴とCSV", icon: FileClock },
-  { id: "projects", label: "案件一覧", description: "CRMと進行状況", icon: Briefcase },
-  { id: "assistant", label: "AI営業秘書", description: "Copilotと提案支援", icon: Sparkles },
-  { id: "templates", label: "テンプレート", description: "PPTデザイン選択", icon: LayoutTemplate },
-  { id: "analytics", label: "分析", description: "営業KPI", icon: BarChart3, managerOnly: true },
-  { id: "improvement", label: "業務改善", description: "短縮率と提出資料", icon: BookOpen },
-  { id: "admin", label: "管理", description: "ユーザーと監査", icon: ShieldCheck, adminOnly: true },
-  { id: "settings", label: "設定", description: "Workspaceと診断", icon: Settings, managerOnly: true }
+const userNavItems: NavItem[] = [
+  { id: "home", label: "ホーム", description: "最初にやること", icon: Home },
+  { id: "new-proposal", label: "提案書を作る", description: "案件情報を貼り付け", icon: Wand2 },
+  { id: "history", label: "作成履歴", description: "過去の提案書", icon: FileClock },
+  { id: "improvement", label: "分析・レポート", description: "効果測定とCSV", icon: BarChart3 },
+  { id: "settings", label: "設定", description: "アカウント確認", icon: Settings }
 ];
+
+const managerNavItems: NavItem[] = [
+  { id: "projects", label: "案件管理", description: "CRMと案件状態", icon: Briefcase, managerOnly: true },
+  { id: "assistant", label: "AI支援", description: "詳細な営業支援", icon: Sparkles, managerOnly: true },
+  { id: "editor", label: "詳細編集", description: "構成とデザイン", icon: PenTool, managerOnly: true },
+  { id: "templates", label: "出力設定", description: "PPTテンプレート", icon: Wrench, managerOnly: true },
+  { id: "analytics", label: "管理分析", description: "利用状況とKPI", icon: BarChart3, managerOnly: true }
+];
+
+const adminNavItems: NavItem[] = [
+  { id: "admin", label: "管理コンソール", description: "ユーザー・監査・運用", icon: ShieldCheck, adminOnly: true }
+];
+
+function buildVisibleItems(role?: string | null) {
+  const items = [...userNavItems, ...managerNavItems, ...adminNavItems];
+  return items.filter((item) => {
+    if (item.adminOnly) return isAdminRole(role ?? undefined);
+    if (item.managerOnly) return isManagerCompatibleRole(role ?? undefined);
+    return true;
+  });
+}
 
 export function ProposalExperienceNav({
   activeView,
@@ -67,11 +81,7 @@ export function ProposalExperienceNav({
   onToggleCollapsed,
   onToggleMobile
 }: ProposalExperienceNavProps) {
-  const visibleItems = navItems.filter((item) => {
-    if (item.adminOnly) return isAdminRole(role ?? undefined);
-    if (item.managerOnly) return isManagerCompatibleRole(role ?? undefined);
-    return true;
-  });
+  const visibleItems = buildVisibleItems(role);
 
   function selectView(view: ProposalExperienceView) {
     onChangeView(view);
@@ -90,8 +100,8 @@ export function ProposalExperienceNav({
           </span>
           {!collapsed && (
             <div>
-              <strong>ProposalPilot</strong>
-              <small>Proposal Experience</small>
+              <strong>AI営業秘書</strong>
+              <small>提案書作成ツール</small>
             </div>
           )}
         </div>
@@ -113,6 +123,7 @@ export function ProposalExperienceNav({
                 type="button"
                 key={item.id}
                 className={`v80-nav-item ${activeView === item.id ? "is-active" : ""}`}
+                data-testid={`nav-${item.id}`}
                 onClick={() => selectView(item.id)}
                 aria-current={activeView === item.id ? "page" : undefined}
                 title={collapsed ? `${item.label}: ${item.description}` : undefined}
@@ -129,18 +140,18 @@ export function ProposalExperienceNav({
           })}
         </nav>
 
-        <button className="v80-collapse-button" type="button" onClick={onToggleCollapsed} aria-label={collapsed ? "サイドバーを展開" : "サイドバーを折りたたむ"}>
+        <button className="v80-collapse-button" type="button" onClick={onToggleCollapsed} aria-label={collapsed ? "サイドバーを広げる" : "サイドバーを折りたたむ"}>
           {collapsed ? <PanelLeftOpen size={17} aria-hidden="true" /> : <PanelLeftClose size={17} aria-hidden="true" />}
           {!collapsed && <span>折りたたむ</span>}
         </button>
       </aside>
       {mobileOpen && <button className="v80-sidebar-backdrop" type="button" onClick={onToggleMobile} aria-label="メニューを閉じる" />}
-      <div className="v80-view-switcher" aria-label="ページ移動">
-        <button type="button" onClick={() => selectView(previousView(activeView, visibleItems))} aria-label="前のページ">
+      <div className="v80-view-switcher" aria-label="画面移動">
+        <button type="button" onClick={() => selectView(previousView(activeView, visibleItems))} aria-label="前の画面">
           <ChevronLeft size={16} aria-hidden="true" />
         </button>
         <span>{visibleItems.find((item) => item.id === activeView)?.label ?? "ホーム"}</span>
-        <button type="button" onClick={() => selectView(nextView(activeView, visibleItems))} aria-label="次のページ">
+        <button type="button" onClick={() => selectView(nextView(activeView, visibleItems))} aria-label="次の画面">
           <ChevronRight size={16} aria-hidden="true" />
         </button>
       </div>

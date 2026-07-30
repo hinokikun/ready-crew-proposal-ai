@@ -13,6 +13,8 @@ import {
   RotateCcw,
   Sparkles
 } from "lucide-react";
+import { ProposalValidationPanel } from "@/components/ProposalValidationPanel";
+import type { PowerPointData } from "@/types/proposal";
 
 export type ProposalResultSectionProps = {
   aiMinutes: { minutes: string[]; todos: string[]; nextActions: string[] };
@@ -84,10 +86,7 @@ export type ProposalResultSectionProps = {
         lost_patterns: string[];
       };
     };
-    powerpoint_generation_data: {
-      deck_title: string;
-      slides: Array<{ slide_no: number; title: string }>;
-    };
+    powerpoint_generation_data: PowerPointData;
   } | null;
   salesIndicators: any[];
   salesOpportunityScore: any;
@@ -460,6 +459,16 @@ export function ProposalResultSection({
                 </span>
               </button>
             </div>
+            <ProposalValidationPanel
+              powerpointData={result.powerpoint_generation_data}
+              proposalContext={{
+                project_brief: form.project_brief,
+                client_company_info: form.client_company_info,
+                competitor_company_name: form.competitor_company_name,
+                budget_range: form.budget_range,
+                desired_launch_timing: form.desired_launch_timing
+              }}
+            />
             <details className="analysis-foldout output-analysis-foldout">
               <summary>詳細分析を開く</summary>
             <p className="eyebrow">営業評価</p>

@@ -74,7 +74,7 @@ def _split_metric_text(value: str) -> tuple[str, str]:
     if "：" in value:
         label, body = value.split("：", 1)
         return label.strip(), body.strip()
-    return value, "要確認"
+    return value, "評価基準を合意"
 
 
 def _layout_items(slide_data: PowerPointSlide, count: int, fallback: list[str] | None = None) -> list[str]:
@@ -161,9 +161,28 @@ def render_comparison_table(prs: Presentation, slide_data: PowerPointSlide, data
     slide = blank_slide(prs)
     set_background(slide)
     _add_layout_header(slide, slide_data, "COMPARISON", COLORS["blue"])
-    items = _layout_items(slide_data, 4)
-    rows = [[f"View {idx + 1}", item, "Confirm"] for idx, item in enumerate(items[:4])]
-    add_table(slide, ["Axis", "Current / Proposal", "Check"], rows, 0.95, 1.78, 11.45, 3.42, [1.65, 7.05, 2.75])
+    items = _layout_items(slide_data, 6)
+    labels = ["Current", "Issue", "After", "Winning Point"]
+    for idx, label in enumerate(labels):
+        x = 0.92 + idx * 3.0
+        accent = _layout_accent(idx)
+        add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, x, 1.82, 2.62, 3.08, fill=COLORS["white"], line=COLORS["line"])
+        add_shape(slide, MSO_SHAPE.RECTANGLE, x, 1.82, 2.62, 0.09, fill=accent, line=accent)
+        add_icon_badge(slide, str(idx + 1), x + 0.88, 2.18, accent, size=0.66)
+        add_text(slide, label, x + 0.24, 3.0, 2.14, 0.28, size=15, color=accent, bold=True, align=PP_ALIGN.CENTER)
+        add_text(slide, _trim(items[idx], 42), x + 0.28, 3.52, 2.06, 0.68, size=13, color=COLORS["text"], bold=True, align=PP_ALIGN.CENTER)
+        if idx < 3:
+            add_shape(slide, MSO_SHAPE.CHEVRON, x + 2.52, 3.02, 0.32, 0.46, fill=COLORS["line_dark"], line=COLORS["line_dark"])
+    add_table(
+        slide,
+        ["Evidence", "Next Check"],
+        [[_trim(items[4] if len(items) > 4 else slide_data.speaker_notes, 58), _trim(items[5] if len(items) > 5 else "Confirm with customer", 48)]],
+        0.95,
+        5.35,
+        11.38,
+        0.72,
+        [6.3, 5.08],
+    )
     add_footer(slide, slide_data.slide_no)
 
 
@@ -567,7 +586,7 @@ def add_competitor_slide(prs: Presentation, slide_data: PowerPointSlide, context
     set_background(slide)
     add_header(slide, slide_data.title or "市場・競合分析", "COMPETITOR", accent=COLORS["purple"])
     competitor_name = context.competitor_company_name or "競合サイト"
-    target_label = "競合あり" if has_competitor_context(context) else "競合未確認"
+    target_label = "競合あり" if has_competitor_context(context) else "競合情報を整理"
     target_text = f"比較対象: {competitor_name}"
     if context.competitor_site_url:
         target_text = f"{target_text} / {context.competitor_site_url}"
@@ -755,7 +774,7 @@ def add_kpi_slide(prs: Presentation, slide_data: PowerPointSlide, context: PptxC
     else:
         metric_lines = ensure_items(
             [f"{label}: {value}" for label, value in context.kpi_rows],
-            ["業務時間削減: 要確認", "処理品質向上: 要確認", "運用定着率: 要確認", "改善サイクル: 要確認"],
+            ["業務時間削減: 測定方法を合意", "処理品質向上: 評価基準を設定", "運用定着率: 目標値を設定", "改善サイクル: 運用後に測定"],
             4,
         )
         metrics = [
@@ -1083,9 +1102,9 @@ def add_quality_comparison_slide(prs: Presentation, slide_data: PowerPointSlide,
     add_header(slide, slide_data.title, "COMPARISON", accent=COLORS["blue"])
     rows = []
     for idx, item in enumerate(unique_items(slide_data.bullets, 4), start=1):
-        rows.append([f"観点 {idx}", item, "要確認"])
+        rows.append([f"観点 {idx}", item, "評価基準を合意"])
     if not rows:
-        rows = [["観点", "入力内容を確認してください", "要確認"]]
+        rows = [["観点", "入力内容を整理してください", "評価基準を合意"]]
     add_table(slide, ["比較軸", "入力情報", "確認ポイント"], rows, 0.9, 1.72, 11.55, 3.35, [1.8, 7.0, 2.75])
     add_insight_band(slide, "Quality Rule", "比較・競合・Before/Afterの内容を編集可能な表として整理しました。", 0.95, 5.55, 11.45, 0.72)
     add_footer(slide, slide_data.slide_no)
@@ -1108,10 +1127,14 @@ def add_quality_kpi_slide(prs: Presentation, slide_data: PowerPointSlide, contex
     add_header(slide, slide_data.title, "KPI", accent=COLORS["green"])
     body = "\n".join(slide_data.bullets)
     numbers = unique_items(extract_numbers(body), 4)
-    if not numbers:
-        numbers = ["要確認"]
-    for idx, value in enumerate(numbers[:4]):
-        add_metric_card(slide, f"Metric {idx + 1}", value, 0.95 + idx * 2.88, 1.72, 2.5, 1.45, SECTION_COLORS[idx % len(SECTION_COLORS)])
+    if numbers:
+        metric_titles = [f"数値 {idx + 1}" for idx in range(len(numbers[:4]))]
+        metric_values = numbers[:4]
+    else:
+        metric_titles = ["現状値", "目標値", "測定方法", "判定基準"]
+        metric_values = ["入力情報を整理", "顧客と合意", "ログで測定", "PoCで確定"]
+    for idx, value in enumerate(metric_values[:4]):
+        add_metric_card(slide, metric_titles[idx], value, 0.95 + idx * 2.88, 1.72, 2.5, 1.45, SECTION_COLORS[idx % len(SECTION_COLORS)])
     add_bullet_list(slide, slide_data.bullets, 1.0, 3.7, 11.2, 1.82, max_items=5, size=13)
     add_insight_band(slide, "Numeric Integrity", "本文中の数値をそのまま保持し、存在しない実績値は追加していません。", 0.95, 5.72, 11.45, 0.58)
     add_footer(slide, slide_data.slide_no)
@@ -1132,7 +1155,8 @@ def add_quality_matrix_slide(prs: Presentation, slide_data: PowerPointSlide, con
     set_background(slide)
     add_header(slide, slide_data.title, "MATRIX", accent=COLORS["orange"])
     items = unique_items(slide_data.bullets, 4)
-    labels = items + ["要確認"] * (4 - len(items))
+    fallback_labels = ["評価対象を整理", "期待効果を整理", "検証方法を定義", "優先度を合意"]
+    labels = (items + fallback_labels)[:4]
     positions = [(0.95, 1.78), (6.72, 1.78), (0.95, 4.15), (6.72, 4.15)]
     for idx, (x, y) in enumerate(positions):
         add_card(slide, ["高優先", "高効果", "要検証", "低優先"][idx], labels[idx], x, y, 5.32, 1.45, SECTION_COLORS[idx], COLORS["white"])

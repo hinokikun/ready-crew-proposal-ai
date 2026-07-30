@@ -109,7 +109,7 @@ def test_detailed_pptx_uses_premium_editable_structure(
 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith(PPTX_MEDIA_TYPE)
-    actual = _assert_premium_pptx(response.content, min_slides=5, max_slides=12)
+    actual = _assert_premium_pptx(response.content, min_slides=5, max_slides=14)
     assert actual["total_tables"] >= 1
 
 

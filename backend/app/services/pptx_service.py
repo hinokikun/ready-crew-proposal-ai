@@ -97,10 +97,16 @@ from app.services.pptx_parts.slides import (
     add_win_probability_slide,
     resolve_slide_kind,
 )
+from app.services.customer_ready_quality import (
+    CustomerReadyBlockedError,
+    attach_customer_ready_report,
+    run_customer_ready_quality_gate,
+)
 from app.services.pptx_design.validators import validate_premium_deck
 from app.services.pptx_layout_integration import apply_layout_decisions_to_slides
 from app.services.pptx_quality import PptxQualityReport, merge_layout_integration_report, run_pptx_quality_pipeline, validate_rendered_pptx
 from app.services.pptx_theme import MEDIA_TYPE, SLIDE_HEIGHT, SLIDE_WIDTH
+from app.services.proposal_quality_upgrade import upgrade_slides_for_v11
 
 
 logger = logging.getLogger(__name__)
@@ -155,6 +161,11 @@ def _build_pptx_result(
             slides = build_summary_slides(slides, context)
         else:
             slides = normalize_detailed_slides(slides)
+        slides = upgrade_slides_for_v11(slides, context, summary_mode=summary_mode)
+        customer_ready_result = run_customer_ready_quality_gate(slides, context, summary_mode=summary_mode)
+        if customer_ready_result.status == "BLOCKED":
+            raise CustomerReadyBlockedError(customer_ready_result)
+        slides = customer_ready_result.slides
 
         # Version81 Phase2 investigation: /api/download-pptx, detailed decks, and
         # summary decks all converge here, so this is the narrowest compatible
@@ -195,6 +206,7 @@ def _build_pptx_result(
             display_slide_no += 1
 
         quality_report = validate_rendered_pptx(prs, quality_report)
+        quality_report = attach_customer_ready_report(quality_report, customer_ready_result)
         issues = validate_premium_deck(prs)
         if issues:
             logger.info(

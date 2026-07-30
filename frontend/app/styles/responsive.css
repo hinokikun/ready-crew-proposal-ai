@@ -192,6 +192,20 @@
     grid-template-columns: 1fr;
   }
 
+  .acceptance-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .acceptance-score-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .acceptance-prediction,
+  .validation-review-grid {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .generate-flow-panel {
     grid-template-columns: 1fr;
   }
@@ -1744,6 +1758,90 @@ span.is-neutral {
   .uat-diagnostics-grid,
   .uat-result-list,
   .uat-progress-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.v80-experience-shell > .workspace-header,
+.v80-experience-shell > .workspace-context-card,
+.v80-experience-shell > .guided-flow-shell,
+.v80-sidebar-collapsed.v80-experience-shell > .guided-flow-shell {
+  width: auto;
+}
+
+@media (max-width: 900px) {
+  .workspace-header,
+  .workspace-header > div,
+  .header-actions,
+  .workspace-context-card,
+  .workspace-context-title,
+  .workspace-context-actions,
+  .workspace-context-actions label {
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .workspace-context-card,
+  .workspace-context-title,
+  .workspace-context-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .workspace-context-actions select,
+  .workspace-context-actions .compact-button {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .workspace-context-title strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .v80-experience-shell > .workspace-header,
+  .v80-experience-shell > .workspace-context-card,
+  .v80-experience-shell > .guided-flow-shell,
+  .v80-sidebar-collapsed.v80-experience-shell > .guided-flow-shell {
+    width: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .v80-experience-shell > .guided-flow-shell,
+  .v80-sidebar-collapsed.v80-experience-shell > .guided-flow-shell {
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
+  }
+
+  .header-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .header-actions .status-pill,
+  .header-actions .mode-toggle {
+    min-width: 0;
+    padding-inline: 0.75rem;
+    width: 100%;
+  }
+
+  .pilot-mode-banner,
+  .maintenance-banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .proposal-validation-heading,
+  .persona-review-list > div,
+  .slide-review-list > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .acceptance-score-grid {
     grid-template-columns: 1fr;
   }
 }

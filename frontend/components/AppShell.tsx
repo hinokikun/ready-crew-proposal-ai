@@ -35,6 +35,7 @@ import { Header } from "@/components/Header";
 import { ProposalAgentDashboard } from "@/components/ProposalAgentDashboard";
 import { ProposalExperienceNav } from "@/components/proposal-experience/ProposalExperienceNav";
 import { ProposalExperienceStudio } from "@/components/proposal-experience/ProposalExperienceStudio";
+import { UserHomePanel } from "@/components/proposal-experience/UserHomePanel";
 import type { PresentationTemplateId, ProposalExperienceView } from "@/components/proposal-experience/types";
 import type { HealthSnapshot } from "@/components/HealthStatus";
 import { PresentationReviewPanel } from "@/components/PresentationReviewPanel";
@@ -352,6 +353,7 @@ export default function Home() {
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [isUatMode, setIsUatMode] = useState(false);
   const [isSimpleDetailMode, setIsSimpleDetailMode] = useState(false);
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [experienceView, setExperienceView] = useState<ProposalExperienceView>("home");
   const [isExperienceSidebarCollapsed, setIsExperienceSidebarCollapsed] = useState(false);
   const [isExperienceMobileOpen, setIsExperienceMobileOpen] = useState(false);
@@ -413,7 +415,7 @@ export default function Home() {
       setExperienceView("home");
       return;
     }
-    if ((experienceView === "analytics" || experienceView === "settings") && !isManagerCompatibleRole(currentUser.role)) {
+    if (experienceView === "analytics" && !isManagerCompatibleRole(currentUser.role)) {
       setExperienceView("home");
     }
   }, [currentUser, currentUser?.role, experienceView]);
@@ -841,7 +843,7 @@ export default function Home() {
   async function generateFromGuidedFlow() {
     if (!rawSourceText.trim() && !companyHomeUrl.trim() && !form.project_brief.trim()) {
       setError("案件情報を入力してください。案件メール、議事録、ヒアリングメモをそのまま貼り付けられます。");
-      return;
+      return false;
     }
     const sourceText = rawSourceText.trim() || form.project_brief.trim();
     const shouldPreserveCurrentForm = !hasMeaningfulSourceText(rawSourceText);
@@ -866,7 +868,7 @@ export default function Home() {
     setAssistantQuestionCount(MAX_ASSISTANT_QUESTIONS);
     setAutoFlowStatus("generating");
     setError("");
-    await generateProposal(nextForm);
+    return generateProposal(nextForm);
   }
 
   async function completeGuidedQualityGate(checklistItems: string[]) {
@@ -1695,6 +1697,24 @@ export default function Home() {
     persistHistory(nextHistory);
   }
 
+  function openHistoryEntry(entry: HistoryEntry) {
+    setRawSourceText(entry.form.project_brief || entry.title || "");
+    setForm(entry.form);
+    setResult(entry.result);
+    setBeautifulAiResult(null);
+    setBeautifulAiError("");
+    setBeautifulAiNotice("");
+    setBeautifulAiManualUrl("");
+    setBeautifulAiQualityGate(null);
+    setBeautifulAiQualityGateError("");
+    setQualityGateUnlocked(false);
+    setHasDownloadedSummary(false);
+    setHasViewedOrganizedResult(true);
+    setError("");
+    setAutoFlowStatus("complete");
+    setExperienceView("new-proposal");
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isMaintenanceMode) {
@@ -1716,11 +1736,11 @@ export default function Home() {
   async function generateProposal(sourceForm = form) {
     if (isMaintenanceMode) {
       showMaintenanceError();
-      return;
+      return false;
     }
     if (!canGenerate) {
       setError("閲覧のみの一般利用者では提案書を作成できません。管理者へ権限変更を依頼してください。");
-      return;
+      return false;
     }
     const nextForm = fillMissingProposalForm(sourceForm);
     setForm(nextForm);
@@ -1751,6 +1771,7 @@ export default function Home() {
       recordModeUsage("sales");
       recordUsage("提案書作成", allInputText(nextForm).length, "markdown", "success");
       void refreshAccountData();
+      return true;
     } catch (caught) {
       const friendly = toFriendlyError(caught);
       trackEvent({
@@ -1762,8 +1783,10 @@ export default function Home() {
         meta: { category: friendly.category }
       });
       recordUsage("提案書作成", allInputText(nextForm).length, "markdown", "failure", friendly.category);
-      setError(`${friendly.title}。${friendly.action}`);
+      const message = `${friendly.title}。${friendly.action}`;
+      setError(message);
       setAutoFlowStatus("idle");
+      return message;
     } finally {
       setIsLoading(false);
     }
@@ -2426,7 +2449,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
     </section>
   );
 
-  const canSeeSimpleDetailMode = Boolean(currentUser && isManagerCompatibleRole(currentUser.role));
+  const canSeeSimpleDetailMode = Boolean(currentUser && canUseWorkFeatures(currentUser.role));
   const isGuidedDetailMode = Boolean(canSeeSimpleDetailMode && isSimpleDetailMode);
   const roleDisplayLabel = currentUser?.role ? getRoleLabel(currentUser.role) : "未ログイン";
   const guidedGenerationStages: GuidedProgressStage[] = useMemo(() => {
@@ -2548,70 +2571,79 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
 
   const experienceViewCopy: Record<ProposalExperienceView, { title: string; description: string }> = {
     home: {
-      title: "ホーム",
-      description: "今日確認すべき提案、最近の案件、次のアクションをまとめて確認できます。"
+      title: "今日は何をしますか？",
+      description: "新しい提案書の作成、作成途中の再開、最近の履歴をここから始められます。"
     },
     "new-proposal": {
-      title: "新規提案",
-      description: "Prompt Builderで必要情報を整理し、従来の提案生成へ安全につなぎます。"
+      title: "提案書を作る",
+      description: "案件メール、議事録、ヒアリングメモを貼り付けるだけでAIが初稿を作成します。"
     },
     editor: {
-      title: "提案エディター",
-      description: "Story Engineと3ペイン編集で、PPT生成前に構成とメッセージを確認します。"
+      title: "詳細編集",
+      description: "提案の流れやPowerPointデザインを必要な時だけ確認します。"
     },
     history: {
-      title: "提案履歴",
-      description: "作成済み提案、出力履歴、研修提出用CSVを確認します。"
+      title: "作成履歴",
+      description: "作成済み提案、出力履歴、CSVを確認します。"
     },
     projects: {
-      title: "案件一覧",
-      description: "CRMの案件状態と作成履歴を確認し、再開すべき案件を探します。"
+      title: "案件管理",
+      description: "CRMの案件状態と作成履歴を確認します。"
     },
     assistant: {
-      title: "AI営業秘書",
-      description: "Proposal AgentとCopilotで、次に取るべき営業アクションを確認します。"
+      title: "AI支援",
+      description: "高度な営業支援、改善提案、次アクションを確認します。"
     },
     templates: {
-      title: "テンプレート",
-      description: "PowerPointの提案テンプレートを選び、資料の見た目を提案内容に合わせます。"
+      title: "出力設定",
+      description: "PowerPointテンプレートや出力の詳細を確認します。"
     },
     analytics: {
-      title: "分析",
+      title: "管理分析",
       description: "営業KPI、生成履歴、Beautiful.ai利用状況を管理者・マネージャー向けに確認します。"
     },
     improvement: {
-      title: "業務改善",
-      description: "研修提出用の短縮率、削減時間、品質変化を確認します。"
+      title: "分析・レポート",
+      description: "作成時間の短縮率、削減時間、品質変化を確認します。"
     },
     admin: {
-      title: "管理",
-      description: "ユーザー、監査、診断、UATを管理者向けに確認します。"
+      title: "管理コンソール",
+      description: "ユーザー、権限、監査、診断、UAT、運用項目を管理します。"
     },
     settings: {
       title: "設定",
-      description: "Workspace、詳細診断、連携状態を確認します。"
+      description: "アカウント、Workspace、詳細表示を確認します。"
     }
   };
   const currentExperienceCopy = experienceViewCopy[experienceView];
-  const showExperienceStudio = experienceView === "new-proposal" || experienceView === "editor" || experienceView === "templates";
-  const showProposalAgentDashboard = experienceView === "home" || experienceView === "assistant";
-  const showGuidedFlow = experienceView === "home" || experienceView === "new-proposal";
-  const showHistoryPanel = experienceView === "home" || experienceView === "history" || experienceView === "projects" || experienceView === "improvement";
+  const showUserHome = experienceView === "home";
+  const showExperienceStudio = (experienceView === "new-proposal" && isGuidedDetailMode) || experienceView === "editor" || experienceView === "templates";
+  const showProposalAgentDashboard = experienceView === "assistant";
+  const showGuidedFlow = experienceView === "new-proposal";
+  const showHistoryPanel = experienceView === "history" || experienceView === "improvement";
   const showProjectsPanel = experienceView === "projects";
   const showOperationsDashboard =
     currentUser &&
+    !isPresentationMode &&
     isGuidedDetailMode &&
-    (experienceView === "home" || experienceView === "analytics" || experienceView === "admin" || experienceView === "settings");
+    isManagerCompatibleRole(currentUser.role) &&
+    (experienceView === "analytics" || experienceView === "admin" || experienceView === "settings");
 
   return (
     <AuthGate>
     <main
       className={`app-shell v80-experience-shell ${isDarkMode ? "dark-mode" : ""} ${
         isGuidedDetailMode ? "guided-detail-mode" : "guided-normal-mode"
-      } ${isExperienceSidebarCollapsed ? "v80-sidebar-collapsed" : ""}`}
+      } ${isExperienceSidebarCollapsed ? "v80-sidebar-collapsed" : ""} ${isPresentationMode ? "presentation-mode" : ""}`}
     >
-      <Header isDarkMode={isDarkMode} onToggleDarkMode={() => setIsDarkMode((current) => !current)} onLogout={handleLogout} />
-      {currentUser && (
+      <Header
+        isDarkMode={isDarkMode}
+        isPresentationMode={isPresentationMode}
+        onTogglePresentationMode={() => setIsPresentationMode((current) => !current)}
+        onToggleDarkMode={() => setIsDarkMode((current) => !current)}
+        onLogout={handleLogout}
+      />
+      {currentUser && !isPresentationMode && (
         <WorkspaceSwitcher
           context={workspaceContext}
           isLoading={isWorkspaceContextLoading}
@@ -2620,15 +2652,14 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           onRefresh={() => void refreshWorkspaceContext()}
         />
       )}
-      {currentUser && <AccountSecurityPanel currentUser={currentUser} />}
-      {pilotStatus?.pilot_mode && (
+      {pilotStatus?.pilot_mode && !isPresentationMode && (
         <section className="pilot-mode-banner" aria-label="社内試験利用中">
           <strong>社内試験利用中</strong>
           <span>AI作成内容は社外提出前に必ず人が確認してください。</span>
           {pilotStatus.pilot_end_date && <small>終了予定: {pilotStatus.pilot_end_date}</small>}
         </section>
       )}
-      {isMaintenanceMode && (
+      {isMaintenanceMode && !isPresentationMode && (
         <section className="maintenance-banner" role="alert">
           <strong>メンテナンス中</strong>
           <span>新規作成・PPT/PDF作成は一時停止しています。履歴確認、CRM、管理画面は利用できます。</span>
@@ -2645,7 +2676,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
             organizationName={workspaceContext?.current?.organization_name || "Ready Crew"}
             onChangeView={(view) => {
               setExperienceView(view);
-              if (view === "admin" || view === "analytics" || view === "settings") {
+              if (view === "admin" || view === "analytics") {
                 setIsSimpleDetailMode(true);
               }
             }}
@@ -2653,14 +2684,21 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
             onToggleMobile={() => setIsExperienceMobileOpen((current) => !current)}
           />
           <section className="v80-page-intro" aria-label="現在の画面">
-            <p className="eyebrow">Proposal Experience Edition</p>
-            <h1>{currentExperienceCopy.title}</h1>
-            <p>{currentExperienceCopy.description}</p>
+            <div>
+              <p className="eyebrow">AI営業秘書</p>
+              <h1>{currentExperienceCopy.title}</h1>
+              <p>{currentExperienceCopy.description}</p>
+            </div>
+            {isManagerCompatibleRole(currentUser.role) && !showGuidedFlow && !isPresentationMode && (
+              <button className="secondary-button" type="button" onClick={() => setIsSimpleDetailMode((current) => !current)} aria-label={isGuidedDetailMode ? "通常表示に戻す" : "詳細モード"}>
+                {isGuidedDetailMode ? "通常表示に戻す" : "詳細機能を表示"}
+              </button>
+            )}
           </section>
         </>
       )}
-      {currentUser && isGuidedDetailMode && <ReleaseUpdatesPanel />}
-      {currentUser && isGuidedDetailMode && (
+      {currentUser && isGuidedDetailMode && !isPresentationMode && <ReleaseUpdatesPanel />}
+      {currentUser && isGuidedDetailMode && !isPresentationMode && (
         <BeautifulAiStatusCard
           statusProbe={beautifulAiStatusProbe}
           healthProbe={beautifulAiHealthProbe}
@@ -2668,7 +2706,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           canViewDiagnostics={isManagerCompatibleRole(currentUser.role)}
         />
       )}
-      {currentUser && isManagerCompatibleRole(currentUser.role) && isGuidedDetailMode && (
+      {currentUser && isManagerCompatibleRole(currentUser.role) && isGuidedDetailMode && !isPresentationMode && (
         <UatModePanel
           enabled={isUatMode}
           onToggle={() => setIsUatMode((current) => !current)}
@@ -2684,6 +2722,21 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
         />
       )}
 
+      {currentUser && showUserHome && (
+        <UserHomePanel
+          hasCurrentProposal={Boolean(result)}
+          isGenerating={isLoading}
+          recentHistory={history}
+          onNewProposal={() => {
+            resetChat();
+            setExperienceView("new-proposal");
+          }}
+          onOpenAnalytics={() => setExperienceView("improvement")}
+          onOpenHistory={() => setExperienceView("history")}
+          onResumeProposal={openHistoryEntry}
+        />
+      )}
+
       {currentUser && showProposalAgentDashboard && (
         <ProposalAgentDashboard
           beautifulAiUrl={beautifulAiResult ? getBeautifulAiOpenUrl(beautifulAiResult) : ""}
@@ -2695,30 +2748,13 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           onCreateBeautifulAi={() => createBeautifulAiCurrent()}
           onDownloadPdf={() => downloadEstimatePdfCurrent()}
           onDownloadPowerPoint={() => downloadPowerPoint()}
-          onOneClickGenerate={() => generateFromGuidedFlow()}
+          onOneClickGenerate={async () => {
+            await generateFromGuidedFlow();
+          }}
           onOpenCrm={() => setExperienceView("projects")}
           onSourceTextChange={handleSourceTextChange}
           sourceText={rawSourceText}
           summaryItems={guidedSummaryItems}
-        />
-      )}
-
-      {currentUser && showExperienceStudio && (
-        <ProposalExperienceStudio
-          sourceText={rawSourceText}
-          result={result}
-          isGenerating={isLoading}
-          canGenerate={canGenerate}
-          canDownloadOutputs={canDownloadMainOutputs}
-          canCreateBeautifulAi={canCreateBeautifulAiOutput}
-          selectedTemplate={selectedPresentationTemplate}
-          onTemplateChange={setSelectedPresentationTemplate}
-          onSourceTextChange={handleSourceTextChange}
-          onGenerate={() => generateFromGuidedFlow()}
-          onDownloadPowerPoint={(powerpointData, qualityState, layoutDecisions) => downloadPowerPoint(powerpointData, qualityState, layoutDecisions)}
-          onDownloadPdf={() => downloadEstimatePdfCurrent()}
-          onCreateBeautifulAi={() => createBeautifulAiCurrent()}
-          lastPptxQualityReport={lastPresentationQualityReport}
         />
       )}
 
@@ -2750,7 +2786,9 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           onDownloadDetail={() => downloadPowerPoint()}
           onDownloadPdf={() => downloadEstimatePdfCurrent()}
           onDownloadSummary={() => downloadSummaryPowerPoint()}
-          onGenerate={() => generateFromGuidedFlow()}
+          onGenerate={async () => {
+            await generateFromGuidedFlow();
+          }}
           onNewCase={resetChat}
           onOpenBeautifulAiUrl={openBeautifulAiUrl}
           onOpenCrm={() => setExperienceView("projects")}
@@ -2766,6 +2804,14 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
             proposalOptimization: guidedProposalOptimizationPanel,
             beautifulAiDiagnostics: renderBeautifulAiDiagnosticsPanel("detail")
           }}
+          powerpointData={result?.powerpoint_generation_data ?? null}
+          proposalContext={{
+            project_brief: form.project_brief,
+            client_company_info: form.client_company_info,
+            competitor_company_name: form.competitor_company_name,
+            budget_range: form.budget_range,
+            desired_launch_timing: form.desired_launch_timing
+          }}
           qualityGate={beautifulAiQualityGate}
           qualityGateComplete={isBeautifulAiQualityGateComplete}
           qualityGateIsLoading={isBeautifulAiQualityGateLoading}
@@ -2777,9 +2823,67 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
         />
       )}
 
+      {currentUser && showExperienceStudio && !isPresentationMode && (
+        <ProposalExperienceStudio
+          sourceText={rawSourceText}
+          result={result}
+          isGenerating={isLoading}
+          canGenerate={canGenerate}
+          canDownloadOutputs={canDownloadMainOutputs}
+          canCreateBeautifulAi={canCreateBeautifulAiOutput}
+          selectedTemplate={selectedPresentationTemplate}
+          onTemplateChange={setSelectedPresentationTemplate}
+          onSourceTextChange={handleSourceTextChange}
+          onGenerate={async () => {
+            await generateFromGuidedFlow();
+          }}
+          onDownloadPowerPoint={(powerpointData, qualityState, layoutDecisions) => downloadPowerPoint(powerpointData, qualityState, layoutDecisions)}
+          onDownloadPdf={() => downloadEstimatePdfCurrent()}
+          onCreateBeautifulAi={() => createBeautifulAiCurrent()}
+          lastPptxQualityReport={lastPresentationQualityReport}
+        />
+      )}
+
       {currentUser && showProjectsPanel && (
         <section className="v80-view-panel" aria-label="案件一覧">
           <CrmPanel customers={crmCustomers} projects={crmProjects} currentRole={currentUser.role} onChanged={() => void refreshAccountData()} />
+        </section>
+      )}
+
+      {currentUser && experienceView === "settings" && (
+        <section className="v80-view-panel user-settings-panel" aria-label="設定">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Settings</p>
+              <h2>設定</h2>
+              <p>アカウント、Workspace、表示モードを確認できます。</p>
+            </div>
+            <span>{roleDisplayLabel}</span>
+          </div>
+          <div className="user-settings-grid">
+            <article>
+              <strong>ログイン中のユーザー</strong>
+              <p>{currentUser.email}</p>
+            </article>
+            <article>
+              <strong>Organization</strong>
+              <p>{workspaceContext?.current?.organization_name || "未設定"}</p>
+            </article>
+            <article>
+              <strong>Workspace</strong>
+              <p>{workspaceContext?.current?.workspace_name || "未設定"}</p>
+            </article>
+            <article>
+              <strong>表示モード</strong>
+              <p>{isGuidedDetailMode ? "詳細機能を表示中" : "通常表示"}</p>
+              {canSeeSimpleDetailMode && (
+                <button className="secondary-button" type="button" onClick={() => setIsSimpleDetailMode((current) => !current)} aria-label={isGuidedDetailMode ? "通常表示に戻す" : "詳細モード"}>
+                  {isGuidedDetailMode ? "通常表示に戻す" : "詳細機能を表示"}
+                </button>
+              )}
+            </article>
+          </div>
+          <AccountSecurityPanel currentUser={currentUser} />
         </section>
       )}
 
@@ -2801,6 +2905,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
         />
       )}
 
+      {isGuidedDetailMode && !isPresentationMode && (
       <section className="ai-wizard-shell legacy-guided-detail" aria-label="詳細作業パネル">
         <WorkspaceProgress
           status={autoFlowStatus}
@@ -3200,7 +3305,9 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           </div>
         </details>
       </section>
+      )}
 
+      {isGuidedDetailMode && !isPresentationMode && (
       <details className="advanced-foldout secondary-guidance-panel">
         <summary>入力ガイド・詳細操作を開く</summary>
       <section className="one-screen-start" aria-label="入力ガイド・詳細操作">
@@ -3298,7 +3405,9 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
         </div>
       </section>
       </details>
+      )}
 
+      {isGuidedDetailMode && !isPresentationMode && (
       <details className="advanced-foldout" id="dashboard-panel">
         <summary>ダッシュボードを見る</summary>
         <Dashboard
@@ -3308,7 +3417,9 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
         />
         <CrmPanel customers={crmCustomers} projects={crmProjects} currentRole={currentUser?.role} onChanged={() => void refreshAccountData()} />
       </details>
+      )}
 
+      {isGuidedDetailMode && !isPresentationMode && (
       <WorkModeSection
         activeMode={activeMode}
         canGenerate={canGenerate}
@@ -3321,7 +3432,8 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
         workModeGroups={workModeGroups}
         workModeMap={workModeMap}
       />
-      {isAdminRole(currentUser?.role) && (
+      )}
+      {isAdminRole(currentUser?.role) && !isPresentationMode && (experienceView === "admin" || isGuidedDetailMode) && (
         <AdminSection
           auditLogs={auditLogs}
           currentUser={currentUser}
@@ -3345,20 +3457,21 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
         />
       )}
 
-      {isManagerCompatibleRole(currentUser?.role) && (
+      {isManagerCompatibleRole(currentUser?.role) && !isPresentationMode && experienceView === "admin" && (
         <details className="advanced-foldout release-menu-foldout" id="release-management-panel">
           <summary>リリース管理を開く</summary>
           <AdminReleaseManagementPanel />
         </details>
       )}
 
-      {isManagerCompatibleRole(currentUser?.role) && (
+      {isManagerCompatibleRole(currentUser?.role) && !isPresentationMode && experienceView === "admin" && (
         <details className="advanced-foldout review-menu-foldout" id="review-menu-panel">
           <summary>レビュー依頼一覧を開く</summary>
           <AdminReviewPanel />
         </details>
       )}
 
+      {isGuidedDetailMode && !isPresentationMode && (
       <DigitalCoworkerSection
         agentSteps={agentSteps}
         aiCoworkerReviews={aiCoworkerReviews}
@@ -3376,8 +3489,9 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
         setSelectedAiEmployee={setSelectedAiEmployee}
         toggleAutomation={toggleAutomation}
       />
+      )}
 
-      {activeMode === "sales" && (
+      {isGuidedDetailMode && !isPresentationMode && activeMode === "sales" && (
         <>
       <SalesInfoSection />
 
@@ -3997,7 +4111,7 @@ CSVまたは会計システムAPIへ連携したい。比較対象：既存OCR�
         </section>
       )}
 
-      {activeMode === "sales" && (
+      {!isPresentationMode && activeMode === "sales" && (
       <details className="advanced-foldout result-foldout" id="result-sales-panel" onToggle={(event) => {
         if ((event.currentTarget as HTMLDetailsElement).open) {
           setHasViewedOrganizedResult(true);

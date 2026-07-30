@@ -14,7 +14,7 @@ type StepNavigationProps = {
 
 function StepNavigationBase({ activeStep, completedSteps, isStepAvailable, onSelectStep, steps }: StepNavigationProps) {
   return (
-    <nav className="guided-step-nav" aria-label="かんたん操作フロー">
+    <nav className="guided-step-nav" aria-label="提案書作成ステップ">
       {steps.map((step) => {
         const isActive = activeStep === step.id;
         const isCompleted = completedSteps.has(step.id);

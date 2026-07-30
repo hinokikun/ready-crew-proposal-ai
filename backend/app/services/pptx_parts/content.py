@@ -673,8 +673,8 @@ def derive_estimate_summary(payload: PptxDownloadRequest, text: str) -> Estimate
         premise_items=[
             f"想定ページ数: {page_count}ページ",
             f"公開希望時期: {payload.desired_launch_timing or '次回確認'}",
-            f"CMS: {payload.cms_required or '要確認'}",
-            f"問い合わせフォーム: {payload.contact_form_required or '要確認'}",
+            f"CMS: {payload.cms_required or '条件確認後に確定'}",
+            f"問い合わせフォーム: {payload.contact_form_required or '条件確認後に確定'}",
         ],
         notes=["外部サービス利用料、撮影費、広告費、サーバー費用は別途確認します。"],
     )
