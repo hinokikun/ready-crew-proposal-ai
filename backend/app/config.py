@@ -92,6 +92,7 @@ class Settings:
     beautiful_ai_image_style: str = os.getenv("BEAUTIFUL_AI_IMAGE_STYLE", "clean corporate proposal")
     beautiful_ai_timeout_seconds: int = _as_int(os.getenv("BEAUTIFUL_AI_TIMEOUT_SECONDS"), 120)
     presentation_engine_mode: str = os.getenv("PRESENTATION_ENGINE_MODE", "legacy").strip().lower()
+    presentation_design_ai_v10_enabled: bool = _as_bool(os.getenv("PRESENTATION_DESIGN_AI_V10_ENABLED"), False)
     sales_assistant_enabled: bool = _as_bool(os.getenv("SALES_ASSISTANT_ENABLED"), False)
     sales_assistant_proposal_enabled: bool = _as_bool(os.getenv("SALES_ASSISTANT_PROPOSAL_ENABLED"), False)
     proposal_export_enabled: bool = _as_bool(os.getenv("PROPOSAL_EXPORT_ENABLED"), False)
