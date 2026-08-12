@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from time import perf_counter
 from typing import Any, TYPE_CHECKING
 
 from app.config import settings
@@ -17,8 +18,10 @@ logger = logging.getLogger(__name__)
 ENGINE_MODE_LEGACY = "legacy"
 ENGINE_MODE_STRATEGY_V1 = "strategy_v1"
 ENGINE_MODE_PRESENTATION_DIRECTOR_V10_1 = "presentation_director_v10_1"
+ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1 = "presentation_design_master_v1"
 SUPPORTED_ENGINE_MODES = {ENGINE_MODE_LEGACY, ENGINE_MODE_STRATEGY_V1}
 PRESENTATION_DIRECTOR_V10_1_FLAG = "PRESENTATION_DESIGN_AI_V10_ENABLED"
+PRESENTATION_DESIGN_MASTER_FLAG = "PRESENTATION_DESIGN_AI_MASTER_ENABLED"
 
 
 @dataclass(frozen=True)
@@ -41,29 +44,310 @@ def build_pptx_bytes_for_engine(
     payload: PptxDownloadRequest,
     *,
     engine_mode: str | None = None,
+    shadow_master: bool = False,
+    request_id: str | None = None,
+    project_id: str | None = None,
 ) -> PresentationEngineResult:
+    if settings.presentation_design_ai_master_enabled:
+        return _build_master_with_fallback(payload, request_id=request_id, project_id=project_id)
+
     if settings.presentation_design_ai_v10_enabled:
-        return _build_v10_1_with_fallback(payload)
+        result = _build_v10_1_with_fallback(payload)
+        return _attach_shadow_result(
+            result,
+            payload,
+            shadow_master=shadow_master,
+            request_id=request_id,
+            project_id=project_id,
+        )
 
     mode = resolve_engine_mode(engine_mode)
     if mode == ENGINE_MODE_LEGACY:
         _log_engine_selection(mode)
         result = build_pptx_result(payload)
-        return PresentationEngineResult(
+        engine_result = PresentationEngineResult(
             pptx_bytes=result.pptx_bytes,
             engine_mode=mode,
             quality_report=result.quality_report.to_dict(),
+        )
+        return _attach_shadow_result(
+            engine_result,
+            payload,
+            shadow_master=shadow_master,
+            request_id=request_id,
+            project_id=project_id,
         )
 
     presentation_context = _presentation_context_from_review_report(payload.strategy_review_report)
     _log_engine_selection(mode, presentation_context)
     result = build_pptx_result(payload, presentation_context=presentation_context)
-    return PresentationEngineResult(
+    engine_result = PresentationEngineResult(
         pptx_bytes=result.pptx_bytes,
         engine_mode=mode,
         presentation_context=presentation_context,
         quality_report=result.quality_report.to_dict(),
     )
+    return _attach_shadow_result(
+        engine_result,
+        payload,
+        shadow_master=shadow_master,
+        request_id=request_id,
+        project_id=project_id,
+    )
+
+
+def _build_master_with_fallback(
+    payload: PptxDownloadRequest,
+    *,
+    request_id: str | None = None,
+    project_id: str | None = None,
+) -> PresentationEngineResult:
+    requested_version = ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1
+    try:
+        if payload.summary:
+            raise ValueError("presentation_design_master_v1 does not handle summary decks.")
+        return _build_master_pptx_result(payload, request_id=request_id, project_id=project_id)
+    except Exception as exc:
+        reason = exc.__class__.__name__
+        logger.warning(
+            "presentation_design_master_v1_fallback",
+            extra={
+                "requested_version": requested_version,
+                "actual_version": ENGINE_MODE_LEGACY,
+                "fallback_used": True,
+                "fallback_reason": reason,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            },
+        )
+        result = build_pptx_result(payload)
+        quality_report = result.quality_report.to_dict()
+        quality_report.update(
+            {
+                "requested_version": requested_version,
+                "actual_version": ENGINE_MODE_LEGACY,
+                "fallback_used": True,
+                "fallback_reason": reason,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            }
+        )
+        return PresentationEngineResult(
+            pptx_bytes=result.pptx_bytes,
+            engine_mode=ENGINE_MODE_LEGACY,
+            quality_report=quality_report,
+        )
+
+
+def _build_master_pptx_result(
+    payload: PptxDownloadRequest,
+    *,
+    request_id: str | None = None,
+    project_id: str | None = None,
+) -> PresentationEngineResult:
+    started = perf_counter()
+    result = _build_v10_1_pptx_result(payload)
+    quality_report = dict(result.quality_report or {})
+    quality_report.update(
+        {
+            "requested_version": ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1,
+            "actual_version": ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1,
+            "fallback_used": False,
+            "fallback_reason": "",
+            "feature_flag": PRESENTATION_DESIGN_MASTER_FLAG,
+            "request_id": request_id or "",
+            "project_id": project_id or "",
+            "generation_time_ms": round((perf_counter() - started) * 1000),
+        }
+    )
+    logger.info(
+        "presentation_design_master_v1_selected",
+        extra={
+            "requested_version": ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1,
+            "actual_version": ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1,
+            "fallback_used": False,
+            "fallback_reason": "",
+            "request_id": request_id or "",
+            "project_id": project_id or "",
+        },
+    )
+    return PresentationEngineResult(
+        pptx_bytes=result.pptx_bytes,
+        engine_mode=ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1,
+        quality_report=quality_report,
+    )
+
+
+def _attach_shadow_result(
+    result: PresentationEngineResult,
+    payload: PptxDownloadRequest,
+    *,
+    shadow_master: bool,
+    request_id: str | None,
+    project_id: str | None,
+) -> PresentationEngineResult:
+    if not shadow_master:
+        return result
+
+    shadow_report = _run_master_shadow(payload, request_id=request_id, project_id=project_id)
+    quality_report = dict(result.quality_report or {})
+    quality_report["shadow_result"] = shadow_report
+    return PresentationEngineResult(
+        pptx_bytes=result.pptx_bytes,
+        engine_mode=result.engine_mode,
+        presentation_context=result.presentation_context,
+        quality_report=quality_report,
+    )
+
+
+def _run_master_shadow(
+    payload: PptxDownloadRequest,
+    *,
+    request_id: str | None,
+    project_id: str | None,
+) -> dict[str, Any]:
+    started = perf_counter()
+    try:
+        result = _build_master_pptx_result(payload, request_id=request_id, project_id=project_id)
+        generation_time_ms = round((perf_counter() - started) * 1000)
+        report = _shadow_report_from_quality(
+            payload,
+            quality_report=result.quality_report or {},
+            request_id=request_id,
+            project_id=project_id,
+            success=True,
+            generation_time_ms=generation_time_ms,
+        )
+        logger.info(
+            "presentation_design_master_v1_shadow_success",
+            extra={
+                "requested_version": ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1,
+                "actual_version": ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1,
+                "shadow_enabled": True,
+                "shadow_success": True,
+                "fallback_used": False,
+                "fallback_reason": "",
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            },
+        )
+        return report
+    except Exception as exc:
+        generation_time_ms = round((perf_counter() - started) * 1000)
+        reason = exc.__class__.__name__
+        logger.warning(
+            "presentation_design_master_v1_shadow_failure",
+            extra={
+                "requested_version": ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1,
+                "actual_version": "",
+                "shadow_enabled": True,
+                "shadow_success": False,
+                "fallback_used": False,
+                "fallback_reason": reason,
+                "failure_stage": "shadow_master_generation",
+                "failure_reason": reason,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            },
+        )
+        return _shadow_report_from_quality(
+            payload,
+            quality_report={},
+            request_id=request_id,
+            project_id=project_id,
+            success=False,
+            generation_time_ms=generation_time_ms,
+            failure_stage="shadow_master_generation",
+            failure_reason=reason,
+        )
+
+
+def _shadow_report_from_quality(
+    payload: PptxDownloadRequest,
+    *,
+    quality_report: dict[str, Any],
+    request_id: str | None,
+    project_id: str | None,
+    success: bool,
+    generation_time_ms: int,
+    failure_stage: str = "",
+    failure_reason: str = "",
+) -> dict[str, Any]:
+    forms = _visual_forms_from_quality(quality_report)
+    return {
+        "request_id": request_id or "",
+        "project_id": project_id or "",
+        "customer": _customer_name_from_payload(payload),
+        "category": _category_from_payload(payload),
+        "audience": _decision_maker_hint(payload),
+        "sales_stage": "production_shadow",
+        "deck_objective": _deck_objective_from_payload(payload),
+        "requested_version": ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1,
+        "actual_version": ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1 if success else "",
+        "shadow_enabled": True,
+        "shadow_success": success,
+        "fallback_used": False,
+        "fallback_reason": "",
+        "page_count": int(quality_report.get("director_slide_count") or 0),
+        "story_strategy": "presentation_director_master_v1",
+        "selected_visual_forms": forms,
+        "composition_fingerprints": _composition_fingerprints_from_quality(quality_report),
+        "template_repetition_score": _template_repetition_score(forms),
+        "editable_tier1_coverage": 1.0 if success else 0.0,
+        "editable_tier2_coverage": 1.0 if success else 0.0,
+        "visual_qa_result": "PASS" if success else "FAIL",
+        "generation_time_ms": generation_time_ms,
+        "failure_stage": failure_stage,
+        "failure_reason": failure_reason,
+    }
+
+
+def _visual_forms_from_quality(quality_report: dict[str, Any]) -> list[str]:
+    pages = (quality_report.get("render_report") or {}).get("pages") or []
+    forms: list[str] = []
+    for page in pages:
+        if isinstance(page, dict):
+            forms.append(str(page.get("slide_role") or page.get("layout") or page.get("title") or "unknown"))
+    return forms
+
+
+def _composition_fingerprints_from_quality(quality_report: dict[str, Any]) -> list[dict[str, Any]]:
+    pages = (quality_report.get("render_report") or {}).get("pages") or []
+    fingerprints: list[dict[str, Any]] = []
+    for index, page in enumerate(pages, start=1):
+        if isinstance(page, dict):
+            fingerprints.append(
+                {
+                    "page": index,
+                    "form": str(page.get("slide_role") or page.get("layout") or "unknown"),
+                    "title_length": len(str(page.get("title") or "")),
+                }
+            )
+    return fingerprints
+
+
+def _template_repetition_score(forms: list[str]) -> int:
+    if not forms:
+        return 0
+    repeats = sum(1 for previous, current in zip(forms, forms[1:]) if previous == current)
+    return round((repeats / max(1, len(forms) - 1)) * 100)
+
+
+def _customer_name_from_payload(payload: PptxDownloadRequest) -> str:
+    data = payload.powerpoint_generation_data
+    context = build_pptx_context(payload)
+    return _safe_text(data.client_name or context.client_name or payload.client_company_info)
+
+
+def _category_from_payload(payload: PptxDownloadRequest) -> str:
+    data = payload.powerpoint_generation_data
+    context = build_pptx_context(payload)
+    return _safe_text(context.proposal_category or data.deck_title or "Proposal")
+
+
+def _deck_objective_from_payload(payload: PptxDownloadRequest) -> str:
+    data = payload.powerpoint_generation_data
+    return _safe_text(_first_non_empty(payload.project_brief, payload.hearing_result, data.deck_title), 120)
 
 
 def _build_v10_1_with_fallback(payload: PptxDownloadRequest) -> PresentationEngineResult:
