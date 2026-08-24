@@ -10,6 +10,12 @@ from pptx import Presentation
 from app.models import PowerPointSlide
 from app.services.pptx_parts.models import PptxContext
 from app.services.pptx_theme import SLIDE_HEIGHT, SLIDE_WIDTH
+from app.services.pptx_design_system.typography import (
+    find_internal_label_leaks,
+    normalize_customer_facing_text,
+    normalize_customer_facing_title,
+    text_density_score,
+)
 
 Severity = Literal["info", "warning", "critical"]
 DiagramType = Literal["comparison", "timeline", "roadmap", "kpi", "flow", "matrix"]
@@ -23,6 +29,9 @@ RULE_DIAGRAM = "PPT-DIAGRAM-001"
 RULE_COMPARE = "PPT-COMPARE-001"
 RULE_NUMERIC = "PPT-NUMERIC-001"
 RULE_RENDER = "PPT-RENDER-001"
+RULE_PLACEHOLDER = "PPT-CGV3-LABEL-001"
+RULE_DENSITY = "PPT-CGV3-DENSITY-001"
+RULE_CUSTOMER_NAME = "PPT-CGV3-CUSTOMER-001"
 
 
 @dataclass(frozen=True)
@@ -103,17 +112,17 @@ class QualityPipelineResult:
 
 
 TEMPLATE_QUALITY_RULES: dict[str, TemplateQualityRule] = {
-    "corporate_clean": TemplateQualityRule(38, 520, 6, 14, 0.72, 5, 4, 4, ("comparison", "flow", "kpi")),
+    "corporate_clean": TemplateQualityRule(38, 460, 5, 16, 0.82, 5, 4, 4, ("comparison", "flow", "kpi")),
     "modern_dark": TemplateQualityRule(34, 460, 5, 15, 0.82, 4, 3, 4, ("kpi", "timeline", "flow")),
     "creative_agency": TemplateQualityRule(32, 430, 5, 15, 0.85, 5, 3, 3, ("roadmap", "comparison", "flow")),
-    "executive_minimal": TemplateQualityRule(30, 360, 4, 16, 0.95, 3, 3, 3, ("kpi", "comparison", "timeline")),
+    "executive_minimal": TemplateQualityRule(34, 380, 5, 16, 0.92, 4, 3, 3, ("kpi", "comparison", "timeline")),
     "data_driven": TemplateQualityRule(34, 450, 5, 14, 0.75, 5, 4, 5, ("kpi", "matrix", "comparison")),
     "warm_professional": TemplateQualityRule(36, 480, 5, 14, 0.78, 5, 4, 4, ("flow", "roadmap", "comparison")),
-    "japanese_business": TemplateQualityRule(40, 560, 6, 13, 0.68, 5, 4, 5, ("timeline", "comparison", "flow")),
+    "japanese_business": TemplateQualityRule(40, 480, 5, 16, 0.78, 5, 4, 5, ("timeline", "comparison", "flow")),
     "bold_vision": TemplateQualityRule(30, 390, 4, 16, 0.92, 4, 3, 3, ("kpi", "roadmap", "matrix")),
 }
 
-SUMMARY_RULE = TemplateQualityRule(30, 340, 4, 16, 0.9, 4, 3, 3, ("kpi", "comparison", "timeline"))
+SUMMARY_RULE = TemplateQualityRule(32, 340, 4, 16, 0.9, 4, 3, 3, ("kpi", "comparison", "timeline"))
 
 
 def run_pptx_quality_pipeline(
@@ -187,7 +196,7 @@ def validate_rendered_pptx(prs: Presentation, report: PptxQualityReport) -> Pptx
             if getattr(shape, "has_text_frame", False):
                 for paragraph in shape.text_frame.paragraphs:
                     for run in paragraph.runs:
-                        if run.font.size is not None and run.font.size.pt < 11:
+                        if run.font.size is not None and run.font.size.pt < 9:
                             findings.append(_render_finding(slide_index, "極端に小さい文字があります。", "最低文字サイズを維持してください。", "warning"))
                             break
 
@@ -252,8 +261,8 @@ def _normalize_slide(
     findings: list[QualityFinding],
     auto_fixes: list[QualityFinding],
 ) -> PowerPointSlide:
-    title = _clean_title(slide.title)
-    bullets = [_clean_body_item(item) for item in slide.bullets if _clean_body_item(item)]
+    title = normalize_customer_facing_title(_clean_title(slide.title), limit=44)
+    bullets = [normalize_customer_facing_text(_clean_body_item(item), limit=92) for item in slide.bullets if _clean_body_item(item)]
     update: dict[str, Any] = {}
     if title != slide.title:
         finding = QualityFinding(
@@ -600,7 +609,7 @@ def _build_report(
     human_review_items: list[str] | None = None,
 ) -> PptxQualityReport:
     category_scores: dict[str, int] = {}
-    categories = sorted({finding.category for finding in findings} | {"title", "content_fit", "diagram", "layout", "numeric", "post_render_validation"})
+    categories = sorted({finding.category for finding in findings} | {"title", "content_fit", "content_density", "customer_facing_copy", "diagram", "layout", "numeric", "post_render_validation"})
     for category in categories:
         critical = sum(1 for finding in findings if finding.category == category and finding.severity == "critical")
         warning = sum(1 for finding in findings if finding.category == category and finding.severity == "warning")

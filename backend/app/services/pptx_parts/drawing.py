@@ -103,8 +103,8 @@ def content_title(item: str, index: int) -> str:
 
 def add_header(slide, title: str, section: str, accent: str = COLORS["teal"]) -> None:
     add_section_label(slide, section, MARGIN_X, HEADER_Y, fill=accent, color=COLORS["white"])
-    add_title(slide, title, MARGIN_X, 0.8, 10.2, 0.48, size=30, color=COLORS["navy"])
-    add_shape(slide, MSO_SHAPE.RECTANGLE, MARGIN_X, 1.32, 11.76, 0.025, fill=COLORS["line"], line=COLORS["line"])
+    add_title(slide, title, MARGIN_X, 0.82, 10.35, 0.48, size=31, color=COLORS["navy"])
+    add_shape(slide, MSO_SHAPE.RECTANGLE, MARGIN_X, 1.38, 11.76, 0.02, fill=COLORS["line"], line=COLORS["line"])
 
 
 def add_footer(slide, slide_no: int) -> None:
@@ -114,7 +114,7 @@ def add_footer(slide, slide_no: int) -> None:
 
 
 def add_title(slide, text: str, x: float, y: float, w: float, h: float, *, size: int, color: str) -> None:
-    add_text(slide, _trim(text, 42), x, y, w, h, size=_fit_font_size(text, size), color=color, bold=True)
+    add_text(slide, _trim(text, 38), x, y, w, h, size=_fit_font_size(text, size), color=color, bold=True)
 
 
 def add_card(
@@ -139,14 +139,14 @@ def add_card(
     else:
         title_x = x + 0.28
         title_w = w - 0.54
-    add_text(slide, _trim(title, 28), title_x, y + 0.22, title_w, 0.28, size=14, color=accent, bold=True)
+    add_text(slide, _trim(title, 22), title_x, y + 0.22, title_w, 0.28, size=14, color=accent, bold=True)
     if body:
-        add_text(slide, _trim(body, 56), x + 0.28, y + 0.72, w - 0.54, h - 0.88, size=14, color=COLORS["text"])
+        add_text(slide, _trim(body, 42), x + 0.3, y + 0.74, w - 0.6, h - 0.9, size=13, color=COLORS["text"])
 
 
 def add_section_label(slide, text: str, x: float, y: float, *, fill: str, color: str) -> None:
     add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, x, y, 1.55, 0.32, fill=fill, line=fill)
-    add_text(slide, text, x + 0.13, y + 0.08, 1.3, 0.12, size=8, color=color, bold=True, align=PP_ALIGN.CENTER)
+    add_text(slide, _trim(text, 12), x + 0.13, y + 0.08, 1.3, 0.12, size=8, color=color, bold=True, align=PP_ALIGN.CENTER)
 
 
 def add_bullet_list(
@@ -169,7 +169,7 @@ def add_bullet_list(
 
     for index, item in enumerate(clean_items[:max_items]):
         paragraph = frame.paragraphs[0] if index == 0 else frame.add_paragraph()
-        paragraph.text = f"• {_trim(item, 52)}"
+        paragraph.text = f"• {_trim(item, 42)}"
         paragraph.space_after = Pt(6)
         style_paragraph(paragraph, size=size, color=COLORS["text"], bold=False)
 
@@ -216,8 +216,8 @@ def add_visual_frame(slide, label: str, x: float, y: float, w: float, h: float) 
 
 def add_insight_band(slide, title: str, body: str, x: float, y: float, w: float, h: float) -> None:
     add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h, fill=COLORS["navy"], line=COLORS["navy"])
-    add_text(slide, title, x + 0.34, y + 0.2, 2.4, 0.25, size=13, color=COLORS["teal_light"], bold=True)
-    add_text(slide, _trim(body, 82), x + 2.65, y + 0.19, w - 3.0, 0.3, size=13, color=COLORS["white"])
+    add_text(slide, _trim(title, 14), x + 0.34, y + 0.2, 2.05, 0.25, size=13, color=COLORS["teal_light"], bold=True)
+    add_text(slide, _trim(body, 58), x + 2.38, y + 0.19, w - 2.72, 0.3, size=13, color=COLORS["white"])
 
 
 def add_side_panel(slide, title: str, items: list[str], x: float, y: float, w: float, h: float, accent: str) -> None:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from app.presentation_composer import PageSpec, PresentationPlan, render_plan_to_pptx
 
+from .evaluator import quality_retention_report
 from .models import DesignDeck, DesignSlideContract
 
 
@@ -26,6 +27,11 @@ def render_design_deck_to_pptx(deck: DesignDeck) -> tuple[bytes, dict]:
             "design_version": deck.design_version,
             "component_ids": sorted({component_id for contract in deck.slide_contracts for component_id in contract.component_ids}),
             "diagram_types": [contract.diagram_type for contract in deck.slide_contracts],
+            "acts": [contract.act for contract in deck.slide_contracts],
+            "dominant_visuals": [contract.dominant_visual for contract in deck.slide_contracts],
+            "composition_families": [contract.composition_family for contract in deck.slide_contracts],
+            "quality_retention": quality_retention_report(deck),
+            "diagram_required": [contract.diagram_decision.diagram_required for contract in deck.slide_contracts],
             "fallback_count": deck.fallback_count,
             "native_fallback_count": deck.native_fallback_count,
             "design_plan_fingerprint": deck.design_plan_fingerprint,
@@ -81,6 +87,12 @@ def _visual_type_for_contract(contract: DesignSlideContract) -> str:
     }
     if contract.diagram_type == "waterfall":
         return "waterfall"
+    if contract.diagram_type in {"measurement_logic", "evidence_architecture", "condition_map", "proof_requirement"}:
+        return "flow"
+    if contract.diagram_type == "decision_threshold":
+        return "matrix"
+    if contract.diagram_type == "decision_gate":
+        return "next_action"
     if contract.diagram_type == "risk_heatmap":
         return "risk_matrix"
     if contract.diagram_type == "phased_roadmap":

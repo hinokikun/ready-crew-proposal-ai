@@ -48,15 +48,23 @@ def build_pptx_bytes_for_engine(
     request_id: str | None = None,
     project_id: str | None = None,
 ) -> PresentationEngineResult:
-    if settings.presentation_design_ai_master_enabled:
+    from app.services.presentation_master import MASTER_MODE_ENABLED, MASTER_MODE_SHADOW, resolve_master_runtime_mode
+
+    master_mode = resolve_master_runtime_mode(
+        enabled=settings.presentation_design_ai_master_enabled,
+        shadow_enabled=getattr(settings, "presentation_design_ai_master_shadow_enabled", False),
+        explicit_shadow=shadow_master,
+    )
+    if master_mode == MASTER_MODE_ENABLED:
         return _build_master_with_fallback(payload, request_id=request_id, project_id=project_id)
+    shadow_enabled = master_mode == MASTER_MODE_SHADOW
 
     if settings.presentation_design_ai_v10_enabled:
         result = _build_v10_1_with_fallback(payload)
         return _attach_shadow_result(
             result,
             payload,
-            shadow_master=shadow_master,
+            shadow_master=shadow_enabled,
             request_id=request_id,
             project_id=project_id,
         )
@@ -73,7 +81,7 @@ def build_pptx_bytes_for_engine(
         return _attach_shadow_result(
             engine_result,
             payload,
-            shadow_master=shadow_master,
+            shadow_master=shadow_enabled,
             request_id=request_id,
             project_id=project_id,
         )
@@ -90,7 +98,7 @@ def build_pptx_bytes_for_engine(
     return _attach_shadow_result(
         engine_result,
         payload,
-        shadow_master=shadow_master,
+        shadow_master=shadow_enabled,
         request_id=request_id,
         project_id=project_id,
     )
@@ -104,11 +112,13 @@ def _build_master_with_fallback(
 ) -> PresentationEngineResult:
     requested_version = ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1
     try:
-        if payload.summary:
-            raise ValueError("presentation_design_master_v1 does not handle summary decks.")
         return _build_master_pptx_result(payload, request_id=request_id, project_id=project_id)
     except Exception as exc:
-        reason = exc.__class__.__name__
+        from app.services.presentation_master import fallback_category_for_exception
+
+        reason = getattr(exc, "reason_code", exc.__class__.__name__)
+        failure_stage = getattr(exc, "failure_stage", "master_generation")
+        fallback_category = fallback_category_for_exception(exc)
         logger.warning(
             "presentation_design_master_v1_fallback",
             extra={
@@ -116,6 +126,8 @@ def _build_master_with_fallback(
                 "actual_version": ENGINE_MODE_LEGACY,
                 "fallback_used": True,
                 "fallback_reason": reason,
+                "fallback_category": fallback_category,
+                "failure_stage": failure_stage,
                 "request_id": request_id or "",
                 "project_id": project_id or "",
             },
@@ -128,6 +140,8 @@ def _build_master_with_fallback(
                 "actual_version": ENGINE_MODE_LEGACY,
                 "fallback_used": True,
                 "fallback_reason": reason,
+                "fallback_category": fallback_category,
+                "failure_stage": failure_stage,
                 "request_id": request_id or "",
                 "project_id": project_id or "",
             }
@@ -145,20 +159,13 @@ def _build_master_pptx_result(
     request_id: str | None = None,
     project_id: str | None = None,
 ) -> PresentationEngineResult:
-    started = perf_counter()
-    result = _build_v10_1_pptx_result(payload)
-    quality_report = dict(result.quality_report or {})
-    quality_report.update(
-        {
-            "requested_version": ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1,
-            "actual_version": ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1,
-            "fallback_used": False,
-            "fallback_reason": "",
-            "feature_flag": PRESENTATION_DESIGN_MASTER_FLAG,
-            "request_id": request_id or "",
-            "project_id": project_id or "",
-            "generation_time_ms": round((perf_counter() - started) * 1000),
-        }
+    from app.services.presentation_master import build_presentation_master
+
+    master_result = build_presentation_master(
+        payload,
+        core_builder=_build_v10_1_pptx_result,
+        request_id=request_id,
+        project_id=project_id,
     )
     logger.info(
         "presentation_design_master_v1_selected",
@@ -172,9 +179,9 @@ def _build_master_pptx_result(
         },
     )
     return PresentationEngineResult(
-        pptx_bytes=result.pptx_bytes,
+        pptx_bytes=master_result.pptx_bytes,
         engine_mode=ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1,
-        quality_report=quality_report,
+        quality_report=master_result.quality_report,
     )
 
 
@@ -233,8 +240,11 @@ def _run_master_shadow(
         )
         return report
     except Exception as exc:
+        from app.services.presentation_master import fallback_category_for_exception
+
         generation_time_ms = round((perf_counter() - started) * 1000)
         reason = exc.__class__.__name__
+        fallback_category = fallback_category_for_exception(exc)
         logger.warning(
             "presentation_design_master_v1_shadow_failure",
             extra={
@@ -244,6 +254,7 @@ def _run_master_shadow(
                 "shadow_success": False,
                 "fallback_used": False,
                 "fallback_reason": reason,
+                "fallback_category": fallback_category,
                 "failure_stage": "shadow_master_generation",
                 "failure_reason": reason,
                 "request_id": request_id or "",
@@ -259,6 +270,7 @@ def _run_master_shadow(
             generation_time_ms=generation_time_ms,
             failure_stage="shadow_master_generation",
             failure_reason=reason,
+            fallback_category=fallback_category,
         )
 
 
@@ -272,6 +284,7 @@ def _shadow_report_from_quality(
     generation_time_ms: int,
     failure_stage: str = "",
     failure_reason: str = "",
+    fallback_category: str = "",
 ) -> dict[str, Any]:
     forms = _visual_forms_from_quality(quality_report)
     return {
@@ -288,6 +301,10 @@ def _shadow_report_from_quality(
         "shadow_success": success,
         "fallback_used": False,
         "fallback_reason": "",
+        "fallback_category": "" if success else (fallback_category or "unexpected_error"),
+        "mode": "shadow",
+        "engine_requested": ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1,
+        "engine_used": ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1 if success else "",
         "page_count": int(quality_report.get("director_slide_count") or 0),
         "story_strategy": "presentation_director_master_v1",
         "selected_visual_forms": forms,

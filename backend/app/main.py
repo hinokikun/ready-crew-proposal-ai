@@ -332,6 +332,7 @@ async def analyze(
 
 @app.post("/api/download-pptx")
 async def download_pptx(
+    request: Request,
     payload: PptxDownloadRequest,
     user: dict = Depends(require_roles("admin", "member")),
     _: None = Depends(rate_limit_dependency("generation")),
@@ -339,7 +340,11 @@ async def download_pptx(
     ensure_not_maintenance_mode()
     started = time.perf_counter()
     try:
-        engine_result = build_pptx_bytes_for_engine(payload)
+        engine_result = build_pptx_bytes_for_engine(
+            payload,
+            shadow_master=settings.presentation_design_ai_master_shadow_enabled,
+            request_id=getattr(request.state, "request_id", ""),
+        )
         duration_ms = perf_counter_ms(started)
         pptx_bytes = engine_result.pptx_bytes
         quality_report = engine_result.quality_report or {}
@@ -405,13 +410,14 @@ async def download_pptx(
 
 @app.post("/api/download-summary-pptx")
 async def download_summary_pptx(
+    request: Request,
     payload: PptxDownloadRequest,
     user: dict = Depends(require_roles("admin", "member")),
     _: None = Depends(rate_limit_dependency("generation")),
 ) -> StreamingResponse:
     ensure_not_maintenance_mode()
     summary_payload = payload.copy(update={"summary": True})
-    return await download_pptx(summary_payload, user)
+    return await download_pptx(request, summary_payload, user)
 
 
 @app.post("/api/download-estimate-pdf")

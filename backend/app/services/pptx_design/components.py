@@ -26,7 +26,7 @@ def add_process_step(slide, index: int, title: str, body: str, x: float, y: floa
 def add_architecture_diagram(slide, nodes: list[str], x: float, y: float, w: float, h: float) -> None:
     clean_nodes = unique_items(nodes, 5)
     if len(clean_nodes) < 4:
-        clean_nodes = unique_items(clean_nodes + ["INPUT", "AI", "CHECK", "OUTPUT"], 5)
+        clean_nodes = unique_items(clean_nodes + ["入力", "AI判定", "人の確認", "連携"], 5)
     node_w = min(2.25, (w - 0.55 * (len(clean_nodes) - 1)) / len(clean_nodes))
     for idx, node in enumerate(clean_nodes):
         sx = x + idx * (node_w + 0.55)
@@ -54,12 +54,12 @@ def add_timeline(slide, phases: list[str], x: float, y: float, w: float) -> None
 
 
 def add_estimate_overview(slide, total: str, fit: str, scope: str) -> None:
-    add_metric_card(slide, "Estimate Range", total, 0.95, 1.48, 3.45, 1.55, COLORS["blue"])
-    add_metric_card(slide, "Budget Fit", fit, 4.78, 1.48, 3.45, 1.55, COLORS["green"])
-    add_card(slide, "Scope", scope, 8.62, 1.48, 3.65, 1.55, COLORS["teal"], COLORS["white"])
+    add_metric_card(slide, "概算費用", total, 0.95, 1.48, 3.45, 1.55, COLORS["blue"])
+    add_metric_card(slide, "予算適合", fit, 4.78, 1.48, 3.45, 1.55, COLORS["green"])
+    add_card(slide, "提案範囲", scope, 8.62, 1.48, 3.65, 1.55, COLORS["teal"], COLORS["white"])
 
 
 def add_next_action_cards(slide, items: list[str], x: float, y: float, w: float) -> None:
     clean_items = unique_items(items, 4)
     for idx, item in enumerate(clean_items[:4]):
-        add_process_step(slide, idx + 1, f"Action {idx + 1}", item, x + idx * (w / 4), y, w / 4 - 0.2, SECTION_COLORS[idx])
+        add_process_step(slide, idx + 1, f"次のアクション {idx + 1}", item, x + idx * (w / 4), y, w / 4 - 0.2, SECTION_COLORS[idx])

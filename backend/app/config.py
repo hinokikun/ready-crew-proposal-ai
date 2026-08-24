@@ -97,6 +97,10 @@ class Settings:
         os.getenv("PRESENTATION_DESIGN_AI_MASTER_ENABLED"),
         False,
     )
+    presentation_design_ai_master_shadow_enabled: bool = _as_bool(
+        os.getenv("PRESENTATION_DESIGN_AI_MASTER_SHADOW_ENABLED"),
+        False,
+    )
     sales_assistant_enabled: bool = _as_bool(os.getenv("SALES_ASSISTANT_ENABLED"), False)
     sales_assistant_proposal_enabled: bool = _as_bool(os.getenv("SALES_ASSISTANT_PROPOSAL_ENABLED"), False)
     proposal_export_enabled: bool = _as_bool(os.getenv("PROPOSAL_EXPORT_ENABLED"), False)

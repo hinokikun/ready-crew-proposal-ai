@@ -60,8 +60,10 @@ class InformationArchitecture:
 @dataclass(frozen=True)
 class DiagramDecision:
     selected_diagram: str
+    diagram_required: bool
     rejected_candidates: tuple[str, ...]
     selection_reason: str
+    necessity_reason: str
     required_evidence: tuple[str, ...]
     visual_risk: str
     fallback_diagram: str
@@ -79,6 +81,20 @@ class VisualHierarchy:
     reading_order: tuple[str, ...]
     focal_point: str
     secondary_point: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class QualityRetentionContract:
+    core_message: str
+    business_object: str
+    decision_role: str
+    dominant_visual_intent: str
+    required_business_evidence: tuple[str, ...]
+    editorial_temperature: str
+    must_preserve_semantic_relationship: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -116,11 +132,22 @@ class DesignSlideContract:
     human_review_reason: str
     diagram_decision: DiagramDecision
     visual_hierarchy: VisualHierarchy
+    act: str
+    dominant_visual: str
+    composition_family: str
+    typography_mode: str
+    photography_mode: str
+    whitespace_strategy: str
+    red_semantic: str
+    dark_mass_usage: str
+    composition_selection_reason: str
+    quality_retention: QualityRetentionContract
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
         payload["diagram_decision"] = self.diagram_decision.to_dict()
         payload["visual_hierarchy"] = self.visual_hierarchy.to_dict()
+        payload["quality_retention"] = self.quality_retention.to_dict()
         return payload
 
 

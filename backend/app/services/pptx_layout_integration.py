@@ -6,47 +6,12 @@ from typing import Iterable
 
 from app.models import PowerPointSlide, PresentationLayoutDecisionContract
 from app.services.pptx_quality import QualityFinding, extract_numbers
+from app.services.pptx_design_system.design_tokens import tokens_for_template
+from app.services.pptx_design_system.layout_selector import LAYOUT_CATALOG
 
-SUPPORTED_LAYOUT_IDS: frozenset[str] = frozenset(
-    {
-        "LAYOUT-001",
-        "LAYOUT-002",
-        "LAYOUT-003",
-        "LAYOUT-004",
-        "LAYOUT-005",
-        "LAYOUT-006",
-        "LAYOUT-007",
-        "LAYOUT-008",
-        "LAYOUT-009",
-        "LAYOUT-010",
-        "LAYOUT-011",
-        "LAYOUT-012",
-        "LAYOUT-013",
-        "LAYOUT-014",
-        "LAYOUT-015",
-        "LAYOUT-016",
-        "LAYOUT-017",
-    }
-)
+SUPPORTED_LAYOUT_IDS: frozenset[str] = frozenset(item.layout_id for item in LAYOUT_CATALOG)
 
-REQUIRED_RENDERED_LAYOUT_IDS: frozenset[str] = frozenset(
-    {
-        "LAYOUT-001",
-        "LAYOUT-002",
-        "LAYOUT-003",
-        "LAYOUT-004",
-        "LAYOUT-005",
-        "LAYOUT-006",
-        "LAYOUT-007",
-        "LAYOUT-008",
-        "LAYOUT-009",
-        "LAYOUT-010",
-        "LAYOUT-011",
-        "LAYOUT-015",
-        "LAYOUT-016",
-        "LAYOUT-017",
-    }
-)
+REQUIRED_RENDERED_LAYOUT_IDS: frozenset[str] = SUPPORTED_LAYOUT_IDS
 
 SUPPORTED_STATUSES: frozenset[str] = frozenset({"suggested", "applied", "rejected", "backend_fallback", "unsupported"})
 SUPPORTED_APPLIED_BY: frozenset[str] = frozenset({"user", "designer_ai", "quality_engine", "backend_fallback"})
@@ -54,25 +19,35 @@ SUPPORTED_APPLIED_BY: frozenset[str] = frozenset({"user", "designer_ai", "qualit
 DESIGNER_LAYOUT_PREFIX = "designer:"
 
 SLIDE_TYPE_FALLBACKS: dict[str, tuple[str, str]] = {
-    "Cover": ("LAYOUT-005", "LAYOUT-001"),
+    "Cover": ("LAYOUT-005", "LAYOUT-005"),
     "Agenda": ("LAYOUT-016", "LAYOUT-002"),
-    "Problem": ("LAYOUT-003", "LAYOUT-004"),
-    "Current State": ("LAYOUT-003", "LAYOUT-006"),
-    "Analysis": ("LAYOUT-006", "LAYOUT-011"),
-    "Comparison": ("LAYOUT-007", "LAYOUT-003"),
-    "Proposal": ("LAYOUT-005", "LAYOUT-004"),
-    "Feature": ("LAYOUT-004", "LAYOUT-003"),
-    "Benefit": ("LAYOUT-006", "LAYOUT-015"),
-    "Timeline": ("LAYOUT-008", "LAYOUT-002"),
-    "Roadmap": ("LAYOUT-009", "LAYOUT-002"),
-    "Estimate": ("LAYOUT-007", "LAYOUT-006"),
-    "KPI": ("LAYOUT-006", "LAYOUT-015"),
-    "Case Study": ("LAYOUT-003", "LAYOUT-006"),
-    "Risk": ("LAYOUT-011", "LAYOUT-016"),
+    "Problem": ("LAYOUT-020", "LAYOUT-019"),
+    "Current State": ("LAYOUT-019", "LAYOUT-021"),
+    "Analysis": ("LAYOUT-024", "LAYOUT-018"),
+    "Comparison": ("LAYOUT-021", "LAYOUT-007"),
+    "Proposal": ("LAYOUT-022", "LAYOUT-023"),
+    "Feature": ("LAYOUT-023", "LAYOUT-004"),
+    "Benefit": ("LAYOUT-025", "LAYOUT-006"),
+    "Timeline": ("LAYOUT-028", "LAYOUT-008"),
+    "Roadmap": ("LAYOUT-028", "LAYOUT-009"),
+    "Estimate": ("LAYOUT-031", "LAYOUT-006"),
+    "KPI": ("LAYOUT-024", "LAYOUT-006"),
+    "Case Study": ("LAYOUT-023", "LAYOUT-006"),
+    "Risk": ("LAYOUT-029", "LAYOUT-016"),
     "FAQ": ("LAYOUT-016", "LAYOUT-002"),
-    "Summary": ("LAYOUT-006", "LAYOUT-016"),
-    "Next Action": ("LAYOUT-010", "LAYOUT-016"),
+    "Summary": ("LAYOUT-018", "LAYOUT-016"),
+    "Next Action": ("LAYOUT-017", "LAYOUT-016"),
     "Closing": ("LAYOUT-017", "LAYOUT-005"),
+    "Executive Summary": ("LAYOUT-018", "LAYOUT-018"),
+    "Problem Structure": ("LAYOUT-020", "LAYOUT-019"),
+    "Before After": ("LAYOUT-021", "LAYOUT-007"),
+    "Competitive Positioning": ("LAYOUT-026", "LAYOUT-007"),
+    "Architecture": ("LAYOUT-027", "LAYOUT-010"),
+    "ROI": ("LAYOUT-025", "LAYOUT-006"),
+    "Governance": ("LAYOUT-030", "LAYOUT-004"),
+    "Cost": ("LAYOUT-031", "LAYOUT-006"),
+    "Scope": ("LAYOUT-032", "LAYOUT-016"),
+    "Section Divider": ("LAYOUT-033", "LAYOUT-001"),
 }
 
 
@@ -251,27 +226,30 @@ def fallback_layout_for_slide_type(slide_type: str, *, summary_mode: bool) -> st
 
 
 def design_token_application(template: str, *, summary_mode: bool) -> dict[str, object]:
-    compact = summary_mode or template in {"executive_minimal", "japanese_business"}
+    tokens = tokens_for_template(template, summary_mode=summary_mode)
     return {
         "template": template,
         "mode": "summary" if summary_mode else "detailed",
-        "background": "template_background",
+        "token_id": tokens.token_id,
+        "background": tokens.palette["surface"],
         "surface": "editable_shapes",
-        "primary": "template_primary",
-        "secondary": "template_secondary",
-        "accent": "template_accent",
-        "text_primary": "template_text_primary",
-        "text_secondary": "template_text_secondary",
-        "title_font_size": 30 if compact else 34,
-        "body_font_size": 13 if compact else 14,
-        "caption_font_size": 9,
-        "card_padding": "compact" if compact else "balanced",
-        "section_gap": "compact" if compact else "balanced",
-        "page_margin": "template_margin",
+        "primary": tokens.palette["primary"],
+        "accent": tokens.palette["accent"],
+        "text_primary": tokens.palette["text"],
+        "text_secondary": tokens.palette["muted"],
+        "cover_title_font_size": tokens.typography.cover_title,
+        "title_font_size": tokens.typography.headline,
+        "body_font_size": tokens.typography.body,
+        "caption_font_size": tokens.typography.caption,
+        "card_padding": "compact" if summary_mode else "balanced",
+        "section_gap": "compact" if summary_mode else "balanced",
+        "page_margin": tokens.margin_x,
+        "safe_area_top": tokens.safe_top,
+        "safe_area_bottom": tokens.safe_bottom,
         "corner_radius": "rounded_rectangle_shape",
         "line_width": "standard_shape_line",
         "table_header_style": "filled_header",
-        "emphasis_style": "accent_band_or_metric_card",
+        "emphasis_style": "message_band_metric_card_or_diagram",
     }
 
 

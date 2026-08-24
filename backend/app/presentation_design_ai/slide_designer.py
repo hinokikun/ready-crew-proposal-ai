@@ -6,6 +6,18 @@ from app.presentation_components import COMPONENT_REGISTRY
 from app.presentation_composer import CaseContext
 
 from .action_title_designer import design_action_title
+from .art_direction_rules import (
+    act_for_item,
+    composition_family_for_item,
+    composition_selection_reason,
+    dark_mass_usage_for_item,
+    dominant_visual_for_item,
+    photography_mode_for_item,
+    quality_retention_for_item,
+    red_semantic_for_item,
+    typography_mode_for_item,
+    whitespace_strategy_for_item,
+)
 from .composition_planner import plan_composition
 from .density_optimizer import density_target_for_slide, normalize_visible_text
 from .diagram_selector import select_diagram
@@ -25,6 +37,7 @@ def design_slide_contract(
 ) -> DesignSlideContract:
     diagram = select_diagram(item, case.category)
     composition = plan_composition(item, diagram, index, previous_compositions)
+    quality_retention = quality_retention_for_item(item, diagram, case)
     emotion, color_role = emotion_for_item(item.item_id, index, total)
     action_title = design_action_title(case, item, index + 1, total)
     density_target, diagram_ratio = density_target_for_slide(composition)
@@ -63,6 +76,16 @@ def design_slide_contract(
         human_review_reason=_human_review_reason(item),
         diagram_decision=diagram,
         visual_hierarchy=hierarchy,
+        act=act_for_item(item.item_id),
+        dominant_visual=dominant_visual_for_item(item, diagram, case),
+        composition_family=composition_family_for_item(item, composition, diagram, previous_compositions),
+        typography_mode=typography_mode_for_item(item.item_id, composition),
+        photography_mode=photography_mode_for_item(item.item_id, case),
+        whitespace_strategy=whitespace_strategy_for_item(item.item_id),
+        red_semantic=red_semantic_for_item(item.item_id),
+        dark_mass_usage=dark_mass_usage_for_item(item.item_id),
+        composition_selection_reason=composition_selection_reason(item, composition, diagram, previous_compositions),
+        quality_retention=quality_retention,
     )
 
 
@@ -171,6 +194,10 @@ def _visual_metaphor(diagram: str) -> str:
         "issue_tree": "branching causes",
         "fishbone": "root cause spine",
         "current_transition_future": "bridge from current to future",
+        "typography_anchor": "oversized business proposition",
+        "hero_business_object": "dominant title and business object",
+        "editorial_context": "business context as an editorial field",
+        "readiness_threshold": "conditions becoming ready for a decision",
         "layered_platform": "stacked operating layers",
         "phased_roadmap": "progressive path",
         "kpi_dashboard": "management cockpit",

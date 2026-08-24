@@ -103,6 +103,8 @@ from app.services.customer_ready_quality import (
     run_customer_ready_quality_gate,
 )
 from app.services.pptx_design.validators import validate_premium_deck
+from app.services.pptx_design_system.layout_selector import create_consulting_layout_decisions
+from app.services.pptx_design_system.typography import normalize_customer_name
 from app.services.pptx_layout_integration import apply_layout_decisions_to_slides
 from app.services.pptx_quality import PptxQualityReport, merge_layout_integration_report, run_pptx_quality_pipeline, validate_rendered_pptx
 from app.services.pptx_theme import MEDIA_TYPE, SLIDE_HEIGHT, SLIDE_WIDTH
@@ -178,9 +180,16 @@ def _build_pptx_result(
         )
         slides = quality_result.slides
         quality_report = quality_result.report
+        consulting_layout_decisions = create_consulting_layout_decisions(
+            slides,
+            context,
+            template=context.design_template or "corporate_clean",
+            summary_mode=summary_mode,
+        )
+        combined_layout_decisions = [*consulting_layout_decisions, *(payload.presentation_layout_decisions or [])]
         layout_result = apply_layout_decisions_to_slides(
             slides,
-            payload.presentation_layout_decisions,
+            combined_layout_decisions,
             template=context.design_template or "corporate_clean",
             summary_mode=summary_mode,
             predicted_score=quality_report.overall_score,
@@ -251,7 +260,7 @@ def build_pptx_context(
     concept = presentation_context.main_message if presentation_context else derive_concept(all_input)
     estimate = derive_estimate_summary(payload, all_input)
     return PptxContext(
-        client_name=extract_client_name(payload.client_company_info, data.client_name),
+        client_name=normalize_customer_name(extract_client_name(payload.client_company_info, data.client_name)),
         proposal_category=profile.category,
         proposal_label=profile.label,
         concept=concept,

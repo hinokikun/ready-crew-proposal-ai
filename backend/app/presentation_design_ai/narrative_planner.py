@@ -25,8 +25,14 @@ STORY_ORDER = (
 
 def select_story_items(items: tuple[InformationItem, ...]) -> tuple[InformationItem, ...]:
     by_id = {item.item_id: item for item in items}
-    selected = [by_id[item_id] for item_id in STORY_ORDER if item_id in by_id and by_id[item_id].disposition != "delete"]
-    return tuple(item for item in selected if item.disposition != "speaker_notes")
+    selected = [
+        by_id[item_id]
+        for item_id in STORY_ORDER
+        if item_id in by_id and by_id[item_id].disposition not in {"delete", "merge", "speaker_notes"}
+    ]
+    if "decision" in by_id and "next_action" in by_id:
+        selected = [item for item in selected if item.item_id != "decision"]
+    return tuple(selected)
 
 
 def previous_connection(index: int, items: tuple[InformationItem, ...]) -> str:
