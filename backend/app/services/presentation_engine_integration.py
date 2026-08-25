@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from concurrent.futures import Future, ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from dataclasses import dataclass
+import hashlib
 import logging
+from threading import BoundedSemaphore, Lock
 from time import perf_counter
 from typing import Any, TYPE_CHECKING
 
@@ -19,9 +22,26 @@ ENGINE_MODE_LEGACY = "legacy"
 ENGINE_MODE_STRATEGY_V1 = "strategy_v1"
 ENGINE_MODE_PRESENTATION_DIRECTOR_V10_1 = "presentation_director_v10_1"
 ENGINE_MODE_PRESENTATION_DESIGN_MASTER_V1 = "presentation_design_master_v1"
+ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP = "presentation_master_v3_renderer_mvp"
 SUPPORTED_ENGINE_MODES = {ENGINE_MODE_LEGACY, ENGINE_MODE_STRATEGY_V1}
 PRESENTATION_DIRECTOR_V10_1_FLAG = "PRESENTATION_DESIGN_AI_V10_ENABLED"
 PRESENTATION_DESIGN_MASTER_FLAG = "PRESENTATION_DESIGN_AI_MASTER_ENABLED"
+PRESENTATION_MASTER_V3_RENDERER_MVP_FLAG = "PRESENTATION_MASTER_V3_RENDERER_MVP_ENABLED"
+PRESENTATION_MASTER_V3_RENDERER_MVP_SHADOW_FLAG = "PRESENTATION_MASTER_V3_RENDERER_MVP_SHADOW_ENABLED"
+PRESENTATION_MASTER_V3_RENDERER_MVP_CANARY_FLAG = "PRESENTATION_MASTER_V3_RENDERER_MVP_CANARY_ENABLED"
+PRESENTATION_MASTER_V3_RENDERER_MVP_AUTO_FALLBACK_FLAG = "PRESENTATION_MASTER_V3_RENDERER_MVP_AUTO_FALLBACK_ENABLED"
+PRESENTATION_MASTER_V3_RENDERER_MVP_SHADOW_MAX_WORKERS = "PRESENTATION_MASTER_V3_RENDERER_MVP_SHADOW_MAX_WORKERS"
+PRESENTATION_MASTER_V3_RENDERER_MVP_SHADOW_MAX_PENDING = "PRESENTATION_MASTER_V3_RENDERER_MVP_SHADOW_MAX_PENDING"
+
+_SHADOW_EXECUTOR = ThreadPoolExecutor(
+    max_workers=max(1, int(getattr(settings, "presentation_master_v3_renderer_mvp_shadow_max_workers", 1))),
+    thread_name_prefix="presentation-v3-shadow",
+)
+_SHADOW_CAPACITY = BoundedSemaphore(
+    max(1, int(getattr(settings, "presentation_master_v3_renderer_mvp_shadow_max_pending", 4)))
+)
+_SHADOW_FUTURES: set[Future[dict[str, Any]]] = set()
+_SHADOW_FUTURES_LOCK = Lock()
 
 
 @dataclass(frozen=True)
@@ -45,10 +65,30 @@ def build_pptx_bytes_for_engine(
     *,
     engine_mode: str | None = None,
     shadow_master: bool = False,
+    renderer_mvp_canary: bool = False,
     request_id: str | None = None,
     project_id: str | None = None,
 ) -> PresentationEngineResult:
     from app.services.presentation_master import MASTER_MODE_ENABLED, MASTER_MODE_SHADOW, resolve_master_runtime_mode
+
+    started = perf_counter()
+    if getattr(settings, "presentation_master_v3_renderer_mvp_enabled", False):
+        return _build_renderer_mvp_with_fallback(
+            payload,
+            request_id=request_id,
+            project_id=project_id,
+            routing_mode="enabled",
+        )
+
+    if getattr(settings, "presentation_master_v3_renderer_mvp_canary_enabled", False) and renderer_mvp_canary:
+        return _build_renderer_mvp_with_fallback(
+            payload,
+            request_id=request_id,
+            project_id=project_id,
+            routing_mode="canary",
+        )
+
+    renderer_mvp_shadow_enabled = getattr(settings, "presentation_master_v3_renderer_mvp_shadow_enabled", False)
 
     master_mode = resolve_master_runtime_mode(
         enabled=settings.presentation_design_ai_master_enabled,
@@ -56,34 +96,64 @@ def build_pptx_bytes_for_engine(
         explicit_shadow=shadow_master,
     )
     if master_mode == MASTER_MODE_ENABLED:
-        return _build_master_with_fallback(payload, request_id=request_id, project_id=project_id)
+        result = _build_master_with_fallback(payload, request_id=request_id, project_id=project_id)
+        return _attach_renderer_mvp_shadow_result(
+            result,
+            payload,
+            renderer_mvp_shadow=renderer_mvp_shadow_enabled,
+            request_id=request_id,
+            project_id=project_id,
+            request_started=started,
+        )
     shadow_enabled = master_mode == MASTER_MODE_SHADOW
 
     if settings.presentation_design_ai_v10_enabled:
         result = _build_v10_1_with_fallback(payload)
-        return _attach_shadow_result(
+        engine_result = _attach_shadow_result(
             result,
             payload,
             shadow_master=shadow_enabled,
             request_id=request_id,
             project_id=project_id,
         )
+        return _attach_renderer_mvp_shadow_result(
+            engine_result,
+            payload,
+            renderer_mvp_shadow=renderer_mvp_shadow_enabled,
+            request_id=request_id,
+            project_id=project_id,
+            request_started=started,
+        )
 
     mode = resolve_engine_mode(engine_mode)
     if mode == ENGINE_MODE_LEGACY:
         _log_engine_selection(mode)
-        result = build_pptx_result(payload)
+        result = _build_legacy_pptx_result(
+            payload,
+            request_id=request_id,
+            project_id=project_id,
+            requested_version=ENGINE_MODE_LEGACY,
+            started=started,
+        )
         engine_result = PresentationEngineResult(
             pptx_bytes=result.pptx_bytes,
             engine_mode=mode,
             quality_report=result.quality_report.to_dict(),
         )
-        return _attach_shadow_result(
+        engine_result = _attach_shadow_result(
             engine_result,
             payload,
             shadow_master=shadow_enabled,
             request_id=request_id,
             project_id=project_id,
+        )
+        return _attach_renderer_mvp_shadow_result(
+            engine_result,
+            payload,
+            renderer_mvp_shadow=renderer_mvp_shadow_enabled,
+            request_id=request_id,
+            project_id=project_id,
+            request_started=started,
         )
 
     presentation_context = _presentation_context_from_review_report(payload.strategy_review_report)
@@ -95,13 +165,539 @@ def build_pptx_bytes_for_engine(
         presentation_context=presentation_context,
         quality_report=result.quality_report.to_dict(),
     )
-    return _attach_shadow_result(
+    engine_result = _attach_shadow_result(
         engine_result,
         payload,
         shadow_master=shadow_enabled,
         request_id=request_id,
         project_id=project_id,
     )
+    return _attach_renderer_mvp_shadow_result(
+        engine_result,
+        payload,
+        renderer_mvp_shadow=renderer_mvp_shadow_enabled,
+        request_id=request_id,
+        project_id=project_id,
+        request_started=started,
+    )
+
+
+def _build_legacy_pptx_result(
+    payload: PptxDownloadRequest,
+    *,
+    request_id: str | None,
+    project_id: str | None,
+    requested_version: str,
+    started: float,
+) -> Any:
+    try:
+        result = build_pptx_result(payload)
+        total_request_latency_ms = round((perf_counter() - started) * 1000)
+        logger.info(
+            "legacy_success",
+            extra={
+                "requested_version": requested_version,
+                "actual_version": ENGINE_MODE_LEGACY,
+                "total_request_latency_ms": total_request_latency_ms,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            },
+        )
+        return result
+    except Exception:
+        total_request_latency_ms = round((perf_counter() - started) * 1000)
+        logger.exception(
+            "legacy_failure",
+            extra={
+                "requested_version": requested_version,
+                "actual_version": "",
+                "total_request_latency_ms": total_request_latency_ms,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            },
+        )
+        raise
+
+
+def _build_renderer_mvp_with_fallback(
+    payload: PptxDownloadRequest,
+    *,
+    request_id: str | None = None,
+    project_id: str | None = None,
+    routing_mode: str,
+) -> PresentationEngineResult:
+    requested_version = ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP
+    started = perf_counter()
+    try:
+        result = _build_renderer_mvp_pptx_result(payload, request_id=request_id, project_id=project_id)
+        if routing_mode == "canary":
+            logger.info(
+                "v3_canary_success",
+                extra={
+                    "requested_version": requested_version,
+                    "actual_version": requested_version,
+                    "fallback_used": False,
+                    "fallback_reason": "",
+                    "request_id": request_id or "",
+                    "project_id": project_id or "",
+                },
+            )
+            quality_report = dict(result.quality_report or {})
+            quality_report.update({"routing_mode": "canary", "canary_success": True})
+            return PresentationEngineResult(
+                pptx_bytes=result.pptx_bytes,
+                engine_mode=result.engine_mode,
+                presentation_context=result.presentation_context,
+                quality_report=quality_report,
+            )
+        return result
+    except Exception as exc:
+        from app.services.presentation_master import fallback_category_for_exception
+
+        if not getattr(settings, "presentation_master_v3_renderer_mvp_auto_fallback_enabled", True):
+            raise
+        reason = getattr(exc, "reason_code", exc.__class__.__name__)
+        failure_stage = getattr(exc, "failure_stage", "renderer_mvp_generation")
+        fallback_category = (
+            "unsupported"
+            if reason == "summary_deck_uses_existing_renderer"
+            else fallback_category_for_exception(exc)
+        )
+        logger.warning(
+            "v3_canary_fallback" if routing_mode == "canary" else "presentation_master_v3_renderer_mvp_fallback",
+            extra={
+                "requested_version": requested_version,
+                "actual_version": ENGINE_MODE_LEGACY,
+                "fallback_used": True,
+                "fallback_reason": reason,
+                "fallback_category": fallback_category,
+                "failure_stage": failure_stage,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+                "routing_mode": routing_mode,
+            },
+        )
+        _log_renderer_mvp_block_event(
+            reason=reason,
+            failure_stage=failure_stage,
+            request_id=request_id,
+            project_id=project_id,
+            routing_mode=routing_mode,
+            shadow_enabled=False,
+        )
+        result = _build_legacy_pptx_result(
+            payload,
+            request_id=request_id,
+            project_id=project_id,
+            requested_version=requested_version,
+            started=started,
+        )
+        quality_report = result.quality_report.to_dict()
+        quality_report.update(
+            {
+                "requested_version": requested_version,
+                "actual_version": ENGINE_MODE_LEGACY,
+                "fallback_used": True,
+                "fallback_reason": reason,
+                "fallback_category": fallback_category,
+                "failure_stage": failure_stage,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+                "routing_mode": routing_mode,
+                "canary_success": False if routing_mode == "canary" else None,
+            }
+        )
+        return PresentationEngineResult(
+            pptx_bytes=result.pptx_bytes,
+            engine_mode=ENGINE_MODE_LEGACY,
+            quality_report=quality_report,
+        )
+
+
+def _build_renderer_mvp_pptx_result(
+    payload: PptxDownloadRequest,
+    *,
+    request_id: str | None = None,
+    project_id: str | None = None,
+) -> PresentationEngineResult:
+    from app.services.presentation_master.renderer_mvp import build_renderer_mvp_pptx
+
+    renderer_result = build_renderer_mvp_pptx(payload, request_id=request_id, project_id=project_id)
+    logger.info(
+        "presentation_master_v3_renderer_mvp_selected",
+        extra={
+            "requested_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+            "actual_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+            "fallback_used": False,
+            "fallback_reason": "",
+            "request_id": request_id or "",
+            "project_id": project_id or "",
+        },
+    )
+    return PresentationEngineResult(
+        pptx_bytes=renderer_result.pptx_bytes,
+        engine_mode=ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+        quality_report=renderer_result.quality_report,
+    )
+
+
+def _attach_renderer_mvp_shadow_result(
+    result: PresentationEngineResult,
+    payload: PptxDownloadRequest,
+    *,
+    renderer_mvp_shadow: bool,
+    request_id: str | None,
+    project_id: str | None,
+    request_started: float,
+) -> PresentationEngineResult:
+    if not renderer_mvp_shadow:
+        return result
+
+    response_ready_latency_ms = round((perf_counter() - request_started) * 1000)
+    submitted = _submit_renderer_mvp_shadow(payload, baseline_result=result, request_id=request_id, project_id=project_id)
+    if submitted:
+        logger.info(
+            "v3_shadow_started",
+            extra={
+                "requested_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+                "actual_version": "",
+                "shadow_enabled": True,
+                "renderer_used_for_response": result.engine_mode,
+                "category": _category_from_payload(payload),
+                "response_ready_latency_ms": response_ready_latency_ms,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            },
+        )
+    return result
+
+
+def _submit_renderer_mvp_shadow(
+    payload: PptxDownloadRequest,
+    *,
+    baseline_result: PresentationEngineResult,
+    request_id: str | None,
+    project_id: str | None,
+) -> bool:
+    if not _SHADOW_CAPACITY.acquire(blocking=False):
+        logger.warning(
+            "v3_shadow_skipped_capacity",
+            extra={
+                "requested_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+                "actual_version": "",
+                "shadow_enabled": True,
+                "shadow_success": False,
+                "fallback_reason": "shadow_capacity_exceeded",
+                "failure_stage": "shadow_enqueue",
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            },
+        )
+        return False
+    try:
+        future = _SHADOW_EXECUTOR.submit(
+            _run_renderer_mvp_shadow,
+            payload,
+            baseline_result=baseline_result,
+            request_id=request_id,
+            project_id=project_id,
+        )
+        with _SHADOW_FUTURES_LOCK:
+            _SHADOW_FUTURES.add(future)
+        future.add_done_callback(_on_renderer_mvp_shadow_done)
+        return True
+    except Exception as exc:
+        _SHADOW_CAPACITY.release()
+        reason = getattr(exc, "reason_code", exc.__class__.__name__)
+        logger.warning(
+            "v3_shadow_failure",
+            extra={
+                "requested_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+                "actual_version": "",
+                "shadow_enabled": True,
+                "shadow_success": False,
+                "fallback_reason": reason,
+                "failure_stage": "shadow_enqueue",
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            },
+        )
+        return False
+
+
+def _on_renderer_mvp_shadow_done(future: Future[dict[str, Any]]) -> None:
+    try:
+        future.result()
+    except Exception as exc:
+        reason = getattr(exc, "reason_code", exc.__class__.__name__)
+        logger.warning(
+            "v3_shadow_failure",
+            extra={
+                "requested_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+                "actual_version": "",
+                "shadow_enabled": True,
+                "shadow_success": False,
+                "fallback_reason": reason,
+                "failure_stage": "shadow_unhandled_completion",
+            },
+        )
+    finally:
+        with _SHADOW_FUTURES_LOCK:
+            _SHADOW_FUTURES.discard(future)
+        _SHADOW_CAPACITY.release()
+
+
+def wait_for_renderer_mvp_shadow_tasks(timeout_seconds: float = 5.0) -> bool:
+    deadline = perf_counter() + max(timeout_seconds, 0.0)
+    while True:
+        with _SHADOW_FUTURES_LOCK:
+            futures = list(_SHADOW_FUTURES)
+        if not futures:
+            return True
+        for future in futures:
+            remaining = deadline - perf_counter()
+            if remaining <= 0:
+                return False
+            try:
+                future.result(timeout=remaining)
+            except FutureTimeoutError:
+                return False
+
+
+def _run_renderer_mvp_shadow(
+    payload: PptxDownloadRequest,
+    *,
+    baseline_result: PresentationEngineResult,
+    request_id: str | None,
+    project_id: str | None,
+) -> dict[str, Any]:
+    started = perf_counter()
+    baseline_slide_count = _pptx_slide_count(baseline_result.pptx_bytes)
+    category = _category_from_payload(payload)
+    base_record: dict[str, Any] = {
+        "request_id": request_id or "",
+        "project_id": project_id or "",
+        "case_identifier": _case_identifier(payload),
+        "category": category,
+        "renderer_used_for_response": baseline_result.engine_mode,
+        "legacy_success": baseline_result.pptx_bytes[:2] == b"PK",
+        "legacy_slide_count": baseline_slide_count,
+        "requested_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+        "shadow_enabled": True,
+        "fallback_occurrence": False,
+        "production_response_replaced": False,
+        "database_side_effect": False,
+    }
+    try:
+        v3_result = _build_renderer_mvp_pptx_result(payload, request_id=request_id, project_id=project_id)
+        duration_ms = round((perf_counter() - started) * 1000)
+        quality = v3_result.quality_report or {}
+        pptx_audit = quality.get("pptx_audit") or {}
+        comparison = _compare_legacy_and_v3(payload, baseline_result, v3_result)
+        timeout_exceeded = duration_ms > int(settings.presentation_master_v3_renderer_mvp_shadow_timeout_seconds * 1000)
+        if timeout_exceeded:
+            logger.warning(
+                "v3_shadow_timeout",
+                extra={
+                    "requested_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+                    "actual_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+                    "shadow_enabled": True,
+                    "generation_time_ms": duration_ms,
+                    "renderer_latency_ms": duration_ms,
+                    "request_id": request_id or "",
+                    "project_id": project_id or "",
+                },
+            )
+        logger.info(
+            "v3_shadow_success",
+            extra={
+                "requested_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+                "actual_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+                "shadow_enabled": True,
+                "shadow_success": True,
+                "generation_time_ms": duration_ms,
+                "renderer_latency_ms": duration_ms,
+                "slide_count": int(pptx_audit.get("page_count") or quality.get("page_count") or 0),
+                "category": category,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            },
+        )
+        return {
+            **base_record,
+            "actual_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+            "shadow_success": True,
+            "v3_success": True,
+            "v3_slide_count": int(pptx_audit.get("page_count") or quality.get("page_count") or 0),
+            "generation_duration_ms": duration_ms,
+            "v3_qa_blocking_count": _qa_blocking_count(quality),
+            "fake_evidence_count": int(quality.get("fake_evidence_count") or 0),
+            "placeholder_count": int(pptx_audit.get("placeholder_count") or 0),
+            "clipping": int(pptx_audit.get("clipping_count") or 0),
+            "overflow": _render_count(quality, "overflow_count"),
+            "rasterization_ratio": float(quality.get("rasterization_ratio") or 0.0),
+            "editability": float(quality.get("tier1_editability") or 0.0),
+            "architecture_deviation": int(quality.get("architecture_deviation_count") or 0),
+            "renderer_exception": "",
+            "timeout_exceeded": timeout_exceeded,
+            "comparison": comparison,
+        }
+    except TimeoutError as exc:
+        return _renderer_mvp_shadow_failure(base_record, started, exc, "v3_shadow_timeout", request_id, project_id)
+    except Exception as exc:
+        return _renderer_mvp_shadow_failure(base_record, started, exc, "v3_shadow_failure", request_id, project_id)
+
+
+def _renderer_mvp_shadow_failure(
+    base_record: dict[str, Any],
+    started: float,
+    exc: Exception,
+    event_name: str,
+    request_id: str | None,
+    project_id: str | None,
+) -> dict[str, Any]:
+    duration_ms = round((perf_counter() - started) * 1000)
+    reason = getattr(exc, "reason_code", exc.__class__.__name__)
+    failure_stage = getattr(exc, "failure_stage", "shadow_renderer_mvp_generation")
+    logger.warning(
+        event_name,
+        extra={
+            "requested_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+            "actual_version": "",
+            "shadow_enabled": True,
+            "shadow_success": False,
+            "fallback_used": False,
+            "fallback_reason": reason,
+            "failure_stage": failure_stage,
+            "generation_time_ms": duration_ms,
+            "renderer_latency_ms": duration_ms,
+            "category": base_record.get("category", ""),
+            "slide_count": base_record.get("legacy_slide_count", 0),
+            "request_id": request_id or "",
+            "project_id": project_id or "",
+        },
+    )
+    _log_renderer_mvp_block_event(
+        reason=reason,
+        failure_stage=failure_stage,
+        request_id=request_id,
+        project_id=project_id,
+        routing_mode="shadow",
+        shadow_enabled=True,
+    )
+    return {
+        **base_record,
+        "actual_version": "",
+        "shadow_success": False,
+        "v3_success": False,
+        "v3_slide_count": 0,
+        "generation_duration_ms": duration_ms,
+        "v3_qa_blocking_count": 0,
+        "fake_evidence_count": 0,
+        "placeholder_count": 0,
+        "clipping": 0,
+        "overflow": 0,
+        "rasterization_ratio": 0.0,
+        "editability": 0.0,
+        "architecture_deviation": 0,
+        "renderer_exception": reason,
+        "failure_stage": failure_stage,
+    }
+
+
+def _log_renderer_mvp_block_event(
+    *,
+    reason: str,
+    failure_stage: str,
+    request_id: str | None,
+    project_id: str | None,
+    routing_mode: str,
+    shadow_enabled: bool,
+) -> None:
+    event_name = _renderer_mvp_block_event_name(reason, failure_stage)
+    if not event_name:
+        return
+    logger.warning(
+        event_name,
+        extra={
+            "requested_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+            "actual_version": "",
+            "shadow_enabled": shadow_enabled,
+            "fallback_reason": reason,
+            "failure_stage": failure_stage,
+            "request_id": request_id or "",
+            "project_id": project_id or "",
+            "routing_mode": routing_mode,
+        },
+    )
+
+
+def _renderer_mvp_block_event_name(reason: str, failure_stage: str) -> str:
+    lowered = f"{reason} {failure_stage}".lower()
+    if "evidence" in lowered:
+        return "v3_evidence_block"
+    if "qa_block" in lowered or failure_stage == "visual_qa":
+        return "v3_qa_block"
+    return ""
+
+
+def _compare_legacy_and_v3(
+    payload: PptxDownloadRequest,
+    baseline_result: PresentationEngineResult,
+    v3_result: PresentationEngineResult,
+) -> dict[str, Any]:
+    from app.services.presentation_master.renderer_mvp import extract_pptx_text
+
+    customer = _customer_name_from_payload(payload)
+    legacy_text = extract_pptx_text(baseline_result.pptx_bytes)
+    v3_text = extract_pptx_text(v3_result.pptx_bytes)
+    legacy_slide_count = _pptx_slide_count(baseline_result.pptx_bytes)
+    v3_slide_count = _pptx_slide_count(v3_result.pptx_bytes)
+    return {
+        "information_loss_candidate": v3_slide_count < min(legacy_slide_count, 5),
+        "slide_count_delta": v3_slide_count - legacy_slide_count,
+        "customer_name_loss": bool(customer and customer in legacy_text and customer not in v3_text),
+        "summary_loss": payload.summary and v3_result.engine_mode == ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+        "estimate_kpi_handling": "no_fake_numeric_claims",
+        "download_compatibility": v3_result.pptx_bytes[:2] == b"PK",
+    }
+
+
+def _pptx_slide_count(pptx_bytes: bytes) -> int:
+    try:
+        from io import BytesIO
+        from pptx import Presentation
+
+        return len(Presentation(BytesIO(pptx_bytes)).slides)
+    except Exception:
+        return 0
+
+
+def _qa_blocking_count(quality_report: dict[str, Any]) -> int:
+    return sum(
+        int(quality_report.get(key) or 0)
+        for key in (
+            "architecture_deviation_count",
+            "fake_evidence_count",
+            "placeholder_internal_label_count",
+        )
+    )
+
+
+def _render_count(quality_report: dict[str, Any], key: str) -> int:
+    pages = (quality_report.get("render_report") or {}).get("pages") or []
+    return sum(int(page.get(key) or 0) for page in pages if isinstance(page, dict))
+
+
+def _case_identifier(payload: PptxDownloadRequest) -> str:
+    raw = "|".join(
+        [
+            _customer_name_from_payload(payload),
+            _category_from_payload(payload),
+            payload.powerpoint_generation_data.deck_title,
+        ]
+    )
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:12]
 
 
 def _build_master_with_fallback(

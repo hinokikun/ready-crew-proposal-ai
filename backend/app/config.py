@@ -101,6 +101,34 @@ class Settings:
         os.getenv("PRESENTATION_DESIGN_AI_MASTER_SHADOW_ENABLED"),
         False,
     )
+    presentation_master_v3_renderer_mvp_enabled: bool = _as_bool(
+        os.getenv("PRESENTATION_MASTER_V3_RENDERER_MVP_ENABLED"),
+        False,
+    )
+    presentation_master_v3_renderer_mvp_shadow_enabled: bool = _as_bool(
+        os.getenv("PRESENTATION_MASTER_V3_RENDERER_MVP_SHADOW_ENABLED"),
+        False,
+    )
+    presentation_master_v3_renderer_mvp_canary_enabled: bool = _as_bool(
+        os.getenv("PRESENTATION_MASTER_V3_RENDERER_MVP_CANARY_ENABLED"),
+        False,
+    )
+    presentation_master_v3_renderer_mvp_auto_fallback_enabled: bool = _as_bool(
+        os.getenv("PRESENTATION_MASTER_V3_RENDERER_MVP_AUTO_FALLBACK_ENABLED"),
+        True,
+    )
+    presentation_master_v3_renderer_mvp_shadow_timeout_seconds: float = _as_float(
+        os.getenv("PRESENTATION_MASTER_V3_RENDERER_MVP_SHADOW_TIMEOUT_SECONDS"),
+        8.0,
+    )
+    presentation_master_v3_renderer_mvp_shadow_max_workers: int = _as_int(
+        os.getenv("PRESENTATION_MASTER_V3_RENDERER_MVP_SHADOW_MAX_WORKERS"),
+        1,
+    )
+    presentation_master_v3_renderer_mvp_shadow_max_pending: int = _as_int(
+        os.getenv("PRESENTATION_MASTER_V3_RENDERER_MVP_SHADOW_MAX_PENDING"),
+        4,
+    )
     sales_assistant_enabled: bool = _as_bool(os.getenv("SALES_ASSISTANT_ENABLED"), False)
     sales_assistant_proposal_enabled: bool = _as_bool(os.getenv("SALES_ASSISTANT_PROPOSAL_ENABLED"), False)
     proposal_export_enabled: bool = _as_bool(os.getenv("PROPOSAL_EXPORT_ENABLED"), False)

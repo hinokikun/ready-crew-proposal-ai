@@ -18,6 +18,14 @@ from .contracts import (
 from .grammar import PHASE4C_GRAMMAR_CONTRACT, golden_regression_cases, grammar_contract_summary
 from .orchestrator import build_presentation_master
 from .qa import route_payload_for_master, validate_master_output
+from .renderer_mvp import (
+    RENDERER_MVP_FEATURE_FLAG,
+    RENDERER_MVP_VERSION,
+    RendererMvpBuildOutput,
+    RendererMvpIntegrationError,
+    build_renderer_mvp_pptx,
+    inspect_pptx_bytes,
+)
 
 __all__ = [
     "MASTER_FEATURE_FLAG",
@@ -38,5 +46,11 @@ __all__ = [
     "grammar_contract_summary",
     "route_payload_for_master",
     "resolve_master_runtime_mode",
+    "RENDERER_MVP_FEATURE_FLAG",
+    "RENDERER_MVP_VERSION",
+    "RendererMvpBuildOutput",
+    "RendererMvpIntegrationError",
+    "build_renderer_mvp_pptx",
+    "inspect_pptx_bytes",
     "validate_master_output",
 ]
