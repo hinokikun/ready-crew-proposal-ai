@@ -52,6 +52,19 @@ class PresentationEngineResult:
     quality_report: dict[str, Any] | None = None
 
 
+class RendererMvpInternalCanaryDisabled(RuntimeError):
+    reason_code = "renderer_mvp_internal_canary_disabled"
+    failure_stage = "routing"
+
+
+class RendererMvpInternalCanaryError(RuntimeError):
+    def __init__(self, reason_code: str, *, failure_stage: str, fallback_category: str):
+        self.reason_code = reason_code
+        self.failure_stage = failure_stage
+        self.fallback_category = fallback_category
+        super().__init__(reason_code)
+
+
 def resolve_engine_mode(value: str | None = None) -> str:
     mode = (value or settings.presentation_engine_mode or ENGINE_MODE_LEGACY).strip().lower()
     if mode in SUPPORTED_ENGINE_MODES:
@@ -180,6 +193,136 @@ def build_pptx_bytes_for_engine(
         project_id=project_id,
         request_started=started,
     )
+
+
+def build_renderer_mvp_internal_canary_pptx_bytes(
+    payload: PptxDownloadRequest,
+    *,
+    request_id: str | None = None,
+    project_id: str | None = None,
+) -> PresentationEngineResult:
+    requested_version = ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP
+    started = perf_counter()
+    category = _category_from_payload(payload)
+    if not getattr(settings, "presentation_master_v3_renderer_mvp_canary_enabled", False):
+        logger.warning(
+            "v3_internal_canary_disabled",
+            extra={
+                "requested_version": requested_version,
+                "actual_version": "",
+                "fallback_used": False,
+                "fallback_reason": RendererMvpInternalCanaryDisabled.reason_code,
+                "failure_stage": RendererMvpInternalCanaryDisabled.failure_stage,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            },
+        )
+        raise RendererMvpInternalCanaryDisabled()
+
+    logger.info(
+        "v3_internal_canary_requested",
+        extra={
+            "requested_version": requested_version,
+            "actual_version": "",
+            "fallback_used": False,
+            "fallback_reason": "",
+            "category": category,
+            "request_id": request_id or "",
+            "project_id": project_id or "",
+        },
+    )
+    try:
+        result = _build_renderer_mvp_pptx_result(payload, request_id=request_id, project_id=project_id)
+        if result.engine_mode != requested_version:
+            from app.services.presentation_master.renderer_mvp import RendererMvpIntegrationError
+
+            raise RendererMvpIntegrationError(
+                "renderer_mvp_unexpected_engine",
+                failure_stage="internal_canary_validation",
+            )
+        if result.pptx_bytes[:2] != b"PK":
+            from app.services.presentation_master.renderer_mvp import RendererMvpIntegrationError
+
+            raise RendererMvpIntegrationError(
+                "renderer_mvp_malformed_pptx",
+                failure_stage="pptx_validation",
+            )
+        duration_ms = round((perf_counter() - started) * 1000)
+        quality_report = dict(result.quality_report or {})
+        pptx_audit = quality_report.get("pptx_audit") or {}
+        quality_report.update(
+            {
+                "requested_version": requested_version,
+                "actual_version": requested_version,
+                "routing_mode": "internal_canary",
+                "internal_canary": True,
+                "canary_success": True,
+                "fallback_used": False,
+                "fallback_reason": "",
+                "fallback_category": "",
+                "failure_stage": "",
+                "feature_flag": PRESENTATION_MASTER_V3_RENDERER_MVP_CANARY_FLAG,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            }
+        )
+        logger.info(
+            "v3_internal_canary_success",
+            extra={
+                "requested_version": requested_version,
+                "actual_version": requested_version,
+                "fallback_used": False,
+                "fallback_reason": "",
+                "category": category,
+                "slide_count": int(pptx_audit.get("page_count") or quality_report.get("page_count") or 0),
+                "generation_time_ms": duration_ms,
+                "renderer_latency_ms": duration_ms,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            },
+        )
+        return PresentationEngineResult(
+            pptx_bytes=result.pptx_bytes,
+            engine_mode=requested_version,
+            presentation_context=result.presentation_context,
+            quality_report=quality_report,
+        )
+    except Exception as exc:
+        from app.services.presentation_master import fallback_category_for_exception
+
+        reason = getattr(exc, "reason_code", exc.__class__.__name__)
+        failure_stage = getattr(exc, "failure_stage", "internal_canary_generation")
+        fallback_category = fallback_category_for_exception(exc)
+        duration_ms = round((perf_counter() - started) * 1000)
+        logger.warning(
+            "v3_internal_canary_failure",
+            extra={
+                "requested_version": requested_version,
+                "actual_version": "",
+                "fallback_used": False,
+                "fallback_reason": reason,
+                "fallback_category": fallback_category,
+                "failure_stage": failure_stage,
+                "category": category,
+                "generation_time_ms": duration_ms,
+                "renderer_latency_ms": duration_ms,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+            },
+        )
+        _log_renderer_mvp_block_event(
+            reason=reason,
+            failure_stage=failure_stage,
+            request_id=request_id,
+            project_id=project_id,
+            routing_mode="internal_canary",
+            shadow_enabled=False,
+        )
+        raise RendererMvpInternalCanaryError(
+            reason,
+            failure_stage=failure_stage,
+            fallback_category=fallback_category,
+        ) from exc
 
 
 def _build_legacy_pptx_result(

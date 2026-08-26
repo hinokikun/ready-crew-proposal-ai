@@ -32,7 +32,13 @@ from app.services.openai_service import OpenAIServiceError, generate_proposal
 from app.services.pdf_service import PDF_MEDIA_TYPE, build_estimate_pdf_bytes, build_estimate_pdf_filename
 from app.services.pptx_service import MEDIA_TYPE, build_pptx_filename
 from app.services.customer_ready_quality import CustomerReadyBlockedError
-from app.services.presentation_engine_integration import build_pptx_bytes_for_engine
+from app.services.presentation_engine_integration import (
+    ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+    RendererMvpInternalCanaryDisabled,
+    RendererMvpInternalCanaryError,
+    build_pptx_bytes_for_engine,
+    build_renderer_mvp_internal_canary_pptx_bytes,
+)
 from app.services.proposal_metadata_service import extract_contact_person, extract_customer_name, proposal_input_length, pptx_input_length
 
 
@@ -400,6 +406,104 @@ async def download_pptx(
         media_type=MEDIA_TYPE,
         headers={
             "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}",
+            "X-Presentation-Quality-Report": quote(
+                json.dumps(quality_report, ensure_ascii=False, separators=(",", ":")),
+                safe="",
+            ),
+        },
+    )
+
+
+@app.post("/api/internal/presentation-master-v3/canary/download-pptx")
+async def download_internal_presentation_master_v3_canary_pptx(
+    request: Request,
+    payload: PptxDownloadRequest,
+    user: dict = Depends(require_roles("admin")),
+    _: None = Depends(rate_limit_dependency("admin")),
+) -> StreamingResponse:
+    ensure_not_maintenance_mode()
+    request_id = getattr(request.state, "request_id", "")
+    started = time.perf_counter()
+    try:
+        engine_result = build_renderer_mvp_internal_canary_pptx_bytes(
+            payload,
+            request_id=request_id,
+        )
+        duration_ms = perf_counter_ms(started)
+        pptx_bytes = engine_result.pptx_bytes
+        quality_report = dict(engine_result.quality_report or {})
+        filename = build_pptx_filename(
+            payload.powerpoint_generation_data,
+            payload.client_company_info,
+            summary_mode=payload.summary,
+        )
+        encoded_filename = quote(f"v3-canary-{filename}")
+        logger.info(
+            "v3_internal_canary_response_prepared",
+            extra={
+                "requested_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+                "actual_version": engine_result.engine_mode,
+                "fallback_used": False,
+                "fallback_reason": "",
+                "request_id": request_id,
+                "duration_ms": duration_ms,
+                "role": str(user.get("role", "")),
+            },
+        )
+    except RendererMvpInternalCanaryDisabled as exc:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error_type": "internal_canary_disabled",
+                "message": "Presentation Master V3 internal Canary is disabled.",
+                "request_id": request_id,
+                "fallback_used": False,
+                "fallback_reason": exc.reason_code,
+            },
+        ) from exc
+    except RendererMvpInternalCanaryError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error_type": "internal_canary_generation_failed",
+                "message": "Presentation Master V3 internal Canary generation failed.",
+                "request_id": request_id,
+                "fallback_used": False,
+                "fallback_reason": exc.reason_code,
+                "fallback_category": exc.fallback_category,
+                "failure_stage": exc.failure_stage,
+            },
+        ) from exc
+    except Exception as exc:
+        logger.exception(
+            "v3_internal_canary_unexpected_failure",
+            extra={
+                "requested_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+                "actual_version": "",
+                "fallback_used": False,
+                "fallback_reason": exc.__class__.__name__,
+                "request_id": request_id,
+            },
+        )
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error_type": "internal_canary_unexpected_failure",
+                "message": "Presentation Master V3 internal Canary generation failed.",
+                "request_id": request_id,
+                "fallback_used": False,
+                "fallback_reason": exc.__class__.__name__,
+            },
+        ) from exc
+
+    return StreamingResponse(
+        BytesIO(pptx_bytes),
+        media_type=MEDIA_TYPE,
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}",
+            "X-Presentation-Engine": "renderer-mvp-v3",
+            "X-Presentation-Canary": "true",
+            "X-Presentation-Canary-Success": "true",
             "X-Presentation-Quality-Report": quote(
                 json.dumps(quality_report, ensure_ascii=False, separators=(",", ":")),
                 safe="",
