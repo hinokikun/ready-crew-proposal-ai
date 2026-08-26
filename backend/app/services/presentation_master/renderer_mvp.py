@@ -556,15 +556,45 @@ class RendererMvpNativeRenderer:
 
     def _draw_context_flower(self, slide, contract: dict[str, Any], page: dict[str, Any]) -> None:
         self._draw_header(slide, contract, "CONTEXT")
-        body_y = self._draw_title_stack(slide, page, 0.78, 0.92, 6.4, 39, 5.7, 17)
         case = contract["case_summary"]
-        self._rule(slide, 0.82, body_y + 0.28, 2.55, 0.08, self.palette["red"])
-        self._text(slide, "対象業務", 0.82, body_y + 0.68, 1.3, 0.24, 11, self.palette["muted"])
-        self._text(slide, f"{case['industry']} / {case['proposal_theme']}", 0.82, body_y + 0.98, 5.1, 0.45, 18, self.palette["ink"], bold=True)
-        self._rect(slide, 7.55, 0.95, 4.72, 5.25, fill=self.palette["dark"], line=self.palette["dark"])
-        self._flower_symbol(slide, 7.98, 1.32, 3.76, 2.85, show_labels=True)
-        self._text(slide, "画像条件  ->  判断記録", 8.02, 4.75, 3.55, 0.46, 22, self.palette["white"], bold=True)
-        self._text(slide, "AI候補と人判断を同じ単位に戻す", 8.04, 5.28, 3.45, 0.34, 12, "#D8D1C6")
+        title = _wrap("PoCは精度証明ではなく、\n次回判断の証拠を残す", 6.3, 35, 3)
+        self._text(slide, title, 0.78, 0.92, 6.55, 1.45, 35, self.palette["ink"], bold=True, shape_name="pmv3:title")
+        self._rule(slide, 0.82, 2.56, 2.35, 0.07, self.palette["red"])
+        self._text(
+            slide,
+            "FAJの対象は生花の商品画像。AI候補と人の最終確認を分離せず、理由・差分・例外を次回利用できる形で残す。",
+            0.84,
+            2.82,
+            5.72,
+            0.68,
+            14,
+            self.palette["muted"],
+        )
+        self._ledger(
+            slide,
+            0.86,
+            4.16,
+            5.85,
+            [
+                ("対象業務", "生花オークション / 商品画像 / 商品管理システム"),
+                ("判定情報", "種類・色・等級・状態 / AI候補提示 / 人の最終確認"),
+                ("接続前提", "API・CSV連携 / PoC検証 / 次回基準化"),
+            ],
+            head="確認済み業務情報を、証拠基盤として扱う",
+        )
+        self._text(slide, "利用可能な証拠の境界", 7.56, 1.02, 3.2, 0.3, 13, self.palette["muted"])
+        self._rect(slide, 7.48, 1.38, 4.55, 1.18, fill="#FDFBF7", line=self.palette["dark"])
+        self._flower_symbol(slide, 7.88, 1.53, 2.38, 0.82, show_labels=False)
+        self._text(slide, "実PoC画像ではない", 7.78, 2.28, 1.7, 0.2, 9.5, self.palette["red"], bold=True)
+        self._text(slide, "AI候補", 7.72, 3.05, 0.8, 0.24, 11, self.palette["muted"])
+        self._text(slide, "種類・色・等級・状態を候補として提示", 8.42, 2.92, 3.35, 0.5, 16, self.palette["ink"], bold=True)
+        self._rule(slide, 7.72, 3.5, 4.0, 0.028, self.palette["dark"])
+        self._text(slide, "人の最終確認", 7.72, 3.88, 1.25, 0.24, 11, self.palette["muted"])
+        self._text(slide, "候補を見て、判断理由と例外を残す", 8.92, 3.76, 2.75, 0.5, 16, self.palette["ink"], bold=True)
+        self._rule(slide, 7.72, 4.34, 4.0, 0.028, self.palette["dark"])
+        self._text(slide, "境界を\n隠さない", 7.55, 4.78, 1.28, 0.76, 24, self.palette["red"], bold=True)
+        self._text(slide, "実画像や実PoC結果は未提供。だからこそ、何を記録すれば次回判断に戻せるかを先に定義する。", 8.92, 4.78, 2.88, 0.82, 14, self.palette["ink"])
+        self._text(slide, f"{case['industry']} / {case['proposal_theme']}", 0.86, 6.0, 4.9, 0.24, 11, self.palette["muted"])
 
     def _draw_context_route(self, slide, contract: dict[str, Any], page: dict[str, Any]) -> None:
         self._draw_header(slide, contract, "CONTEXT")
@@ -581,13 +611,37 @@ class RendererMvpNativeRenderer:
 
     def _draw_problem_gap(self, slide, contract: dict[str, Any], page: dict[str, Any]) -> None:
         self._draw_header(slide, contract, "PROBLEM")
-        self._text(slide, "残る", 0.9, 1.05, 2.2, 0.95, 54, self.palette["ink"], bold=True)
-        self._text(slide, "戻らない", 8.1, 4.82, 3.5, 0.75, 42, self.palette["red"], bold=True)
-        self._text(slide, _wrap(page["core_message"], 5.3, 24, 2), 0.96, 2.15, 5.4, 0.65, 24, self.palette["ink"], bold=True)
-        self._record_sheet(slide, 1.0, 3.35, 3.1, 1.75, "判定結果", ["等級", "候補", "時点"], accent=False)
-        self._broken_path(slide, 4.45, 3.55, 3.2, 1.35)
-        self._text(slide, "判断理由", 8.25, 3.8, 2.5, 0.42, 17, self.palette["muted"])
-        self._rule(slide, 8.25, 4.28, 2.5, 0.08, self.palette["red"])
+        self._text(slide, "結果は残る。\n理由は戻らない。", 0.78, 0.98, 4.9, 1.24, 34, self.palette["ink"], bold=True, shape_name="pmv3:title")
+        self._text(
+            slide,
+            "登録情報は商品管理に残る。一方で、次回の品質判断へ戻すための「なぜ」は、記録されないまま消える。",
+            0.82,
+            2.44,
+            5.6,
+            0.48,
+            13.5,
+            self.palette["muted"],
+            shape_name="pmv3:subtitle",
+        )
+        self._ledger(
+            slide,
+            0.86,
+            3.42,
+            3.28,
+            [("商品属性", "種類"), ("見た目", "色"), ("評価", "等級"), ("状態", "傷み・開花・鮮度")],
+            head="現場確認で残る登録情報",
+            row_h=0.38,
+        )
+        self._rect(slide, 5.2, 3.04, 1.12, 2.28, fill=self.palette["red"], line=self.palette["red"])
+        self._text(slide, "判断理由\n未記録", 5.36, 3.72, 0.82, 0.64, 19, self.palette["white"], bold=True, align=PP_ALIGN.CENTER)
+        self._connector(slide, 4.24, 4.04, 5.2, 3.72, self.palette["line"])
+        self._connector(slide, 6.32, 3.72, 7.22, 3.46, self.palette["line"])
+        self._connector(slide, 6.32, 4.58, 7.22, 5.02, self.palette["line"])
+        self._text(slide, "基準化には戻せない", 4.82, 5.48, 1.92, 0.2, 9.5, self.palette["muted"], align=PP_ALIGN.CENTER)
+        self._text(slide, "次回判断で必要になる情報", 7.35, 3.12, 3.35, 0.28, 13, self.palette["muted"])
+        self._need_block(slide, 7.35, 3.58, "どの画像条件なら迷うか", "撮影条件・花材状態・除外条件を再現できるか")
+        self._need_block(slide, 7.35, 4.42, "AI候補と人判断がなぜ違うか", "一致だけでなく、差異と補正理由を戻せるか")
+        self._need_block(slide, 7.35, 5.26, "例外を次回基準へ戻せるか", "判断が割れたケースをPoCの証拠項目にできるか")
 
     def _draw_problem_collision(self, slide, contract: dict[str, Any], page: dict[str, Any]) -> None:
         self._draw_header(slide, contract, "PROBLEM")
@@ -609,10 +663,43 @@ class RendererMvpNativeRenderer:
 
     def _draw_model_flower(self, slide, contract: dict[str, Any], page: dict[str, Any]) -> None:
         self._draw_header(slide, contract, "OPERATING MODEL")
-        self._text(slide, "同じ単位で残す", 0.86, 0.92, 4.6, 1.12, 42, self.palette["ink"], bold=True)
-        self._draw_title_stack(slide, page, 5.7, 1.03, 5.65, 26, 5.0, 16)
-        self._material_stack(slide, 5.95, 3.0, 5.25, 2.58, ["対象画像", "AI候補", "人判断", "理由"])
-        self._rule(slide, 0.9, 3.08, 3.2, 0.08, self.palette["red"])
+        self._text(slide, "判断基準は、\n記録が揃って初めて育つ", 0.78, 0.98, 5.2, 1.1, 31, self.palette["ink"], bold=True, shape_name="pmv3:title")
+        self._text(slide, "見せ方の比較ではなく、次回判断へ再利用できる業務素材の記録単位を示す。", 0.82, 2.35, 5.0, 0.44, 14, self.palette["muted"], shape_name="pmv3:subtitle")
+        self._ledger(
+            slide,
+            0.86,
+            3.34,
+            4.78,
+            [
+                ("対象画像", "商品画像 / 撮影条件"),
+                ("AI候補", "種類・色・等級・状態"),
+                ("人判断", "最終確認 / 補正"),
+                ("差分", "一致 / 差異"),
+                ("理由", "なぜそう判断したか"),
+                ("例外", "迷う条件 / 除外条件"),
+                ("再利用条件", "次回基準へ戻す条件"),
+            ],
+            head="再利用可能にする記録単位",
+            row_h=0.32,
+            accent_key="差分",
+        )
+        self._connector(slide, 5.82, 3.58, 6.95, 3.22, self.palette["line"])
+        self._connector(slide, 5.82, 4.72, 6.95, 4.96, self.palette["line"])
+        self._text(slide, "業務資産", 7.04, 2.82, 1.6, 0.28, 16, self.palette["ink"], bold=True)
+        self._text(slide, "判断基準\n素材", 7.0, 3.22, 3.0, 1.3, 43, self.palette["ink"], bold=True)
+        self._rule(slide, 7.04, 4.74, 3.62, 0.07, self.palette["red"])
+        self._text(
+            slide,
+            "記録単位が揃うと、PoC後に「AIが何を候補にし、人がどこを補ったか」を次回の品質判断へ戻せる。",
+            7.05,
+            5.02,
+            3.95,
+            0.62,
+            14,
+            self.palette["ink"],
+        )
+        self._text(slide, "基準化に使う問い", 7.05, 6.0, 1.45, 0.2, 10.5, self.palette["muted"])
+        self._text(slide, "同じ条件の画像で、AI候補と人判断の差分理由を再確認できるか。", 8.35, 5.94, 3.35, 0.32, 12, self.palette["muted"])
 
     def _draw_model_route(self, slide, contract: dict[str, Any], page: dict[str, Any]) -> None:
         self._draw_header(slide, contract, "OPERATING MODEL")
@@ -626,13 +713,46 @@ class RendererMvpNativeRenderer:
 
     def _draw_evidence_flower(self, slide, contract: dict[str, Any], page: dict[str, Any]) -> None:
         self._draw_header(slide, contract, "EVIDENCE")
-        bottom = self._draw_title_stack(slide, page, 0.78, 0.82, 7.4, 35, 6.5, 16)
-        panel_y = max(2.62, bottom)
-        self._rect(slide, 0.86, panel_y, 10.95, 3.32, fill="#FDFBF7", line="#D8CDBF")
-        self._mini_flower_evidence(slide, 1.16, panel_y + 0.38, 2.1, 2.42)
-        self._record_sheet(slide, 3.65, panel_y + 0.34, 3.4, 2.45, "判定記録", ["AI候補", "人判断", "一致 / 差異", "判断理由"], accent=True)
-        self._decision_slab(slide, 7.55, panel_y + 0.4, 3.45, 2.32, "次回GO条件", ["記録単位に合意", "例外条件を残す", "基準化の可否"])
-        self._text(slide, "精度・ROI・件数は未確定値として描画しない", 0.9, 6.35, 5.1, 0.24, 10, self.palette["muted"], shape_name="pmv3:footer_note")
+        self._text(slide, "1件の判定記録が、\n次回判断の証拠になる", 0.78, 0.88, 6.6, 1.12, 32, self.palette["ink"], bold=True, shape_name="pmv3:title")
+        self._text(slide, "存在しない精度値は作らない。PoCで記録・比較・レビューする項目を、証拠オブジェクトそのものとして提示する。", 0.82, 2.24, 7.08, 0.42, 14, self.palette["muted"], shape_name="pmv3:subtitle")
+        self._rule(slide, 0.86, 2.95, 10.95, 0.028, self.palette["dark"])
+        self._rect(slide, 0.9, 3.28, 2.18, 1.78, fill="#FDFBF7", line=self.palette["dark"])
+        self._text(slide, "画像条件の参照枠", 1.08, 3.44, 1.55, 0.2, 10.5, self.palette["muted"])
+        self._flower_symbol(slide, 1.14, 3.72, 1.58, 0.86, show_labels=False)
+        self._text(slide, "実PoC画像ではない", 1.08, 4.76, 1.45, 0.18, 8.5, self.palette["red"], bold=True)
+        self._text(slide, "対象画像と撮影条件を、後から判断理由へ戻せる粒度で残す。", 0.9, 5.22, 2.28, 0.42, 12, self.palette["muted"])
+        self._text(slide, "判定記録", 3.64, 3.22, 2.35, 0.55, 30, self.palette["ink"], bold=True)
+        self._text(slide, "確認対象 / レビュー対象 / 次回利用条件", 3.66, 3.82, 3.2, 0.22, 10.5, self.palette["muted"])
+        record_items = [
+            ("AI候補", "種類・色・等級・状態を候補として記録"),
+            ("人の最終判断", "担当者が確認し、補正と理由を残す"),
+            ("差分", "一致 / 差異を分けて残す"),
+            ("判断理由", "なぜ候補を採用 / 修正したか"),
+            ("例外条件", "迷う画像・除外条件を確認"),
+            ("次回利用条件", "次回判断へ戻せる証拠を確認"),
+        ]
+        for idx, (label, value) in enumerate(record_items):
+            col = idx % 2
+            row = idx // 2
+            x = 3.68 + col * 1.78
+            y = 4.16 + row * 0.56
+            if label in {"差分", "次回利用条件"}:
+                self._rule(slide, x, y - 0.08, 1.5, 0.03, self.palette["red"])
+            self._text(slide, label, x, y, 1.44, 0.18, 9.5, self.palette["muted"])
+            self._text(slide, value, x, y + 0.2, 1.52, 0.28, 11.2, self.palette["red"] if label == "差分" else self.palette["ink"], bold=True)
+        self._rule(slide, 8.04, 3.26, 0.045, 2.78, self.palette["red"])
+        self._text(slide, "結果ではなく、\n戻せる記録。", 8.36, 3.5, 2.35, 0.65, 21, self.palette["red"], bold=True)
+        self._text(slide, "1件の判断を、次回のPoC設計で再利用できる証拠オブジェクトへ変える。", 8.36, 4.36, 2.7, 0.62, 14, self.palette["ink"], bold=True)
+        self._ledger(
+            slide,
+            8.36,
+            5.24,
+            2.8,
+            [("", "AI候補と人判断を同じ記録へ残す"), ("", "差分理由をレビューできる"), ("", "例外を次回基準へ戻せる")],
+            head="",
+            row_h=0.25,
+            small=True,
+        )
 
     def _draw_evidence_route(self, slide, contract: dict[str, Any], page: dict[str, Any]) -> None:
         self._draw_header(slide, contract, "EVIDENCE")
@@ -665,18 +785,30 @@ class RendererMvpNativeRenderer:
 
     def _draw_decision_convergence(self, slide, contract: dict[str, Any], page: dict[str, Any]) -> None:
         self._draw_header(slide, contract, "DECISION")
-        bottom = self._draw_title_stack(slide, page, 0.82, 0.86, 7.45, 37, 6.8, 16)
-        gate_y = max(3.05, bottom + 0.22)
-        labels = ["証拠構造", "例外条件", "判断理由"]
-        xs = [1.05, 3.85, 6.65]
-        for x, label in zip(xs, labels):
-            self._rect(slide, x, gate_y, 2.05, 1.25, fill="#FFFFFF", line="#D8CDBF")
-            self._text(slide, label, x + 0.2, gate_y + 0.4, 1.55, 0.35, 18, self.palette["ink"], bold=True, align=PP_ALIGN.CENTER)
-            self._connector(slide, x + 2.05, gate_y + 0.63, 9.1, gate_y + 1.0, self.palette["line"])
-        self._rect(slide, 9.12, gate_y - 0.2, 2.55, 2.1, fill=self.palette["dark"], line=self.palette["dark"])
-        self._text(slide, "GO", 9.55, gate_y + 0.11, 1.7, 0.78, 50, self.palette["white"], bold=True, align=PP_ALIGN.CENTER)
-        self._rule(slide, 9.42, gate_y + 1.07, 1.95, 0.08, self.palette["red"])
-        self._text(slide, "次回合意へ", 9.45, gate_y + 1.27, 1.85, 0.32, 14, "#D8D1C6", align=PP_ALIGN.CENTER)
+        self._text(slide, "GOは、\n条件が揃って初めて判断できる", 0.78, 0.96, 6.4, 1.15, 32, self.palette["ink"], bold=True, shape_name="pmv3:title")
+        self._text(slide, "未確定のAccuracyやSample Countは作らない。次回打ち合わせでは、何が確認できればPoC設計へ進めるかを合意する。", 0.82, 2.32, 6.7, 0.42, 14, self.palette["muted"], shape_name="pmv3:subtitle")
+        self._rule(slide, 0.86, 2.98, 3.92, 0.06, self.palette["red"])
+        self._text(slide, "主役はGOの文字ではなく、証拠が次回判断に使える構造で残ること。", 0.86, 3.16, 5.4, 0.3, 12, self.palette["muted"])
+        criteria = [
+            ("証拠が残る", "対象画像・AI候補・人判断・差分が同じ記録にある"),
+            ("理由をレビューできる", "なぜ補正したか、判断理由を次回確認できる"),
+            ("例外条件を扱える", "迷う条件・除外条件をPoC対象として明確にする"),
+            ("次回判断へ使える", "商品管理システム連携前に基準素材として戻せる"),
+        ]
+        start_y = 3.82
+        for idx, (label, value) in enumerate(criteria):
+            y = start_y + idx * 0.52
+            self._rule(slide, 0.86, y, 5.15, 0.018, self.palette["dark"])
+            self._text(slide, label, 0.9, y + 0.13, 1.65, 0.22, 11.5, self.palette["ink"], bold=True)
+            self._text(slide, value, 2.55, y + 0.12, 3.5, 0.24, 10.5, self.palette["muted"])
+            self._connector(slide, 6.2, y + 0.24, 7.54, 4.26 + (idx - 1.5) * 0.11, self.palette["line"])
+        self._rule(slide, 7.74, 3.44, 0.05, 2.9, self.palette["red"])
+        self._text(slide, "判断の意味", 8.02, 3.32, 1.28, 0.22, 11, self.palette["muted"])
+        self._text(slide, "PoC設計へ\n進む条件", 8.0, 3.72, 3.05, 0.98, 31, self.palette["red"], bold=True)
+        self._text(slide, "4条件が揃うなら、次回合意でPoCの対象範囲と記録方法を決められる。", 8.02, 4.86, 3.18, 0.5, 14, self.palette["ink"], bold=True)
+        self._rect(slide, 8.02, 5.74, 3.2, 0.64, fill="#FDFBF7", line=self.palette["red"])
+        self._text(slide, "次回合意", 8.24, 5.9, 0.95, 0.18, 11.5, self.palette["red"], bold=True)
+        self._text(slide, "証拠の残し方とレビュー方法を先に合意する。", 9.12, 5.82, 1.95, 0.38, 10.5, self.palette["muted"])
 
     def _draw_footer(self, slide, contract: dict[str, Any], page_index: int, page_count: int) -> None:
         self._rule(slide, 0.62, 6.93, 11.9, 0.015, "#D6CEC2")
@@ -765,6 +897,47 @@ class RendererMvpNativeRenderer:
         self._rect(slide, x, y, w, h, fill="#F2E8DF", line="#D8CDBF")
         self._flower_symbol(slide, x + 0.22, y + 0.24, w - 0.46, h - 0.74, show_labels=False)
         self._text(slide, "対象画像", x + 0.22, y + h - 0.36, w - 0.44, 0.22, 10, self.palette["muted"], align=PP_ALIGN.CENTER)
+
+    def _ledger(
+        self,
+        slide,
+        x: float,
+        y: float,
+        w: float,
+        rows: list[tuple[str, str]],
+        *,
+        head: str,
+        row_h: float = 0.34,
+        accent_key: str = "",
+        small: bool = False,
+    ) -> None:
+        if head:
+            self._text(slide, head, x, y - 0.33, w, 0.22, 11.5, self.palette["ink"], bold=True)
+        key_w = 1.12 if not small else 0.08
+        value_x = x + key_w + (0.1 if not small else 0.0)
+        value_w = w - key_w - (0.1 if not small else 0.0)
+        for index, (key, value) in enumerate(rows):
+            yy = y + index * row_h
+            self._rule(slide, x, yy, w, 0.018, self.palette["dark"] if not small else "#CFC6B9")
+            if key:
+                color = self.palette["red"] if key == accent_key else self.palette["muted"]
+                self._text(slide, key, x + 0.02, yy + 0.09, key_w - 0.04, 0.18, 10.5, color, bold=key == accent_key)
+            self._text(
+                slide,
+                value,
+                value_x,
+                yy + 0.08,
+                value_w,
+                0.2 if not small else 0.18,
+                11.2 if not small else 9.8,
+                self.palette["ink"] if not small else self.palette["muted"],
+                bold=not small,
+            )
+
+    def _need_block(self, slide, x: float, y: float, title: str, detail: str) -> None:
+        self._rule(slide, x, y - 0.06, 3.3, 0.018, self.palette["dark"])
+        self._text(slide, title, x, y + 0.08, 3.15, 0.28, 15.5, self.palette["ink"], bold=True)
+        self._text(slide, detail, x, y + 0.43, 3.15, 0.23, 10.5, self.palette["muted"])
 
     def _record_sheet(self, slide, x: float, y: float, w: float, h: float, title: str, rows: list[str], *, accent: bool) -> None:
         self._rect(slide, x, y, w, h, fill="#FFFFFF", line="#D8CDBF")
@@ -856,9 +1029,11 @@ class RendererMvpNativeRenderer:
         min_font = 999.0
         off_canvas = 0
         clipping = 0
+        overflow = 0
         pictures = 0
         text_shapes = 0
         native_shapes = 0
+        text_bounds: list[tuple[float, float, float, float]] = []
         for shape in slide.shapes:
             left = shape.left / EMU_PER_INCH
             top = shape.top / EMU_PER_INCH
@@ -877,10 +1052,14 @@ class RendererMvpNativeRenderer:
                 if text:
                     text_shapes += 1
                     visible_text.append(text)
+                    text_bounds.append((left, top, width, height))
                 for paragraph in shape.text_frame.paragraphs:
                     for run in paragraph.runs:
                         if run.font.size is not None:
                             min_font = min(min_font, run.font.size.pt)
+                if text and _text_overflows_box(shape, width, height):
+                    overflow += 1
+        collision = _count_text_collisions(text_bounds)
         joined = "\n".join(visible_text)
         return {
             "page_id": page["page_id"],
@@ -892,8 +1071,8 @@ class RendererMvpNativeRenderer:
             "rasterized_object_count": pictures,
             "text_shape_count": text_shapes,
             "min_font_pt": 0 if min_font == 999 else round(min_font, 1),
-            "overflow_count": 0,
-            "collision_count": 0,
+            "overflow_count": overflow,
+            "collision_count": collision,
             "clipping_count": clipping,
             "off_canvas_count": off_canvas,
             "placeholder_count": _contains_prohibited_text(joined),
@@ -1134,33 +1313,189 @@ def _inches(value: float):
     return Inches(float(value))
 
 
+PROTECTED_JA_PHRASES = (
+    "証拠",
+    "判断",
+    "次回判断",
+    "人判断",
+    "AI候補",
+    "判定記録",
+    "判断理由",
+    "例外条件",
+    "撮影条件",
+    "品質判断",
+    "画像条件",
+)
+
+
 def _char_units(text: str) -> float:
-    return sum(0.55 if ord(char) < 128 else 1.0 for char in text)
+    units = 0.0
+    for char in text:
+        codepoint = ord(char)
+        if codepoint < 128:
+            units += 0.55
+        elif char in "、。，．・：／「」『』（）()":
+            units += 0.42
+        elif "\u3040" <= char <= "\u30ff" or "\u4e00" <= char <= "\u9fff":
+            units += 0.82
+        else:
+            units += 0.75
+    return units
 
 
 def _wrap(text: str, width_in: float, font_pt: float, max_lines: int) -> str:
-    limit = max(4.0, width_in * 72.0 / max(font_pt * 1.25, 1.0))
+    limit = max(4.0, width_in * 72.0 / max(font_pt * 1.18, 1.0))
     lines: list[str] = []
     for raw in str(text or "").split("\n"):
-        remaining = raw.strip()
-        while _char_units(remaining) > limit and len(lines) < max_lines - 1:
-            used = 0.0
-            cut = 0
-            for index, char in enumerate(remaining):
-                used += 0.55 if ord(char) < 128 else 1.0
-                if used > limit and cut > 0:
-                    break
-                cut = index + 1
-            while cut < len(remaining) and remaining[cut] in "、。，．,.;:!?！？)]）】」』":
-                cut += 1
-            lines.append(remaining[:cut].rstrip())
-            remaining = remaining[cut:].lstrip()
-        if remaining:
-            lines.append(remaining)
+        parts = _wrap_one_line(raw.strip(), limit, max(1, max_lines - len(lines)))
+        lines.extend(parts)
+        if len(lines) >= max_lines:
+            break
     return "\n".join(lines[:max_lines])
+
+
+def _wrap_one_line(text: str, limit: float, max_lines: int) -> list[str]:
+    if not text or _char_units(text) <= limit:
+        return [text] if text else []
+    n = len(text)
+    candidates = [0, n]
+    for index in range(1, n):
+        prev = text[index - 1]
+        curr = text[index]
+        if _break_is_allowed(text, index) and (
+            prev in "、。，．,.;:!?！？)]）】」』 "
+            or curr in "次本対人理証例判業P"
+            or prev in "はがをにでと、"
+        ):
+            candidates.append(index)
+    candidates = sorted(set(candidates))
+    best: tuple[float, list[str]] | None = None
+    for line_count in range(2, max_lines + 1):
+        for combo in _break_combinations(candidates[1:-1], line_count - 1):
+            points = [0, *combo, n]
+            lines = [text[points[i] : points[i + 1]].strip() for i in range(len(points) - 1)]
+            if any(not line for line in lines):
+                continue
+            cost = _wrap_cost(lines, limit)
+            if best is None or cost < best[0]:
+                best = (cost, lines)
+    if best:
+        return best[1]
+    return _greedy_wrap(text, limit, max_lines)
+
+
+def _break_combinations(candidates: list[int], count: int) -> list[tuple[int, ...]]:
+    if count <= 0:
+        return [()]
+    results: list[tuple[int, ...]] = []
+
+    def walk(start: int, chosen: list[int]) -> None:
+        if len(chosen) == count:
+            results.append(tuple(chosen))
+            return
+        remaining = count - len(chosen)
+        for index in range(start, len(candidates) - remaining + 1):
+            chosen.append(candidates[index])
+            walk(index + 1, chosen)
+            chosen.pop()
+
+    walk(0, [])
+    return results[:600]
+
+
+def _wrap_cost(lines: list[str], limit: float) -> float:
+    cost = 0.0
+    for line in lines:
+        units = _char_units(line)
+        overflow = max(0.0, units - limit)
+        slack = max(0.0, limit - units)
+        cost += overflow * overflow * 12 + slack * slack * 0.12
+        if len(line) <= 1:
+            cost += 100
+        if line[-1:] in "（(「『【":
+            cost += 30
+        if line[:1] in "、。，．,.;:!?！？)]）】」』":
+            cost += 30
+    return cost
+
+
+def _greedy_wrap(text: str, limit: float, max_lines: int) -> list[str]:
+    lines: list[str] = []
+    remaining = text
+    while _char_units(remaining) > limit and len(lines) < max_lines - 1:
+        cut = 1
+        for index in range(1, len(remaining)):
+            if _char_units(remaining[:index]) <= limit and _break_is_allowed(remaining, index):
+                cut = index
+        if cut <= 1 and len(remaining) > 2:
+            cut = len(remaining) // 2
+        lines.append(remaining[:cut].strip())
+        remaining = remaining[cut:].strip()
+    if remaining:
+        lines.append(remaining)
+    return lines
+
+
+def _break_is_allowed(text: str, index: int) -> bool:
+    if index <= 1 or index >= len(text) - 1:
+        return False
+    if text[index] in "、。，．,.;:!?！？)]）】」』":
+        return False
+    if text[index - 1] in "（(「『【":
+        return False
+    for phrase in PROTECTED_JA_PHRASES:
+        start = text.find(phrase)
+        while start >= 0:
+            end = start + len(phrase)
+            if start < index < end:
+                return False
+            start = text.find(phrase, start + 1)
+    return True
 
 
 def _estimated_height(text: str, width_in: float, font_pt: float) -> float:
     line_count = max(1, len(str(text).split("\n")))
     line_height = 0.95 if font_pt >= 34 else 1.05
     return max(0.18, (font_pt / 72.0) * line_height * line_count + 0.09)
+
+
+def _text_overflows_box(shape: Any, width_in: float, height_in: float) -> bool:
+    if not getattr(shape, "has_text_frame", False):
+        return False
+    text = shape.text_frame.text.strip()
+    if not text:
+        return False
+    font_pt = 0.0
+    for paragraph in shape.text_frame.paragraphs:
+        for run in paragraph.runs:
+            if run.font.size is not None:
+                font_pt = max(font_pt, float(run.font.size.pt))
+                break
+    if font_pt <= 0:
+        font_pt = 12.0
+    limit = max(4.0, width_in * 72.0 / max(font_pt * 1.18, 1.0))
+    estimated_lines = 0
+    for raw in text.split("\n"):
+        estimated_lines += max(1, math.ceil(_char_units(raw.strip()) / max(limit, 0.1)))
+    line_height = 0.95 if font_pt >= 34 else 1.05
+    required = (font_pt / 72.0) * line_height * estimated_lines + 0.04
+    return required > height_in + 0.09
+
+
+def _count_text_collisions(bounds: list[tuple[float, float, float, float]]) -> int:
+    count = 0
+    for index, a in enumerate(bounds):
+        for b in bounds[index + 1 :]:
+            if _overlap_area(a, b) > 0.05:
+                count += 1
+    return count
+
+
+def _overlap_area(a: tuple[float, float, float, float], b: tuple[float, float, float, float]) -> float:
+    ax, ay, aw, ah = a
+    bx, by, bw, bh = b
+    overlap_w = min(ax + aw, bx + bw) - max(ax, bx)
+    overlap_h = min(ay + ah, by + bh) - max(ay, by)
+    if overlap_w <= 0 or overlap_h <= 0:
+        return 0.0
+    return overlap_w * overlap_h

@@ -15,6 +15,7 @@ from app.services.presentation_master.renderer_mvp import (
     RendererMvpIntegrationError,
     extract_pptx_text,
     inspect_pptx_bytes,
+    _wrap,
 )
 
 
@@ -151,6 +152,15 @@ def test_renderer_mvp_feature_flag_default_is_off() -> None:
     assert runtime_settings.presentation_master_v3_renderer_mvp_shadow_max_pending >= 1
 
 
+def test_renderer_mvp_japanese_title_wrap_keeps_semantic_units() -> None:
+    wrapped = _wrap("PoCは精度証明ではなく、次回判断の証拠を残す", 6.4, 35, 3)
+
+    assert "証\n拠" not in wrapped
+    assert "判\n断" not in wrapped
+    assert "証拠" in wrapped
+    assert len(wrapped.splitlines()) <= 3
+
+
 def test_renderer_mvp_flag_off_preserves_current_production_flow(sample_pptx_payload: dict[str, Any]) -> None:
     flags = _set_flags(renderer_mvp=False, master=False, v10=False, shadow=False, canary=False)
     try:
@@ -191,6 +201,11 @@ def test_renderer_mvp_flag_on_generates_valid_pptx_for_three_categories() -> Non
         assert result.quality_report["placeholder_internal_label_count"] == 0
         assert result.quality_report["tier1_editability"] == 1.0
         assert result.quality_report["rasterization_ratio"] == 0.0
+        render_pages = result.quality_report["render_report"]["pages"]
+        assert sum(page["overflow_count"] for page in render_pages) == 0
+        assert sum(page["collision_count"] for page in render_pages) == 0
+        assert sum(page["clipping_count"] for page in render_pages) == 0
+        assert sum(page["off_canvas_count"] for page in render_pages) == 0
         audit = inspect_pptx_bytes(result.pptx_bytes, source_payload=_fixture_cases()[case_id])
         assert audit["placeholder_count"] == 0
         assert audit["internal_label_count"] == 0
