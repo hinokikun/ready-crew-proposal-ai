@@ -149,7 +149,7 @@ import type { PresentationLayoutDecisionRequest, PresentationQualityDownloadRepo
 import { canUseWorkFeatures, getRoleLabel, isAdminRole, isManagerCompatibleRole, type CreatableUserRole } from "@/lib/roles";
 import { appendUsageLog, buildScopedStorageKey, readUsageLogs, type UsageLogEntry } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
-import type { AnalysisResponse, PowerPointData, ProposalRequest } from "@/types/proposal";
+import type { AnalysisResponse, PowerPointData, ProposalRequest, SemanticCandidate } from "@/types/proposal";
 
 import {
   MAX_ASSISTANT_QUESTIONS,
@@ -301,6 +301,7 @@ export default function Home() {
   const [reportInput, setReportInput] = useState("");
   const [reportResult, setReportResult] = useState<ReportAiResult | null>(null);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
+  const [semanticCandidatesForTransport, setSemanticCandidatesForTransport] = useState<SemanticCandidate[]>([]);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -481,6 +482,7 @@ export default function Home() {
 
   function resetWorkspaceScopedState() {
     setResult(null);
+    setSemanticCandidatesForTransport([]);
     setEditablePreviewSlides([]);
     setCompanyResearch(null);
     setExtractedInfo(null);
@@ -1758,6 +1760,7 @@ export default function Home() {
       trackEvent({ name: "ai_analysis_complete", feature: "proposal", status: "success", durationMs, meta: { mode: inputMode } });
       trackEvent({ name: "proposal_generated", feature: "proposal", status: "success", durationMs, meta: { output: "markdown" } });
       setResult(response);
+      setSemanticCandidatesForTransport(response.semantic_candidates?.candidates ?? []);
       setBeautifulAiResult(null);
       setBeautifulAiError("");
       setHasDownloadedSummary(false);
@@ -1859,7 +1862,7 @@ export default function Home() {
         targetForm.own_service_info,
         targetForm.past_proposal_template,
         targetForm.case_studies,
-        { designTemplate: selectedPresentationTemplate, qualityState: options.qualityState, layoutDecisions: options.layoutDecisions }
+        { designTemplate: selectedPresentationTemplate, qualityState: options.qualityState, layoutDecisions: options.layoutDecisions, semanticCandidates: summary ? undefined : semanticCandidatesForTransport }
       );
       setLastPresentationQualityReport(downloadResult.qualityReport);
       trackEvent({
@@ -2794,6 +2797,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           onOpenCrm={() => setExperienceView("projects")}
           onRetry={lastDownloadRetry ? () => void retryLastDownload() : undefined}
           onShowGuide={() => setShowGuideTutorial(true)}
+          onSemanticCandidatesChange={setSemanticCandidatesForTransport}
           onSourceTextChange={handleSourceTextChange}
           onToggleDetailMode={() => setIsSimpleDetailMode((current) => !current)}
           onUseSample={startSampleExperience}
@@ -2815,6 +2819,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           qualityGate={beautifulAiQualityGate}
           qualityGateComplete={isBeautifulAiQualityGateComplete}
           qualityGateIsLoading={isBeautifulAiQualityGateLoading}
+          semanticCandidates={result?.semantic_candidates ?? null}
           roleLabel={roleDisplayLabel}
           showSalesCopilotMarker
           sourceText={rawSourceText}

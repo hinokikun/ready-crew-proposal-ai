@@ -453,35 +453,39 @@ class RendererMvpNativeRenderer:
         for index, page in enumerate(contract["pages"], start=1):
             slide = prs.slides.add_slide(blank)
             self._set_background(slide)
-            family = self._select_family(page)
-            if family == "context_flower":
-                self._draw_context_flower(slide, contract, page)
-            elif family == "context_route":
-                self._draw_context_route(slide, contract, page)
-            elif family == "context_commerce":
-                self._draw_context_commerce(slide, contract, page)
-            elif family == "problem_gap":
-                self._draw_problem_gap(slide, contract, page)
-            elif family == "problem_collision":
-                self._draw_problem_collision(slide, contract, page)
-            elif family == "problem_journey":
-                self._draw_problem_journey(slide, contract, page)
-            elif family == "model_route":
-                self._draw_model_route(slide, contract, page)
-            elif family == "model_commerce":
-                self._draw_model_commerce(slide, contract, page)
-            elif family == "model_flower":
-                self._draw_model_flower(slide, contract, page)
-            elif family == "evidence_flower":
-                self._draw_evidence_flower(slide, contract, page)
-            elif family == "evidence_route":
-                self._draw_evidence_route(slide, contract, page)
-            elif family == "evidence_commerce":
-                self._draw_evidence_commerce(slide, contract, page)
-            elif family == "decision_dependency":
-                self._draw_decision_dependency(slide, contract, page)
+            if contract.get("render_mode") == "structural_bridge_v1":
+                family = "structural_bridge"
+                self._draw_structural_bridge_page(slide, contract, page)
             else:
-                self._draw_decision_convergence(slide, contract, page)
+                family = self._select_family(page)
+                if family == "context_flower":
+                    self._draw_context_flower(slide, contract, page)
+                elif family == "context_route":
+                    self._draw_context_route(slide, contract, page)
+                elif family == "context_commerce":
+                    self._draw_context_commerce(slide, contract, page)
+                elif family == "problem_gap":
+                    self._draw_problem_gap(slide, contract, page)
+                elif family == "problem_collision":
+                    self._draw_problem_collision(slide, contract, page)
+                elif family == "problem_journey":
+                    self._draw_problem_journey(slide, contract, page)
+                elif family == "model_route":
+                    self._draw_model_route(slide, contract, page)
+                elif family == "model_commerce":
+                    self._draw_model_commerce(slide, contract, page)
+                elif family == "model_flower":
+                    self._draw_model_flower(slide, contract, page)
+                elif family == "evidence_flower":
+                    self._draw_evidence_flower(slide, contract, page)
+                elif family == "evidence_route":
+                    self._draw_evidence_route(slide, contract, page)
+                elif family == "evidence_commerce":
+                    self._draw_evidence_commerce(slide, contract, page)
+                elif family == "decision_dependency":
+                    self._draw_decision_dependency(slide, contract, page)
+                else:
+                    self._draw_decision_convergence(slide, contract, page)
             self._draw_footer(slide, contract, index, len(contract["pages"]))
             pages.append(self._audit_slide(slide, page, family))
             fingerprints.append(self._fingerprint(slide, page, family))
@@ -492,6 +496,237 @@ class RendererMvpNativeRenderer:
             "pages": pages,
             "composition_fingerprints": fingerprints,
         }
+
+    def _draw_structural_bridge_page(self, slide, contract: dict[str, Any], page: dict[str, Any]) -> None:
+        """Render structural bridge objects with reusable semantic visual rules."""
+
+        group = page.get("group_id", page.get("page_role", "semantic"))
+        self._draw_header(slide, contract, group)
+        title = _wrap(page.get("core_message", ""), 8.9, 24, 2)
+        self._text(slide, title, 0.62, 0.76, 8.9, 0.9, 24, self.palette["ink"], bold=True)
+        self._text(slide, page.get("visual_thesis", ""), 0.62, 1.7, 8.9, 0.3, 13, self.palette["muted"])
+        if contract.get("review_state") == "REVIEW_REQUIRED":
+            self._review_marker(slide, 10.05, 0.76)
+
+        objects = page.get("objects", [])
+        layout_mode = self._structural_layout_mode(contract)
+        if objects and all(obj.get("content_type") == "stage" for obj in objects):
+            self._draw_structural_stage_row(slide, objects, 0.62, 2.18)
+        elif layout_mode != "generic":
+            self._draw_structural_topology_page(slide, contract, page, layout_mode)
+        else:
+            self._draw_structural_object_grid(slide, objects, 0.62, 2.15)
+
+        relationships = page.get("relationships", [])
+        if relationships:
+            self._draw_structural_relationship_rail(slide, relationships, 0.62, 5.15)
+
+    def _structural_layout_mode(self, contract: dict[str, Any]) -> str:
+        groups = {str(page.get("group_id", "")) for page in contract.get("pages", [])}
+        relationships = {str(rel.get("semantic_type", "")) for page in contract.get("pages", []) for rel in page.get("relationships", [])}
+        if {"observation", "record", "review", "decision_value"}.issubset(groups):
+            return "lifecycle"
+        if {"preparation", "decision", "approval", "execution"}.issubset(groups):
+            return "workflow"
+        if {"data_sources", "collection", "transformation", "analysis", "decision", "business_value"}.issubset(groups):
+            return "value_chain"
+        if {"barriers", "intervention", "behavior_change", "adoption", "outcome_visibility", "learning"}.issubset(groups):
+            return "behavior_loop"
+        if {"journey_stages", "friction", "intervention", "value", "touchpoints"}.issubset(groups):
+            return "journey"
+        if {"escalation_stages", "responsibilities", "levels", "decision_records", "principles"}.issubset(groups):
+            return "governance"
+        if {"purpose", "metric_tree", "evidence", "thresholds", "actions"}.issubset(groups):
+            return "metric"
+        if {"stages", "outputs", "exit_criteria", "gates", "principles"}.issubset(groups):
+            return "roadmap"
+        if {"thesis", "proof", "implication", "preconditions"}.issubset(groups):
+            return "argument"
+        if {"investment", "capability", "verification", "outcome", "business_value", "gates"}.issubset(groups):
+            return "investment_case"
+        if "feedback" in relationships or "handoff" in relationships:
+            return "relationship"
+        return "generic"
+
+    def _draw_structural_topology_page(self, slide, contract: dict[str, Any], page: dict[str, Any], mode: str) -> None:
+        """Use topology to create a focal object and a subordinate semantic cluster."""
+
+        objects = page.get("objects", [])
+        if not objects:
+            return
+        primary_index = next(
+            (index for index, obj in enumerate(objects) if self._structural_style(obj) in {"boundary", "outcome", "evidence"}),
+            0,
+        )
+        primary = objects[primary_index]
+        supporting = [obj for index, obj in enumerate(objects) if index != primary_index]
+        primary_style = self._structural_style(primary)
+        fill = {"evidence": "#F2E8DF", "boundary": self.palette["dark"], "outcome": "#E9E0D0", "owner": "#F7F1E7", "stage": "#FDFBF7", "support": self.palette["white"]}[primary_style]
+        line = self.palette["red"] if primary_style in {"boundary", "outcome", "evidence"} else self.palette["line"]
+        self._rect(slide, 0.62, 2.18, 3.5, 1.48, fill=fill, line=line)
+        self._rule(slide, 0.62, 2.18, 0.1, 1.48, self.palette["red"] if primary_style != "owner" else self.palette["blue"])
+        text_color = self.palette["white"] if primary_style == "boundary" else self.palette["ink"]
+        meta_color = "#E7DED2" if primary_style == "boundary" else self.palette["muted"]
+        primary_font = 16 if primary_style in {"boundary", "outcome"} else 15
+        primary_text = _wrap(primary.get("content", ""), 3.0, primary_font, 2)
+        self._text(slide, primary_text, 0.86, 2.4, 3.0, 0.86, primary_font, text_color, bold=True)
+        self._text(slide, str(primary.get("semantic_role", "")).replace("_", " "), 0.86, 3.3, 3.0, 0.18, 9, meta_color)
+
+        cluster_x = 4.55
+        cluster_w = 7.85
+        self._text(slide, self._topology_cluster_label(mode), cluster_x, 2.08, cluster_w, 0.2, 9, self.palette["muted"], bold=True)
+        if mode in {"lifecycle", "workflow", "value_chain", "behavior_loop", "journey", "governance", "roadmap"}:
+            self._draw_structural_support_list(slide, supporting, cluster_x, 2.42, cluster_w, mode)
+        else:
+            self._draw_structural_support_list(slide, supporting, cluster_x, 2.42, cluster_w, "relationship")
+        self._draw_structural_topology_rail(slide, contract, 0.62, 4.3, mode)
+
+    def _topology_cluster_label(self, mode: str) -> str:
+        return {
+            "lifecycle": "EVIDENCE LIFECYCLE",
+            "workflow": "OWNERSHIP / APPROVAL FLOW",
+            "value_chain": "DATA-TO-VALUE CHAIN",
+            "behavior_loop": "ADOPTION SYSTEM",
+            "journey": "JOURNEY PROGRESSION",
+            "governance": "ESCALATION / CONTROL",
+            "metric": "MEASUREMENT LOGIC",
+            "roadmap": "ROADMAP SUPPORT",
+            "argument": "THESIS / PROOF",
+            "investment_case": "INVESTMENT TO VALUE",
+            "relationship": "SEMANTIC SUPPORT",
+        }.get(mode, "SUPPORTING INFORMATION")
+
+    def _draw_structural_support_list(self, slide, objects: list[dict[str, Any]], x: float, y: float, w: float, mode: str) -> None:
+        if not objects:
+            return
+        columns = 2 if len(objects) > 3 else 1
+        gap = 0.28
+        col_w = (w - gap * (columns - 1)) / columns
+        row_h = 0.54
+        for index, obj in enumerate(objects):
+            col = index % columns
+            row = index // columns
+            xx = x + col * (col_w + gap)
+            yy = y + row * row_h
+            style = self._structural_style(obj)
+            color = self.palette["red"] if style in {"evidence", "boundary", "outcome"} else self.palette["line"]
+            self._rule(slide, xx, yy + 0.43, col_w, 0.018, color)
+            self._text(slide, obj.get("content", ""), xx, yy + 0.04, col_w, 0.34, 11.5 if style != "boundary" else 12.5, self.palette["ink"], bold=style in {"boundary", "outcome"})
+            self._text(slide, str(obj.get("semantic_role", "")).replace("_", " "), xx, yy + 0.39, col_w, 0.13, 8, self.palette["muted"])
+
+    def _draw_structural_topology_rail(self, slide, contract: dict[str, Any], x: float, y: float, mode: str) -> None:
+        groups = [str(page.get("group_id", "")) for page in contract.get("pages", []) if page.get("group_id")]
+        if not groups:
+            return
+        groups = groups[:7]
+        self._text(slide, "TOPOLOGY", x, y - 0.25, 1.0, 0.16, 8.5, self.palette["muted"], bold=True)
+        gap = 0.12
+        width = (12.08 - gap * (len(groups) - 1)) / len(groups)
+        centers = []
+        for index in range(len(groups) - 1):
+            x1 = x + (index + 1) * width + index * gap
+            x2 = x1 + gap
+            self._connector(slide, x1, y + 0.27, x2, y + 0.27, self.palette["red"] if mode in {"value_chain", "journey", "workflow", "lifecycle"} else self.palette["line"])
+        for index, group in enumerate(groups):
+            xx = x + index * (width + gap)
+            fill = self.palette["dark"] if group in {"decision", "decision_value", "business_value", "gates", "principles"} else self.palette["white"]
+            text_color = self.palette["white"] if fill == self.palette["dark"] else self.palette["ink"]
+            self._rect(slide, xx, y, width, 0.54, fill=fill, line=self.palette["line"])
+            self._text(slide, group.replace("_", " "), xx + 0.04, y + 0.18, width - 0.08, 0.16, 8, text_color, bold=fill == self.palette["dark"], align=PP_ALIGN.CENTER)
+
+    def _structural_style(self, obj: dict[str, Any]) -> str:
+        content_type = obj.get("content_type", "")
+        role = str(obj.get("semantic_role", "")).lower()
+        if content_type == "evidence" or obj.get("evidence_state") in {"evidence_backed", "source_backed"} and "evidence" in role:
+            return "evidence"
+        if content_type in {"decision", "threshold", "condition", "criterion", "gate", "owner", "escalation", "level"} or any(token in role for token in ("threshold", "decision", "approval", "gate", "escalation")):
+            return "boundary"
+        if content_type in {"outcome", "value"} or any(token in role for token in ("value", "outcome")):
+            return "outcome"
+        if content_type in {"stage", "process"}:
+            return "stage"
+        if content_type in {"owner", "responsibility"}:
+            return "owner"
+        return "support"
+
+    def _draw_structural_object_grid(self, slide, objects: list[dict[str, Any]], x: float, y: float) -> None:
+        columns = 2 if len(objects) <= 8 else 3
+        gap = 0.28
+        width = (12.08 - gap * (columns - 1)) / columns
+        height = 0.78
+        row_gap = 0.2
+        for index, obj in enumerate(objects):
+            col = index % columns
+            row = index // columns
+            xx = x + col * (width + gap)
+            yy = y + row * (height + row_gap)
+            style = self._structural_style(obj)
+            fill = {"evidence": "#F2E8DF", "boundary": self.palette["dark"], "outcome": "#E9E0D0", "owner": "#F7F1E7", "stage": "#FDFBF7", "support": self.palette["white"]}[style]
+            line = {"evidence": "#D8CDBF", "boundary": self.palette["dark"], "outcome": self.palette["red"], "owner": "#CFC0AA", "stage": self.palette["line"], "support": self.palette["line"]}[style]
+            self._rect(slide, xx, yy, width, height, fill=fill, line=line)
+            if style in {"evidence", "outcome", "owner"}:
+                self._rule(slide, xx, yy, 0.08, height, self.palette["red"] if style != "owner" else self.palette["blue"])
+            text_color = self.palette["white"] if style == "boundary" else self.palette["ink"]
+            meta_color = "#E7DED2" if style == "boundary" else self.palette["muted"]
+            title_font = 14 if style in {"boundary", "outcome"} else 11.5
+            self._text(slide, obj.get("content", ""), xx + 0.18, yy + 0.1, width - 0.35, 0.38, title_font, text_color, bold=style in {"boundary", "outcome"})
+            self._text(slide, str(obj.get("semantic_role", "")).replace("_", " "), xx + 0.18, yy + 0.57, width - 0.35, 0.13, 8.5, meta_color)
+
+    def _draw_structural_stage_row(self, slide, objects: list[dict[str, Any]], x: float, y: float) -> None:
+        count = len(objects)
+        gap = 0.16
+        width = (12.08 - gap * (count - 1)) / count
+        centers = []
+        for index in range(count - 1):
+            x1 = x + (index + 1) * width + index * gap
+            x2 = x1 + gap
+            self._connector(slide, x1, y + 0.37, x2, y + 0.37, self.palette["red"])
+        for index, obj in enumerate(objects):
+            xx = x + index * (width + gap)
+            self._rect(slide, xx, y, width, 0.82, fill=self.palette["white"], line=self.palette["line"])
+            self._rect(slide, xx, y, 0.36, 0.82, fill=self.palette["red"], line=self.palette["red"])
+            self._text(slide, str(index + 1), xx + 0.07, y + 0.27, 0.2, 0.2, 12, self.palette["white"], bold=True, align=PP_ALIGN.CENTER)
+            self._text(slide, obj.get("content", ""), xx + 0.48, y + 0.1, width - 0.58, 0.38, 9.5, self.palette["ink"], bold=True)
+            self._text(slide, str(obj.get("semantic_role", "")).replace("_", " "), xx + 0.48, y + 0.55, width - 0.58, 0.24, 7.5, self.palette["muted"])
+
+    def _draw_structural_relationship_rail(self, slide, relationships: list[dict[str, Any]], x: float, y: float) -> None:
+        groups: list[str] = []
+        for relationship in relationships:
+            for key in ("from_object", "to_object"):
+                value = str(relationship.get(key, ""))
+                if value and value not in groups:
+                    groups.append(value)
+        groups = groups[:6]
+        if not groups:
+            return
+        self._text(slide, "RELATIONSHIPS", x, y - 0.28, 2.0, 0.18, 8.5, self.palette["muted"], bold=True)
+        gap = 0.2
+        width = (12.08 - gap * (len(groups) - 1)) / len(groups)
+        positions = {group: x + index * (width + gap) for index, group in enumerate(groups)}
+        for relationship in relationships:
+            source = str(relationship.get("from_object", ""))
+            target = str(relationship.get("to_object", ""))
+            if source not in positions or target not in positions:
+                continue
+            source_x = positions[source] + width
+            target_x = positions[target]
+            relation_type = relationship.get("semantic_type", relationship.get("type", "relationship"))
+            color = self.palette["red"] if relation_type in {"feedback", "decision_boundary", "handoff", "boundary"} else self.palette["line"]
+            if relation_type == "feedback":
+                self._connector(slide, target_x, y + 0.37, source_x, y + 0.66, color)
+                label_x = (source_x + target_x) / 2 - 0.42
+                self._text(slide, "feedback ↩", label_x, y + 0.68, 0.84, 0.18, 7.5, color, bold=True, align=PP_ALIGN.CENTER)
+            else:
+                self._connector(slide, source_x, y + 0.37, target_x, y + 0.37, color)
+                if relation_type in {"handoff", "decision_boundary", "boundary"}:
+                    self._rule(slide, (source_x + target_x) / 2 - 0.025, y + 0.16, 0.05, 0.42, self.palette["red"])
+        for group, xx in positions.items():
+            self._rect(slide, xx, y, width, 0.5, fill=self.palette["white"], line=self.palette["line"])
+            self._text(slide, group.replace("_", " "), xx + 0.05, y + 0.16, width - 0.1, 0.15, 8.5, self.palette["ink"], align=PP_ALIGN.CENTER)
+
+    def _review_marker(self, slide, x: float, y: float) -> None:
+        self._rect(slide, x, y, 2.35, 0.34, fill="#F2E8DF", line="#D8CDBF")
+        self._text(slide, "REVIEW REQUIRED · NON-FINAL", x + 0.08, y + 0.09, 2.18, 0.16, 8.5, self.palette["red"], bold=True, align=PP_ALIGN.CENTER)
 
     def _select_family(self, page: dict[str, Any]) -> str:
         role = page["page_role"]

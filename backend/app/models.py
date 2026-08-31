@@ -587,6 +587,17 @@ class AnalysisResponse(BaseModel):
     markdown: str
     powerpoint_generation_data: PowerPointData
     knowledge_insights: dict = Field(default_factory=dict)
+    semantic_candidates: dict | None = Field(None, description="Optional Production semantic candidates; candidates remain unconfirmed until explicit review.")
+
+
+class SemanticConfirmationTransportItem(BaseModel):
+    """Minimal optional frontend review intent; backend remains authoritative."""
+
+    id: str
+    semantic_type: str
+    review_state: str
+    value: str | None = None
+    original_candidate_id: str | None = None
 
 
 class PptxDownloadRequest(BaseModel):
@@ -622,5 +633,11 @@ class PptxDownloadRequest(BaseModel):
     presentation_layout_decisions: list[PresentationLayoutDecisionContract] = Field(
         default_factory=list,
         description="Optional Version 81 Phase4 Designer AI layout decisions. Backward compatible and not persisted.",
+    )
+    semantic_confirmation_state: list[SemanticConfirmationTransportItem] | None = Field(
+        None, description="Optional Step3 semantic review intents for the detailed Production adapter path."
+    )
+    semantic_candidates: dict | None = Field(
+        None, description="Optional authoritative structured semantic candidates for the future Production Shadow path."
     )
 

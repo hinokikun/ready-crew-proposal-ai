@@ -1,13 +1,13 @@
 "use client";
 
 import { memo, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, FileDown, HelpCircle, Sparkles } from "lucide-react";
+import { CheckCircle2, FileDown, HelpCircle, Pencil, Sparkles, X } from "lucide-react";
 import { BeautifulAiSimpleCard } from "@/components/guided-flow/BeautifulAiSimpleCard";
 import { SimpleErrorMessage } from "@/components/guided-flow/SimpleErrorMessage";
 import { StepFooter } from "@/components/guided-flow/StepFooter";
 import { StepNavigation } from "@/components/guided-flow/StepNavigation";
 import { ProposalValidationPanel } from "@/components/ProposalValidationPanel";
-import type { PowerPointData } from "@/types/proposal";
+import type { PowerPointData, SemanticCandidate, SemanticCandidateSet } from "@/types/proposal";
 import type {
   BeautifulAiSimpleRequirement,
   GuidedFlowPanels,
@@ -53,6 +53,7 @@ type GuidedFlowProps = {
   onOpenCrm: () => void;
   onRetry?: () => void;
   onShowGuide: () => void;
+  onSemanticCandidatesChange?: (candidates: SemanticCandidate[]) => void;
   onSourceTextChange: (value: string) => void;
   onToggleDetailMode: () => void;
   onUseSample: () => void;
@@ -63,6 +64,7 @@ type GuidedFlowProps = {
   qualityGate: GuidedQualityGate | null;
   qualityGateComplete: boolean;
   qualityGateIsLoading: boolean;
+  semanticCandidates?: SemanticCandidateSet | null;
   roleLabel: string;
   showSalesCopilotMarker: boolean;
   sourceText: string;
@@ -157,18 +159,49 @@ function outputTitle(choice: OutputChoice) {
   return "要約版PowerPoint";
 }
 
+const criticalSemanticTypes = new Set(["decision_condition", "accountable_owner", "approver", "execution_action", "evidence", "decision_context"]);
+const semanticTypeLabels: Record<string, string> = {
+  decision_condition: "判断条件",
+  accountable_owner: "責任者",
+  approver: "承認者",
+  execution_action: "実行内容",
+  evidence: "根拠・出典",
+  decision_context: "判断の対象"
+};
+function semanticStatusLabel(candidate: SemanticCandidate) {
+  if (candidate.review_state === "CONFIRMED") return "確認済み";
+  if (candidate.review_state === "CORRECTED") return "修正済み";
+  if (candidate.review_state === "REJECTED") return "使用しない";
+  return "未確認";
+}
+
 function GuidedFlowBase(props: GuidedFlowProps) {
   const [activeStep, setActiveStep] = useState<GuidedStepId>(1);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [selectedOutput, setSelectedOutput] = useState<OutputChoice>("summary");
   const [isCompletingGate, setIsCompletingGate] = useState(false);
   const [localNotice, setLocalNotice] = useState("");
+  const [semanticCandidates, setSemanticCandidates] = useState<SemanticCandidate[]>(props.semanticCandidates?.candidates || []);
+  const [editingCandidateId, setEditingCandidateId] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState("");
   const hasInput = props.sourceText.trim().length > 0;
   const isOutputBusy = props.isDownloadingSummary || props.isDownloadingDetail || props.isDownloadingPdf || props.beautifulAiIsCreating;
   const qualityItems = useMemo(() => qualityItemsForSource(props.sourceText), [props.sourceText]);
   const uncheckedCount = qualityItems.filter((item) => !checkedItems[item]).length;
   const allQualityChecked = uncheckedCount === 0;
   const missingQuestions = props.summaryItems.filter((item) => item.inferred || /未定|要確認|未入力/.test(item.value)).slice(0, 3);
+  const visibleSemanticCandidates = semanticCandidates.filter((candidate) => criticalSemanticTypes.has(candidate.semantic_type));
+  const confirmedSemanticCount = visibleSemanticCandidates.filter((candidate) => candidate.review_state === "CONFIRMED" || candidate.review_state === "CORRECTED").length;
+
+  useEffect(() => {
+    setSemanticCandidates(props.semanticCandidates?.candidates || []);
+    setEditingCandidateId(null);
+    setEditingValue("");
+  }, [props.semanticCandidates]);
+
+  useEffect(() => {
+    props.onSemanticCandidatesChange?.(semanticCandidates);
+  }, [semanticCandidates]);
 
   useEffect(() => {
     if (props.isGenerating) setActiveStep(2);
@@ -229,6 +262,27 @@ function GuidedFlowBase(props: GuidedFlowProps) {
     } finally {
       setIsCompletingGate(false);
     }
+  }
+
+  function confirmSemanticCandidate(candidate: SemanticCandidate) {
+    setSemanticCandidates((current) => current.map((item) => item.id === candidate.id ? { ...item, review_state: "CONFIRMED", confirmation_authority: "USER_EXPLICIT" } : item));
+  }
+
+  function startSemanticEdit(candidate: SemanticCandidate) {
+    setEditingCandidateId(candidate.id);
+    setEditingValue(candidate.value);
+  }
+
+  function saveSemanticEdit(candidate: SemanticCandidate) {
+    const value = editingValue.trim();
+    if (!value) return;
+    setSemanticCandidates((current) => current.map((item) => item.id === candidate.id ? { ...item, value, authority: "USER_EXPLICIT", review_state: "CORRECTED", inferred: false, original_candidate_id: item.original_candidate_id || item.id, confirmation_authority: "USER_EXPLICIT" } : item));
+    setEditingCandidateId(null);
+    setEditingValue("");
+  }
+
+  function rejectSemanticCandidate(candidate: SemanticCandidate) {
+    setSemanticCandidates((current) => current.map((item) => item.id === candidate.id ? { ...item, review_state: "REJECTED" } : item));
   }
 
   async function runSelectedOutput() {
@@ -401,6 +455,56 @@ function GuidedFlowBase(props: GuidedFlowProps) {
               </article>
             ))}
           </div>
+          {visibleSemanticCandidates.length > 0 && (
+            <section className="guided-semantic-confirmation" aria-labelledby="guided-semantic-confirmation-heading">
+              <div className="guided-semantic-confirmation__header">
+                <div>
+                  <p className="eyebrow">重要項目の確認</p>
+                  <h3 id="guided-semantic-confirmation-heading">AIが整理した重要項目を確認してください</h3>
+                  <p>AIが整理した内容のうち、提出前に確認が必要な項目だけ表示しています。</p>
+                </div>
+                <strong aria-live="polite">{confirmedSemanticCount} / {visibleSemanticCandidates.length} 確認済み</strong>
+              </div>
+              <div className="guided-semantic-card-list">
+                {visibleSemanticCandidates.map((candidate) => {
+                  const isEditing = editingCandidateId === candidate.id;
+                  const isAiProposal = candidate.authority === "AI_PROPOSED" && candidate.review_state === "UNCONFIRMED";
+                  return (
+                    <article className={`guided-semantic-card is-${candidate.review_state.toLowerCase()}`} key={candidate.id}>
+                      <div className="guided-semantic-card__topline">
+                        <span className="guided-semantic-card__type">{semanticTypeLabels[candidate.semantic_type] || "確認項目"}</span>
+                        <span className="guided-semantic-card__status">{semanticStatusLabel(candidate)}</span>
+                      </div>
+                      {isAiProposal && <span className="guided-semantic-card__ai-label">AIによる候補</span>}
+                      {candidate.semantic_type === "evidence" && (
+                        <div className="guided-semantic-evidence-meta"><span>出典</span><strong>{candidate.source_reference || candidate.source_field || "出典を確認してください"}</strong></div>
+                      )}
+                      {candidate.relationship_type && candidate.from_item && candidate.to_item && (
+                        <div className="guided-semantic-handoff" aria-label="引き継ぎ"><span>{candidate.from_item}</span><span aria-hidden="true">→</span><span>{candidate.to_item}</span></div>
+                      )}
+                      {isEditing ? (
+                        <div className="guided-semantic-edit-row">
+                          <label htmlFor={`semantic-edit-${candidate.id}`}>内容を編集</label>
+                          <input id={`semantic-edit-${candidate.id}`} value={editingValue} onChange={(event) => setEditingValue(event.target.value)} />
+                          <button className="primary-button" onClick={() => saveSemanticEdit(candidate)} type="button">内容を確定</button>
+                          <button className="text-button" onClick={() => setEditingCandidateId(null)} type="button">キャンセル</button>
+                        </div>
+                      ) : <p className="guided-semantic-card__value">{candidate.value}</p>}
+                      {candidate.semantic_type === "evidence" && <small className="guided-semantic-evidence-state">確認状態: {candidate.admissible_as_evidence ? "出典を確認してください" : "未確認"}</small>}
+                      {candidate.review_state !== "REJECTED" && !isEditing && (
+                        <div className="guided-semantic-card__actions">
+                          {candidate.review_state !== "CONFIRMED" && candidate.review_state !== "CORRECTED" && <button className="primary-button" onClick={() => confirmSemanticCandidate(candidate)} type="button"><CheckCircle2 size={15} aria-hidden="true" />この内容で確定</button>}
+                          <button className="secondary-button" onClick={() => startSemanticEdit(candidate)} type="button"><Pencil size={15} aria-hidden="true" />編集</button>
+                          <button className="text-button" onClick={() => rejectSemanticCandidate(candidate)} type="button"><X size={15} aria-hidden="true" />この候補を使わない</button>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+              {confirmedSemanticCount < visibleSemanticCandidates.length && <p className="guided-semantic-confirmation__hint" role="status">一部の項目は未確認です。必要に応じて確認してください。</p>}
+            </section>
+          )}
           {missingQuestions.length > 0 && (
             <div className="guided-question-card">
               <strong>提案書をより正確にするため、あと{missingQuestions.length}点だけ確認してください</strong>

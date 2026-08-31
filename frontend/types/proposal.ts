@@ -108,6 +108,40 @@ export type AnalysisResponse = {
   markdown: string;
   powerpoint_generation_data: PowerPointData;
   knowledge_insights?: KnowledgeInsights;
+  semantic_candidates?: SemanticCandidateSet | null;
+};
+
+export type SemanticAuthority =
+  | "USER_EXPLICIT"
+  | "SYSTEM_EXTRACTED"
+  | "AI_PROPOSED"
+  | "EXISTING_STRUCTURED_AI_OUTPUT"
+  | "EXTERNAL_VERIFIED"
+  | "UNRESOLVED";
+
+export type SemanticReviewState = "UNCONFIRMED" | "CONFIRMED" | "CORRECTED" | "REJECTED" | "UNRESOLVED";
+
+export type SemanticCandidate = {
+  id: string;
+  semantic_type: string;
+  value: string;
+  source_type: string;
+  source_field: string;
+  authority: SemanticAuthority;
+  confidence: number;
+  review_state: SemanticReviewState;
+  inferred?: boolean;
+  admissible_as_evidence?: boolean;
+  source_reference?: string;
+  from_item?: string;
+  to_item?: string;
+  relationship_type?: string;
+  original_candidate_id?: string;
+  confirmation_authority?: SemanticAuthority;
+};
+
+export type SemanticCandidateSet = {
+  candidates: SemanticCandidate[];
 };
 
 export type KnowledgeEntry = {

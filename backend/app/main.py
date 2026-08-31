@@ -53,8 +53,23 @@ PRODUCTION_ENVIRONMENTS = {"production", "prod"}
 LOCAL_ENVIRONMENTS = {"local", "development", "dev", "test", "testing"}
 
 
+def _log_runtime_flag_config() -> None:
+    """Emit the cached runtime flag state once during application startup."""
+    try:
+        logger.info(
+            "presentation_shadow_runtime_config",
+            extra={
+                "shadow_enabled": bool(settings.presentation_master_v3_renderer_mvp_shadow_enabled),
+                "pmv3_enabled": bool(settings.presentation_master_v3_renderer_mvp_enabled),
+            },
+        )
+    except Exception:
+        return
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    _log_runtime_flag_config()
     init_db()
     db_tables_count = get_db_health().get("db_tables_count", 0)
     if db_tables_count:

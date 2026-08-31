@@ -1,4 +1,4 @@
-import type { PowerPointData, WinProbability } from "@/types/proposal";
+import type { PowerPointData, SemanticCandidate, WinProbability } from "@/types/proposal";
 import { getAuthHeaders } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/config";
 
@@ -25,6 +25,8 @@ type DownloadPptxPayload = {
   brand_settings?: Record<string, string>;
   presentation_quality_state?: PresentationQualityRequestState;
   presentation_layout_decisions?: PresentationLayoutDecisionRequest[];
+  semantic_confirmation_state?: SemanticConfirmationTransportItem[];
+  semantic_candidates?: { candidates: SemanticCandidate[] };
 };
 
 type PowerPointDesignOptions = {
@@ -32,6 +34,11 @@ type PowerPointDesignOptions = {
   brandSettings?: Record<string, string>;
   qualityState?: PresentationQualityRequestState;
   layoutDecisions?: PresentationLayoutDecisionRequest[];
+  semanticCandidates?: SemanticCandidate[];
+};
+
+export type SemanticConfirmationTransportItem = Pick<SemanticCandidate, "id" | "semantic_type" | "review_state"> & {
+  value?: string;
 };
 
 export type PresentationQualityRequestState = {
@@ -243,7 +250,11 @@ async function downloadPowerPoint(
       design_template: options.designTemplate,
       brand_settings: options.brandSettings,
       presentation_quality_state: options.qualityState,
-      presentation_layout_decisions: options.layoutDecisions
+      presentation_layout_decisions: options.layoutDecisions,
+      ...(summary || !options.semanticCandidates ? {} : {
+        semantic_candidates: { candidates: options.semanticCandidates },
+        semantic_confirmation_state: options.semanticCandidates.map(({ id, semantic_type, review_state, value }) => ({ id, semantic_type, review_state, value }))
+      })
     } satisfies DownloadPptxPayload)
   });
 
