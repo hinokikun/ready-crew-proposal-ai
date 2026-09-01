@@ -287,9 +287,12 @@ def _log_shadow_eligibility_decision(
     """Emit one bounded, opaque eligibility decision without affecting Primary."""
     try:
         fields: dict[str, Any] = {"decision": decision, "reason": reason}
+        message = f"presentation_shadow_eligibility_decision decision={decision} reason={reason}"
         if request_id:
-            fields["correlation_id"] = hashlib.sha256(request_id.encode()).hexdigest()[:16]
-        _log_shadow_metadata("presentation_shadow_eligibility_decision", **fields)
+            correlation_id = hashlib.sha256(request_id.encode()).hexdigest()[:16]
+            fields["correlation_id"] = correlation_id
+            message += f" correlation_id={correlation_id}"
+        _log_shadow_metadata(message, **fields)
     except Exception:
         return
 

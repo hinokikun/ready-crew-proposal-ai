@@ -243,8 +243,11 @@ def test_eligibility_observability_emits_one_eligible_decision_and_preserves_adm
     result = engine_integration._submit_production_shadow_after_primary(primary, payload, request_id="eligible", project_id=None)
 
     assert result is primary
-    decisions = [extra for event, extra in events if event == "presentation_shadow_eligibility_decision"]
-    assert decisions == [{"decision": "ELIGIBLE", "reason": "ELIGIBLE", "correlation_id": hashlib.sha256(b"eligible").hexdigest()[:16]}]
+    decisions = [(event, extra) for event, extra in events if event.startswith("presentation_shadow_eligibility_decision")]
+    assert len(decisions) == 1
+    event, extra = decisions[0]
+    assert event == f"presentation_shadow_eligibility_decision decision=ELIGIBLE reason=ELIGIBLE correlation_id={hashlib.sha256(b'eligible').hexdigest()[:16]}"
+    assert extra == {"decision": "ELIGIBLE", "reason": "ELIGIBLE", "correlation_id": hashlib.sha256(b"eligible").hexdigest()[:16]}
 
 
 def test_eligibility_observability_classifies_missing_state_without_admission(monkeypatch):
@@ -255,10 +258,15 @@ def test_eligibility_observability_classifies_missing_state_without_admission(mo
 
     engine_integration._submit_production_shadow_after_primary(primary, payload, request_id="missing", project_id=None)
 
-    assert [extra for event, extra in events if event == "presentation_shadow_eligibility_decision"] == [
-        {"decision": "INELIGIBLE", "reason": "MISSING_CANDIDATE_STATE", "correlation_id": hashlib.sha256(b"missing").hexdigest()[:16]}
+    decisions = [(event, extra) for event, extra in events if event.startswith("presentation_shadow_eligibility_decision")]
+    expected_correlation = hashlib.sha256(b"missing").hexdigest()[:16]
+    assert decisions == [
+        (
+            f"presentation_shadow_eligibility_decision decision=INELIGIBLE reason=MISSING_CANDIDATE_STATE correlation_id={expected_correlation}",
+            {"decision": "INELIGIBLE", "reason": "MISSING_CANDIDATE_STATE", "correlation_id": expected_correlation},
+        )
     ]
-    assert all(event != "presentation_shadow_admission" for event, _ in events)
+    assert all(not event.startswith("presentation_shadow_admission") for event, _ in events)
 
 
 @pytest.mark.parametrize(
@@ -274,7 +282,22 @@ def test_eligibility_observability_uses_bounded_rejection_reasons(monkeypatch, p
 
     engine_integration._submit_production_shadow_after_primary(primary, payload, request_id="rejected", project_id=None)
 
-    decisions = [extra for event, extra in events if event == "presentation_shadow_eligibility_decision"]
+    decisions = [(event, extra) for event, extra in events if event.startswith("presentation_shadow_eligibility_decision")]
     assert len(decisions) == 1
-    assert decisions[0]["decision"] == "INELIGIBLE"
-    assert decisions[0]["reason"] == reason
+    assert decisions[0][1]["decision"] == "INELIGIBLE"
+    assert decisions[0][1]["reason"] == reason
+    assert f"decision=INELIGIBLE reason={reason}" in decisions[0][0]
+
+
+def test_eligibility_message_omits_unavailable_correlation_and_sensitive_content(monkeypatch):
+    events = _patch_integration_seam(monkeypatch)
+    payload = _integration_payload([])
+    payload.semantic_candidates = None
+    primary = PresentationEngineResult(b"PK-primary", "legacy")
+
+    engine_integration._submit_production_shadow_after_primary(primary, payload, request_id=None, project_id="secret-project")
+
+    decisions = [event for event, _ in events if event.startswith("presentation_shadow_eligibility_decision")]
+    assert decisions == ["presentation_shadow_eligibility_decision decision=INELIGIBLE reason=MISSING_REQUEST_ID"]
+    assert "correlation_id=" not in decisions[0]
+    assert "secret-project" not in decisions[0]
