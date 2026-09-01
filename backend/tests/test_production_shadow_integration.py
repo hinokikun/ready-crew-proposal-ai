@@ -246,8 +246,8 @@ def test_eligibility_observability_emits_one_eligible_decision_and_preserves_adm
     decisions = [(event, extra) for event, extra in events if event.startswith("presentation_shadow_eligibility_decision")]
     assert len(decisions) == 1
     event, extra = decisions[0]
-    assert event == f"presentation_shadow_eligibility_decision decision=ELIGIBLE reason=ELIGIBLE correlation_id={hashlib.sha256(b'eligible').hexdigest()[:16]}"
-    assert extra == {"decision": "ELIGIBLE", "reason": "ELIGIBLE", "correlation_id": hashlib.sha256(b"eligible").hexdigest()[:16]}
+    assert event == f"presentation_shadow_eligibility_decision decision=ELIGIBLE reason=ELIGIBLE readiness_class=READY correlation_id={hashlib.sha256(b'eligible').hexdigest()[:16]}"
+    assert extra == {"decision": "ELIGIBLE", "reason": "ELIGIBLE", "readiness_class": "READY", "correlation_id": hashlib.sha256(b"eligible").hexdigest()[:16]}
 
 
 def test_eligibility_observability_classifies_missing_state_without_admission(monkeypatch):
@@ -286,7 +286,46 @@ def test_eligibility_observability_uses_bounded_rejection_reasons(monkeypatch, p
     assert len(decisions) == 1
     assert decisions[0][1]["decision"] == "INELIGIBLE"
     assert decisions[0][1]["reason"] == reason
+    assert decisions[0][1]["readiness_class"] == prepared_status
     assert f"decision=INELIGIBLE reason={reason}" in decisions[0][0]
+
+
+@pytest.mark.parametrize("prepared_status", ["REVIEW_REQUIRED", "NOT_READY", "NO_MATCH", "INVALID_INPUT", "ADAPTER_ERROR"])
+def test_eligibility_observability_emits_only_bounded_readiness_class(monkeypatch, prepared_status):
+    events = _patch_integration_seam(monkeypatch, prepared_status=prepared_status, selected_master="M47")
+    payload = _integration_payload(_state(_m48_candidates()))
+    primary = PresentationEngineResult(b"PK-primary", "legacy")
+
+    engine_integration._submit_production_shadow_after_primary(primary, payload, request_id="bounded", project_id=None)
+
+    decisions = [event for event, _ in events if event.startswith("presentation_shadow_eligibility_decision")]
+    assert len(decisions) == 1
+    assert f"readiness_class={prepared_status}" in decisions[0]
+    assert all(text in decisions[0] for text in ("decision=INELIGIBLE", "reason=READINESS_NOT_ELIGIBLE" if prepared_status != "READY" else ""))
+
+
+def test_eligibility_observability_omits_unavailable_readiness_class(monkeypatch):
+    events = _patch_integration_seam(monkeypatch)
+    payload = _integration_payload([])
+    payload.semantic_candidates = None
+    primary = PresentationEngineResult(b"PK-primary", "legacy")
+
+    engine_integration._submit_production_shadow_after_primary(primary, payload, request_id="unavailable", project_id=None)
+
+    decisions = [event for event, _ in events if event.startswith("presentation_shadow_eligibility_decision")]
+    assert len(decisions) == 1
+    assert "readiness_class=" not in decisions[0]
+
+
+def test_eligibility_observability_rejects_arbitrary_readiness_text(monkeypatch):
+    events = []
+    monkeypatch.setattr(engine_integration.logger, "info", lambda event, extra=None: events.append((event, extra or {})))
+
+    engine_integration._log_shadow_eligibility_decision("opaque", "INELIGIBLE", "READINESS_NOT_ELIGIBLE", readiness_class="arbitrary")
+
+    assert len(events) == 1
+    assert "readiness_class=" not in events[0][0]
+    assert "readiness_class" not in events[0][1]
 
 
 def test_eligibility_message_omits_unavailable_correlation_and_sensitive_content(monkeypatch):

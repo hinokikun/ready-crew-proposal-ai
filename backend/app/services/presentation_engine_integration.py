@@ -181,6 +181,17 @@ def _build_primary_pptx_bytes_for_engine(
 
 
 _PRODUCTION_SHADOW_CONTROLLER: Any | None = None
+_READINESS_CLASSES = frozenset(
+    {
+        "READY",
+        "READY_WITH_VALID_BINDINGS",
+        "REVIEW_REQUIRED",
+        "NOT_READY",
+        "NO_MATCH",
+        "INVALID_INPUT",
+        "ADAPTER_ERROR",
+    }
+)
 
 
 def _submit_production_shadow_after_primary(
@@ -197,10 +208,10 @@ def _submit_production_shadow_after_primary(
         return primary
     decision_emitted = False
 
-    def emit_decision(decision: str, reason: str) -> None:
+    def emit_decision(decision: str, reason: str, readiness_class: str | None = None) -> None:
         nonlocal decision_emitted
         if not decision_emitted:
-            _log_shadow_eligibility_decision(request_id, decision, reason)
+            _log_shadow_eligibility_decision(request_id, decision, reason, readiness_class=readiness_class)
             decision_emitted = True
 
     if not request_id:
@@ -252,7 +263,11 @@ def _submit_production_shadow_after_primary(
                 "SELECTION_NO_MATCH": "MASTER_NOT_M48",
                 "COMPOSITION_INVALID": "COMPOSITION_INVALID",
             }
-            emit_decision("INELIGIBLE", reason_map.get(eligibility.reason, "INTERNAL_PRE_ADMISSION_ERROR"))
+            emit_decision(
+                "INELIGIBLE",
+                reason_map.get(eligibility.reason, "INTERNAL_PRE_ADMISSION_ERROR"),
+                readiness_class=prepared.status.value,
+            )
             return primary
         global _PRODUCTION_SHADOW_CONTROLLER
         if _PRODUCTION_SHADOW_CONTROLLER is None:
@@ -271,7 +286,7 @@ def _submit_production_shadow_after_primary(
             composition_status=prepared.composition_readiness,
             workload=ShadowProcessWorkload(payload=payload, binding=context.binding),
         )
-        emit_decision("ELIGIBLE", "ELIGIBLE")
+        emit_decision("ELIGIBLE", "ELIGIBLE", readiness_class=prepared.status.value)
         submitted = _PRODUCTION_SHADOW_CONTROLLER.submit(job, eligibility=eligibility)
         del submitted
     except Exception:
@@ -283,11 +298,16 @@ def _log_shadow_eligibility_decision(
     request_id: str | None,
     decision: str,
     reason: str,
+    *,
+    readiness_class: str | None = None,
 ) -> None:
     """Emit one bounded, opaque eligibility decision without affecting Primary."""
     try:
         fields: dict[str, Any] = {"decision": decision, "reason": reason}
         message = f"presentation_shadow_eligibility_decision decision={decision} reason={reason}"
+        if readiness_class in _READINESS_CLASSES:
+            fields["readiness_class"] = readiness_class
+            message += f" readiness_class={readiness_class}"
         if request_id:
             correlation_id = hashlib.sha256(request_id.encode()).hexdigest()[:16]
             fields["correlation_id"] = correlation_id
