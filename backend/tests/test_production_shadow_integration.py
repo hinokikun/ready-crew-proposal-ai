@@ -1,5 +1,6 @@
 import time
 import hashlib
+from dataclasses import replace
 from io import BytesIO
 from types import SimpleNamespace
 from zipfile import ZipFile
@@ -11,6 +12,8 @@ import app.services.presentation_master.integration as shadow_integration
 from app.services.presentation_engine_integration import PresentationEngineResult
 from app.services.presentation_master.integration.shadow_integration import ShadowController
 from app.services.presentation_master.integration import candidate_set_to_dict
+from app.services.presentation_master.integration.engine_adapter import _semantic_supply_invalid_reason
+from app.services.presentation_master.integration.production_semantic_contract import SemanticAuthority, SemanticReviewState
 from app.services.presentation_master.integration.shadow_candidate_binding import bind_shadow_candidates
 from app.services.presentation_master.integration.shadow_process_isolation import ProcessShadowJob, ShadowProcessWorkload
 from tests.test_offline_production_path_e2e_v2 import _m48_candidates, _request, _state
@@ -376,6 +379,54 @@ def test_invalid_input_reason_is_omitted_for_non_invalid_readiness(monkeypatch):
 
     event = next(event for event, _ in events if event.startswith("presentation_shadow_eligibility_decision"))
     assert "invalid_input_reason=" not in event
+
+
+@pytest.mark.parametrize(
+    ("candidates", "expected"),
+    [
+        ((), "NO_CANDIDATES"),
+        (
+            tuple(replace(item, review_state=SemanticReviewState.CONFIRMED, authority=SemanticAuthority.AI_PROPOSED, confirmation_authority=SemanticAuthority.USER_EXPLICIT) for item in _m48_candidates().candidates),
+            "REVIEWED_BUT_AUTHORITY_NOT_ADMISSIBLE",
+        ),
+        (
+            (_m48_candidates().candidates[0],),
+            "ADMISSIBILITY_STATE_UNCLASSIFIED",
+        ),
+    ],
+)
+def test_semantic_supply_invalid_reason_is_bounded(candidates, expected):
+    from app.services.presentation_master.integration.production_semantic_contract import ProductionSemanticCandidateSet
+
+    assert _semantic_supply_invalid_reason(ProductionSemanticCandidateSet(candidates)) == expected
+
+
+@pytest.mark.parametrize("reason", ["NO_CANDIDATES", "REVIEWED_BUT_AUTHORITY_NOT_ADMISSIBLE", "ADMISSIBILITY_STATE_UNCLASSIFIED"])
+def test_semantic_supply_invalid_reason_is_visible_only_for_matching_invalid_input(monkeypatch, reason):
+    events = []
+    monkeypatch.setattr(engine_integration.logger, "info", lambda event, extra=None: events.append((event, extra or {})))
+
+    engine_integration._log_shadow_eligibility_decision(
+        "opaque", "INELIGIBLE", "READINESS_NOT_ELIGIBLE", readiness_class="INVALID_INPUT",
+        invalid_input_reason="SEMANTIC_SUPPLY_INVALID", semantic_supply_invalid_reason=reason,
+    )
+
+    assert len(events) == 1
+    assert f"semantic_supply_invalid_reason={reason}" in events[0][0]
+    assert events[0][1]["semantic_supply_invalid_reason"] == reason
+
+
+def test_semantic_supply_invalid_reason_is_suppressed_for_other_paths(monkeypatch):
+    events = []
+    monkeypatch.setattr(engine_integration.logger, "info", lambda event, extra=None: events.append((event, extra or {})))
+
+    for readiness, invalid_reason in (("INVALID_INPUT", "PRODUCTION_REQUEST_INVALID"), ("REVIEW_REQUIRED", "SEMANTIC_SUPPLY_INVALID"), ("READY", "SEMANTIC_SUPPLY_INVALID")):
+        engine_integration._log_shadow_eligibility_decision(
+            "opaque", "INELIGIBLE", "READINESS_NOT_ELIGIBLE", readiness_class=readiness,
+            invalid_input_reason=invalid_reason, semantic_supply_invalid_reason="raw text",
+        )
+
+    assert all("semantic_supply_invalid_reason" not in event and "semantic_supply_invalid_reason" not in extra for event, extra in events)
 
 
 def test_invalid_input_reason_ignores_untrusted_diagnostic(monkeypatch):

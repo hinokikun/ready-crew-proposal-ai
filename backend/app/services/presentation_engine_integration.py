@@ -204,6 +204,13 @@ _INVALID_INPUT_REASONS = frozenset(
         "ADAPTER_VALIDATION_ERROR",
     }
 )
+_SEMANTIC_SUPPLY_INVALID_REASONS = frozenset(
+    {
+        "NO_CANDIDATES",
+        "REVIEWED_BUT_AUTHORITY_NOT_ADMISSIBLE",
+        "ADMISSIBILITY_STATE_UNCLASSIFIED",
+    }
+)
 
 
 def _submit_production_shadow_after_primary(
@@ -225,6 +232,7 @@ def _submit_production_shadow_after_primary(
         reason: str,
         readiness_class: str | None = None,
         invalid_input_reason: str | None = None,
+        semantic_supply_invalid_reason: str | None = None,
     ) -> None:
         nonlocal decision_emitted
         if not decision_emitted:
@@ -234,6 +242,7 @@ def _submit_production_shadow_after_primary(
                 reason,
                 readiness_class=readiness_class,
                 invalid_input_reason=invalid_input_reason,
+                semantic_supply_invalid_reason=semantic_supply_invalid_reason,
             )
             decision_emitted = True
 
@@ -280,11 +289,15 @@ def _submit_production_shadow_after_primary(
             emit_decision("INELIGIBLE", "INTERNAL_PRE_ADMISSION_ERROR")
             return primary
         invalid_input_reason = None
+        semantic_supply_invalid_reason = None
         diagnostics = getattr(prepared, "diagnostics", {})
         if prepared.status.value == "INVALID_INPUT" and isinstance(diagnostics, dict):
             candidate_reason = diagnostics.get("invalid_input_reason")
             if candidate_reason in _INVALID_INPUT_REASONS:
                 invalid_input_reason = candidate_reason
+            supply_reason = diagnostics.get("semantic_supply_invalid_reason")
+            if supply_reason in _SEMANTIC_SUPPLY_INVALID_REASONS:
+                semantic_supply_invalid_reason = supply_reason
         if not eligibility.eligible:
             reason_map = {
                 "SEMANTIC_REVIEW_REQUIRED": "READINESS_NOT_ELIGIBLE",
@@ -297,6 +310,7 @@ def _submit_production_shadow_after_primary(
                 reason_map.get(eligibility.reason, "INTERNAL_PRE_ADMISSION_ERROR"),
                 readiness_class=prepared.status.value,
                 invalid_input_reason=invalid_input_reason,
+                semantic_supply_invalid_reason=semantic_supply_invalid_reason,
             )
             return primary
         global _PRODUCTION_SHADOW_CONTROLLER
@@ -331,6 +345,7 @@ def _log_shadow_eligibility_decision(
     *,
     readiness_class: str | None = None,
     invalid_input_reason: str | None = None,
+    semantic_supply_invalid_reason: str | None = None,
 ) -> None:
     """Emit one bounded, opaque eligibility decision without affecting Primary."""
     try:
@@ -342,6 +357,13 @@ def _log_shadow_eligibility_decision(
         if readiness_class == "INVALID_INPUT" and invalid_input_reason in _INVALID_INPUT_REASONS:
             fields["invalid_input_reason"] = invalid_input_reason
             message += f" invalid_input_reason={invalid_input_reason}"
+        if (
+            readiness_class == "INVALID_INPUT"
+            and invalid_input_reason == "SEMANTIC_SUPPLY_INVALID"
+            and semantic_supply_invalid_reason in _SEMANTIC_SUPPLY_INVALID_REASONS
+        ):
+            fields["semantic_supply_invalid_reason"] = semantic_supply_invalid_reason
+            message += f" semantic_supply_invalid_reason={semantic_supply_invalid_reason}"
         if request_id:
             correlation_id = hashlib.sha256(request_id.encode()).hexdigest()[:16]
             fields["correlation_id"] = correlation_id

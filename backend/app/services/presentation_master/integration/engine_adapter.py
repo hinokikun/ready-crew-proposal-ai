@@ -29,6 +29,26 @@ _INVALID_INPUT_REASONS = frozenset(
         "ADAPTER_VALIDATION_ERROR",
     }
 )
+_SEMANTIC_SUPPLY_INVALID_REASONS = frozenset(
+    {
+        "NO_CANDIDATES",
+        "REVIEWED_BUT_AUTHORITY_NOT_ADMISSIBLE",
+        "ADMISSIBILITY_STATE_UNCLASSIFIED",
+    }
+)
+
+
+def _semantic_supply_invalid_reason(candidate_set: Any) -> str:
+    candidates = tuple(getattr(candidate_set, "candidates", ()))
+    if not candidates:
+        return "NO_CANDIDATES"
+    if all(
+        getattr(candidate, "review_state", None).value in {"CONFIRMED", "CORRECTED"}
+        and getattr(candidate, "authority", None).value not in {"USER_EXPLICIT", "SYSTEM_EXTRACTED", "EXTERNAL_VERIFIED"}
+        for candidate in candidates
+    ):
+        return "REVIEWED_BUT_AUTHORITY_NOT_ADMISSIBLE"
+    return "ADMISSIBILITY_STATE_UNCLASSIFIED"
 
 
 def _fallback(status: AdapterStatus, stage: FallbackStage, reason: str, **kwargs: Any) -> ProductionPmv3AdapterResult:
@@ -78,11 +98,17 @@ def prepare_pmv3(
             and not adapter_input.semantic_candidates.admissible()
             and not adapter_input.semantic_candidates.unresolved_critical()
         ):
+            semantic_supply_invalid_reason = _semantic_supply_invalid_reason(adapter_input.semantic_candidates)
             return _fallback(
                 AdapterStatus.INVALID_INPUT,
                 FallbackStage.SEMANTIC_ADAPTER,
                 "Confirmed semantic candidates are required.",
-                diagnostics={"invalid_input_reason": "SEMANTIC_SUPPLY_INVALID"},
+                diagnostics={
+                    "invalid_input_reason": "SEMANTIC_SUPPLY_INVALID",
+                    "semantic_supply_invalid_reason": semantic_supply_invalid_reason
+                    if semantic_supply_invalid_reason in _SEMANTIC_SUPPLY_INVALID_REASONS
+                    else "ADMISSIBILITY_STATE_UNCLASSIFIED",
+                },
             )
         try:
             envelope, resolution, provenance, early_status, reason = prepare_semantics(adapter_input)
