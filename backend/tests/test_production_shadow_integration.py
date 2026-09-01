@@ -1,9 +1,16 @@
 import time
 import hashlib
 from io import BytesIO
+from types import SimpleNamespace
 from zipfile import ZipFile
 
+import pytest
+
+import app.services.presentation_engine_integration as engine_integration
+import app.services.presentation_master.integration as shadow_integration
+from app.services.presentation_engine_integration import PresentationEngineResult
 from app.services.presentation_master.integration.shadow_integration import ShadowController
+from app.services.presentation_master.integration import candidate_set_to_dict
 from app.services.presentation_master.integration.shadow_candidate_binding import bind_shadow_candidates
 from app.services.presentation_master.integration.shadow_process_isolation import ProcessShadowJob, ShadowProcessWorkload
 from tests.test_offline_production_path_e2e_v2 import _m48_candidates, _request, _state
@@ -187,3 +194,87 @@ def test_logger_failure_does_not_affect_primary_or_retry_synchronously():
     assert controller.submit(_process_job("logger-failure", binding, _success_worker), eligibility=_eligibility())
     assert _wait(controller)[-1]["package_valid"] is True
     controller.shutdown()
+
+
+def _integration_payload(state):
+    candidates = _m48_candidates()
+    payload = _request(state)
+    payload.semantic_candidates = candidate_set_to_dict(candidates)
+    return payload
+
+
+def _patch_integration_seam(monkeypatch, *, prepared_status="READY", selected_master="M48", composition="VALID"):
+    events = []
+
+    class FakeController:
+        def __init__(self, **kwargs):
+            self.event_logger = kwargs["event_logger"]
+
+        @staticmethod
+        def eligibility(**kwargs):
+            return ShadowController.eligibility(**kwargs)
+
+        def submit(self, job, *, eligibility):
+            return True
+
+    fake_context = SimpleNamespace(binding=SimpleNamespace(candidates=[]))
+    fake_prepared = SimpleNamespace(
+        status=SimpleNamespace(value=prepared_status),
+        selected_master_id=selected_master,
+        composition_readiness=composition,
+        semantic_readiness=prepared_status,
+    )
+    monkeypatch.setattr(shadow_integration, "ShadowController", FakeController)
+    monkeypatch.setattr(shadow_integration, "ShadowJob", lambda **kwargs: kwargs)
+    monkeypatch.setattr(shadow_integration, "ShadowProcessWorkload", lambda **kwargs: kwargs)
+    monkeypatch.setattr(shadow_integration, "build_candidate_state_bridge", lambda *args, **kwargs: fake_context)
+    monkeypatch.setattr(shadow_integration, "prepare_pmv3", lambda *args, **kwargs: fake_prepared)
+    monkeypatch.setattr(engine_integration.logger, "info", lambda event, extra=None: events.append((event, extra or {})))
+    monkeypatch.setattr(engine_integration, "_PRODUCTION_SHADOW_CONTROLLER", None)
+    monkeypatch.setattr(engine_integration, "settings", SimpleNamespace(presentation_master_v3_renderer_mvp_shadow_enabled=True))
+    return events
+
+
+def test_eligibility_observability_emits_one_eligible_decision_and_preserves_admission(monkeypatch):
+    events = _patch_integration_seam(monkeypatch)
+    payload = _integration_payload(_state(_m48_candidates()))
+    primary = PresentationEngineResult(b"PK-primary", "legacy")
+
+    result = engine_integration._submit_production_shadow_after_primary(primary, payload, request_id="eligible", project_id=None)
+
+    assert result is primary
+    decisions = [extra for event, extra in events if event == "presentation_shadow_eligibility_decision"]
+    assert decisions == [{"decision": "ELIGIBLE", "reason": "ELIGIBLE", "correlation_id": hashlib.sha256(b"eligible").hexdigest()[:16]}]
+
+
+def test_eligibility_observability_classifies_missing_state_without_admission(monkeypatch):
+    events = _patch_integration_seam(monkeypatch)
+    payload = _integration_payload([])
+    payload.semantic_candidates = None
+    primary = PresentationEngineResult(b"PK-primary", "legacy")
+
+    engine_integration._submit_production_shadow_after_primary(primary, payload, request_id="missing", project_id=None)
+
+    assert [extra for event, extra in events if event == "presentation_shadow_eligibility_decision"] == [
+        {"decision": "INELIGIBLE", "reason": "MISSING_CANDIDATE_STATE", "correlation_id": hashlib.sha256(b"missing").hexdigest()[:16]}
+    ]
+    assert all(event != "presentation_shadow_admission" for event, _ in events)
+
+
+@pytest.mark.parametrize(
+    ("prepared_status", "selected_master", "composition", "reason"),
+    [("REVIEW_REQUIRED", "M48", "VALID", "READINESS_NOT_ELIGIBLE"),
+     ("READY", "M47", "VALID", "MASTER_NOT_M48"),
+     ("READY", "M48", "INVALID", "COMPOSITION_INVALID")],
+)
+def test_eligibility_observability_uses_bounded_rejection_reasons(monkeypatch, prepared_status, selected_master, composition, reason):
+    events = _patch_integration_seam(monkeypatch, prepared_status=prepared_status, selected_master=selected_master, composition=composition)
+    payload = _integration_payload(_state(_m48_candidates()))
+    primary = PresentationEngineResult(b"PK-primary", "legacy")
+
+    engine_integration._submit_production_shadow_after_primary(primary, payload, request_id="rejected", project_id=None)
+
+    decisions = [extra for event, extra in events if event == "presentation_shadow_eligibility_decision"]
+    assert len(decisions) == 1
+    assert decisions[0]["decision"] == "INELIGIBLE"
+    assert decisions[0]["reason"] == reason

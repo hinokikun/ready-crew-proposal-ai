@@ -193,7 +193,21 @@ def _submit_production_shadow_after_primary(
     """Best-effort, default-off observation seam; Primary remains authoritative."""
     if not getattr(settings, "presentation_master_v3_renderer_mvp_shadow_enabled", False):
         return primary
-    if not request_id or not isinstance(primary.pptx_bytes, bytes) or not primary.pptx_bytes:
+    if payload.summary:
+        return primary
+    decision_emitted = False
+
+    def emit_decision(decision: str, reason: str) -> None:
+        nonlocal decision_emitted
+        if not decision_emitted:
+            _log_shadow_eligibility_decision(request_id, decision, reason)
+            decision_emitted = True
+
+    if not request_id:
+        emit_decision("INELIGIBLE", "MISSING_REQUEST_ID")
+        return primary
+    if not isinstance(primary.pptx_bytes, bytes) or not primary.pptx_bytes:
+        emit_decision("INELIGIBLE", "INVALID_PRIMARY_BYTES")
         return primary
     try:
         from app.services.presentation_master.integration import (
@@ -204,22 +218,51 @@ def _submit_production_shadow_after_primary(
             prepare_pmv3,
         )
 
-        context = build_candidate_state_bridge(payload, request_id=request_id)
-        if context is None:
+        if payload.semantic_candidates is None or payload.semantic_confirmation_state is None:
+            emit_decision("INELIGIBLE", "MISSING_CANDIDATE_STATE")
             return primary
-        prepared = prepare_pmv3(payload, semantic_candidates=context.binding.candidates)
-        eligibility = ShadowController.eligibility(
-            summary=payload.summary,
-            confirmation_state_present=True,
-            prepared_status=prepared.status.value,
-            selected_master=prepared.selected_master_id or "",
-            composition_status=prepared.composition_readiness,
-        )
+        try:
+            context = build_candidate_state_bridge(payload, request_id=request_id)
+        except Exception:
+            emit_decision("INELIGIBLE", "CANDIDATE_BINDING_FAILED")
+            return primary
+        if context is None:
+            emit_decision("INELIGIBLE", "CANDIDATE_BINDING_FAILED")
+            return primary
+        try:
+            prepared = prepare_pmv3(payload, semantic_candidates=context.binding.candidates)
+        except Exception:
+            emit_decision("INELIGIBLE", "PREPARATION_FAILED")
+            return primary
+        try:
+            eligibility = ShadowController.eligibility(
+                summary=payload.summary,
+                confirmation_state_present=True,
+                prepared_status=prepared.status.value,
+                selected_master=prepared.selected_master_id or "",
+                composition_status=prepared.composition_readiness,
+            )
+        except Exception:
+            emit_decision("INELIGIBLE", "INTERNAL_PRE_ADMISSION_ERROR")
+            return primary
         if not eligibility.eligible:
+            reason_map = {
+                "SEMANTIC_REVIEW_REQUIRED": "READINESS_NOT_ELIGIBLE",
+                "NOT_ELIGIBLE": "READINESS_NOT_ELIGIBLE",
+                "SELECTION_NO_MATCH": "MASTER_NOT_M48",
+                "COMPOSITION_INVALID": "COMPOSITION_INVALID",
+            }
+            emit_decision("INELIGIBLE", reason_map.get(eligibility.reason, "INTERNAL_PRE_ADMISSION_ERROR"))
             return primary
         global _PRODUCTION_SHADOW_CONTROLLER
         if _PRODUCTION_SHADOW_CONTROLLER is None:
             _PRODUCTION_SHADOW_CONTROLLER = ShadowController(enabled=True, event_logger=_log_shadow_metadata)
+        stop_event = getattr(_PRODUCTION_SHADOW_CONTROLLER, "_stop", None)
+        if not getattr(_PRODUCTION_SHADOW_CONTROLLER, "enabled", True) or (
+            stop_event is not None and stop_event.is_set()
+        ):
+            emit_decision("INELIGIBLE", "CONTROLLER_DISABLED")
+            return primary
         job = ShadowJob(
             request_id=request_id,
             primary_engine=primary.engine_mode,
@@ -228,11 +271,27 @@ def _submit_production_shadow_after_primary(
             composition_status=prepared.composition_readiness,
             workload=ShadowProcessWorkload(payload=payload, binding=context.binding),
         )
+        emit_decision("ELIGIBLE", "ELIGIBLE")
         submitted = _PRODUCTION_SHADOW_CONTROLLER.submit(job, eligibility=eligibility)
         del submitted
-    except Exception as exc:
-        del exc
+    except Exception:
+        emit_decision("INELIGIBLE", "INTERNAL_PRE_ADMISSION_ERROR")
     return primary
+
+
+def _log_shadow_eligibility_decision(
+    request_id: str | None,
+    decision: str,
+    reason: str,
+) -> None:
+    """Emit one bounded, opaque eligibility decision without affecting Primary."""
+    try:
+        fields: dict[str, Any] = {"decision": decision, "reason": reason}
+        if request_id:
+            fields["correlation_id"] = hashlib.sha256(request_id.encode()).hexdigest()[:16]
+        _log_shadow_metadata("presentation_shadow_eligibility_decision", **fields)
+    except Exception:
+        return
 
 
 def _log_shadow_metadata(event: str, **fields: Any) -> None:
