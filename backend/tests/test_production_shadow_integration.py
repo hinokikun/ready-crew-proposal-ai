@@ -328,6 +328,73 @@ def test_eligibility_observability_rejects_arbitrary_readiness_text(monkeypatch)
     assert "readiness_class" not in events[0][1]
 
 
+@pytest.mark.parametrize(
+    "reason",
+    [
+        "PRODUCTION_REQUEST_INVALID",
+        "CONFIRMATION_TRANSPORT_INVALID",
+        "SEMANTIC_SUPPLY_INVALID",
+        "SEMANTIC_PREPARATION_INVALID",
+        "MASTER_SELECTION_INVALID",
+        "COMPOSITION_INVALID",
+        "RENDER_PREPARATION_INVALID",
+        "ADAPTER_VALIDATION_ERROR",
+    ],
+)
+def test_invalid_input_reason_is_bounded_and_visible(monkeypatch, reason):
+    events = _patch_integration_seam(monkeypatch, prepared_status="INVALID_INPUT", selected_master="M48")
+    payload = _integration_payload(_state(_m48_candidates()))
+    primary = PresentationEngineResult(b"PK-primary", "legacy")
+    monkeypatch.setattr(
+        shadow_integration,
+        "prepare_pmv3",
+        lambda *args, **kwargs: SimpleNamespace(
+            status=SimpleNamespace(value="INVALID_INPUT"),
+            diagnostics={"invalid_input_reason": reason},
+            selected_master_id=None,
+            composition_readiness="NOT_READY",
+            semantic_readiness="INVALID_INPUT",
+        ),
+    )
+
+    engine_integration._submit_production_shadow_after_primary(primary, payload, request_id="invalid", project_id=None)
+
+    decisions = [event for event, _ in events if event.startswith("presentation_shadow_eligibility_decision")]
+    assert len(decisions) == 1
+    assert "decision=INELIGIBLE" in decisions[0]
+    assert "reason=READINESS_NOT_ELIGIBLE" in decisions[0]
+    assert "readiness_class=INVALID_INPUT" in decisions[0]
+    assert f"invalid_input_reason={reason}" in decisions[0]
+
+
+def test_invalid_input_reason_is_omitted_for_non_invalid_readiness(monkeypatch):
+    events = _patch_integration_seam(monkeypatch, prepared_status="REVIEW_REQUIRED")
+    payload = _integration_payload(_state(_m48_candidates()))
+    primary = PresentationEngineResult(b"PK-primary", "legacy")
+
+    engine_integration._submit_production_shadow_after_primary(primary, payload, request_id="review", project_id=None)
+
+    event = next(event for event, _ in events if event.startswith("presentation_shadow_eligibility_decision"))
+    assert "invalid_input_reason=" not in event
+
+
+def test_invalid_input_reason_ignores_untrusted_diagnostic(monkeypatch):
+    events = []
+    monkeypatch.setattr(engine_integration.logger, "info", lambda event, extra=None: events.append((event, extra or {})))
+
+    engine_integration._log_shadow_eligibility_decision(
+        "opaque",
+        "INELIGIBLE",
+        "READINESS_NOT_ELIGIBLE",
+        readiness_class="INVALID_INPUT",
+        invalid_input_reason="raw exception text",
+    )
+
+    assert len(events) == 1
+    assert "invalid_input_reason=" not in events[0][0]
+    assert "invalid_input_reason" not in events[0][1]
+
+
 def test_eligibility_message_omits_unavailable_correlation_and_sensitive_content(monkeypatch):
     events = _patch_integration_seam(monkeypatch)
     payload = _integration_payload([])

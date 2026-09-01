@@ -192,6 +192,18 @@ _READINESS_CLASSES = frozenset(
         "ADAPTER_ERROR",
     }
 )
+_INVALID_INPUT_REASONS = frozenset(
+    {
+        "PRODUCTION_REQUEST_INVALID",
+        "CONFIRMATION_TRANSPORT_INVALID",
+        "SEMANTIC_SUPPLY_INVALID",
+        "SEMANTIC_PREPARATION_INVALID",
+        "MASTER_SELECTION_INVALID",
+        "COMPOSITION_INVALID",
+        "RENDER_PREPARATION_INVALID",
+        "ADAPTER_VALIDATION_ERROR",
+    }
+)
 
 
 def _submit_production_shadow_after_primary(
@@ -208,10 +220,21 @@ def _submit_production_shadow_after_primary(
         return primary
     decision_emitted = False
 
-    def emit_decision(decision: str, reason: str, readiness_class: str | None = None) -> None:
+    def emit_decision(
+        decision: str,
+        reason: str,
+        readiness_class: str | None = None,
+        invalid_input_reason: str | None = None,
+    ) -> None:
         nonlocal decision_emitted
         if not decision_emitted:
-            _log_shadow_eligibility_decision(request_id, decision, reason, readiness_class=readiness_class)
+            _log_shadow_eligibility_decision(
+                request_id,
+                decision,
+                reason,
+                readiness_class=readiness_class,
+                invalid_input_reason=invalid_input_reason,
+            )
             decision_emitted = True
 
     if not request_id:
@@ -256,6 +279,12 @@ def _submit_production_shadow_after_primary(
         except Exception:
             emit_decision("INELIGIBLE", "INTERNAL_PRE_ADMISSION_ERROR")
             return primary
+        invalid_input_reason = None
+        diagnostics = getattr(prepared, "diagnostics", {})
+        if prepared.status.value == "INVALID_INPUT" and isinstance(diagnostics, dict):
+            candidate_reason = diagnostics.get("invalid_input_reason")
+            if candidate_reason in _INVALID_INPUT_REASONS:
+                invalid_input_reason = candidate_reason
         if not eligibility.eligible:
             reason_map = {
                 "SEMANTIC_REVIEW_REQUIRED": "READINESS_NOT_ELIGIBLE",
@@ -267,6 +296,7 @@ def _submit_production_shadow_after_primary(
                 "INELIGIBLE",
                 reason_map.get(eligibility.reason, "INTERNAL_PRE_ADMISSION_ERROR"),
                 readiness_class=prepared.status.value,
+                invalid_input_reason=invalid_input_reason,
             )
             return primary
         global _PRODUCTION_SHADOW_CONTROLLER
@@ -300,6 +330,7 @@ def _log_shadow_eligibility_decision(
     reason: str,
     *,
     readiness_class: str | None = None,
+    invalid_input_reason: str | None = None,
 ) -> None:
     """Emit one bounded, opaque eligibility decision without affecting Primary."""
     try:
@@ -308,6 +339,9 @@ def _log_shadow_eligibility_decision(
         if readiness_class in _READINESS_CLASSES:
             fields["readiness_class"] = readiness_class
             message += f" readiness_class={readiness_class}"
+        if readiness_class == "INVALID_INPUT" and invalid_input_reason in _INVALID_INPUT_REASONS:
+            fields["invalid_input_reason"] = invalid_input_reason
+            message += f" invalid_input_reason={invalid_input_reason}"
         if request_id:
             correlation_id = hashlib.sha256(request_id.encode()).hexdigest()[:16]
             fields["correlation_id"] = correlation_id
