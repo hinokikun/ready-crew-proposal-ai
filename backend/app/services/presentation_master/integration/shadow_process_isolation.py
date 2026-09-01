@@ -59,7 +59,10 @@ def _worker_entry(connection: Connection, workload: ShadowProcessWorkload) -> No
         del rendered
     except Exception:
         try:
-            connection.send({"failure_category": "RENDER_FAILED"})
+            connection.send({
+                "failure_category": "RENDER_FAILED",
+                "terminal_outcome": "CRASHED" if workload.injected_worker is not None else "FAILED",
+            })
         except (BrokenPipeError, EOFError, OSError):
             pass
     finally:
@@ -69,7 +72,7 @@ def _worker_entry(connection: Connection, workload: ShadowProcessWorkload) -> No
 class ProcessShadowController:
     """One dispatcher, bounded queue, and one killable process per active task."""
 
-    def __init__(self, *, enabled: bool = False, sample_rate: float = 0.01, timeout_seconds: float = 8.0, max_pending: int = 4, clock=monotonic):
+    def __init__(self, *, enabled: bool = False, sample_rate: float = 0.01, timeout_seconds: float = 8.0, max_pending: int = 4, clock=monotonic, event_logger: Callable[..., None] | None = None):
         self.enabled = enabled
         self.sample_rate = sample_rate
         self.timeout_seconds = timeout_seconds
@@ -79,12 +82,17 @@ class ProcessShadowController:
         self._stop = Event()
         self._lock = Lock()
         self._clock = clock
+        self._event_logger = event_logger or (lambda event, **fields: None)
         self._failures: deque[float] = deque()
         self._cooldown_until = 0.0
         self._active: mp.Process | None = None
         self._context = mp.get_context("spawn")
         self._dispatcher = Thread(target=self._dispatch, name="presentation-v3-shadow-dispatcher", daemon=True)
         self._dispatcher.start()
+
+    @staticmethod
+    def correlation_id(request_id: str) -> str:
+        return hashlib.sha256(request_id.encode()).hexdigest()[:16]
 
     @staticmethod
     def is_sampled(request_id: str, rate: float = 0.01) -> bool:
@@ -109,7 +117,16 @@ class ProcessShadowController:
     def submit(self, job: ProcessShadowJob, *, eligibility=None) -> bool:
         if self._stop.is_set() or not self.enabled or (eligibility is not None and not eligibility.eligible):
             return False
-        if not self.is_sampled(job.request_id, self.sample_rate):
+        correlation_id = self.correlation_id(job.request_id)
+        sampled = self.is_sampled(job.request_id, self.sample_rate)
+        self._emit_event(
+            "presentation_shadow_admission",
+            correlation_id=correlation_id,
+            sampled=sampled,
+            capacity_active=self._capacity_active(),
+            capacity_pending=min(self._queue.qsize(), self._queue.maxsize),
+        )
+        if not sampled:
             return False
         if not self._slots.acquire(blocking=False):
             self._publish({"request_id": job.request_id, "failure_category": "SHADOW_CAPACITY_SKIPPED"})
@@ -123,6 +140,7 @@ class ProcessShadowController:
                 return False
         try:
             self._queue.put_nowait(job)
+            self._emit_event("presentation_shadow_sampled_in", correlation_id=correlation_id, sampled=True)
             return True
         except Full:
             self._slots.release()
@@ -146,13 +164,26 @@ class ProcessShadowController:
             self._run_one(job)
 
     def _run_one(self, job: ProcessShadowJob) -> None:
+        correlation_id = self.correlation_id(job.request_id)
         parent, child = self._context.Pipe(duplex=False)
         process = self._context.Process(target=_worker_entry, args=(child, job.workload), name="presentation-v3-shadow-worker")
         with self._lock:
             self._active = process
         started = monotonic()
-        process.start()
+        try:
+            process.start()
+        except Exception:
+            self._slots.release()
+            self._record_failure()
+            self._emit_event("presentation_shadow_failed", correlation_id=correlation_id, outcome="FAILED", error_class="PROCESS_START_FAILED")
+            self._emit_capacity_reclaimed(correlation_id)
+            parent.close()
+            child.close()
+            with self._lock:
+                self._active = None
+            return
         child.close()
+        self._emit_event("presentation_shadow_child_started", correlation_id=correlation_id)
         process.join(timeout=max(0.0, self.timeout_seconds))
         # The child has exited or is about to be terminated; reclaim admission
         # before publishing the result so consumers can submit immediately.
@@ -160,6 +191,7 @@ class ProcessShadowController:
         if process.is_alive():
             self._terminate(process)
             self._record_failure()
+            self._emit_event("presentation_shadow_timeout", correlation_id=correlation_id, outcome="TIMEOUT", timeout_boolean=True, error_class="SHADOW_TIMEOUT")
             self._publish({"request_id": job.request_id, "failure_category": "SHADOW_TIMEOUT", "elapsed_ms": round((monotonic() - started) * 1000)})
         else:
             try:
@@ -169,7 +201,15 @@ class ProcessShadowController:
             if result.get("failure_category"):
                 self._record_failure()
             result["request_id"] = job.request_id
+            terminal = result.get("terminal_outcome")
+            if terminal == "CRASHED":
+                self._emit_event("presentation_shadow_crash", correlation_id=correlation_id, outcome="CRASHED", crash_boolean=True, error_class="CHILD_CRASH")
+            elif result.get("failure_category"):
+                self._emit_event("presentation_shadow_failed", correlation_id=correlation_id, outcome="FAILED", error_class=self._bounded_error_class(result.get("failure_category")))
+            else:
+                self._emit_event("presentation_shadow_completed", correlation_id=correlation_id, outcome="COMPLETED", elapsed_ms=result.get("elapsed_ms", 0))
             self._publish(result)
+        self._emit_capacity_reclaimed(correlation_id)
         parent.close()
         with self._lock:
             self._active = None
@@ -187,6 +227,29 @@ class ProcessShadowController:
             self._results.put_nowait(dict(result))
         except Full:
             pass
+
+    def _emit_event(self, event: str, **fields: Any) -> None:
+        try:
+            self._event_logger(event, **fields)
+        except Exception:
+            pass
+
+    def _emit_capacity_reclaimed(self, correlation_id: str) -> None:
+        self._emit_event(
+            "presentation_shadow_capacity_reclaimed",
+            correlation_id=correlation_id,
+            capacity_active=self._capacity_active(),
+            capacity_pending=min(self._queue.qsize(), self._queue.maxsize),
+        )
+
+    def _capacity_active(self) -> int:
+        with self._lock:
+            return int(self._active is not None and self._active.is_alive())
+
+    @staticmethod
+    def _bounded_error_class(value: Any) -> str:
+        candidate = str(value or "UNKNOWN")
+        return candidate if candidate.isidentifier() and len(candidate) <= 40 else "SHADOW_FAILURE"
 
     def _record_failure(self) -> None:
         with self._lock:

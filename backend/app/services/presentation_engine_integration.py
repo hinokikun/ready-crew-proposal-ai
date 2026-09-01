@@ -219,7 +219,7 @@ def _submit_production_shadow_after_primary(
             return primary
         global _PRODUCTION_SHADOW_CONTROLLER
         if _PRODUCTION_SHADOW_CONTROLLER is None:
-            _PRODUCTION_SHADOW_CONTROLLER = ShadowController(enabled=True)
+            _PRODUCTION_SHADOW_CONTROLLER = ShadowController(enabled=True, event_logger=_log_shadow_metadata)
         job = ShadowJob(
             request_id=request_id,
             primary_engine=primary.engine_mode,
@@ -229,14 +229,7 @@ def _submit_production_shadow_after_primary(
             workload=ShadowProcessWorkload(payload=payload, binding=context.binding),
         )
         submitted = _PRODUCTION_SHADOW_CONTROLLER.submit(job, eligibility=eligibility)
-        _log_shadow_metadata(
-            "presentation_shadow_admission",
-            request_id=request_id,
-            project_id=project_id,
-            submitted=submitted,
-            selected_master=prepared.selected_master_id or "",
-            composition_status=prepared.composition_readiness,
-        )
+        del submitted
     except Exception as exc:
         del exc
     return primary

@@ -1,4 +1,5 @@
 import time
+import hashlib
 from io import BytesIO
 from zipfile import ZipFile
 
@@ -116,4 +117,73 @@ def test_final_controller_breaker_blocks_after_three_failures():
     clock[0] += 601
     assert controller.submit(_process_job("breaker-closed", binding, _success_worker), eligibility=_eligibility()) is True
     assert _wait(controller, 5)[-1]["package_valid"] is True
+    controller.shutdown()
+
+
+def test_shadow_lifecycle_uses_opaque_correlation_and_no_raw_request_id():
+    events = []
+    request_id = "request-with-sensitive-looking-marker"
+    payload = _request([])
+    binding = bind_shadow_candidates(payload, request_id=request_id, candidates=_m48_candidates(), confirmation_state=[])
+    controller = ShadowController(enabled=True, sample_rate=1.0, max_pending=0, event_logger=lambda event, **fields: events.append((event, fields)))
+    assert controller.submit(_process_job(request_id, binding, _success_worker), eligibility=_eligibility())
+    _wait(controller)
+    controller.shutdown()
+    expected = hashlib.sha256(request_id.encode()).hexdigest()[:16]
+    assert all(fields.get("correlation_id") == expected for _, fields in events)
+    assert all("request_id" not in fields for _, fields in events)
+
+
+def test_sampled_out_has_no_child_lifecycle():
+    events = []
+    payload = _request([])
+    binding = bind_shadow_candidates(payload, request_id="sampled-out", candidates=_m48_candidates(), confirmation_state=[])
+    controller = ShadowController(enabled=True, sample_rate=0.0, event_logger=lambda event, **fields: events.append(event))
+    assert controller.submit(_process_job("sampled-out", binding, _success_worker), eligibility=_eligibility()) is False
+    time.sleep(0.05)
+    controller.shutdown()
+    assert events == ["presentation_shadow_admission"]
+
+
+def test_sampled_in_success_emits_ordered_single_terminal_lifecycle():
+    events = []
+    payload = _request([])
+    binding = bind_shadow_candidates(payload, request_id="sampled-in", candidates=_m48_candidates(), confirmation_state=[])
+    controller = ShadowController(enabled=True, sample_rate=1.0, max_pending=0, event_logger=lambda event, **fields: events.append((event, fields)))
+    assert controller.submit(_process_job("sampled-in", binding, _success_worker), eligibility=_eligibility())
+    assert _wait(controller)
+    controller.shutdown()
+    names = [event for event, _ in events]
+    assert names == [
+        "presentation_shadow_admission",
+        "presentation_shadow_sampled_in",
+        "presentation_shadow_child_started",
+        "presentation_shadow_completed",
+        "presentation_shadow_capacity_reclaimed",
+    ]
+    assert sum(name in {"presentation_shadow_completed", "presentation_shadow_failed", "presentation_shadow_timeout", "presentation_shadow_crash"} for name in names) == 1
+
+
+def test_timeout_and_crash_emit_terminal_evidence_and_reclaim_capacity():
+    for request_id, worker, terminal in (("timeout-observe", _stuck_worker, "presentation_shadow_timeout"), ("crash-observe", _crash_worker, "presentation_shadow_crash")):
+        events = []
+        payload = _request([])
+        binding = bind_shadow_candidates(payload, request_id=request_id, candidates=_m48_candidates(), confirmation_state=[])
+        controller = ShadowController(enabled=True, sample_rate=1.0, timeout_seconds=3, max_pending=0, event_logger=lambda event, **fields: events.append(event))
+        assert controller.submit(_process_job(request_id, binding, worker), eligibility=_eligibility())
+        assert _wait(controller, 4)
+        controller.shutdown()
+        assert terminal in events
+        assert events[-1] == "presentation_shadow_capacity_reclaimed"
+
+
+def test_logger_failure_does_not_affect_primary_or_retry_synchronously():
+    def failing_logger(event, **fields):
+        raise RuntimeError("must not escape")
+
+    payload = _request([])
+    binding = bind_shadow_candidates(payload, request_id="logger-failure", candidates=_m48_candidates(), confirmation_state=[])
+    controller = ShadowController(enabled=True, sample_rate=1.0, max_pending=0, event_logger=failing_logger)
+    assert controller.submit(_process_job("logger-failure", binding, _success_worker), eligibility=_eligibility())
+    assert _wait(controller)[-1]["package_valid"] is True
     controller.shutdown()
