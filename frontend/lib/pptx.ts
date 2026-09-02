@@ -1,7 +1,7 @@
 import type { PowerPointData, SemanticCandidate, WinProbability } from "@/types/proposal";
 import { getAuthHeaders } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/config";
-import { trackEvent } from "@/lib/analytics";
+import { persistCandidateBoundaryCapture, trackEvent } from "@/lib/analytics";
 
 type DownloadPptxPayload = {
   powerpoint_generation_data: PowerPointData;
@@ -28,6 +28,7 @@ type DownloadPptxPayload = {
   presentation_layout_decisions?: PresentationLayoutDecisionRequest[];
   semantic_confirmation_state?: SemanticConfirmationTransportItem[];
   semantic_candidates?: { candidates: SemanticCandidate[] };
+  candidate_boundary_correlation_id?: string;
 };
 
 type PowerPointDesignOptions = {
@@ -36,6 +37,8 @@ type PowerPointDesignOptions = {
   qualityState?: PresentationQualityRequestState;
   layoutDecisions?: PresentationLayoutDecisionRequest[];
   semanticCandidates?: SemanticCandidate[];
+  diagnosticCorrelationId?: string;
+  onDiagnosticCaptureStatus?: (status: "TRANSPORT_CAPTURE_CONFIRMED" | "TRANSPORT_CAPTURE_FAILED") => void;
 };
 
 export type SemanticConfirmationTransportItem = Pick<SemanticCandidate, "id" | "semantic_type" | "review_state"> & {
@@ -225,17 +228,34 @@ async function downloadPowerPoint(
 ) {
   if (!summary) {
     const transportCandidateCount = options.semanticCandidates?.length ?? 0;
-    trackEvent({
-      name: "presentation_candidate_boundary_transport",
-      feature: "proposal",
-      status: "success",
-      meta: {
-        semantic_candidates_state: options.semanticCandidates == null
-          ? "OMITTED"
-          : transportCandidateCount > 0 ? "NONEMPTY" : "EMPTY",
-        candidate_count: transportCandidateCount
+    if (!options.diagnosticCorrelationId) {
+      trackEvent({
+        name: "presentation_candidate_boundary_transport",
+        feature: "proposal",
+        status: "success",
+        meta: {
+          semantic_candidates_state: options.semanticCandidates == null
+            ? "OMITTED"
+            : transportCandidateCount > 0 ? "NONEMPTY" : "EMPTY",
+          candidate_count: transportCandidateCount
+        }
+      });
+    }
+    if (options.diagnosticCorrelationId) {
+      try {
+        await persistCandidateBoundaryCapture("presentation_candidate_boundary_transport", {
+          correlationId: options.diagnosticCorrelationId,
+          state: options.semanticCandidates == null
+            ? "OMITTED"
+            : transportCandidateCount > 0 ? "NONEMPTY" : "EMPTY",
+          count: transportCandidateCount
+        });
+        options.onDiagnosticCaptureStatus?.("TRANSPORT_CAPTURE_CONFIRMED");
+      } catch (error) {
+        options.onDiagnosticCaptureStatus?.("TRANSPORT_CAPTURE_FAILED");
+        throw error;
       }
-    });
+    }
   }
   const response = await fetch(`${API_BASE_URL}/api/download-pptx`, {
     method: "POST",
@@ -268,7 +288,8 @@ async function downloadPowerPoint(
       presentation_layout_decisions: options.layoutDecisions,
       ...(summary || !options.semanticCandidates ? {} : {
         semantic_candidates: { candidates: options.semanticCandidates },
-        semantic_confirmation_state: options.semanticCandidates.map(({ id, semantic_type, review_state, value }) => ({ id, semantic_type, review_state, value }))
+        semantic_confirmation_state: options.semanticCandidates.map(({ id, semantic_type, review_state, value }) => ({ id, semantic_type, review_state, value })),
+        ...(options.diagnosticCorrelationId ? { candidate_boundary_correlation_id: options.diagnosticCorrelationId } : {})
       })
     } satisfies DownloadPptxPayload)
   });

@@ -640,4 +640,7 @@ class PptxDownloadRequest(BaseModel):
     semantic_candidates: dict | None = Field(
         None, description="Optional authoritative structured semantic candidates for the future Production Shadow path."
     )
+    candidate_boundary_correlation_id: str | None = Field(
+        None, max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Bounded diagnostic-only candidate boundary correlation."
+    )
 

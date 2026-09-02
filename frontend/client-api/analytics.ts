@@ -8,12 +8,14 @@ import type {
 export type CandidateBoundaryEvent = {
   event_name: string;
   created_at: string;
+  candidate_boundary_correlation_id?: string;
   semantic_candidates_state: string;
   candidate_count: number;
 };
 
-export function getCandidateBoundaryEvents(start: string, end: string): Promise<{ events: CandidateBoundaryEvent[] }> {
+export function getCandidateBoundaryEvents(start: string, end: string, correlationId?: string): Promise<{ events: CandidateBoundaryEvent[] }> {
   const params = new URLSearchParams({ start, end });
+  if (correlationId) params.set("candidate_boundary_correlation_id", correlationId);
   return fetchJson(`/api/analytics/candidate-boundary-events?${params.toString()}`);
 }
 

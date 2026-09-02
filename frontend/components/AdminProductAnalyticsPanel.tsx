@@ -39,6 +39,11 @@ const funnelLabels: Record<string, string> = {
 const CANDIDATE_BOUNDARY_DIAGNOSTIC_START = "2026-09-02T05:34:00Z";
 const CANDIDATE_BOUNDARY_DIAGNOSTIC_END = "2026-09-02T05:39:00Z";
 
+export type CandidateBoundaryDiagnosticState = {
+  status: "idle" | "armed" | "analysis_confirmed" | "transport_confirmed" | "failed";
+  correlationId: string;
+};
+
 function formatDate(value: string | null | undefined) {
   if (!value) {
     return "-";
@@ -78,7 +83,13 @@ function buildAnalyticsMarkdown(dashboard: ProductAnalyticsDashboardData, notes:
   ].join("\n");
 }
 
-export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPanel() {
+export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPanel({
+  candidateBoundaryDiagnostic,
+  onArmCandidateBoundaryDiagnostic
+}: {
+  candidateBoundaryDiagnostic: CandidateBoundaryDiagnosticState;
+  onArmCandidateBoundaryDiagnostic: () => void;
+}) {
   const [dashboard, setDashboard] = useState<ProductAnalyticsDashboardData>(emptyDashboard);
   const [releaseNotes, setReleaseNotes] = useState<ReleaseNoteEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -133,7 +144,8 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
     try {
       const response = await getCandidateBoundaryEvents(
         CANDIDATE_BOUNDARY_DIAGNOSTIC_START,
-        CANDIDATE_BOUNDARY_DIAGNOSTIC_END
+        CANDIDATE_BOUNDARY_DIAGNOSTIC_END,
+        candidateBoundaryDiagnostic.correlationId || undefined
       );
       setCandidateBoundaryEvents(response.events);
       setCandidateBoundaryStatus("success");
@@ -200,12 +212,15 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
           <button
             className="secondary-button"
             type="button"
-            onClick={() => void loadCandidateBoundaryDiagnostic()}
-            disabled={candidateBoundaryStatus === "loading"}
+            onClick={() => candidateBoundaryDiagnostic.correlationId ? void loadCandidateBoundaryDiagnostic() : onArmCandidateBoundaryDiagnostic()}
+            disabled={candidateBoundaryStatus === "loading" || candidateBoundaryDiagnostic.status === "armed" && !candidateBoundaryDiagnostic.correlationId}
           >
-            {candidateBoundaryStatus === "loading" ? "読み込み中…" : "診断を実行"}
+            {candidateBoundaryStatus === "loading" ? "読み込み中…" : candidateBoundaryDiagnostic.correlationId ? "相関結果を取得" : candidateBoundaryDiagnostic.status === "armed" ? "診断フロー準備済み" : "診断フローを準備"}
           </button>
         </div>
+        {candidateBoundaryDiagnostic.correlationId ? <p className="helper-text">correlation_id: {candidateBoundaryDiagnostic.correlationId}</p> : null}
+        {candidateBoundaryDiagnostic.status !== "idle" ? <p className="helper-text">capture status: {candidateBoundaryDiagnostic.status}</p> : null}
+        {candidateBoundaryDiagnostic.status === "armed" && !candidateBoundaryDiagnostic.correlationId ? <p className="helper-text">次の提案生成1回だけ診断キャプチャを有効にします。</p> : null}
         {candidateBoundaryStatus === "success" && candidateBoundaryEvents.length === 0 ? (
           <p className="helper-text">No candidate-boundary events found in the authorized window.</p>
         ) : null}

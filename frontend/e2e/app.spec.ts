@@ -922,14 +922,22 @@ test("Sales CopilotのQuick Commandが対象画面へ移動する", async ({ pag
   await expect(page.locator("#admin-product-analytics-panel")).toBeVisible();
 });
 
-test("adminのCandidate Boundary Diagnosticは固定期間を1回だけ取得し安全な4項目だけ表示する", async ({ page }) => {
+test("adminのCandidate Boundary Diagnosticは1回だけ準備して相関結果を安全な4項目だけ表示する", async ({ page }) => {
   let requestCount = 0;
   let requestUrl = "";
+  const captureRequests: Array<Record<string, unknown>> = [];
   page.on("request", (request) => {
     const url = new URL(request.url());
     if (url.pathname === "/api/analytics/candidate-boundary-events") {
       requestCount += 1;
       requestUrl = request.url();
+    }
+    if (url.pathname === "/api/analytics/events" && request.method() === "POST") {
+      try {
+        captureRequests.push(request.postDataJSON() as Record<string, unknown>);
+      } catch {
+        // The request body is not needed for unrelated analytics calls.
+      }
     }
   });
 
@@ -940,10 +948,25 @@ test("adminのCandidate Boundary Diagnosticは固定期間を1回だけ取得し
   });
   const diagnostic = page.getByTestId("candidate-boundary-diagnostic");
   await expect(diagnostic).toBeVisible();
-  await expect(diagnostic.getByRole("button", { name: "診断を実行" })).toBeVisible();
+  await expect(diagnostic.getByRole("button", { name: "診断フローを準備" })).toBeVisible();
   expect(requestCount).toBe(0);
 
-  await diagnostic.getByRole("button", { name: "診断を実行" }).click();
+  await diagnostic.getByRole("button", { name: "診断フローを準備" }).click();
+  await expect(diagnostic.getByRole("button", { name: "診断フロー準備済み" })).toBeVisible();
+  await expect(diagnostic.getByText("次の提案生成1回だけ診断キャプチャを有効にします。")).toBeVisible();
+  expect(requestCount).toBe(0);
+
+  await setTextareaValue(page, "project-source-input", "株式会社サンプル様。Webサイトリニューアルの相談です。");
+  await clickGuidedGenerate(page);
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).waitFor({ state: "visible", timeout: 25000 });
+  await expect(diagnostic.getByText("capture status: analysis_confirmed")).toBeVisible();
+  const analysisCaptures = captureRequests.filter((request) => request.event_name === "presentation_candidate_boundary_analysis");
+  expect(analysisCaptures).toHaveLength(1);
+  expect((analysisCaptures[0].metadata as Record<string, unknown>).semantic_candidates_state).toBe("OMITTED");
+  expect((analysisCaptures[0].metadata as Record<string, unknown>).candidate_count).toBe(0);
+  expect(requestCount).toBe(0);
+
+  await diagnostic.getByRole("button", { name: "相関結果を取得" }).click();
   await expect(diagnostic.getByText("診断結果を読み込みました。")).toBeVisible();
   expect(requestCount).toBe(1);
   const url = new URL(requestUrl);
@@ -957,6 +980,28 @@ test("adminのCandidate Boundary Diagnosticは固定期間を1回だけ取得し
     "candidate_count"
   ]);
   await expect(diagnostic).not.toContainText(/metadata|authorization|token|cookie|candidate_id|user_id/i);
+});
+
+test("Candidate Boundary Diagnosticは分析キャプチャ失敗時に診断を失敗扱いにして出力へ進めない", async ({ page }) => {
+  await page.route("**/api/analytics/events", async (route) => {
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ detail: "capture unavailable" })
+    });
+  });
+  await login(page, adminEmail);
+  await openAdminPilotDashboard(page);
+  await page.locator("#admin-product-analytics-panel").evaluate((element) => {
+    (element as HTMLDetailsElement).open = true;
+  });
+  const diagnostic = page.getByTestId("candidate-boundary-diagnostic");
+  await diagnostic.getByRole("button", { name: "診断フローを準備" }).click();
+  await setTextareaValue(page, "project-source-input", "株式会社サンプル様。業務改善提案の相談です。");
+  await clickGuidedGenerate(page);
+  await expect(diagnostic.getByText("capture status: failed")).toBeVisible();
+  await expect(page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "PowerPointを生成" })).toHaveCount(0);
 });
 
 test("memberにはCandidate Boundary Diagnosticを表示しない", async ({ page }) => {

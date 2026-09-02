@@ -217,3 +217,29 @@ def test_candidate_boundary_endpoint_has_bounded_malformed_scan(client: TestClie
     response = client.get(f"/api/analytics/candidate-boundary-events?start={start}&end={end}", headers=admin_headers)
     assert response.status_code == 200
     assert response.json()["events"] == []
+
+
+def test_candidate_boundary_endpoint_retrieves_exact_correlation_without_content(client: TestClient, admin_headers: dict[str, str]) -> None:
+    correlation_id = "diagnostic-correlation-001"
+    start, end = _candidate_window_and_seed(
+        client,
+        [
+            ("presentation_candidate_boundary_analysis", '{"candidate_boundary_correlation_id":"diagnostic-correlation-001","semantic_candidates_state":"EMPTY","candidate_count":0}', 1, 1),
+            ("presentation_candidate_boundary_transport", '{"candidate_boundary_correlation_id":"other-correlation","semantic_candidates_state":"NONEMPTY","candidate_count":2}', 1, 1),
+        ],
+    )
+    response = client.get(
+        f"/api/analytics/candidate-boundary-events?start={start}&end={end}&candidate_boundary_correlation_id={correlation_id}",
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+    events = response.json()["events"]
+    assert events == [
+        {
+            "event_name": "presentation_candidate_boundary_analysis",
+            "created_at": events[0]["created_at"],
+            "candidate_boundary_correlation_id": correlation_id,
+            "semantic_candidates_state": "EMPTY",
+            "candidate_count": 0,
+        }
+    ]

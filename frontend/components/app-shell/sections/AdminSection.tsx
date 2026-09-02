@@ -7,7 +7,7 @@ import { AdminImprovementDashboardPanel } from "@/components/AdminImprovementDas
 import { AdminKnowledgePanel } from "@/components/AdminKnowledgePanel";
 import { AdminOperationReadinessPanel } from "@/components/AdminOperationReadinessPanel";
 import { AdminPilotDashboardPanel } from "@/components/AdminPilotDashboardPanel";
-import { AdminProductAnalyticsPanel } from "@/components/AdminProductAnalyticsPanel";
+import { AdminProductAnalyticsPanel, type CandidateBoundaryDiagnosticState } from "@/components/AdminProductAnalyticsPanel";
 import { AdminSalesAssistantPanel } from "@/components/AdminSalesAssistantPanel";
 import { AdminTrialReportPanel } from "@/components/AdminTrialReportPanel";
 import { AdminUsageDashboardPanel } from "@/components/AdminUsageDashboardPanel";
@@ -56,6 +56,8 @@ export type AdminSectionProps = {
   setIsAdminMenuOpen: (isOpen: boolean) => void;
   usageDashboard: any;
   usageLogs: any[];
+  candidateBoundaryDiagnostic: CandidateBoundaryDiagnosticState;
+  onArmCandidateBoundaryDiagnostic: () => void;
 };
 
 export function AdminSection({
@@ -77,7 +79,9 @@ export function AdminSection({
   setHealthSnapshot,
   setIsAdminMenuOpen,
   usageDashboard,
-  usageLogs
+  usageLogs,
+  candidateBoundaryDiagnostic,
+  onArmCandidateBoundaryDiagnostic
 }: AdminSectionProps) {
   const readinessItems = [
     {
@@ -188,7 +192,10 @@ export function AdminSection({
           <p className="admin-menu-category-label">利用状況とレポート</p>
           <details className="advanced-foldout" id="admin-product-analytics-panel">
             <summary>Product Analytics</summary>
-            <AdminProductAnalyticsPanel />
+            <AdminProductAnalyticsPanel
+              candidateBoundaryDiagnostic={candidateBoundaryDiagnostic}
+              onArmCandidateBoundaryDiagnostic={onArmCandidateBoundaryDiagnostic}
+            />
           </details>
           <details className="advanced-foldout">
             <summary>利用状況ダッシュボード</summary>

@@ -148,7 +148,7 @@ import { downloadProposalPowerPoint, downloadSummaryProposalPowerPoint } from "@
 import type { PresentationLayoutDecisionRequest, PresentationQualityDownloadReport, PresentationQualityRequestState } from "@/lib/pptx";
 import { canUseWorkFeatures, getRoleLabel, isAdminRole, isManagerCompatibleRole, type CreatableUserRole } from "@/lib/roles";
 import { appendUsageLog, buildScopedStorageKey, readUsageLogs, type UsageLogEntry } from "@/lib/storage";
-import { trackEvent } from "@/lib/analytics";
+import { createCandidateBoundaryCorrelationId, persistCandidateBoundaryCapture, trackEvent } from "@/lib/analytics";
 import { clearGuidedFlowDraft, getGuidedFlowDraftKey, readGuidedFlowDraft, saveGuidedFlowDraft } from "@/lib/guidedFlowDraft";
 import type { AnalysisResponse, PowerPointData, ProposalRequest, SemanticCandidate } from "@/types/proposal";
 
@@ -303,6 +303,7 @@ export default function Home() {
   const [reportResult, setReportResult] = useState<ReportAiResult | null>(null);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [semanticCandidatesForTransport, setSemanticCandidatesForTransport] = useState<SemanticCandidate[]>([]);
+  const [candidateBoundaryDiagnostic, setCandidateBoundaryDiagnostic] = useState<{ status: "idle" | "armed" | "analysis_confirmed" | "transport_confirmed" | "failed"; correlationId: string }>({ status: "idle", correlationId: "" });
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -383,6 +384,7 @@ export default function Home() {
     organizationId: workspaceContext?.current?.organization_id ?? "",
     workspaceId: workspaceContext?.current?.workspace_id ?? ""
   }), [currentUser?.id, workspaceContext?.current?.organization_id, workspaceContext?.current?.workspace_id]);
+  const candidateBoundaryDiagnosticRef = useRef<{ armed: boolean; active: boolean; correlationId: string }>({ armed: false, active: false, correlationId: "" });
   const guidedDraftScopeKey = getGuidedFlowDraftKey(guidedDraftScope);
 
   const refreshGuidedDraftAvailability = useCallback(() => {
@@ -1831,6 +1833,12 @@ export default function Home() {
     setIsConfirmOpen(true);
   }
 
+  function armCandidateBoundaryDiagnostic() {
+    if (!isManagerCompatibleRole(currentUser?.role)) return;
+    candidateBoundaryDiagnosticRef.current = { armed: true, active: false, correlationId: "" };
+    setCandidateBoundaryDiagnostic({ status: "armed", correlationId: "" });
+  }
+
   async function generateProposal(sourceForm = form) {
     if (isMaintenanceMode) {
       showMaintenanceError();
@@ -1847,6 +1855,13 @@ export default function Home() {
     setAutoFlowStatus("generating");
     setError("");
     setCopyState("idle");
+    const diagnosticCorrelationId = candidateBoundaryDiagnosticRef.current.armed
+      ? createCandidateBoundaryCorrelationId()
+      : "";
+    if (diagnosticCorrelationId) {
+      candidateBoundaryDiagnosticRef.current = { armed: false, active: true, correlationId: diagnosticCorrelationId };
+      setCandidateBoundaryDiagnostic({ status: "armed", correlationId: diagnosticCorrelationId });
+    }
     const analysisStartedAt = performance.now();
     trackEvent({ name: "ai_analysis_start", feature: "proposal", status: "start", meta: { mode: inputMode } });
 
@@ -1855,20 +1870,36 @@ export default function Home() {
       const durationMs = performance.now() - analysisStartedAt;
       trackEvent({ name: "ai_analysis_complete", feature: "proposal", status: "success", durationMs, meta: { mode: inputMode } });
       trackEvent({ name: "proposal_generated", feature: "proposal", status: "success", durationMs, meta: { output: "markdown" } });
-      setResult(response);
       const analysisCandidates = response.semantic_candidates?.candidates;
       const analysisCandidateState = response.semantic_candidates == null
         ? "OMITTED"
         : analysisCandidates?.length ? "NONEMPTY" : "EMPTY";
-      trackEvent({
-        name: "presentation_candidate_boundary_analysis",
-        feature: "proposal",
-        status: "success",
-        meta: {
-          semantic_candidates_state: analysisCandidateState,
-          candidate_count: analysisCandidates?.length ?? 0
+      if (diagnosticCorrelationId) {
+        try {
+          await persistCandidateBoundaryCapture("presentation_candidate_boundary_analysis", {
+            correlationId: diagnosticCorrelationId,
+            state: analysisCandidateState,
+            count: analysisCandidates?.length ?? 0
+          });
+          setCandidateBoundaryDiagnostic({ status: "analysis_confirmed", correlationId: diagnosticCorrelationId });
+        } catch (captureError) {
+          candidateBoundaryDiagnosticRef.current.active = false;
+          setCandidateBoundaryDiagnostic({ status: "failed", correlationId: diagnosticCorrelationId });
+          throw new Error("ANALYSIS_CAPTURE_FAILED", { cause: captureError });
         }
-      });
+      }
+      setResult(response);
+      if (!diagnosticCorrelationId) {
+        trackEvent({
+          name: "presentation_candidate_boundary_analysis",
+          feature: "proposal",
+          status: "success",
+          meta: {
+            semantic_candidates_state: analysisCandidateState,
+            candidate_count: analysisCandidates?.length ?? 0
+          }
+        });
+      }
       setSemanticCandidatesForTransport(response.semantic_candidates?.candidates ?? []);
       setBeautifulAiResult(null);
       setBeautifulAiError("");
@@ -1887,6 +1918,10 @@ export default function Home() {
       void refreshAccountData();
       return true;
     } catch (caught) {
+      if (diagnosticCorrelationId) {
+        candidateBoundaryDiagnosticRef.current.active = false;
+        setCandidateBoundaryDiagnostic((current) => current.status === "failed" ? current : { status: "failed", correlationId: diagnosticCorrelationId });
+      }
       const friendly = toFriendlyError(caught);
       trackEvent({
         name: "ai_analysis_complete",
@@ -1973,8 +2008,26 @@ export default function Home() {
         targetForm.own_service_info,
         targetForm.past_proposal_template,
         targetForm.case_studies,
-        { designTemplate: selectedPresentationTemplate, qualityState: options.qualityState, layoutDecisions: options.layoutDecisions, semanticCandidates: summary ? undefined : semanticCandidatesForTransport }
+        {
+          designTemplate: selectedPresentationTemplate,
+          qualityState: options.qualityState,
+          layoutDecisions: options.layoutDecisions,
+          semanticCandidates: summary ? undefined : semanticCandidatesForTransport,
+          diagnosticCorrelationId: !summary && candidateBoundaryDiagnosticRef.current.active ? candidateBoundaryDiagnosticRef.current.correlationId : undefined,
+          onDiagnosticCaptureStatus: (status) => {
+            const correlationId = candidateBoundaryDiagnosticRef.current.correlationId;
+            if (status === "TRANSPORT_CAPTURE_FAILED") {
+              candidateBoundaryDiagnosticRef.current.active = false;
+              setCandidateBoundaryDiagnostic({ status: "failed", correlationId });
+            } else {
+              setCandidateBoundaryDiagnostic({ status: "transport_confirmed", correlationId });
+            }
+          }
+        }
       );
+      if (!summary && candidateBoundaryDiagnosticRef.current.active) {
+        candidateBoundaryDiagnosticRef.current.active = false;
+      }
       setLastPresentationQualityReport(downloadResult.qualityReport);
       trackEvent({
         name: downloadEventName,
@@ -3581,6 +3634,8 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           setIsAdminMenuOpen={setIsAdminMenuOpen}
           usageDashboard={usageDashboard}
           usageLogs={usageLogs}
+          candidateBoundaryDiagnostic={candidateBoundaryDiagnostic}
+          onArmCandidateBoundaryDiagnostic={armCandidateBoundaryDiagnostic}
         />
       )}
 

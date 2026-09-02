@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime
 from sqlite3 import Connection
 from typing import Any
@@ -31,7 +32,7 @@ FUNNEL_STEPS = [
 
 DOWNLOAD_EVENTS = {"summary_ppt_download", "detail_ppt_download", "estimate_pdf_download"}
 GENERATION_EVENTS = {"proposal_generated"}
-SAFE_METADATA_KEYS = {"source", "mode", "output", "reason", "category", "semantic_candidates_state", "candidate_count"}
+SAFE_METADATA_KEYS = {"source", "mode", "output", "reason", "category", "semantic_candidates_state", "candidate_count", "candidate_boundary_correlation_id"}
 SEMANTIC_CANDIDATE_STATES = {"OMITTED", "EMPTY", "NONEMPTY"}
 MAX_CANDIDATE_COUNT = 1000
 CANDIDATE_BOUNDARY_EVENT_NAMES = (
@@ -56,12 +57,14 @@ def _scope_clause(scope: ScopeContext | None, alias: str = "") -> tuple[str, tup
     return scope_where(scope, alias)
 
 
-def _safe_metadata(metadata: dict[str, Any] | None) -> str:
+def _safe_metadata(metadata: dict[str, Any] | None, *, candidate_boundary: bool = False) -> str:
     if not metadata:
         return ""
     safe = {}
     for key, value in metadata.items():
         if key not in SAFE_METADATA_KEYS:
+            continue
+        if candidate_boundary and key not in {"candidate_boundary_correlation_id", "semantic_candidates_state", "candidate_count"}:
             continue
         if key == "semantic_candidates_state":
             if isinstance(value, str) and value in SEMANTIC_CANDIDATE_STATES:
@@ -69,6 +72,10 @@ def _safe_metadata(metadata: dict[str, Any] | None) -> str:
             continue
         if key == "candidate_count":
             if isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= MAX_CANDIDATE_COUNT:
+                safe[key] = value
+            continue
+        if key == "candidate_boundary_correlation_id":
+            if isinstance(value, str) and value and len(value) <= 64 and re.fullmatch(r"[A-Za-z0-9_-]+", value):
                 safe[key] = value
             continue
         if isinstance(value, (str, int, float, bool, type(None))):
@@ -96,11 +103,22 @@ def _validated_candidate_boundary_metadata(metadata: Any) -> dict[str, Any] | No
         return None
     state = decoded.get("semantic_candidates_state")
     count = decoded.get("candidate_count")
+    correlation_id = decoded.get("candidate_boundary_correlation_id")
     if state not in SEMANTIC_CANDIDATE_STATES:
         return None
     if isinstance(count, bool) or not isinstance(count, int) or not 0 <= count <= MAX_CANDIDATE_COUNT:
         return None
-    return {"semantic_candidates_state": state, "candidate_count": count}
+    if correlation_id is not None and (
+        not isinstance(correlation_id, str)
+        or not correlation_id
+        or len(correlation_id) > 64
+        or not re.fullmatch(r"[A-Za-z0-9_-]+", correlation_id)
+    ):
+        return None
+    result = {"semantic_candidates_state": state, "candidate_count": count}
+    if correlation_id is not None:
+        result["candidate_boundary_correlation_id"] = correlation_id
+    return result
 
 
 def list_candidate_boundary_events(
@@ -108,6 +126,7 @@ def list_candidate_boundary_events(
     start_at: str,
     end_at: str,
     scope: ScopeContext | None = None,
+    correlation_id: str | None = None,
 ) -> list[dict[str, Any]]:
     scope_sql, scope_params = _scope_clause(scope, "e")
     rows = db.execute(
@@ -135,6 +154,9 @@ def list_candidate_boundary_events(
                 **metadata,
             }
         )
+        if correlation_id and metadata.get("candidate_boundary_correlation_id") != correlation_id:
+            events.pop()
+            continue
         if len(events) >= MAX_CANDIDATE_BOUNDARY_RESULTS:
             break
     return events
@@ -170,7 +192,7 @@ def record_analytics_event(
         INSERT INTO analytics_events (session_key, user_id, event_name, feature_name, status, duration_ms, metadata, organization_id, workspace_id)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (session_key, user_id, event_name, feature_name, status, max(duration_ms, 0), _safe_metadata(metadata), organization_id, workspace_id),
+        (session_key, user_id, event_name, feature_name, status, max(duration_ms, 0), _safe_metadata(metadata, candidate_boundary=event_name in CANDIDATE_BOUNDARY_EVENT_NAMES), organization_id, workspace_id),
     )
 
     generation_increment = 1 if event_name in GENERATION_EVENTS and status == "success" else 0

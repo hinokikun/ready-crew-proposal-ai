@@ -57,6 +57,7 @@ async def get_candidate_boundary_events(
     end: str = Query(..., min_length=1),
     user: dict = Depends(require_roles("admin", "manager")),
     scope: str = Query("workspace", pattern="^(workspace|organization)$"),
+    candidate_boundary_correlation_id: str | None = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_-]+$"),
 ) -> dict:
     start_dt = _parse_utc_bound(start, "start")
     end_dt = _parse_utc_bound(end, "end")
@@ -72,6 +73,7 @@ async def get_candidate_boundary_events(
                 start_dt.strftime("%Y-%m-%d %H:%M:%S"),
                 end_dt.strftime("%Y-%m-%d %H:%M:%S"),
                 resolved_scope,
+                candidate_boundary_correlation_id,
             )
         }
 
