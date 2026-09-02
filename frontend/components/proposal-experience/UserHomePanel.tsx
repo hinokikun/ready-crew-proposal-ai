@@ -8,6 +8,7 @@ type UserHomePanelProps = {
   isGenerating: boolean;
   recentHistory: HistoryEntry[];
   onNewProposal: () => void;
+  onResumeCurrent: () => void;
   onOpenAnalytics: () => void;
   onOpenHistory: () => void;
   onResumeProposal: (entry: HistoryEntry) => void;
@@ -30,11 +31,22 @@ export function UserHomePanel({
   isGenerating,
   recentHistory,
   onNewProposal,
+  onResumeCurrent,
   onOpenAnalytics,
   onOpenHistory,
   onResumeProposal
 }: UserHomePanelProps) {
-  const visibleHistory = recentHistory.slice(0, 5);
+  const visibleHistory = recentHistory.slice(0, 3);
+  const resumableEntry = recentHistory.find((entry) => !entry.result?.powerpoint_generation_data);
+  const canResume = Boolean(resumableEntry || hasCurrentProposal || isGenerating);
+
+  function resumeProposal() {
+    if (resumableEntry) {
+      onResumeProposal(resumableEntry);
+      return;
+    }
+    if (canResume) onResumeCurrent();
+  }
 
   return (
     <section className="user-home-panel" aria-label="利用者ホーム" data-testid="user-home-panel">
@@ -51,31 +63,46 @@ export function UserHomePanel({
       </div>
 
       <div className="user-home-priority-grid" aria-label="よく使う操作">
-        <article>
+        <button className="user-home-action-card is-primary" type="button" onClick={onNewProposal}>
           <FileText size={20} aria-hidden="true" />
           <span>1</span>
           <strong>新しい提案書を作る</strong>
           <p>案件情報を貼るだけで開始できます。</p>
-        </article>
-        <article>
+        </button>
+        <button className="user-home-action-card" type="button" onClick={resumeProposal} disabled={!canResume}>
           <Clock3 size={20} aria-hidden="true" />
           <span>2</span>
           <strong>作成途中を再開する</strong>
-          <p>{hasCurrentProposal || isGenerating ? "現在の作成内容があります。" : "最近の履歴からすぐ再開できます。"}</p>
-        </article>
-        <article>
+          <p>{canResume ? "現在の作成内容を続きから開きます。" : "作成途中の提案書があると再開できます。"}</p>
+        </button>
+        <button className="user-home-action-card" type="button" onClick={onOpenHistory}>
           <History size={20} aria-hidden="true" />
           <span>3</span>
           <strong>最近の提案書を見る</strong>
           <p>過去の出力やCSVは履歴にまとまります。</p>
-        </article>
-        <article>
+        </button>
+        <button className="user-home-action-card" type="button" onClick={onOpenAnalytics}>
           <BarChart3 size={20} aria-hidden="true" />
           <span>4</span>
           <strong>詳細分析を見る</strong>
           <p>効果測定やレポートは必要な時だけ開きます。</p>
-        </article>
+        </button>
       </div>
+
+      <section className="user-home-flow" aria-labelledby="user-home-flow-title">
+        <div className="user-home-section-heading">
+          <div>
+            <p className="eyebrow">使い方</p>
+            <h3 id="user-home-flow-title">提案書作成の流れ</h3>
+          </div>
+        </div>
+        <ol className="user-home-flow-list">
+          <li><span>1</span><strong>案件情報を入力</strong></li>
+          <li><span>2</span><strong>AIが分析・生成</strong></li>
+          <li><span>3</span><strong>内容を確認・編集</strong></li>
+          <li><span>4</span><strong>PowerPoint / PDF 出力</strong></li>
+        </ol>
+      </section>
 
       <div className="user-home-section-heading">
         <div>
@@ -112,15 +139,6 @@ export function UserHomePanel({
         </div>
       )}
 
-      <details className="user-home-advanced">
-        <summary>詳細分析を見る</summary>
-        <div>
-          <p>提案内容の評価、業務改善レポート、利用状況は「分析・レポート」にまとめています。</p>
-          <button className="secondary-button" type="button" onClick={onOpenAnalytics}>
-            分析・レポートを開く
-          </button>
-        </div>
-      </details>
     </section>
   );
 }
