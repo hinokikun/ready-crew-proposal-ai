@@ -1,6 +1,7 @@
 import type { PowerPointData, SemanticCandidate, WinProbability } from "@/types/proposal";
 import { getAuthHeaders } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/config";
+import { trackEvent } from "@/lib/analytics";
 
 type DownloadPptxPayload = {
   powerpoint_generation_data: PowerPointData;
@@ -222,6 +223,20 @@ async function downloadPowerPoint(
   summary = false,
   options: PowerPointDesignOptions = {}
 ) {
+  if (!summary) {
+    const transportCandidateCount = options.semanticCandidates?.length ?? 0;
+    trackEvent({
+      name: "presentation_candidate_boundary_transport",
+      feature: "proposal",
+      status: "success",
+      meta: {
+        semantic_candidates_state: options.semanticCandidates == null
+          ? "OMITTED"
+          : transportCandidateCount > 0 ? "NONEMPTY" : "EMPTY",
+        candidate_count: transportCandidateCount
+      }
+    });
+  }
   const response = await fetch(`${API_BASE_URL}/api/download-pptx`, {
     method: "POST",
     headers: {

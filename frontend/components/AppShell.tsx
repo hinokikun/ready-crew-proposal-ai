@@ -1856,6 +1856,19 @@ export default function Home() {
       trackEvent({ name: "ai_analysis_complete", feature: "proposal", status: "success", durationMs, meta: { mode: inputMode } });
       trackEvent({ name: "proposal_generated", feature: "proposal", status: "success", durationMs, meta: { output: "markdown" } });
       setResult(response);
+      const analysisCandidates = response.semantic_candidates?.candidates;
+      const analysisCandidateState = response.semantic_candidates == null
+        ? "OMITTED"
+        : analysisCandidates?.length ? "NONEMPTY" : "EMPTY";
+      trackEvent({
+        name: "presentation_candidate_boundary_analysis",
+        feature: "proposal",
+        status: "success",
+        meta: {
+          semantic_candidates_state: analysisCandidateState,
+          candidate_count: analysisCandidates?.length ?? 0
+        }
+      });
       setSemanticCandidatesForTransport(response.semantic_candidates?.candidates ?? []);
       setBeautifulAiResult(null);
       setBeautifulAiError("");

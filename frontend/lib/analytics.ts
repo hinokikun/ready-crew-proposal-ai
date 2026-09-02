@@ -12,7 +12,9 @@ export type AnalyticsEvent = {
 };
 
 const SESSION_STORAGE_KEY = "ai-sales-secretary-analytics-session-v1";
-const SAFE_METADATA_KEYS = new Set(["source", "mode", "output", "reason", "category"]);
+const SAFE_METADATA_KEYS = new Set(["source", "mode", "output", "reason", "category", "semantic_candidates_state", "candidate_count"]);
+const SEMANTIC_CANDIDATE_STATES = new Set(["OMITTED", "EMPTY", "NONEMPTY"]);
+const MAX_CANDIDATE_COUNT = 1000;
 
 function createSessionId() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -38,9 +40,12 @@ function sanitizeMetadata(meta: AnalyticsEvent["meta"]) {
   if (!meta) {
     return {};
   }
-  return Object.fromEntries(
-    Object.entries(meta).filter(([key, value]) => SAFE_METADATA_KEYS.has(key) && ["string", "number", "boolean"].includes(typeof value))
-  );
+  return Object.fromEntries(Object.entries(meta).filter(([key, value]) => {
+    if (!SAFE_METADATA_KEYS.has(key)) return false;
+    if (key === "semantic_candidates_state") return typeof value === "string" && SEMANTIC_CANDIDATE_STATES.has(value);
+    if (key === "candidate_count") return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= MAX_CANDIDATE_COUNT;
+    return ["string", "number", "boolean"].includes(typeof value);
+  }));
 }
 
 export function trackEvent(event: AnalyticsEvent) {

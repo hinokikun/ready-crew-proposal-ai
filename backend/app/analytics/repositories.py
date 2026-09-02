@@ -31,7 +31,9 @@ FUNNEL_STEPS = [
 
 DOWNLOAD_EVENTS = {"summary_ppt_download", "detail_ppt_download", "estimate_pdf_download"}
 GENERATION_EVENTS = {"proposal_generated"}
-SAFE_METADATA_KEYS = {"source", "mode", "output", "reason", "category"}
+SAFE_METADATA_KEYS = {"source", "mode", "output", "reason", "category", "semantic_candidates_state", "candidate_count"}
+SEMANTIC_CANDIDATE_STATES = {"OMITTED", "EMPTY", "NONEMPTY"}
+MAX_CANDIDATE_COUNT = 1000
 
 
 def _row_to_dict(row: Any) -> dict[str, Any]:
@@ -51,11 +53,20 @@ def _scope_clause(scope: ScopeContext | None, alias: str = "") -> tuple[str, tup
 def _safe_metadata(metadata: dict[str, Any] | None) -> str:
     if not metadata:
         return ""
-    safe = {
-        key: value
-        for key, value in metadata.items()
-        if key in SAFE_METADATA_KEYS and isinstance(value, (str, int, float, bool, type(None)))
-    }
+    safe = {}
+    for key, value in metadata.items():
+        if key not in SAFE_METADATA_KEYS:
+            continue
+        if key == "semantic_candidates_state":
+            if isinstance(value, str) and value in SEMANTIC_CANDIDATE_STATES:
+                safe[key] = value
+            continue
+        if key == "candidate_count":
+            if isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= MAX_CANDIDATE_COUNT:
+                safe[key] = value
+            continue
+        if isinstance(value, (str, int, float, bool, type(None))):
+            safe[key] = value
     return json.dumps(safe, ensure_ascii=False)[:1000]
 
 

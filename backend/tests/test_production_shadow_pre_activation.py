@@ -85,8 +85,13 @@ def test_hook_entry_emits_one_bounded_downstream_correlation_id(monkeypatch):
 
     engine.build_pptx_bytes_for_engine(_eligible_payload(), request_id="correlated")
 
-    hook_events = [fields for event, fields in events if event == "presentation_shadow_hook_entered"]
-    assert hook_events == [{"correlation_id": hashlib.sha256(b"correlated").hexdigest()[:16]}]
+    hook_events = [
+        (event, fields)
+        for event, fields in events
+        if event.startswith("presentation_shadow_hook_entered")
+    ]
+    correlation_id = hashlib.sha256(b"correlated").hexdigest()[:16]
+    assert hook_events == [(f"presentation_shadow_hook_entered correlation_id={correlation_id}", {"correlation_id": correlation_id})]
 
 
 def test_ineligible_and_logger_failure_are_primary_safe(monkeypatch):

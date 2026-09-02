@@ -225,6 +225,20 @@ def _submit_production_shadow_after_primary(
         return primary
     if payload.summary:
         return primary
+    raw_candidates = getattr(payload, "semantic_candidates", None)
+    candidate_items = raw_candidates.get("candidates") if isinstance(raw_candidates, dict) else None
+    candidate_count = len(candidate_items) if isinstance(candidate_items, list) else 0
+    candidate_state = "OMITTED" if raw_candidates is None else ("NONEMPTY" if candidate_count else "EMPTY")
+    correlation_id = hashlib.sha256(request_id.encode()).hexdigest()[:16] if request_id else "missing"
+    try:
+        _log_shadow_metadata(
+            f"presentation_candidate_boundary_backend semantic_candidates_state={candidate_state} candidate_count={candidate_count} correlation_id={correlation_id}",
+            semantic_candidates_state=candidate_state,
+            candidate_count=candidate_count,
+            correlation_id=correlation_id,
+        )
+    except Exception:
+        pass
     decision_emitted = False
 
     def emit_decision(
@@ -251,7 +265,7 @@ def _submit_production_shadow_after_primary(
         return primary
     hook_correlation_id = hashlib.sha256(request_id.encode()).hexdigest()[:16]
     try:
-        _log_shadow_metadata("presentation_shadow_hook_entered", correlation_id=hook_correlation_id)
+        _log_shadow_metadata(f"presentation_shadow_hook_entered correlation_id={hook_correlation_id}", correlation_id=hook_correlation_id)
     except Exception:
         pass
     if not isinstance(primary.pptx_bytes, bytes) or not primary.pptx_bytes:
