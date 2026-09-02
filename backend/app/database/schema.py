@@ -557,6 +557,7 @@ def _schema_statements() -> list[str]:
             status TEXT NOT NULL DEFAULT 'success',
             duration_ms INTEGER NOT NULL DEFAULT 0,
             metadata TEXT NOT NULL DEFAULT '',
+            candidate_boundary_correlation_id TEXT,
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(user_id) REFERENCES users(id)
         )

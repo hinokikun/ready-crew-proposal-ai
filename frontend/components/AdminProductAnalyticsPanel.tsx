@@ -1,7 +1,8 @@
 "use client";
 
 import { memo, useEffect, useMemo, useState } from "react";
-import { getCandidateBoundaryEvents, getHistoricalCandidateBoundaryEvents, type CandidateBoundaryEvent } from "@/client-api/analytics";
+import { getCandidateBoundaryDiagnosticResult, getCandidateBoundaryEvents, getHistoricalCandidateBoundaryEvents, type CandidateBoundaryEvent } from "@/client-api/analytics";
+import { readCandidateBoundaryDiagnosticSession } from "@/lib/analytics";
 import {
   createReleaseNote,
   getProductAnalyticsDashboard,
@@ -40,7 +41,7 @@ const CANDIDATE_BOUNDARY_DIAGNOSTIC_START = "2026-09-02T05:34:00Z";
 const CANDIDATE_BOUNDARY_DIAGNOSTIC_END = "2026-09-02T05:39:00Z";
 
 export type CandidateBoundaryDiagnosticState = {
-  status: "idle" | "armed" | "analysis_confirmed" | "transport_confirmed" | "failed";
+  status: "idle" | "armed" | "analysis_confirmed" | "transport_confirmed" | "completed" | "failed";
   correlationId: string;
 };
 
@@ -50,6 +51,50 @@ type HistoricalRecoveryState = {
   analysis: CandidateBoundaryEvent | null;
   transport: CandidateBoundaryEvent | null;
 };
+
+type DurableDiagnosticRecoveryState = {
+  status: "idle" | "loading" | "complete" | "missing" | "ambiguous" | "invalid" | "error";
+  correlationId: string;
+  analysis: CandidateBoundaryEvent | null;
+  transport: CandidateBoundaryEvent | null;
+  backend: CandidateBoundaryEvent | null;
+  classification: string;
+};
+
+function reconcileDurableDiagnosticEvents(events: CandidateBoundaryEvent[], requestedCorrelationId: string): DurableDiagnosticRecoveryState {
+  const matching = events.filter((event) => event.candidate_boundary_correlation_id === requestedCorrelationId);
+  const byName = new Map<string, CandidateBoundaryEvent[]>();
+  for (const event of matching) {
+    const current = byName.get(event.event_name) ?? [];
+    current.push(event);
+    byName.set(event.event_name, current);
+  }
+  const allowed = new Set([
+    "presentation_candidate_boundary_analysis",
+    "presentation_candidate_boundary_transport",
+    "presentation_candidate_boundary_backend"
+  ]);
+  if ([...byName.keys()].some((name) => !allowed.has(name))) {
+    return { status: "invalid", correlationId: requestedCorrelationId, analysis: null, transport: null, backend: null, classification: "DIAGNOSTIC_INVALID" };
+  }
+  if ([...byName.values()].some((rows) => rows.length > 1)) {
+    return { status: "ambiguous", correlationId: requestedCorrelationId, analysis: null, transport: null, backend: null, classification: "DUPLICATE_BOUNDARY_EVENT" };
+  }
+  const analysis = byName.get("presentation_candidate_boundary_analysis")?.[0] ?? null;
+  const transport = byName.get("presentation_candidate_boundary_transport")?.[0] ?? null;
+  const backend = byName.get("presentation_candidate_boundary_backend")?.[0] ?? null;
+  if (!analysis || !transport || !backend) {
+    const missing = !analysis ? "ANALYSIS_MISSING" : !transport ? "TRANSPORT_MISSING" : "BACKEND_MISSING";
+    return { status: "missing", correlationId: requestedCorrelationId, analysis, transport, backend, classification: missing };
+  }
+  let classification = "DIAGNOSTIC_COMPLETE";
+  if (analysis.semantic_candidates_state === "EMPTY" && transport.semantic_candidates_state === "EMPTY" && backend.semantic_candidates_state === "EMPTY") classification = "ZERO_ORIGIN_AT_OR_BEFORE_ANALYSIS_BOUNDARY";
+  else if (analysis.semantic_candidates_state === "NONEMPTY" && transport.semantic_candidates_state === "EMPTY" && backend.semantic_candidates_state === "EMPTY") classification = "CANDIDATE_LOSS_BETWEEN_ANALYSIS_AND_TRANSPORT";
+  else if (analysis.semantic_candidates_state === "NONEMPTY" && transport.semantic_candidates_state === "NONEMPTY" && backend.semantic_candidates_state === "NONEMPTY") classification = "CANDIDATES_PRESERVED_END_TO_END";
+  else if (analysis.semantic_candidates_state === "NONEMPTY" && transport.semantic_candidates_state === "NONEMPTY" && backend.semantic_candidates_state === "EMPTY") classification = "TRANSPORT_TO_BACKEND_REGRESSION";
+  else classification = "DIAGNOSTIC_INVALID";
+  return { status: classification === "DIAGNOSTIC_INVALID" ? "invalid" : "complete", correlationId: requestedCorrelationId, analysis, transport, backend, classification };
+}
 
 function reconcileHistoricalCandidateBoundaryEvents(events: CandidateBoundaryEvent[]): HistoricalRecoveryState {
   const byCorrelation = new Map<string, { analysis: CandidateBoundaryEvent[]; transport: CandidateBoundaryEvent[] }>();
@@ -132,6 +177,9 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
     analysis: null,
     transport: null
   });
+  const [durableRecovery, setDurableRecovery] = useState<DurableDiagnosticRecoveryState>({
+    status: "idle", correlationId: "", analysis: null, transport: null, backend: null, classification: ""
+  });
 
   const markdown = useMemo(() => buildAnalyticsMarkdown(dashboard, releaseNotes), [dashboard, releaseNotes]);
 
@@ -197,6 +245,22 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
     }
   }
 
+  async function loadDurableDiagnosticResult() {
+    if (durableRecovery.status !== "idle") return;
+    const session = readCandidateBoundaryDiagnosticSession();
+    if (!session) {
+      setDurableRecovery({ status: "invalid", correlationId: "", analysis: null, transport: null, backend: null, classification: "DIAGNOSTIC_INVALID" });
+      return;
+    }
+    setDurableRecovery({ status: "loading", correlationId: session.correlationId, analysis: null, transport: null, backend: null, classification: "" });
+    try {
+      const response = await getCandidateBoundaryDiagnosticResult(session.correlationId);
+      setDurableRecovery(reconcileDurableDiagnosticEvents(response.events, session.correlationId));
+    } catch {
+      setDurableRecovery({ status: "error", correlationId: session.correlationId, analysis: null, transport: null, backend: null, classification: "DIAGNOSTIC_INVALID" });
+    }
+  }
+
   async function saveReleaseNote() {
     if (!newVersion.trim() || !newDate.trim()) {
       setStatusMessage("Versionと日付を入力してください。");
@@ -255,10 +319,10 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
           <button
             className="secondary-button"
             type="button"
-            onClick={() => candidateBoundaryDiagnostic.correlationId ? void loadCandidateBoundaryDiagnostic() : onArmCandidateBoundaryDiagnostic()}
-            disabled={candidateBoundaryStatus === "loading" || candidateBoundaryDiagnostic.status === "armed" && !candidateBoundaryDiagnostic.correlationId}
+            onClick={() => candidateBoundaryDiagnostic.status === "armed" ? undefined : candidateBoundaryDiagnostic.correlationId ? void loadCandidateBoundaryDiagnostic() : onArmCandidateBoundaryDiagnostic()}
+            disabled={candidateBoundaryStatus === "loading" || candidateBoundaryDiagnostic.status === "armed"}
           >
-            {candidateBoundaryStatus === "loading" ? "読み込み中…" : candidateBoundaryDiagnostic.correlationId ? "相関結果を取得" : candidateBoundaryDiagnostic.status === "armed" ? "診断フロー準備済み" : "診断フローを準備"}
+            {candidateBoundaryStatus === "loading" ? "読み込み中…" : candidateBoundaryDiagnostic.status === "armed" ? "診断フロー準備済み" : candidateBoundaryDiagnostic.correlationId ? "相関結果を取得" : "診断フローを準備"}
           </button>
         </div>
         <div className="advanced-foldout" data-testid="candidate-boundary-historical-recovery">
@@ -294,9 +358,37 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
             </div>
           ) : null}
         </div>
+        <div className="advanced-foldout" data-testid="candidate-boundary-durable-result">
+          <div className="section-heading-row">
+            <div>
+              <h5>Durable Diagnostic Result</h5>
+              <p className="helper-text">現在の診断相関だけを1回読み取ります。</p>
+            </div>
+            <button className="secondary-button" type="button" onClick={() => void loadDurableDiagnosticResult()} disabled={durableRecovery.status !== "idle"}>
+              {durableRecovery.status === "loading" ? "診断結果を読み込み中…" : "診断結果を取得"}
+            </button>
+          </div>
+          {durableRecovery.status === "invalid" ? <p className="status-note">DIAGNOSTIC_INVALID</p> : null}
+          {durableRecovery.status === "missing" ? <p className="status-note">{durableRecovery.classification}</p> : null}
+          {durableRecovery.status === "ambiguous" ? <p className="status-note">DUPLICATE_BOUNDARY_EVENT</p> : null}
+          {durableRecovery.status === "error" ? <p className="status-note">診断結果を読み込めませんでした。</p> : null}
+          {durableRecovery.status === "complete" ? (
+            <div className="helper-text">
+              <div>correlation_id: {durableRecovery.correlationId}</div>
+              <div>overall: {durableRecovery.classification}</div>
+              {[durableRecovery.analysis, durableRecovery.transport, durableRecovery.backend].map((event) => event ? (
+                <div key={event.event_name}>
+                  <div>{event.event_name}</div>
+                  <div>{event.semantic_candidates_state} / {event.candidate_count}</div>
+                  <div>{event.created_at}</div>
+                </div>
+              ) : null)}
+            </div>
+          ) : null}
+        </div>
         {candidateBoundaryDiagnostic.correlationId ? <p className="helper-text">correlation_id: {candidateBoundaryDiagnostic.correlationId}</p> : null}
         {candidateBoundaryDiagnostic.status !== "idle" ? <p className="helper-text">capture status: {candidateBoundaryDiagnostic.status}</p> : null}
-        {candidateBoundaryDiagnostic.status === "armed" && !candidateBoundaryDiagnostic.correlationId ? <p className="helper-text">次の提案生成1回だけ診断キャプチャを有効にします。</p> : null}
+        {candidateBoundaryDiagnostic.status === "armed" ? <p className="helper-text">次の提案生成1回だけ診断キャプチャを有効にします。</p> : null}
         {candidateBoundaryStatus === "success" && candidateBoundaryEvents.length === 0 ? (
           <p className="helper-text">No candidate-boundary events found in the authorized window.</p>
         ) : null}

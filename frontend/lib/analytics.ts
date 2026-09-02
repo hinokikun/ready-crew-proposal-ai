@@ -22,12 +22,27 @@ export type CandidateBoundaryCaptureResult = {
   ok: boolean;
 };
 
+export type CandidateBoundaryDiagnosticSession = {
+  version: 1;
+  correlationId: string;
+  phase: "armed" | "analysis_confirmed" | "transport_confirmed" | "completed" | "failed";
+  analysisStatus: "pending" | "confirmed" | "failed";
+  transportStatus: "pending" | "confirmed" | "failed";
+  backendStatus: "pending" | "confirmed" | "failed";
+  resultStatus: "pending" | "available" | "invalid";
+  createdAt: number;
+};
+
 const SESSION_STORAGE_KEY = "ai-sales-secretary-analytics-session-v1";
+export const CANDIDATE_BOUNDARY_DIAGNOSTIC_STORAGE_KEY = "ready-crew-candidate-boundary-diagnostic-v2";
+const CANDIDATE_BOUNDARY_CORRELATION_PATTERN = /^[a-f0-9]{32}$/i;
+const DIAGNOSTIC_SESSION_VERSION = 1;
+const DIAGNOSTIC_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const SAFE_METADATA_KEYS = new Set(["source", "mode", "output", "reason", "category", "semantic_candidates_state", "candidate_count", "candidate_boundary_correlation_id"]);
 const SEMANTIC_CANDIDATE_STATES = new Set(["OMITTED", "EMPTY", "NONEMPTY"]);
 const MAX_CANDIDATE_COUNT = 1000;
 const MAX_CORRELATION_ID_LENGTH = 64;
-const CORRELATION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
+const CORRELATION_ID_PATTERN = /^[a-f0-9]{32}$/i;
 
 function createSessionId() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -98,10 +113,50 @@ export function trackEvent(event: AnalyticsEvent) {
 }
 
 export function createCandidateBoundaryCorrelationId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID().replace(/-/g, "");
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID().replace(/-/g, "");
+  throw new Error("DIAGNOSTIC_CORRELATION_UNAVAILABLE");
+}
+
+export function isCandidateBoundaryCorrelationId(value: string): boolean {
+  return CANDIDATE_BOUNDARY_CORRELATION_PATTERN.test(value);
+}
+
+function isValidDiagnosticSession(value: unknown): value is CandidateBoundaryDiagnosticSession {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<CandidateBoundaryDiagnosticSession>;
+  return candidate.version === DIAGNOSTIC_SESSION_VERSION
+    && typeof candidate.correlationId === "string"
+    && CANDIDATE_BOUNDARY_CORRELATION_PATTERN.test(candidate.correlationId)
+    && ["armed", "analysis_confirmed", "transport_confirmed", "completed", "failed"].includes(candidate.phase ?? "")
+    && ["pending", "confirmed", "failed"].includes(candidate.analysisStatus ?? "")
+    && ["pending", "confirmed", "failed"].includes(candidate.transportStatus ?? "")
+    && ["pending", "confirmed", "failed"].includes(candidate.backendStatus ?? "")
+    && ["pending", "available", "invalid"].includes(candidate.resultStatus ?? "")
+    && typeof candidate.createdAt === "number"
+    && Number.isFinite(candidate.createdAt)
+    && Date.now() - candidate.createdAt <= DIAGNOSTIC_SESSION_MAX_AGE_MS;
+}
+
+export function readCandidateBoundaryDiagnosticSession(): CandidateBoundaryDiagnosticSession | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(CANDIDATE_BOUNDARY_DIAGNOSTIC_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (!isValidDiagnosticSession(parsed)) {
+      window.sessionStorage.removeItem(CANDIDATE_BOUNDARY_DIAGNOSTIC_STORAGE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    try { window.sessionStorage.removeItem(CANDIDATE_BOUNDARY_DIAGNOSTIC_STORAGE_KEY); } catch { /* fail closed */ }
+    return null;
   }
-  return `cb-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 14)}`;
+}
+
+export function writeCandidateBoundaryDiagnosticSession(session: CandidateBoundaryDiagnosticSession): void {
+  if (typeof window === "undefined" || !isValidDiagnosticSession(session)) return;
+  window.sessionStorage.setItem(CANDIDATE_BOUNDARY_DIAGNOSTIC_STORAGE_KEY, JSON.stringify(session));
 }
 
 function assertCandidateBoundaryCapture(capture: CandidateBoundaryCapture) {
@@ -131,7 +186,7 @@ export async function persistCandidateBoundaryCapture(
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetchJson<CandidateBoundaryCaptureResult>("/api/analytics/events", {
+    const result = await fetchJson<CandidateBoundaryCaptureResult>("/api/analytics/events", {
       method: "POST",
       signal: controller.signal,
       body: JSON.stringify({
@@ -148,6 +203,8 @@ export async function persistCandidateBoundaryCapture(
         }
       })
     });
+    if (result?.ok !== true) throw new Error("Candidate boundary capture was not acknowledged");
+    return result;
   } finally {
     window.clearTimeout(timeout);
   }

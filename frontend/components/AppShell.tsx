@@ -148,7 +148,15 @@ import { downloadProposalPowerPoint, downloadSummaryProposalPowerPoint } from "@
 import type { PresentationLayoutDecisionRequest, PresentationQualityDownloadReport, PresentationQualityRequestState } from "@/lib/pptx";
 import { canUseWorkFeatures, getRoleLabel, isAdminRole, isManagerCompatibleRole, type CreatableUserRole } from "@/lib/roles";
 import { appendUsageLog, buildScopedStorageKey, readUsageLogs, type UsageLogEntry } from "@/lib/storage";
-import { createCandidateBoundaryCorrelationId, persistCandidateBoundaryCapture, trackEvent } from "@/lib/analytics";
+import {
+  createCandidateBoundaryCorrelationId,
+  isCandidateBoundaryCorrelationId,
+  persistCandidateBoundaryCapture,
+  readCandidateBoundaryDiagnosticSession,
+  trackEvent,
+  writeCandidateBoundaryDiagnosticSession,
+  type CandidateBoundaryDiagnosticSession
+} from "@/lib/analytics";
 import { clearGuidedFlowDraft, getGuidedFlowDraftKey, readGuidedFlowDraft, saveGuidedFlowDraft } from "@/lib/guidedFlowDraft";
 import type { AnalysisResponse, PowerPointData, ProposalRequest, SemanticCandidate } from "@/types/proposal";
 
@@ -248,6 +256,53 @@ import {
 } from "@/components/app-shell/logic";
 export { wizardSteps, buildWizardMessage } from "@/components/app-shell/logic";
 
+type CandidateBoundaryDiagnosticUiState = {
+  status: "idle" | "armed" | "analysis_confirmed" | "transport_confirmed" | "completed" | "failed";
+  correlationId: string;
+  analysisStatus: CandidateBoundaryDiagnosticSession["analysisStatus"];
+  transportStatus: CandidateBoundaryDiagnosticSession["transportStatus"];
+  backendStatus: CandidateBoundaryDiagnosticSession["backendStatus"];
+  resultStatus: CandidateBoundaryDiagnosticSession["resultStatus"];
+  createdAt: number;
+};
+
+const emptyCandidateBoundaryDiagnostic: CandidateBoundaryDiagnosticUiState = {
+  status: "idle",
+  correlationId: "",
+  analysisStatus: "pending",
+  transportStatus: "pending",
+  backendStatus: "pending",
+  resultStatus: "pending",
+  createdAt: 0
+};
+
+function diagnosticUiStateFromSession(session: CandidateBoundaryDiagnosticSession | null): CandidateBoundaryDiagnosticUiState {
+  if (!session) return emptyCandidateBoundaryDiagnostic;
+  return {
+    status: session.phase,
+    correlationId: session.correlationId,
+    analysisStatus: session.analysisStatus,
+    transportStatus: session.transportStatus,
+    backendStatus: session.backendStatus,
+    resultStatus: session.resultStatus,
+    createdAt: session.createdAt
+  };
+}
+
+function persistDiagnosticUiState(state: CandidateBoundaryDiagnosticUiState) {
+  if (!state.correlationId || state.status === "idle") return;
+  writeCandidateBoundaryDiagnosticSession({
+    version: 1,
+    correlationId: state.correlationId,
+    phase: state.status,
+    analysisStatus: state.analysisStatus,
+    transportStatus: state.transportStatus,
+    backendStatus: state.backendStatus,
+    resultStatus: state.resultStatus,
+    createdAt: state.createdAt || Date.now()
+  });
+}
+
 export default function Home() {
   const [activeMode, setActiveMode] = useState<WorkMode>("sales");
   const [modeUsageCounts, setModeUsageCounts] = useState<GeneratedCounts>(initialModeCounts);
@@ -303,7 +358,7 @@ export default function Home() {
   const [reportResult, setReportResult] = useState<ReportAiResult | null>(null);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [semanticCandidatesForTransport, setSemanticCandidatesForTransport] = useState<SemanticCandidate[]>([]);
-  const [candidateBoundaryDiagnostic, setCandidateBoundaryDiagnostic] = useState<{ status: "idle" | "armed" | "analysis_confirmed" | "transport_confirmed" | "failed"; correlationId: string }>({ status: "idle", correlationId: "" });
+  const [candidateBoundaryDiagnostic, setCandidateBoundaryDiagnostic] = useState<CandidateBoundaryDiagnosticUiState>(() => diagnosticUiStateFromSession(readCandidateBoundaryDiagnosticSession()));
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -384,7 +439,15 @@ export default function Home() {
     organizationId: workspaceContext?.current?.organization_id ?? "",
     workspaceId: workspaceContext?.current?.workspace_id ?? ""
   }), [currentUser?.id, workspaceContext?.current?.organization_id, workspaceContext?.current?.workspace_id]);
-  const candidateBoundaryDiagnosticRef = useRef<{ armed: boolean; active: boolean; correlationId: string }>({ armed: false, active: false, correlationId: "" });
+  const candidateBoundaryDiagnosticRef = useRef<{ armed: boolean; active: boolean; correlationId: string }>({
+    armed: candidateBoundaryDiagnostic.status === "armed",
+    active: candidateBoundaryDiagnostic.status !== "idle" && candidateBoundaryDiagnostic.status !== "failed" && candidateBoundaryDiagnostic.status !== "completed",
+    correlationId: candidateBoundaryDiagnostic.correlationId
+  });
+
+  useEffect(() => {
+    persistDiagnosticUiState(candidateBoundaryDiagnostic);
+  }, [candidateBoundaryDiagnostic]);
   const guidedDraftScopeKey = getGuidedFlowDraftKey(guidedDraftScope);
 
   const refreshGuidedDraftAvailability = useCallback(() => {
@@ -1835,8 +1898,18 @@ export default function Home() {
 
   function armCandidateBoundaryDiagnostic() {
     if (!isManagerCompatibleRole(currentUser?.role)) return;
-    candidateBoundaryDiagnosticRef.current = { armed: true, active: false, correlationId: "" };
-    setCandidateBoundaryDiagnostic({ status: "armed", correlationId: "" });
+    const correlationId = createCandidateBoundaryCorrelationId();
+    const next = {
+      status: "armed" as const,
+      correlationId,
+      analysisStatus: "pending" as const,
+      transportStatus: "pending" as const,
+      backendStatus: "pending" as const,
+      resultStatus: "pending" as const,
+      createdAt: Date.now()
+    };
+    candidateBoundaryDiagnosticRef.current = { armed: true, active: false, correlationId };
+    setCandidateBoundaryDiagnostic(next);
   }
 
   async function generateProposal(sourceForm = form) {
@@ -1856,11 +1929,11 @@ export default function Home() {
     setError("");
     setCopyState("idle");
     const diagnosticCorrelationId = candidateBoundaryDiagnosticRef.current.armed
-      ? createCandidateBoundaryCorrelationId()
+      ? candidateBoundaryDiagnosticRef.current.correlationId
       : "";
     if (diagnosticCorrelationId) {
       candidateBoundaryDiagnosticRef.current = { armed: false, active: true, correlationId: diagnosticCorrelationId };
-      setCandidateBoundaryDiagnostic({ status: "armed", correlationId: diagnosticCorrelationId });
+      setCandidateBoundaryDiagnostic((current) => ({ ...current, status: "armed", correlationId: diagnosticCorrelationId, analysisStatus: "pending", backendStatus: "pending", resultStatus: "pending" }));
     }
     const analysisStartedAt = performance.now();
     trackEvent({ name: "ai_analysis_start", feature: "proposal", status: "start", meta: { mode: inputMode } });
@@ -1881,10 +1954,10 @@ export default function Home() {
             state: analysisCandidateState,
             count: analysisCandidates?.length ?? 0
           });
-          setCandidateBoundaryDiagnostic({ status: "analysis_confirmed", correlationId: diagnosticCorrelationId });
+           setCandidateBoundaryDiagnostic((current) => ({ ...current, status: "analysis_confirmed", analysisStatus: "confirmed" }));
         } catch (captureError) {
           candidateBoundaryDiagnosticRef.current.active = false;
-          setCandidateBoundaryDiagnostic({ status: "failed", correlationId: diagnosticCorrelationId });
+          setCandidateBoundaryDiagnostic((current) => ({ ...current, status: "failed", analysisStatus: "failed", resultStatus: "invalid" }));
           throw new Error("ANALYSIS_CAPTURE_FAILED", { cause: captureError });
         }
       }
@@ -1920,7 +1993,7 @@ export default function Home() {
     } catch (caught) {
       if (diagnosticCorrelationId) {
         candidateBoundaryDiagnosticRef.current.active = false;
-        setCandidateBoundaryDiagnostic((current) => current.status === "failed" ? current : { status: "failed", correlationId: diagnosticCorrelationId });
+        setCandidateBoundaryDiagnostic((current) => current.status === "failed" ? current : { ...current, status: "failed", resultStatus: "invalid" });
       }
       const friendly = toFriendlyError(caught);
       trackEvent({
@@ -1989,6 +2062,9 @@ export default function Home() {
     const downloadFeatureName = summary ? "summary_ppt" : "detail_ppt";
 
     try {
+      if (!summary && candidateBoundaryDiagnosticRef.current.active && !isCandidateBoundaryCorrelationId(candidateBoundaryDiagnosticRef.current.correlationId)) {
+        throw new Error("DIAGNOSTIC_CORRELATION_MISSING");
+      }
       const downloader = summary ? downloadSummaryProposalPowerPoint : downloadProposalPowerPoint;
       const downloadResult = await downloader(
         options.powerpointData ?? targetResult.powerpoint_generation_data,
@@ -2018,15 +2094,16 @@ export default function Home() {
             const correlationId = candidateBoundaryDiagnosticRef.current.correlationId;
             if (status === "TRANSPORT_CAPTURE_FAILED") {
               candidateBoundaryDiagnosticRef.current.active = false;
-              setCandidateBoundaryDiagnostic({ status: "failed", correlationId });
+              setCandidateBoundaryDiagnostic((current) => ({ ...current, status: "failed", transportStatus: "failed", resultStatus: "invalid" }));
             } else {
-              setCandidateBoundaryDiagnostic({ status: "transport_confirmed", correlationId });
+              setCandidateBoundaryDiagnostic((current) => ({ ...current, status: "transport_confirmed", transportStatus: "confirmed" }));
             }
           }
         }
       );
       if (!summary && candidateBoundaryDiagnosticRef.current.active) {
         candidateBoundaryDiagnosticRef.current.active = false;
+        setCandidateBoundaryDiagnostic((current) => ({ ...current, status: "completed", backendStatus: "confirmed", resultStatus: "available" }));
       }
       setLastPresentationQualityReport(downloadResult.qualityReport);
       trackEvent({

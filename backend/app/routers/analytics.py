@@ -53,25 +53,33 @@ def _parse_utc_bound(value: str, name: str) -> datetime:
 
 @router.get("/candidate-boundary-events")
 async def get_candidate_boundary_events(
-    start: str = Query(..., min_length=1),
-    end: str = Query(..., min_length=1),
+    start: str | None = Query(None, min_length=1),
+    end: str | None = Query(None, min_length=1),
     user: dict = Depends(require_roles("admin", "manager")),
     scope: str = Query("workspace", pattern="^(workspace|organization)$"),
     candidate_boundary_correlation_id: str | None = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_-]+$"),
 ) -> dict:
-    start_dt = _parse_utc_bound(start, "start")
-    end_dt = _parse_utc_bound(end, "end")
-    if start_dt >= end_dt:
-        raise HTTPException(status_code=400, detail="start must be before end.")
-    if end_dt - start_dt > timedelta(hours=24):
-        raise HTTPException(status_code=400, detail="time window must not exceed 24 hours.")
+    if (start is None) != (end is None):
+        raise HTTPException(status_code=400, detail="start and end must be provided together.")
+    if candidate_boundary_correlation_id is None and (start is None or end is None):
+        raise HTTPException(status_code=400, detail="start and end are required without a correlation.")
+    start_at = end_at = None
+    if start is not None and end is not None:
+        start_dt = _parse_utc_bound(start, "start")
+        end_dt = _parse_utc_bound(end, "end")
+        if start_dt >= end_dt:
+            raise HTTPException(status_code=400, detail="start must be before end.")
+        if end_dt - start_dt > timedelta(hours=24):
+            raise HTTPException(status_code=400, detail="time window must not exceed 24 hours.")
+        start_at = start_dt.strftime("%Y-%m-%d %H:%M:%S")
+        end_at = end_dt.strftime("%Y-%m-%d %H:%M:%S")
     with get_db() as db:
         resolved_scope = resolve_scope(db, user, scope)
         return {
             "events": list_candidate_boundary_events(
                 db,
-                start_dt.strftime("%Y-%m-%d %H:%M:%S"),
-                end_dt.strftime("%Y-%m-%d %H:%M:%S"),
+                start_at,
+                end_at,
                 resolved_scope,
                 candidate_boundary_correlation_id,
             )

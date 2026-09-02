@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
@@ -100,8 +101,8 @@ def test_candidate_boundary_events_are_bounded_scoped_and_fail_closed(client: Te
             ("presentation_candidate_boundary_transport", '{"semantic_candidates_state":"NONEMPTY","candidate_count":true}'),
         ):
             db.execute(
-                "INSERT INTO analytics_events (session_key, event_name, metadata, organization_id, workspace_id) VALUES (?, ?, ?, ?, ?)",
-                ("candidate-boundary-analytics", event_name, metadata, 1, 1),
+                "INSERT INTO analytics_events (session_key, event_name, metadata, candidate_boundary_correlation_id, organization_id, workspace_id) VALUES (?, ?, ?, ?, ?, ?)",
+                ("candidate-boundary-analytics", event_name, metadata, None, 1, 1),
             )
         created_at = db.execute("SELECT MIN(created_at) AS created_at FROM analytics_events WHERE session_key = ?", ("candidate-boundary-analytics",)).fetchone()["created_at"]
     event_time = datetime.fromisoformat(str(created_at).replace(" ", "T")).replace(tzinfo=timezone.utc)
@@ -132,9 +133,10 @@ def _candidate_window_and_seed(client: TestClient, rows: list[tuple[str, str, in
 
     with current_get_db() as db:
         for event_name, metadata, organization_id, workspace_id in rows:
+            correlation_id = json.loads(metadata).get("candidate_boundary_correlation_id")
             db.execute(
-                "INSERT INTO analytics_events (session_key, event_name, metadata, organization_id, workspace_id) VALUES (?, ?, ?, ?, ?)",
-                ("candidate-boundary-seed", event_name, metadata, organization_id, workspace_id),
+                "INSERT INTO analytics_events (session_key, event_name, metadata, candidate_boundary_correlation_id, organization_id, workspace_id) VALUES (?, ?, ?, ?, ?, ?)",
+                ("candidate-boundary-seed", event_name, metadata, correlation_id, organization_id, workspace_id),
             )
         created_at = db.execute("SELECT MIN(created_at) AS created_at FROM analytics_events WHERE session_key = ?", ("candidate-boundary-seed",)).fetchone()["created_at"]
     event_time = datetime.fromisoformat(str(created_at).replace(" ", "T")).replace(tzinfo=timezone.utc)

@@ -72,6 +72,8 @@ def _ensure_context_indexes(db: Any) -> None:
             ON quality_gates(organization_id, workspace_id, project_id)
             """
         )
+    if _table_exists(db, "analytics_events") and "candidate_boundary_correlation_id" in _existing_columns(db, "analytics_events"):
+        db.execute("CREATE INDEX IF NOT EXISTS idx_analytics_events_candidate_boundary_correlation ON analytics_events(candidate_boundary_correlation_id)")
 
 
 def add_missing_columns() -> None:
@@ -239,6 +241,8 @@ def add_missing_columns() -> None:
         for table_name in _CONTEXT_TABLES:
             _ensure_column(db, table_name, "organization_id", "INTEGER NOT NULL DEFAULT 1")
             _ensure_column(db, table_name, "workspace_id", "INTEGER NOT NULL DEFAULT 1")
+            if table_name == "analytics_events":
+                _ensure_column(db, table_name, "candidate_boundary_correlation_id", "TEXT")
         _ensure_context_indexes(db)
         if _table_exists(db, "presentation_revisions"):
             db.execute(

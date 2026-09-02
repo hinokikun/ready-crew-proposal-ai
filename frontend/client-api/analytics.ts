@@ -26,6 +26,10 @@ export function getHistoricalCandidateBoundaryEvents(): Promise<{ events: Candid
   return getCandidateBoundaryEvents(HISTORICAL_CANDIDATE_BOUNDARY_START, HISTORICAL_CANDIDATE_BOUNDARY_END);
 }
 
+export function getCandidateBoundaryDiagnosticResult(correlationId: string): Promise<{ events: CandidateBoundaryEvent[] }> {
+  return fetchJson(`/api/analytics/candidate-boundary-events?candidate_boundary_correlation_id=${encodeURIComponent(correlationId)}`);
+}
+
 export function saveProductAnalyticsEvent(payload: ProductAnalyticsEventPayload): Promise<{ ok: boolean }> {
   return fetchJson("/api/analytics/events", {
     method: "POST",

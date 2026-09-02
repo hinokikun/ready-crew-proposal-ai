@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from app.config import settings
 from app.auth import ensure_not_maintenance_mode, require_roles
+from app.analytics.services import record_event
 from app.db import get_db, get_db_health, init_db, seed_default_organization, seed_default_templates
 from app.health import build_health_payload as build_application_health_payload
 from app.knowledge.services import add_knowledge_entry, build_best_practices, search_similar_knowledge
@@ -361,6 +362,32 @@ async def download_pptx(
     ensure_not_maintenance_mode()
     started = time.perf_counter()
     try:
+        if not payload.summary and payload.candidate_boundary_correlation_id:
+            raw_candidates = payload.semantic_candidates
+            candidate_items = raw_candidates.get("candidates") if isinstance(raw_candidates, dict) else None
+            candidate_count = len(candidate_items) if isinstance(candidate_items, list) else 0
+            candidate_state = "OMITTED" if raw_candidates is None else ("NONEMPTY" if candidate_count else "EMPTY")
+            try:
+                with get_db() as db:
+                    record_event(
+                        db,
+                        user_id=int(user["id"]),
+                        session_key=f"candidate-boundary:{payload.candidate_boundary_correlation_id}",
+                        event_name="presentation_candidate_boundary_backend",
+                        feature_name="proposal",
+                        status="success",
+                        metadata={
+                            "candidate_boundary_correlation_id": payload.candidate_boundary_correlation_id,
+                            "semantic_candidates_state": candidate_state,
+                            "candidate_count": candidate_count,
+                        },
+                    )
+            except Exception as exc:
+                logger.warning("diagnostic backend boundary capture failed: %s", exc.__class__.__name__)
+                raise HTTPException(
+                    status_code=503,
+                    detail={"error_code": "DIAGNOSTIC_BACKEND_CAPTURE_FAILED", "message": "診断境界の保存に失敗しました。"},
+                ) from exc
         engine_result = build_pptx_bytes_for_engine(
             payload,
             shadow_master=settings.presentation_design_ai_master_shadow_enabled,

@@ -38,6 +38,7 @@ MAX_CANDIDATE_COUNT = 1000
 CANDIDATE_BOUNDARY_EVENT_NAMES = (
     "presentation_candidate_boundary_analysis",
     "presentation_candidate_boundary_transport",
+    "presentation_candidate_boundary_backend",
 )
 MAX_CANDIDATE_BOUNDARY_RESULTS = 20
 MAX_CANDIDATE_BOUNDARY_SCAN = 200
@@ -123,24 +124,33 @@ def _validated_candidate_boundary_metadata(metadata: Any) -> dict[str, Any] | No
 
 def list_candidate_boundary_events(
     db: Connection,
-    start_at: str,
-    end_at: str,
+    start_at: str | None,
+    end_at: str | None,
     scope: ScopeContext | None = None,
     correlation_id: str | None = None,
 ) -> list[dict[str, Any]]:
     scope_sql, scope_params = _scope_clause(scope, "e")
+    correlation_scoped = bool(correlation_id)
+    clauses = [scope_sql, "e.event_name IN (?, ?, ?)"]
+    params: tuple[Any, ...] = (*scope_params, *CANDIDATE_BOUNDARY_EVENT_NAMES)
+    if start_at is not None and end_at is not None:
+        clauses.extend(("e.created_at >= ?", "e.created_at < ?"))
+        params = (*params, start_at, end_at)
+    if correlation_scoped:
+        clauses.append("e.candidate_boundary_correlation_id = ?")
+        params = (*params, correlation_id)
+    limit_clause = "LIMIT 4" if correlation_scoped else "LIMIT ?"
+    if not correlation_scoped:
+        params = (*params, MAX_CANDIDATE_BOUNDARY_SCAN)
     rows = db.execute(
         f"""
         SELECT e.event_name, e.created_at, e.metadata
         FROM analytics_events e
-        WHERE {scope_sql}
-          AND e.event_name IN (?, ?)
-          AND e.created_at >= ?
-          AND e.created_at < ?
+        WHERE {' AND '.join(clauses)}
         ORDER BY e.created_at ASC, e.id ASC
-        LIMIT ?
+        {limit_clause}
         """,
-        (*scope_params, *CANDIDATE_BOUNDARY_EVENT_NAMES, start_at, end_at, MAX_CANDIDATE_BOUNDARY_SCAN),
+        params,
     ).fetchall()
     events: list[dict[str, Any]] = []
     for row in rows:
@@ -157,7 +167,7 @@ def list_candidate_boundary_events(
         if correlation_id and metadata.get("candidate_boundary_correlation_id") != correlation_id:
             events.pop()
             continue
-        if len(events) >= MAX_CANDIDATE_BOUNDARY_RESULTS:
+        if not correlation_scoped and len(events) >= MAX_CANDIDATE_BOUNDARY_RESULTS:
             break
     return events
 
@@ -187,12 +197,17 @@ def record_analytics_event(
         """,
         (session_key, user_id, organization_id, workspace_id),
     )
+    candidate_boundary_correlation_id = None
+    if event_name in CANDIDATE_BOUNDARY_EVENT_NAMES and isinstance(metadata, dict):
+        candidate_boundary_correlation_id = metadata.get("candidate_boundary_correlation_id")
+        if not isinstance(candidate_boundary_correlation_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", candidate_boundary_correlation_id):
+            candidate_boundary_correlation_id = None
     db.execute(
         """
-        INSERT INTO analytics_events (session_key, user_id, event_name, feature_name, status, duration_ms, metadata, organization_id, workspace_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO analytics_events (session_key, user_id, event_name, feature_name, status, duration_ms, metadata, candidate_boundary_correlation_id, organization_id, workspace_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (session_key, user_id, event_name, feature_name, status, max(duration_ms, 0), _safe_metadata(metadata, candidate_boundary=event_name in CANDIDATE_BOUNDARY_EVENT_NAMES), organization_id, workspace_id),
+        (session_key, user_id, event_name, feature_name, status, max(duration_ms, 0), _safe_metadata(metadata, candidate_boundary=event_name in CANDIDATE_BOUNDARY_EVENT_NAMES), candidate_boundary_correlation_id, organization_id, workspace_id),
     )
 
     generation_increment = 1 if event_name in GENERATION_EVENTS and status == "success" else 0

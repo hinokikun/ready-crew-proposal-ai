@@ -1690,6 +1690,9 @@ async function mockApi(page: Page, options: MockOptions = {}) {
     if (path.endsWith("/api/admin/proposal-generation-history")) {
       return json(route, proposalGenerationHistoryJson());
     }
+    if (path.endsWith("/api/analytics/events")) {
+      return json(route, { ok: true });
+    }
     if (path.endsWith("/api/analyze") && options.analyzeError === "maintenance") {
       return json(
         route,
