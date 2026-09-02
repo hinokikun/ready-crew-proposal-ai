@@ -1009,6 +1009,136 @@ test("memberにはCandidate Boundary Diagnosticを表示しない", async ({ pag
   await expect(page.getByTestId("candidate-boundary-diagnostic")).toHaveCount(0);
 });
 
+test("adminの履歴復元は固定窓を一度だけ読み、同一相関のanalysisとtransportだけを表示する", async ({ page }) => {
+  let recoveryRequests = 0;
+  let recoveryUrl = "";
+  await page.route("**/api/analytics/candidate-boundary-events**", async (route) => {
+    recoveryRequests += 1;
+    recoveryUrl = route.request().url();
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        events: [
+          { event_name: "presentation_candidate_boundary_analysis", created_at: "2026-09-02 13:40:00", candidate_boundary_correlation_id: "history-001", semantic_candidates_state: "EMPTY", candidate_count: 0 },
+          { event_name: "presentation_candidate_boundary_transport", created_at: "2026-09-02 13:45:00", candidate_boundary_correlation_id: "history-001", semantic_candidates_state: "EMPTY", candidate_count: 0 }
+        ]
+      })
+    });
+  });
+  await login(page, adminEmail);
+  await openAdminPilotDashboard(page);
+  await page.locator("#admin-product-analytics-panel").evaluate((element) => {
+    (element as HTMLDetailsElement).open = true;
+  });
+  const recovery = page.getByTestId("candidate-boundary-historical-recovery");
+  await expect(recovery.getByRole("button", { name: "履歴から今回の診断を復元" })).toBeVisible();
+  expect(recoveryRequests).toBe(0);
+  await recovery.getByRole("button", { name: "履歴から今回の診断を復元" }).click();
+  await expect(recovery.getByText("HISTORICAL_CORRELATION_UNIQUELY_RECOVERED")).toBeVisible();
+  expect(recoveryRequests).toBe(1);
+  const url = new URL(recoveryUrl);
+  expect(url.searchParams.get("start")).toBe("2026-09-02T13:38:00Z");
+  expect(url.searchParams.get("end")).toBe("2026-09-02T13:50:00Z");
+  expect(url.searchParams.has("candidate_boundary_correlation_id")).toBe(false);
+  await expect(recovery).toContainText("history-001");
+  await expect(recovery).toContainText("presentation_candidate_boundary_analysis");
+  await expect(recovery).toContainText("presentation_candidate_boundary_transport");
+  await expect(recovery).not.toContainText(/metadata|candidate_id|proposal|customer|organization|workspace|token|cookie/i);
+  await expect(recovery.getByRole("button", { name: "履歴から今回の診断を復元" })).toBeDisabled();
+  expect(recoveryRequests).toBe(1);
+});
+
+test("履歴復元は完全ペアがない場合にNOT_FOUND、多数の完全ペアはAMBIGUOUSとして扱う", async ({ page }) => {
+  let responseMode: "none" | "ambiguous" = "none";
+  await page.route("**/api/analytics/candidate-boundary-events**", async (route) => {
+    const rows = responseMode === "none"
+      ? [{ event_name: "presentation_candidate_boundary_analysis", created_at: "2026-09-02 13:40:00", candidate_boundary_correlation_id: "analysis-only", semantic_candidates_state: "NONEMPTY", candidate_count: 2 }]
+      : [
+          { event_name: "presentation_candidate_boundary_analysis", created_at: "2026-09-02 13:40:00", candidate_boundary_correlation_id: "history-001", semantic_candidates_state: "EMPTY", candidate_count: 0 },
+          { event_name: "presentation_candidate_boundary_transport", created_at: "2026-09-02 13:41:00", candidate_boundary_correlation_id: "history-001", semantic_candidates_state: "EMPTY", candidate_count: 0 },
+          { event_name: "presentation_candidate_boundary_analysis", created_at: "2026-09-02 13:42:00", candidate_boundary_correlation_id: "history-002", semantic_candidates_state: "NONEMPTY", candidate_count: 1 },
+          { event_name: "presentation_candidate_boundary_transport", created_at: "2026-09-02 13:43:00", candidate_boundary_correlation_id: "history-002", semantic_candidates_state: "NONEMPTY", candidate_count: 1 }
+        ];
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ events: rows }) });
+  });
+  await login(page, adminEmail);
+  await openAdminPilotDashboard(page);
+  await page.locator("#admin-product-analytics-panel").evaluate((element) => { (element as HTMLDetailsElement).open = true; });
+  const recovery = page.getByTestId("candidate-boundary-historical-recovery");
+  await recovery.getByRole("button", { name: "履歴から今回の診断を復元" }).click();
+  await expect(recovery).toContainText("HISTORICAL_CORRELATION_NOT_FOUND");
+
+  await page.reload();
+  await login(page, adminEmail);
+  await openAdminPilotDashboard(page);
+  await page.locator("#admin-product-analytics-panel").evaluate((element) => { (element as HTMLDetailsElement).open = true; });
+  responseMode = "ambiguous";
+  const ambiguousRecovery = page.getByTestId("candidate-boundary-historical-recovery");
+  await ambiguousRecovery.getByRole("button", { name: "履歴から今回の診断を復元" }).click();
+  await expect(ambiguousRecovery).toContainText("HISTORICAL_CORRELATION_AMBIGUOUS");
+});
+
+test("履歴復元は同一相関IDの重複analysis/transportをAMBIGUOUSとして拒否する", async ({ page }) => {
+  await page.route("**/api/analytics/candidate-boundary-events**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        events: [
+          { event_name: "presentation_candidate_boundary_analysis", created_at: "2026-09-02 13:40:00", candidate_boundary_correlation_id: "duplicate-001", semantic_candidates_state: "EMPTY", candidate_count: 0 },
+          { event_name: "presentation_candidate_boundary_analysis", created_at: "2026-09-02 13:41:00", candidate_boundary_correlation_id: "duplicate-001", semantic_candidates_state: "NONEMPTY", candidate_count: 1 },
+          { event_name: "presentation_candidate_boundary_transport", created_at: "2026-09-02 13:42:00", candidate_boundary_correlation_id: "duplicate-001", semantic_candidates_state: "NONEMPTY", candidate_count: 1 },
+          { event_name: "presentation_candidate_boundary_transport", created_at: "2026-09-02 13:43:00", candidate_boundary_correlation_id: "duplicate-001", semantic_candidates_state: "EMPTY", candidate_count: 0 }
+        ]
+      })
+    });
+  });
+  await login(page, adminEmail);
+  await openAdminPilotDashboard(page);
+  await page.locator("#admin-product-analytics-panel").evaluate((element) => { (element as HTMLDetailsElement).open = true; });
+  const recovery = page.getByTestId("candidate-boundary-historical-recovery");
+  await recovery.getByRole("button", { name: "履歴から今回の診断を復元" }).click();
+  await expect(recovery).toContainText("HISTORICAL_CORRELATION_AMBIGUOUS");
+});
+
+test("履歴復元はanalysis/transportの同種重複と競合相関をすべてAMBIGUOUSとして拒否する", async ({ page }) => {
+  test.setTimeout(120_000);
+  let scenario: "analysis-duplicate" | "transport-duplicate" | "valid-and-duplicate" = "analysis-duplicate";
+  await page.route("**/api/analytics/candidate-boundary-events**", async (route) => {
+    const rows = scenario === "analysis-duplicate"
+      ? [
+          { event_name: "presentation_candidate_boundary_analysis", created_at: "2026-09-02 13:40:00", candidate_boundary_correlation_id: "duplicate-analysis", semantic_candidates_state: "EMPTY", candidate_count: 0 },
+          { event_name: "presentation_candidate_boundary_analysis", created_at: "2026-09-02 13:41:00", candidate_boundary_correlation_id: "duplicate-analysis", semantic_candidates_state: "NONEMPTY", candidate_count: 1 },
+          { event_name: "presentation_candidate_boundary_transport", created_at: "2026-09-02 13:42:00", candidate_boundary_correlation_id: "duplicate-analysis", semantic_candidates_state: "NONEMPTY", candidate_count: 1 }
+        ]
+      : scenario === "transport-duplicate"
+        ? [
+            { event_name: "presentation_candidate_boundary_analysis", created_at: "2026-09-02 13:40:00", candidate_boundary_correlation_id: "duplicate-transport", semantic_candidates_state: "NONEMPTY", candidate_count: 1 },
+            { event_name: "presentation_candidate_boundary_transport", created_at: "2026-09-02 13:41:00", candidate_boundary_correlation_id: "duplicate-transport", semantic_candidates_state: "NONEMPTY", candidate_count: 1 },
+            { event_name: "presentation_candidate_boundary_transport", created_at: "2026-09-02 13:42:00", candidate_boundary_correlation_id: "duplicate-transport", semantic_candidates_state: "EMPTY", candidate_count: 0 }
+          ]
+        : [
+            { event_name: "presentation_candidate_boundary_analysis", created_at: "2026-09-02 13:40:00", candidate_boundary_correlation_id: "valid-001", semantic_candidates_state: "EMPTY", candidate_count: 0 },
+            { event_name: "presentation_candidate_boundary_transport", created_at: "2026-09-02 13:41:00", candidate_boundary_correlation_id: "valid-001", semantic_candidates_state: "EMPTY", candidate_count: 0 },
+            { event_name: "presentation_candidate_boundary_analysis", created_at: "2026-09-02 13:42:00", candidate_boundary_correlation_id: "duplicate-002", semantic_candidates_state: "NONEMPTY", candidate_count: 1 },
+            { event_name: "presentation_candidate_boundary_analysis", created_at: "2026-09-02 13:43:00", candidate_boundary_correlation_id: "duplicate-002", semantic_candidates_state: "NONEMPTY", candidate_count: 1 },
+            { event_name: "presentation_candidate_boundary_transport", created_at: "2026-09-02 13:44:00", candidate_boundary_correlation_id: "duplicate-002", semantic_candidates_state: "NONEMPTY", candidate_count: 1 }
+          ];
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ events: rows }) });
+  });
+  for (const nextScenario of ["analysis-duplicate", "transport-duplicate", "valid-and-duplicate"] as const) {
+    scenario = nextScenario;
+    await page.goto("/");
+    await login(page, adminEmail);
+    await openAdminPilotDashboard(page);
+    await page.locator("#admin-product-analytics-panel").evaluate((element) => { (element as HTMLDetailsElement).open = true; });
+    const recovery = page.getByTestId("candidate-boundary-historical-recovery");
+    await recovery.getByRole("button", { name: "履歴から今回の診断を復元" }).click();
+    await expect(recovery).toContainText("HISTORICAL_CORRELATION_AMBIGUOUS");
+  }
+});
+
 test("存在しないページでアプリ全体が落ちない", async ({ page }) => {
   await page.goto("/not-found-for-e2e");
   await expect(page.locator("body")).toBeVisible();

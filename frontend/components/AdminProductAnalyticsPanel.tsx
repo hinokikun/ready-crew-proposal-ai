@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useMemo, useState } from "react";
-import { getCandidateBoundaryEvents, type CandidateBoundaryEvent } from "@/client-api/analytics";
+import { getCandidateBoundaryEvents, getHistoricalCandidateBoundaryEvents, type CandidateBoundaryEvent } from "@/client-api/analytics";
 import {
   createReleaseNote,
   getProductAnalyticsDashboard,
@@ -43,6 +43,32 @@ export type CandidateBoundaryDiagnosticState = {
   status: "idle" | "armed" | "analysis_confirmed" | "transport_confirmed" | "failed";
   correlationId: string;
 };
+
+type HistoricalRecoveryState = {
+  status: "idle" | "loading" | "not_found" | "uniquely_recovered" | "ambiguous" | "error";
+  correlationId: string;
+  analysis: CandidateBoundaryEvent | null;
+  transport: CandidateBoundaryEvent | null;
+};
+
+function reconcileHistoricalCandidateBoundaryEvents(events: CandidateBoundaryEvent[]): HistoricalRecoveryState {
+  const byCorrelation = new Map<string, { analysis: CandidateBoundaryEvent[]; transport: CandidateBoundaryEvent[] }>();
+  for (const event of events) {
+    const correlationId = event.candidate_boundary_correlation_id;
+    if (!correlationId || (event.event_name !== "presentation_candidate_boundary_analysis" && event.event_name !== "presentation_candidate_boundary_transport")) continue;
+    const current = byCorrelation.get(correlationId) ?? { analysis: [], transport: [] };
+    if (event.event_name === "presentation_candidate_boundary_analysis") current.analysis.push(event);
+    if (event.event_name === "presentation_candidate_boundary_transport") current.transport.push(event);
+    byCorrelation.set(correlationId, current);
+  }
+  const duplicateCorrelation = [...byCorrelation.values()].some((pair) => pair.analysis.length > 1 || pair.transport.length > 1);
+  if (duplicateCorrelation) return { status: "ambiguous", correlationId: "", analysis: null, transport: null };
+  const completePairs = [...byCorrelation.entries()].filter(([, pair]) => pair.analysis.length === 1 && pair.transport.length === 1);
+  if (completePairs.length === 0) return { status: "not_found", correlationId: "", analysis: null, transport: null };
+  if (completePairs.length > 1) return { status: "ambiguous", correlationId: "", analysis: null, transport: null };
+  const [correlationId, pair] = completePairs[0];
+  return { status: "uniquely_recovered", correlationId, analysis: pair.analysis[0], transport: pair.transport[0] };
+}
 
 function formatDate(value: string | null | undefined) {
   if (!value) {
@@ -100,6 +126,12 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
   const [newImprovements, setNewImprovements] = useState("");
   const [candidateBoundaryEvents, setCandidateBoundaryEvents] = useState<CandidateBoundaryEvent[]>([]);
   const [candidateBoundaryStatus, setCandidateBoundaryStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [historicalRecovery, setHistoricalRecovery] = useState<HistoricalRecoveryState>({
+    status: "idle",
+    correlationId: "",
+    analysis: null,
+    transport: null
+  });
 
   const markdown = useMemo(() => buildAnalyticsMarkdown(dashboard, releaseNotes), [dashboard, releaseNotes]);
 
@@ -151,6 +183,17 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
       setCandidateBoundaryStatus("success");
     } catch {
       setCandidateBoundaryStatus("error");
+    }
+  }
+
+  async function loadHistoricalRecovery() {
+    if (historicalRecovery.status !== "idle") return;
+    setHistoricalRecovery({ status: "loading", correlationId: "", analysis: null, transport: null });
+    try {
+      const response = await getHistoricalCandidateBoundaryEvents();
+      setHistoricalRecovery(reconcileHistoricalCandidateBoundaryEvents(response.events));
+    } catch {
+      setHistoricalRecovery({ status: "error", correlationId: "", analysis: null, transport: null });
     }
   }
 
@@ -217,6 +260,39 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
           >
             {candidateBoundaryStatus === "loading" ? "読み込み中…" : candidateBoundaryDiagnostic.correlationId ? "相関結果を取得" : candidateBoundaryDiagnostic.status === "armed" ? "診断フロー準備済み" : "診断フローを準備"}
           </button>
+        </div>
+        <div className="advanced-foldout" data-testid="candidate-boundary-historical-recovery">
+          <div className="section-heading-row">
+            <div>
+              <h5>Historical Run Recovery</h5>
+              <p className="helper-text">承認済み固定期間を1回だけ読み取り、完了した診断実行を照合します。</p>
+            </div>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => void loadHistoricalRecovery()}
+              disabled={historicalRecovery.status !== "idle"}
+            >
+              {historicalRecovery.status === "loading" ? "履歴を読み込み中…" : "履歴から今回の診断を復元"}
+            </button>
+          </div>
+          {historicalRecovery.status === "not_found" ? <p className="status-note">HISTORICAL_CORRELATION_NOT_FOUND</p> : null}
+          {historicalRecovery.status === "ambiguous" ? <p className="status-note">HISTORICAL_CORRELATION_AMBIGUOUS</p> : null}
+          {historicalRecovery.status === "error" ? <p className="status-note">履歴を読み込めませんでした。</p> : null}
+          {historicalRecovery.status === "uniquely_recovered" ? (
+            <div>
+              <p className="helper-text">HISTORICAL_CORRELATION_UNIQUELY_RECOVERED</p>
+              <p className="helper-text">candidate_boundary_correlation_id: {historicalRecovery.correlationId}</p>
+              {[historicalRecovery.analysis, historicalRecovery.transport].map((event) => event ? (
+                <div key={event.event_name} className="helper-text">
+                  <div>{event.event_name}</div>
+                  <div>{event.created_at}</div>
+                  <div>{event.semantic_candidates_state}</div>
+                  <div>{event.candidate_count}</div>
+                </div>
+              ) : null)}
+            </div>
+          ) : null}
         </div>
         {candidateBoundaryDiagnostic.correlationId ? <p className="helper-text">correlation_id: {candidateBoundaryDiagnostic.correlationId}</p> : null}
         {candidateBoundaryDiagnostic.status !== "idle" ? <p className="helper-text">capture status: {candidateBoundaryDiagnostic.status}</p> : null}

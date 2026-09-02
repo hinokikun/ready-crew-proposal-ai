@@ -13,10 +13,17 @@ export type CandidateBoundaryEvent = {
   candidate_count: number;
 };
 
+export const HISTORICAL_CANDIDATE_BOUNDARY_START = "2026-09-02T13:38:00Z";
+export const HISTORICAL_CANDIDATE_BOUNDARY_END = "2026-09-02T13:50:00Z";
+
 export function getCandidateBoundaryEvents(start: string, end: string, correlationId?: string): Promise<{ events: CandidateBoundaryEvent[] }> {
   const params = new URLSearchParams({ start, end });
   if (correlationId) params.set("candidate_boundary_correlation_id", correlationId);
   return fetchJson(`/api/analytics/candidate-boundary-events?${params.toString()}`);
+}
+
+export function getHistoricalCandidateBoundaryEvents(): Promise<{ events: CandidateBoundaryEvent[] }> {
+  return getCandidateBoundaryEvents(HISTORICAL_CANDIDATE_BOUNDARY_START, HISTORICAL_CANDIDATE_BOUNDARY_END);
 }
 
 export function saveProductAnalyticsEvent(payload: ProductAnalyticsEventPayload): Promise<{ ok: boolean }> {
