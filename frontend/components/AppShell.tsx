@@ -149,6 +149,7 @@ import type { PresentationLayoutDecisionRequest, PresentationQualityDownloadRepo
 import { canUseWorkFeatures, getRoleLabel, isAdminRole, isManagerCompatibleRole, type CreatableUserRole } from "@/lib/roles";
 import { appendUsageLog, buildScopedStorageKey, readUsageLogs, type UsageLogEntry } from "@/lib/storage";
 import { trackEvent } from "@/lib/analytics";
+import { clearGuidedFlowDraft, getGuidedFlowDraftKey, readGuidedFlowDraft, saveGuidedFlowDraft } from "@/lib/guidedFlowDraft";
 import type { AnalysisResponse, PowerPointData, ProposalRequest, SemanticCandidate } from "@/types/proposal";
 
 import {
@@ -358,6 +359,8 @@ export default function Home() {
   const [experienceView, setExperienceView] = useState<ProposalExperienceView>("home");
   const [isExperienceSidebarCollapsed, setIsExperienceSidebarCollapsed] = useState(false);
   const [isExperienceMobileOpen, setIsExperienceMobileOpen] = useState(false);
+  const [guidedDraftNotice, setGuidedDraftNotice] = useState("");
+  const [guidedDraftSaveStatus, setGuidedDraftSaveStatus] = useState("");
   const [selectedPresentationTemplate, setSelectedPresentationTemplate] = useState<PresentationTemplateId>("corporate_clean");
   const [lastPresentationQualityReport, setLastPresentationQualityReport] = useState<PresentationQualityDownloadReport | null>(null);
   const autoAnalyzeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -368,6 +371,17 @@ export default function Home() {
   const pasteAnalyticsTrackedRef = useRef(false);
   const beautifulAiVerificationRequestRef = useRef(0);
   const isAppShellMountedRef = useRef(true);
+  const guidedDraftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const guidedDraftRestoreAttemptedRef = useRef<string | null>(null);
+  const guidedDraftSuppressRestoreRef = useRef(false);
+  const guidedDraftHydratingRef = useRef(false);
+  const guidedDraftSkipEmptyClearRef = useRef(false);
+  const guidedDraftScope = useMemo(() => ({
+    userId: currentUser?.id ?? "",
+    organizationId: workspaceContext?.current?.organization_id ?? "",
+    workspaceId: workspaceContext?.current?.workspace_id ?? ""
+  }), [currentUser?.id, workspaceContext?.current?.organization_id, workspaceContext?.current?.workspace_id]);
+  const guidedDraftScopeKey = getGuidedFlowDraftKey(guidedDraftScope);
 
   useEffect(() => {
     isAppShellMountedRef.current = true;
@@ -383,6 +397,44 @@ export default function Home() {
       window.removeEventListener("ready-crew-auth-changed", handler);
     };
   }, []);
+
+  useEffect(() => {
+    if (experienceView !== "new-proposal" || !guidedDraftScopeKey || guidedDraftSuppressRestoreRef.current) return;
+    if (guidedDraftRestoreAttemptedRef.current === guidedDraftScopeKey || rawSourceText.trim() || result) return;
+    guidedDraftRestoreAttemptedRef.current = guidedDraftScopeKey;
+    const draft = readGuidedFlowDraft(guidedDraftScope);
+    if (!draft) return;
+    guidedDraftHydratingRef.current = true;
+    setRawSourceText(draft.rawSourceText);
+    setForm(initialForm);
+    resetProposalDerivedState(draft.rawSourceText);
+    setGuidedDraftNotice("前回の入力を復元しました");
+    setGuidedDraftSaveStatus("");
+  }, [experienceView, guidedDraftScopeKey, rawSourceText, result]);
+
+  useEffect(() => {
+    if (guidedDraftSaveTimerRef.current) clearTimeout(guidedDraftSaveTimerRef.current);
+    if (guidedDraftHydratingRef.current) {
+      guidedDraftHydratingRef.current = false;
+      return;
+    }
+    if (experienceView !== "new-proposal" || !guidedDraftScopeKey || result) return;
+    if (!rawSourceText.trim()) {
+      if (guidedDraftSkipEmptyClearRef.current) {
+        guidedDraftSkipEmptyClearRef.current = false;
+        return;
+      }
+      clearGuidedFlowDraft(guidedDraftScope);
+      return;
+    }
+    guidedDraftSaveTimerRef.current = setTimeout(() => {
+      const saved = saveGuidedFlowDraft(guidedDraftScope, rawSourceText);
+      if (saved) setGuidedDraftSaveStatus("入力を保存しました");
+    }, 500);
+    return () => {
+      if (guidedDraftSaveTimerRef.current) clearTimeout(guidedDraftSaveTimerRef.current);
+    };
+  }, [experienceView, guidedDraftScopeKey, rawSourceText, result]);
 
   useEffect(() => {
     if (rawSourceText.trim().length >= 10 && !pasteAnalyticsTrackedRef.current) {
@@ -481,6 +533,12 @@ export default function Home() {
   }
 
   function resetWorkspaceScopedState() {
+    guidedDraftSkipEmptyClearRef.current = true;
+    setRawSourceText("");
+    setCompanyHomeUrl("");
+    setForm(initialForm);
+    setGuidedDraftNotice("");
+    setGuidedDraftSaveStatus("");
     setResult(null);
     setSemanticCandidatesForTransport([]);
     setEditablePreviewSlides([]);
@@ -513,6 +571,8 @@ export default function Home() {
     setIsWorkspaceContextLoading(true);
     setWorkspaceContextError("");
     try {
+      guidedDraftRestoreAttemptedRef.current = null;
+      guidedDraftSuppressRestoreRef.current = false;
       const switched = await switchWorkspaceContext({ organization_id: organizationId, workspace_id: workspaceId });
       const storedUser = getStoredUser();
       if (storedUser) {
@@ -1660,10 +1720,16 @@ export default function Home() {
   function handleSourceTextChange(value: string) {
     setRawSourceText(value);
     setForm(initialForm);
+    setGuidedDraftNotice("");
+    setGuidedDraftSaveStatus("");
     resetProposalDerivedState(value);
   }
 
   function resetChat() {
+    guidedDraftSuppressRestoreRef.current = true;
+    clearGuidedFlowDraft(guidedDraftScope);
+    setGuidedDraftNotice("");
+    setGuidedDraftSaveStatus("");
     setChatMessages(initialChatMessages);
     setChatAnswers({});
     setChatQuestionIndex(0);
@@ -1675,6 +1741,18 @@ export default function Home() {
     setUrlInsight(null);
     setForm(initialForm);
     resetProposalDerivedState("");
+  }
+
+  function discardGuidedFlowDraft() {
+    clearGuidedFlowDraft(guidedDraftScope);
+    guidedDraftSuppressRestoreRef.current = true;
+    guidedDraftRestoreAttemptedRef.current = guidedDraftScopeKey;
+    setRawSourceText("");
+    setCompanyHomeUrl("");
+    setForm(initialForm);
+    resetProposalDerivedState("");
+    setGuidedDraftNotice("");
+    setGuidedDraftSaveStatus("");
   }
 
   function persistHistory(nextHistory: HistoryEntry[]) {
@@ -1703,6 +1781,7 @@ export default function Home() {
     setRawSourceText(entry.form.project_brief || entry.title || "");
     setForm(entry.form);
     setResult(entry.result);
+    setSemanticCandidatesForTransport(entry.result.semantic_candidates?.candidates ?? []);
     setBeautifulAiResult(null);
     setBeautifulAiError("");
     setBeautifulAiNotice("");
@@ -1771,6 +1850,7 @@ export default function Home() {
       setFeedbackError("");
       setAutoFlowStatus("complete");
       saveHistory(response, nextForm);
+      clearGuidedFlowDraft(guidedDraftScope);
       recordModeUsage("sales");
       recordUsage("提案書作成", allInputText(nextForm).length, "markdown", "success");
       void refreshAccountData();
@@ -2566,11 +2646,12 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
   );
 
   const handleLogout = useCallback(() => {
+    clearGuidedFlowDraft(guidedDraftScope);
     void logoutCurrentSession().finally(() => {
       window.dispatchEvent(new Event("ready-crew-auth-changed"));
       window.location.reload();
     });
-  }, []);
+  }, [guidedDraftScope]);
 
   const experienceViewCopy: Record<ProposalExperienceView, { title: string; description: string }> = {
     home: {
@@ -2678,6 +2759,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
             workspaceName={workspaceContext?.current?.workspace_name || "営業部"}
             organizationName={workspaceContext?.current?.organization_name || "Ready Crew"}
             onChangeView={(view) => {
+              if (view === "new-proposal") guidedDraftSuppressRestoreRef.current = false;
               setExperienceView(view);
               if (view === "admin" || view === "analytics") {
                 setIsSimpleDetailMode(true);
@@ -2686,7 +2768,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
             onToggleCollapsed={() => setIsExperienceSidebarCollapsed((current) => !current)}
             onToggleMobile={() => setIsExperienceMobileOpen((current) => !current)}
           />
-          <section className="v80-page-intro" aria-label="現在の画面">
+          {!showUserHome && <section className="v80-page-intro" aria-label="現在の画面">
             <div>
               <p className="eyebrow">AI営業秘書</p>
               <h1>{currentExperienceCopy.title}</h1>
@@ -2697,7 +2779,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
                 {isGuidedDetailMode ? "通常表示に戻す" : "詳細機能を表示"}
               </button>
             )}
-          </section>
+          </section>}
         </>
       )}
       {currentUser && isGuidedDetailMode && !isPresentationMode && <ReleaseUpdatesPanel />}
@@ -2732,6 +2814,10 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           recentHistory={history}
           onNewProposal={() => {
             resetChat();
+            setExperienceView("new-proposal");
+          }}
+          onResumeCurrent={() => {
+            guidedDraftSuppressRestoreRef.current = false;
             setExperienceView("new-proposal");
           }}
           onOpenAnalytics={() => setExperienceView("improvement")}
@@ -2776,6 +2862,8 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           canGenerate={canGenerate}
           canSeeDetailMode={canSeeSimpleDetailMode}
           detailMode={isGuidedDetailMode}
+          draftNotice={guidedDraftNotice}
+          draftSaveStatus={guidedDraftSaveStatus}
           errorMessage={error}
           generationStages={guidedGenerationStages}
           hasDownloadedSummary={hasDownloadedSummary}
@@ -2786,6 +2874,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           isGenerating={isLoading}
           onCompleteQualityGate={(items) => completeGuidedQualityGate(items)}
           onCreateBeautifulAi={() => createBeautifulAiCurrent()}
+          onDiscardDraft={discardGuidedFlowDraft}
           onDownloadDetail={() => downloadPowerPoint()}
           onDownloadPdf={() => downloadEstimatePdfCurrent()}
           onDownloadSummary={() => downloadSummaryPowerPoint()}
@@ -2819,7 +2908,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           qualityGate={beautifulAiQualityGate}
           qualityGateComplete={isBeautifulAiQualityGateComplete}
           qualityGateIsLoading={isBeautifulAiQualityGateLoading}
-          semanticCandidates={result?.semantic_candidates ?? null}
+          semanticCandidates={result ? { candidates: semanticCandidatesForTransport } : null}
           roleLabel={roleDisplayLabel}
           showSalesCopilotMarker
           sourceText={rawSourceText}

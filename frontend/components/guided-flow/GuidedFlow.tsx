@@ -34,6 +34,8 @@ type GuidedFlowProps = {
   canSeeDetailMode: boolean;
   canDownloadMainOutputs: boolean;
   detailMode: boolean;
+  draftNotice?: string;
+  draftSaveStatus?: string;
   errorMessage: string;
   generationStages: GuidedProgressStage[];
   hasDownloadedSummary: boolean;
@@ -44,6 +46,7 @@ type GuidedFlowProps = {
   isGenerating: boolean;
   onCompleteQualityGate: (items: string[]) => Promise<void> | void;
   onCreateBeautifulAi: () => Promise<void> | void;
+  onDiscardDraft?: () => void;
   onDownloadDetail: () => Promise<void> | void;
   onDownloadPdf: () => Promise<void> | void;
   onDownloadSummary: () => Promise<void> | void;
@@ -181,7 +184,6 @@ function GuidedFlowBase(props: GuidedFlowProps) {
   const [selectedOutput, setSelectedOutput] = useState<OutputChoice>("summary");
   const [isCompletingGate, setIsCompletingGate] = useState(false);
   const [localNotice, setLocalNotice] = useState("");
-  const [semanticCandidates, setSemanticCandidates] = useState<SemanticCandidate[]>(props.semanticCandidates?.candidates || []);
   const [editingCandidateId, setEditingCandidateId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const hasInput = props.sourceText.trim().length > 0;
@@ -190,18 +192,9 @@ function GuidedFlowBase(props: GuidedFlowProps) {
   const uncheckedCount = qualityItems.filter((item) => !checkedItems[item]).length;
   const allQualityChecked = uncheckedCount === 0;
   const missingQuestions = props.summaryItems.filter((item) => item.inferred || /未定|要確認|未入力/.test(item.value)).slice(0, 3);
+  const semanticCandidates = props.semanticCandidates?.candidates || [];
   const visibleSemanticCandidates = semanticCandidates.filter((candidate) => criticalSemanticTypes.has(candidate.semantic_type));
   const confirmedSemanticCount = visibleSemanticCandidates.filter((candidate) => candidate.review_state === "CONFIRMED" || candidate.review_state === "CORRECTED").length;
-
-  useEffect(() => {
-    setSemanticCandidates(props.semanticCandidates?.candidates || []);
-    setEditingCandidateId(null);
-    setEditingValue("");
-  }, [props.semanticCandidates]);
-
-  useEffect(() => {
-    props.onSemanticCandidatesChange?.(semanticCandidates);
-  }, [semanticCandidates]);
 
   useEffect(() => {
     if (props.isGenerating) setActiveStep(2);
@@ -265,7 +258,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
   }
 
   function confirmSemanticCandidate(candidate: SemanticCandidate) {
-    setSemanticCandidates((current) => current.map((item) => item.id === candidate.id ? { ...item, review_state: "CONFIRMED", confirmation_authority: "USER_EXPLICIT" } : item));
+    props.onSemanticCandidatesChange?.(semanticCandidates.map((item) => item.id === candidate.id ? { ...item, review_state: "CONFIRMED", confirmation_authority: "USER_EXPLICIT" } : item));
   }
 
   function startSemanticEdit(candidate: SemanticCandidate) {
@@ -276,13 +269,13 @@ function GuidedFlowBase(props: GuidedFlowProps) {
   function saveSemanticEdit(candidate: SemanticCandidate) {
     const value = editingValue.trim();
     if (!value) return;
-    setSemanticCandidates((current) => current.map((item) => item.id === candidate.id ? { ...item, value, authority: "USER_EXPLICIT", review_state: "CORRECTED", inferred: false, original_candidate_id: item.original_candidate_id || item.id, confirmation_authority: "USER_EXPLICIT" } : item));
+    props.onSemanticCandidatesChange?.(semanticCandidates.map((item) => item.id === candidate.id ? { ...item, value, authority: "USER_EXPLICIT", review_state: "CORRECTED", inferred: false, original_candidate_id: item.original_candidate_id || item.id, confirmation_authority: "USER_EXPLICIT" } : item));
     setEditingCandidateId(null);
     setEditingValue("");
   }
 
   function rejectSemanticCandidate(candidate: SemanticCandidate) {
-    setSemanticCandidates((current) => current.map((item) => item.id === candidate.id ? { ...item, review_state: "REJECTED" } : item));
+    props.onSemanticCandidatesChange?.(semanticCandidates.map((item) => item.id === candidate.id ? { ...item, review_state: "REJECTED" } : item));
   }
 
   async function runSelectedOutput() {
@@ -359,14 +352,19 @@ function GuidedFlowBase(props: GuidedFlowProps) {
             <div>
               <p className="eyebrow">STEP 1 案件入力</p>
               <h2>案件情報を貼り付けてください</h2>
-              <p>案件メール、議事録、ヒアリングメモなどをそのまま貼り付けられます。会社名、予算、納期が分からない場合もそのまま作成できます。</p>
+              <p>案件情報を貼り付けるだけで開始できます。会社名、予算、納期が分からない場合もそのまま作成できます。</p>
             </div>
+          </div>
+          <div className="guided-input-intro">
+            <strong>まずは案件情報を貼り付けてください</strong>
+            <span>案件メール / 議事録 / ヒアリングメモ / 案件概要</span>
           </div>
           <label className="field guided-source-field" htmlFor="guided-source-text">
             <span>案件メール・議事録・ヒアリングメモ</span>
             <textarea
               data-testid="project-source-input"
               id="guided-source-text"
+              aria-describedby="guided-source-help guided-source-warning"
               onChange={(event) => {
                 props.onSourceTextChange(event.target.value);
                 setLocalNotice("");
@@ -376,7 +374,15 @@ function GuidedFlowBase(props: GuidedFlowProps) {
               value={props.sourceText}
             />
           </label>
-          {localNotice && <p className="guided-inline-warning" role="alert">{localNotice}</p>}
+          <p id="guided-source-help" className="guided-field-help">案件概要だけでも大丈夫です。不明な情報はAIが「要確認」として整理します。</p>
+          {props.draftNotice && (
+            <div className="guided-draft-notice" role="status">
+              <span>{props.draftNotice}</span>
+              {props.onDiscardDraft && <button className="text-button" onClick={props.onDiscardDraft} type="button">この入力を破棄</button>}
+            </div>
+          )}
+          {props.draftSaveStatus && <p className="guided-draft-save-status" role="status">{props.draftSaveStatus}</p>}
+          {localNotice && <p id="guided-source-warning" className="guided-inline-warning" role="alert">{localNotice}</p>}
           <div className="guided-aux-actions">
             <button className="secondary-button" onClick={props.onUseSample} type="button">
               <Sparkles size={16} aria-hidden="true" />
@@ -388,7 +394,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
             </button>
           </div>
           <details className="guided-detail-foldout">
-            <summary>詳細条件を入力する場合</summary>
+            <summary>詳細条件を設定する（任意）</summary>
             <p>業種、予算、納期、競合などはAIが本文から抽出します。必要な項目は、生成後の内容確認画面で修正してください。</p>
           </details>
           <StepFooter
@@ -402,13 +408,17 @@ function GuidedFlowBase(props: GuidedFlowProps) {
       )}
 
       {activeStep === 2 && (
-        <article className="guided-step-card">
+        <article className="guided-step-card" aria-busy={props.isGenerating}>
           <div className="section-heading">
             <div>
               <p className="eyebrow">STEP 2 AI分析</p>
               <h2>AIが提案書の流れを作成しています</h2>
               <p>通常1〜2分程度かかります。この画面を閉じずにお待ちください。</p>
             </div>
+          </div>
+          <div className="guided-processing-note" role="status" aria-live="polite">
+            <strong>AIが案件情報を整理して提案書を作成しています</strong>
+            <span>通常1〜2分程度かかります。この画面を閉じずにお待ちください。</span>
           </div>
           <div className="guided-progress-list" aria-live="polite">
             {props.generationStages.slice(0, 4).map((stage) => (
@@ -441,8 +451,8 @@ function GuidedFlowBase(props: GuidedFlowProps) {
           <div className="section-heading">
             <div>
               <p className="eyebrow">STEP 3 内容確認</p>
-              <h2>提案書が完成しました</h2>
-              <p>案件名、提案概要、AIが推測した項目を確認してください。</p>
+              <h2>AIが整理した内容を確認してください</h2>
+              <p>案件概要、課題、提案方針などを確認します。AI推測と表示された項目は、提出前に人の目で確認してください。</p>
             </div>
             <span>{uncheckedCount > 0 ? `未確認 ${uncheckedCount}件` : "確認済み"}</span>
           </div>
@@ -537,8 +547,8 @@ function GuidedFlowBase(props: GuidedFlowProps) {
           <div className="section-heading">
             <div>
               <p className="eyebrow">STEP 4 提出前チェック</p>
-              <h2>提出前に内容を確認してください</h2>
-              <p>すべて確認するとPowerPoint、PDF、Beautiful.ai出力が利用できます。</p>
+              <h2>提出してよい状態か最終確認してください</h2>
+              <p>Step 3が内容の確認、Step 4が社外提出前の最終確認です。すべて確認するとPowerPoint、PDF、Beautiful.ai出力が利用できます。</p>
             </div>
             <span>{props.qualityGateComplete ? "完了" : uncheckedCount < qualityItems.length ? "確認中" : "未確認"}</span>
           </div>
@@ -593,9 +603,9 @@ function GuidedFlowBase(props: GuidedFlowProps) {
           )}
           <div className="guided-output-grid">
             {[
-              { id: "summary" as const, title: "要約版PowerPoint", text: "短時間説明用" },
-              { id: "detail" as const, title: "詳細版PowerPoint", text: "社内確認・本提案用" },
-              { id: "pdf" as const, title: "見積PDF", text: "見積確認用" }
+              { id: "summary" as const, title: "要約版PowerPoint", text: "短時間の説明・概要共有向け" },
+              { id: "detail" as const, title: "詳細版PowerPoint", text: "正式な提案・詳細説明向け" },
+              { id: "pdf" as const, title: "見積PDF", text: "見積内容の共有向け" }
             ].map((item) => (
               <button className={`guided-output-option ${selectedOutput === item.id ? "is-selected" : ""}`} key={item.id} onClick={() => setSelectedOutput(item.id)} type="button">
                 <FileDown size={18} aria-hidden="true" />
