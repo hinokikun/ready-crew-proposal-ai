@@ -1,5 +1,8 @@
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.analytics.repositories import list_candidate_boundary_events
 from app.analytics.services import add_release_note, get_dashboard, get_release_notes as get_release_notes_service, record_event, set_error_resolved
 from app.auth import require_roles
 from app.db import get_db
@@ -36,6 +39,41 @@ async def get_analytics_dashboard(
     with get_db() as db:
         resolved_scope = resolve_scope(db, user, scope)
         return {"dashboard": get_dashboard(db, limit, offset, resolved_scope)}
+
+
+def _parse_utc_bound(value: str, name: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=f"{name} must be an ISO-8601 timestamp with timezone.") from exc
+    if parsed.tzinfo is None:
+        raise HTTPException(status_code=400, detail=f"{name} must include a timezone.")
+    return parsed.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+@router.get("/candidate-boundary-events")
+async def get_candidate_boundary_events(
+    start: str = Query(..., min_length=1),
+    end: str = Query(..., min_length=1),
+    user: dict = Depends(require_roles("admin", "manager")),
+    scope: str = Query("workspace", pattern="^(workspace|organization)$"),
+) -> dict:
+    start_dt = _parse_utc_bound(start, "start")
+    end_dt = _parse_utc_bound(end, "end")
+    if start_dt >= end_dt:
+        raise HTTPException(status_code=400, detail="start must be before end.")
+    if end_dt - start_dt > timedelta(hours=24):
+        raise HTTPException(status_code=400, detail="time window must not exceed 24 hours.")
+    with get_db() as db:
+        resolved_scope = resolve_scope(db, user, scope)
+        return {
+            "events": list_candidate_boundary_events(
+                db,
+                start_dt.strftime("%Y-%m-%d %H:%M:%S"),
+                end_dt.strftime("%Y-%m-%d %H:%M:%S"),
+                resolved_scope,
+            )
+        }
 
 
 @router.patch("/errors/{error_id}")

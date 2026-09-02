@@ -34,6 +34,12 @@ GENERATION_EVENTS = {"proposal_generated"}
 SAFE_METADATA_KEYS = {"source", "mode", "output", "reason", "category", "semantic_candidates_state", "candidate_count"}
 SEMANTIC_CANDIDATE_STATES = {"OMITTED", "EMPTY", "NONEMPTY"}
 MAX_CANDIDATE_COUNT = 1000
+CANDIDATE_BOUNDARY_EVENT_NAMES = (
+    "presentation_candidate_boundary_analysis",
+    "presentation_candidate_boundary_transport",
+)
+MAX_CANDIDATE_BOUNDARY_RESULTS = 20
+MAX_CANDIDATE_BOUNDARY_SCAN = 200
 
 
 def _row_to_dict(row: Any) -> dict[str, Any]:
@@ -77,6 +83,61 @@ def _parse_time(value: str | None) -> datetime | None:
         return datetime.fromisoformat(value.replace(" ", "T"))
     except ValueError:
         return None
+
+
+def _validated_candidate_boundary_metadata(metadata: Any) -> dict[str, Any] | None:
+    if not isinstance(metadata, str) or not metadata:
+        return None
+    try:
+        decoded = json.loads(metadata)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return None
+    if not isinstance(decoded, dict):
+        return None
+    state = decoded.get("semantic_candidates_state")
+    count = decoded.get("candidate_count")
+    if state not in SEMANTIC_CANDIDATE_STATES:
+        return None
+    if isinstance(count, bool) or not isinstance(count, int) or not 0 <= count <= MAX_CANDIDATE_COUNT:
+        return None
+    return {"semantic_candidates_state": state, "candidate_count": count}
+
+
+def list_candidate_boundary_events(
+    db: Connection,
+    start_at: str,
+    end_at: str,
+    scope: ScopeContext | None = None,
+) -> list[dict[str, Any]]:
+    scope_sql, scope_params = _scope_clause(scope, "e")
+    rows = db.execute(
+        f"""
+        SELECT e.event_name, e.created_at, e.metadata
+        FROM analytics_events e
+        WHERE {scope_sql}
+          AND e.event_name IN (?, ?)
+          AND e.created_at >= ?
+          AND e.created_at < ?
+        ORDER BY e.created_at ASC, e.id ASC
+        LIMIT ?
+        """,
+        (*scope_params, *CANDIDATE_BOUNDARY_EVENT_NAMES, start_at, end_at, MAX_CANDIDATE_BOUNDARY_SCAN),
+    ).fetchall()
+    events: list[dict[str, Any]] = []
+    for row in rows:
+        metadata = _validated_candidate_boundary_metadata(row["metadata"])
+        if metadata is None:
+            continue
+        events.append(
+            {
+                "event_name": row["event_name"],
+                "created_at": row["created_at"],
+                **metadata,
+            }
+        )
+        if len(events) >= MAX_CANDIDATE_BOUNDARY_RESULTS:
+            break
+    return events
 
 
 def _error_key(category: str, message: str, source: str) -> str:
