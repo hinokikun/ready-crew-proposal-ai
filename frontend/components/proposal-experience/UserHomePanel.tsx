@@ -5,6 +5,7 @@ import type { HistoryEntry } from "@/components/app-shell/types";
 
 type UserHomePanelProps = {
   hasCurrentProposal: boolean;
+  hasPersistedGuidedFlowDraft: boolean;
   isGenerating: boolean;
   recentHistory: HistoryEntry[];
   onNewProposal: () => void;
@@ -28,6 +29,7 @@ function statusLabel(entry: HistoryEntry) {
 
 export function UserHomePanel({
   hasCurrentProposal,
+  hasPersistedGuidedFlowDraft,
   isGenerating,
   recentHistory,
   onNewProposal,
@@ -38,7 +40,7 @@ export function UserHomePanel({
 }: UserHomePanelProps) {
   const visibleHistory = recentHistory.slice(0, 3);
   const resumableEntry = recentHistory.find((entry) => !entry.result?.powerpoint_generation_data);
-  const canResume = Boolean(resumableEntry || hasCurrentProposal || isGenerating);
+  const canResume = Boolean(resumableEntry || hasCurrentProposal || isGenerating || hasPersistedGuidedFlowDraft);
 
   function resumeProposal() {
     if (resumableEntry) {

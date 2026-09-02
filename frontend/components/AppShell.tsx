@@ -357,6 +357,8 @@ export default function Home() {
   const [isSimpleDetailMode, setIsSimpleDetailMode] = useState(false);
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [experienceView, setExperienceView] = useState<ProposalExperienceView>("home");
+  const [hasPersistedGuidedFlowDraft, setHasPersistedGuidedFlowDraft] = useState(false);
+  const [guidedDraftAvailabilityScopeKey, setGuidedDraftAvailabilityScopeKey] = useState<string | null>(null);
   const [isExperienceSidebarCollapsed, setIsExperienceSidebarCollapsed] = useState(false);
   const [isExperienceMobileOpen, setIsExperienceMobileOpen] = useState(false);
   const [guidedDraftNotice, setGuidedDraftNotice] = useState("");
@@ -383,6 +385,11 @@ export default function Home() {
   }), [currentUser?.id, workspaceContext?.current?.organization_id, workspaceContext?.current?.workspace_id]);
   const guidedDraftScopeKey = getGuidedFlowDraftKey(guidedDraftScope);
 
+  const refreshGuidedDraftAvailability = useCallback(() => {
+    setGuidedDraftAvailabilityScopeKey(guidedDraftScopeKey);
+    setHasPersistedGuidedFlowDraft(Boolean(guidedDraftScopeKey && readGuidedFlowDraft(guidedDraftScope)));
+  }, [guidedDraftScope, guidedDraftScopeKey]);
+
   useEffect(() => {
     isAppShellMountedRef.current = true;
     setHistory(safeHistoryParse(window.localStorage.getItem(buildScopedStorageKey(HISTORY_KEY))));
@@ -397,6 +404,10 @@ export default function Home() {
       window.removeEventListener("ready-crew-auth-changed", handler);
     };
   }, []);
+
+  useEffect(() => {
+    refreshGuidedDraftAvailability();
+  }, [experienceView, guidedDraftScopeKey, refreshGuidedDraftAvailability]);
 
   useEffect(() => {
     if (experienceView !== "new-proposal" || !guidedDraftScopeKey || guidedDraftSuppressRestoreRef.current) return;
@@ -425,16 +436,20 @@ export default function Home() {
         return;
       }
       clearGuidedFlowDraft(guidedDraftScope);
+      refreshGuidedDraftAvailability();
       return;
     }
     guidedDraftSaveTimerRef.current = setTimeout(() => {
       const saved = saveGuidedFlowDraft(guidedDraftScope, rawSourceText);
-      if (saved) setGuidedDraftSaveStatus("入力を保存しました");
+      if (saved) {
+        setGuidedDraftSaveStatus("入力を保存しました");
+        refreshGuidedDraftAvailability();
+      }
     }, 500);
     return () => {
       if (guidedDraftSaveTimerRef.current) clearTimeout(guidedDraftSaveTimerRef.current);
     };
-  }, [experienceView, guidedDraftScopeKey, rawSourceText, result]);
+  }, [experienceView, guidedDraftScopeKey, rawSourceText, result, refreshGuidedDraftAvailability]);
 
   useEffect(() => {
     if (rawSourceText.trim().length >= 10 && !pasteAnalyticsTrackedRef.current) {
@@ -1728,6 +1743,7 @@ export default function Home() {
   function resetChat() {
     guidedDraftSuppressRestoreRef.current = true;
     clearGuidedFlowDraft(guidedDraftScope);
+    refreshGuidedDraftAvailability();
     setGuidedDraftNotice("");
     setGuidedDraftSaveStatus("");
     setChatMessages(initialChatMessages);
@@ -1745,6 +1761,7 @@ export default function Home() {
 
   function discardGuidedFlowDraft() {
     clearGuidedFlowDraft(guidedDraftScope);
+    refreshGuidedDraftAvailability();
     guidedDraftSuppressRestoreRef.current = true;
     guidedDraftRestoreAttemptedRef.current = guidedDraftScopeKey;
     setRawSourceText("");
@@ -1851,6 +1868,7 @@ export default function Home() {
       setAutoFlowStatus("complete");
       saveHistory(response, nextForm);
       clearGuidedFlowDraft(guidedDraftScope);
+      refreshGuidedDraftAvailability();
       recordModeUsage("sales");
       recordUsage("提案書作成", allInputText(nextForm).length, "markdown", "success");
       void refreshAccountData();
@@ -2647,11 +2665,12 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
 
   const handleLogout = useCallback(() => {
     clearGuidedFlowDraft(guidedDraftScope);
+    refreshGuidedDraftAvailability();
     void logoutCurrentSession().finally(() => {
       window.dispatchEvent(new Event("ready-crew-auth-changed"));
       window.location.reload();
     });
-  }, [guidedDraftScope]);
+  }, [guidedDraftScope, refreshGuidedDraftAvailability]);
 
   const experienceViewCopy: Record<ProposalExperienceView, { title: string; description: string }> = {
     home: {
@@ -2810,6 +2829,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
       {currentUser && showUserHome && (
         <UserHomePanel
           hasCurrentProposal={Boolean(result)}
+          hasPersistedGuidedFlowDraft={guidedDraftAvailabilityScopeKey === guidedDraftScopeKey && hasPersistedGuidedFlowDraft}
           isGenerating={isLoading}
           recentHistory={history}
           onNewProposal={() => {
