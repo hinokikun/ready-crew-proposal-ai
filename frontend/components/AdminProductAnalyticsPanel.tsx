@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect, useMemo, useState } from "react";
+import { getCandidateBoundaryEvents, type CandidateBoundaryEvent } from "@/client-api/analytics";
 import {
   createReleaseNote,
   getProductAnalyticsDashboard,
@@ -34,6 +35,9 @@ const funnelLabels: Record<string, string> = {
   detail_ppt_download: "詳細PPT",
   estimate_pdf_download: "見積PDF"
 };
+
+const CANDIDATE_BOUNDARY_DIAGNOSTIC_START = "2026-09-02T05:34:00Z";
+const CANDIDATE_BOUNDARY_DIAGNOSTIC_END = "2026-09-02T05:39:00Z";
 
 function formatDate(value: string | null | undefined) {
   if (!value) {
@@ -83,6 +87,8 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
   const [newDate, setNewDate] = useState(new Date().toISOString().slice(0, 10));
   const [newTitle, setNewTitle] = useState("Product Analytics");
   const [newImprovements, setNewImprovements] = useState("");
+  const [candidateBoundaryEvents, setCandidateBoundaryEvents] = useState<CandidateBoundaryEvent[]>([]);
+  const [candidateBoundaryStatus, setCandidateBoundaryStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const markdown = useMemo(() => buildAnalyticsMarkdown(dashboard, releaseNotes), [dashboard, releaseNotes]);
 
@@ -115,6 +121,24 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
     } catch (caught) {
       const friendly = toFriendlyError(caught);
       setStatusMessage(`${friendly.title} ${friendly.action}`);
+    }
+  }
+
+  async function loadCandidateBoundaryDiagnostic() {
+    if (candidateBoundaryStatus === "loading") {
+      return;
+    }
+    setCandidateBoundaryStatus("loading");
+    setCandidateBoundaryEvents([]);
+    try {
+      const response = await getCandidateBoundaryEvents(
+        CANDIDATE_BOUNDARY_DIAGNOSTIC_START,
+        CANDIDATE_BOUNDARY_DIAGNOSTIC_END
+      );
+      setCandidateBoundaryEvents(response.events);
+      setCandidateBoundaryStatus("success");
+    } catch {
+      setCandidateBoundaryStatus("error");
     }
   }
 
@@ -166,6 +190,54 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
       </div>
 
       {statusMessage ? <p className="status-note">{statusMessage}</p> : null}
+
+      <section className="advanced-foldout" data-testid="candidate-boundary-diagnostic">
+        <div className="section-heading-row">
+          <div>
+            <h4>Candidate Boundary Diagnostic</h4>
+            <p className="helper-text">管理者向け・承認済み固定期間の境界イベント確認。</p>
+          </div>
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() => void loadCandidateBoundaryDiagnostic()}
+            disabled={candidateBoundaryStatus === "loading"}
+          >
+            {candidateBoundaryStatus === "loading" ? "読み込み中…" : "診断を実行"}
+          </button>
+        </div>
+        {candidateBoundaryStatus === "success" && candidateBoundaryEvents.length === 0 ? (
+          <p className="helper-text">No candidate-boundary events found in the authorized window.</p>
+        ) : null}
+        {candidateBoundaryStatus === "success" && candidateBoundaryEvents.length > 0 ? (
+          <p className="helper-text">診断結果を読み込みました。</p>
+        ) : null}
+        {candidateBoundaryStatus === "error" ? <p className="status-note">診断結果を読み込めませんでした。</p> : null}
+        {candidateBoundaryEvents.length > 0 ? (
+          <div className="table-scroll">
+            <table className="usage-dashboard-table">
+              <thead>
+                <tr>
+                  <th>event_name</th>
+                  <th>created_at</th>
+                  <th>semantic_candidates_state</th>
+                  <th>candidate_count</th>
+                </tr>
+              </thead>
+              <tbody>
+                {candidateBoundaryEvents.map((event, index) => (
+                  <tr key={`${event.created_at}-${event.event_name}-${index}`}>
+                    <td>{event.event_name}</td>
+                    <td>{event.created_at}</td>
+                    <td>{event.semantic_candidates_state}</td>
+                    <td>{event.candidate_count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </section>
 
       <div className="usage-dashboard-grid">
         <article>

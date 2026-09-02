@@ -5,6 +5,18 @@ import type {
   ReleaseNoteEntry
 } from "@/types/app";
 
+export type CandidateBoundaryEvent = {
+  event_name: string;
+  created_at: string;
+  semantic_candidates_state: string;
+  candidate_count: number;
+};
+
+export function getCandidateBoundaryEvents(start: string, end: string): Promise<{ events: CandidateBoundaryEvent[] }> {
+  const params = new URLSearchParams({ start, end });
+  return fetchJson(`/api/analytics/candidate-boundary-events?${params.toString()}`);
+}
+
 export function saveProductAnalyticsEvent(payload: ProductAnalyticsEventPayload): Promise<{ ok: boolean }> {
   return fetchJson("/api/analytics/events", {
     method: "POST",

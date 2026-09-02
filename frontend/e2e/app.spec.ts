@@ -922,6 +922,48 @@ test("Sales CopilotのQuick Commandが対象画面へ移動する", async ({ pag
   await expect(page.locator("#admin-product-analytics-panel")).toBeVisible();
 });
 
+test("adminのCandidate Boundary Diagnosticは固定期間を1回だけ取得し安全な4項目だけ表示する", async ({ page }) => {
+  let requestCount = 0;
+  let requestUrl = "";
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname === "/api/analytics/candidate-boundary-events") {
+      requestCount += 1;
+      requestUrl = request.url();
+    }
+  });
+
+  await login(page, adminEmail);
+  await openAdminPilotDashboard(page);
+  await page.locator("#admin-product-analytics-panel").evaluate((element) => {
+    (element as HTMLDetailsElement).open = true;
+  });
+  const diagnostic = page.getByTestId("candidate-boundary-diagnostic");
+  await expect(diagnostic).toBeVisible();
+  await expect(diagnostic.getByRole("button", { name: "診断を実行" })).toBeVisible();
+  expect(requestCount).toBe(0);
+
+  await diagnostic.getByRole("button", { name: "診断を実行" }).click();
+  await expect(diagnostic.getByText("診断結果を読み込みました。")).toBeVisible();
+  expect(requestCount).toBe(1);
+  const url = new URL(requestUrl);
+  expect(url.pathname).toBe("/api/analytics/candidate-boundary-events");
+  expect(url.searchParams.get("start")).toBe("2026-09-02T05:34:00Z");
+  expect(url.searchParams.get("end")).toBe("2026-09-02T05:39:00Z");
+  await expect(diagnostic.locator("thead th")).toHaveText([
+    "event_name",
+    "created_at",
+    "semantic_candidates_state",
+    "candidate_count"
+  ]);
+  await expect(diagnostic).not.toContainText(/metadata|authorization|token|cookie|candidate_id|user_id/i);
+});
+
+test("memberにはCandidate Boundary Diagnosticを表示しない", async ({ page }) => {
+  await login(page, memberEmail);
+  await expect(page.getByTestId("candidate-boundary-diagnostic")).toHaveCount(0);
+});
+
 test("存在しないページでアプリ全体が落ちない", async ({ page }) => {
   await page.goto("/not-found-for-e2e");
   await expect(page.locator("body")).toBeVisible();
@@ -2197,6 +2239,18 @@ function proposalGenerationHistoryJson() {
 }
 
 function mockResponse(path: string, options: MockOptions = {}, presentationState = { status: "draft", approved: false, generated: false }) {
+  if (path.includes("/analytics/candidate-boundary-events")) {
+    return {
+      events: [
+        {
+          event_name: "shadow_candidate_boundary",
+          created_at: "2026-09-02 05:36:15",
+          semantic_candidates_state: "EMPTY",
+          candidate_count: 0
+        }
+      ]
+    };
+  }
   if (path.includes("/beautiful-ai/diagnostics/test")) {
     return {
       ok: true,
