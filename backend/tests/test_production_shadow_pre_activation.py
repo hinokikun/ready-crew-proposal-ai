@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+
 import pytest
 
 from app.config import settings
@@ -69,6 +71,22 @@ def test_eligible_hook_submits_once_and_returns_before_shadow_completion(monkeyp
     assert result.pptx_bytes == b"primary"
     assert len(fake.submissions) == 1
     assert fake.submissions[0].workload.binding.candidates.candidates
+
+
+def test_hook_entry_emits_one_bounded_downstream_correlation_id(monkeypatch):
+    primary = engine.PresentationEngineResult(b"primary", "legacy", quality_report={"validated": True})
+    fake = _FakeController(enabled=True)
+    fake.submissions.clear()
+    events: list[tuple[str, dict[str, object]]] = []
+    monkeypatch.setattr(engine, "_build_primary_pptx_bytes_for_engine", lambda *args, **kwargs: primary)
+    monkeypatch.setattr(engine, "_log_shadow_metadata", lambda event, **fields: events.append((event, fields)))
+    object.__setattr__(settings, "presentation_master_v3_renderer_mvp_shadow_enabled", True)
+    monkeypatch.setattr(engine, "_PRODUCTION_SHADOW_CONTROLLER", fake)
+
+    engine.build_pptx_bytes_for_engine(_eligible_payload(), request_id="correlated")
+
+    hook_events = [fields for event, fields in events if event == "presentation_shadow_hook_entered"]
+    assert hook_events == [{"correlation_id": hashlib.sha256(b"correlated").hexdigest()[:16]}]
 
 
 def test_ineligible_and_logger_failure_are_primary_safe(monkeypatch):

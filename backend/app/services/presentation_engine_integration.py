@@ -249,6 +249,11 @@ def _submit_production_shadow_after_primary(
     if not request_id:
         emit_decision("INELIGIBLE", "MISSING_REQUEST_ID")
         return primary
+    hook_correlation_id = hashlib.sha256(request_id.encode()).hexdigest()[:16]
+    try:
+        _log_shadow_metadata("presentation_shadow_hook_entered", correlation_id=hook_correlation_id)
+    except Exception:
+        pass
     if not isinstance(primary.pptx_bytes, bytes) or not primary.pptx_bytes:
         emit_decision("INELIGIBLE", "INVALID_PRIMARY_BYTES")
         return primary
