@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from datetime import datetime
 from sqlite3 import Connection
@@ -11,6 +12,7 @@ from app.daily_briefing import build_daily_briefing_analytics
 from app.integrations import build_integration_analytics
 from app.learning.services import build_learning_analytics
 from app.orchestrator import build_orchestrator_analytics
+from app.observability import log_structured
 from app.presentation_review import build_presentation_analytics
 from app.proposal_optimization import build_optimization_dashboard
 from app.project_lifecycle import build_project_lifecycle_analytics
@@ -42,6 +44,13 @@ CANDIDATE_BOUNDARY_EVENT_NAMES = (
 )
 MAX_CANDIDATE_BOUNDARY_RESULTS = 20
 MAX_CANDIDATE_BOUNDARY_SCAN = 200
+BOUNDARY_LABELS = {
+    "presentation_candidate_boundary_analysis": "ANALYSIS",
+    "presentation_candidate_boundary_transport": "TRANSPORT",
+    "presentation_candidate_boundary_backend": "BACKEND",
+}
+
+logger = logging.getLogger(__name__)
 
 
 def _row_to_dict(row: Any) -> dict[str, Any]:
@@ -56,6 +65,16 @@ def _scope_clause(scope: ScopeContext | None, alias: str = "") -> tuple[str, tup
     if not scope:
         return "1 = 1", ()
     return scope_where(scope, alias)
+
+
+def _normalize_candidate_boundary_metadata(metadata: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not isinstance(metadata, dict):
+        return metadata
+    normalized = dict(metadata)
+    count = normalized.get("candidate_count")
+    if isinstance(count, str) and re.fullmatch(r"(?:0|[1-9][0-9]*)", count):
+        normalized["candidate_count"] = int(count)
+    return normalized
 
 
 def _safe_metadata(metadata: dict[str, Any] | None, *, candidate_boundary: bool = False) -> str:
@@ -120,6 +139,132 @@ def _validated_candidate_boundary_metadata(metadata: Any) -> dict[str, Any] | No
     if correlation_id is not None:
         result["candidate_boundary_correlation_id"] = correlation_id
     return result
+
+
+def _candidate_boundary_validation_reason(metadata: Any, correlation_id: str) -> tuple[str, dict[str, Any] | None]:
+    if not isinstance(metadata, str) or not metadata:
+        return "INVALID_METADATA", None
+    try:
+        decoded = json.loads(metadata)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return "INVALID_METADATA", None
+    if not isinstance(decoded, dict):
+        return "INVALID_METADATA", None
+    state = decoded.get("semantic_candidates_state")
+    if state not in SEMANTIC_CANDIDATE_STATES:
+        return "INVALID_STATE", None
+    count = decoded.get("candidate_count")
+    if isinstance(count, bool) or not isinstance(count, int) or not 0 <= count <= MAX_CANDIDATE_COUNT:
+        return "INVALID_COUNT", None
+    if decoded.get("candidate_boundary_correlation_id") != correlation_id:
+        return "INVALID_CORRELATION", None
+    return "VALID", {
+        "semantic_candidates_state": state,
+        "candidate_count": count,
+        "candidate_boundary_correlation_id": correlation_id,
+    }
+
+
+def log_candidate_boundary_persisted(evidence: dict[str, Any] | None) -> None:
+    if not evidence:
+        return
+    log_structured(
+        logger,
+        "info",
+        "candidate_boundary_persisted",
+        boundary=evidence["boundary"],
+        correlation_id=evidence["correlation_id"],
+        semantic_candidates_state=evidence["state"],
+        candidate_count=evidence["count"],
+        persistence_result="COMMITTED",
+    )
+
+
+def build_candidate_boundary_evidence(event_name: str, metadata: dict[str, Any] | None) -> dict[str, Any] | None:
+    metadata = _normalize_candidate_boundary_metadata(metadata)
+    if event_name not in BOUNDARY_LABELS or not isinstance(metadata, dict):
+        return None
+    state = metadata.get("semantic_candidates_state")
+    count = metadata.get("candidate_count")
+    correlation = metadata.get("candidate_boundary_correlation_id")
+    if (
+        isinstance(correlation, str)
+        and re.fullmatch(r"[A-Za-z0-9_-]{1,64}", correlation)
+        and state in SEMANTIC_CANDIDATE_STATES
+        and isinstance(count, int)
+        and not isinstance(count, bool)
+        and 0 <= count <= MAX_CANDIDATE_COUNT
+    ):
+        return {"boundary": BOUNDARY_LABELS[event_name], "correlation_id": correlation, "state": state, "count": count}
+    return None
+
+
+def reconcile_candidate_boundary_events(
+    db: Connection,
+    scope: ScopeContext,
+    correlation_id: str,
+) -> dict[str, Any]:
+    rows = db.execute(
+        """
+        SELECT event_name, created_at, metadata, candidate_boundary_correlation_id,
+               organization_id, workspace_id
+        FROM analytics_events
+        WHERE event_name IN (?, ?, ?)
+          AND candidate_boundary_correlation_id = ?
+        ORDER BY created_at ASC, id ASC
+        LIMIT 20
+        """,
+        (*CANDIDATE_BOUNDARY_EVENT_NAMES, correlation_id),
+    ).fetchall()
+    scoped_rows: dict[str, list[Any]] = {name: [] for name in CANDIDATE_BOUNDARY_EVENT_NAMES}
+    excluded_rows: set[str] = set()
+    for row in rows:
+        name = row["event_name"]
+        matches_scope = (
+            int(row["organization_id"] or 0) == scope.organization_id
+            and (scope.workspace_id is None or int(row["workspace_id"] or 0) == int(scope.workspace_id))
+        )
+        if matches_scope:
+            scoped_rows[name].append(row)
+        else:
+            excluded_rows.add(name)
+
+    events: list[dict[str, Any]] = []
+    boundaries: list[dict[str, Any]] = []
+    for event_name in CANDIDATE_BOUNDARY_EVENT_NAMES:
+        matching = scoped_rows[event_name]
+        status = "MISSING"
+        reason = "MISSING"
+        valid_rows: list[tuple[Any, dict[str, Any]]] = []
+        if not matching and event_name in excluded_rows:
+            status = "SCOPE_EXCLUDED"
+            reason = "SCOPE_EXCLUDED"
+        elif len(matching) > 1:
+            status = "DUPLICATE"
+            reason = "DUPLICATE"
+        elif matching:
+            validation_reason, metadata = _candidate_boundary_validation_reason(matching[0]["metadata"], correlation_id)
+            if validation_reason == "VALID" and metadata is not None:
+                status = "VALID"
+                reason = ""
+                valid_rows.append((matching[0], metadata))
+            else:
+                status = validation_reason
+                reason = validation_reason
+        for row, metadata in valid_rows:
+            events.append({"event_name": row["event_name"], "created_at": row["created_at"], **metadata})
+        boundaries.append(
+            {
+                "boundary": BOUNDARY_LABELS[event_name],
+                "event_name": event_name,
+                "physical_row_count": len(matching) if matching or event_name not in excluded_rows else 0,
+                "valid_row_count": len(valid_rows),
+                "status": status,
+                "reason": reason,
+                "scope_match": status != "SCOPE_EXCLUDED",
+            }
+        )
+    return {"events": events, "diagnostic": {"requested_correlation_id": correlation_id, "boundaries": boundaries}}
 
 
 def list_candidate_boundary_events(
@@ -198,8 +343,9 @@ def record_analytics_event(
         (session_key, user_id, organization_id, workspace_id),
     )
     candidate_boundary_correlation_id = None
-    if event_name in CANDIDATE_BOUNDARY_EVENT_NAMES and isinstance(metadata, dict):
-        candidate_boundary_correlation_id = metadata.get("candidate_boundary_correlation_id")
+    normalized_metadata = _normalize_candidate_boundary_metadata(metadata)
+    if event_name in CANDIDATE_BOUNDARY_EVENT_NAMES and isinstance(normalized_metadata, dict):
+        candidate_boundary_correlation_id = normalized_metadata.get("candidate_boundary_correlation_id")
         if not isinstance(candidate_boundary_correlation_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", candidate_boundary_correlation_id):
             candidate_boundary_correlation_id = None
     db.execute(
@@ -207,7 +353,7 @@ def record_analytics_event(
         INSERT INTO analytics_events (session_key, user_id, event_name, feature_name, status, duration_ms, metadata, candidate_boundary_correlation_id, organization_id, workspace_id)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (session_key, user_id, event_name, feature_name, status, max(duration_ms, 0), _safe_metadata(metadata, candidate_boundary=event_name in CANDIDATE_BOUNDARY_EVENT_NAMES), candidate_boundary_correlation_id, organization_id, workspace_id),
+        (session_key, user_id, event_name, feature_name, status, max(duration_ms, 0), _safe_metadata(normalized_metadata, candidate_boundary=event_name in CANDIDATE_BOUNDARY_EVENT_NAMES), candidate_boundary_correlation_id, organization_id, workspace_id),
     )
 
     generation_increment = 1 if event_name in GENERATION_EVENTS and status == "success" else 0
@@ -246,7 +392,11 @@ def record_analytics_event(
             (key, category, event_name, source, organization_id, workspace_id),
         )
 
-    return {"ok": True}
+    result: dict[str, Any] = {"ok": True}
+    evidence = build_candidate_boundary_evidence(event_name, normalized_metadata)
+    if evidence is not None:
+        result["_candidate_boundary_evidence"] = evidence
+    return result
 
 
 def list_analytics_sessions(db: Connection, limit: int = 20, offset: int = 0, scope: ScopeContext | None = None) -> list[dict[str, Any]]:

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.analytics.repositories import list_candidate_boundary_events
+from app.analytics.repositories import build_candidate_boundary_evidence, list_candidate_boundary_events, log_candidate_boundary_persisted, reconcile_candidate_boundary_events
 from app.analytics.services import add_release_note, get_dashboard, get_release_notes as get_release_notes_service, record_event, set_error_resolved
 from app.auth import require_roles
 from app.db import get_db
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 @router.post("/events")
 async def post_analytics_event(payload: AnalyticsEventRequest, user: dict = Depends(require_roles("admin", "member", "viewer"))) -> dict:
     with get_db() as db:
-        return record_event(
+        result = record_event(
             db,
             user_id=int(user["id"]),
             session_key=payload.session_id,
@@ -27,6 +27,9 @@ async def post_analytics_event(payload: AnalyticsEventRequest, user: dict = Depe
             error_type=payload.error_type,
             metadata=payload.metadata,
         )
+    evidence = result.pop("_candidate_boundary_evidence", None) or build_candidate_boundary_evidence(payload.event_name, payload.metadata)
+    log_candidate_boundary_persisted(evidence)
+    return {"ok": True}
 
 
 @router.get("/dashboard")
@@ -75,6 +78,8 @@ async def get_candidate_boundary_events(
         end_at = end_dt.strftime("%Y-%m-%d %H:%M:%S")
     with get_db() as db:
         resolved_scope = resolve_scope(db, user, scope)
+        if candidate_boundary_correlation_id is not None:
+            return reconcile_candidate_boundary_events(db, resolved_scope, candidate_boundary_correlation_id)
         return {
             "events": list_candidate_boundary_events(
                 db,

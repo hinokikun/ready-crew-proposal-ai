@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from app.config import settings
 from app.auth import ensure_not_maintenance_mode, require_roles
+from app.analytics.repositories import build_candidate_boundary_evidence, log_candidate_boundary_persisted
 from app.analytics.services import record_event
 from app.db import get_db, get_db_health, init_db, seed_default_organization, seed_default_templates
 from app.health import build_health_payload as build_application_health_payload
@@ -369,7 +370,7 @@ async def download_pptx(
             candidate_state = "OMITTED" if raw_candidates is None else ("NONEMPTY" if candidate_count else "EMPTY")
             try:
                 with get_db() as db:
-                    record_event(
+                    backend_capture = record_event(
                         db,
                         user_id=int(user["id"]),
                         session_key=f"candidate-boundary:{payload.candidate_boundary_correlation_id}",
@@ -382,6 +383,15 @@ async def download_pptx(
                             "candidate_count": candidate_count,
                         },
                     )
+                evidence = backend_capture.pop("_candidate_boundary_evidence", None) or build_candidate_boundary_evidence(
+                    "presentation_candidate_boundary_backend",
+                    {
+                        "candidate_boundary_correlation_id": payload.candidate_boundary_correlation_id,
+                        "semantic_candidates_state": candidate_state,
+                        "candidate_count": candidate_count,
+                    },
+                )
+                log_candidate_boundary_persisted(evidence)
             except Exception as exc:
                 logger.warning("diagnostic backend boundary capture failed: %s", exc.__class__.__name__)
                 raise HTTPException(

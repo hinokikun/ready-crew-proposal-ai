@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timedelta, timezone
 
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -245,3 +246,115 @@ def test_candidate_boundary_endpoint_retrieves_exact_correlation_without_content
             "candidate_count": 0,
         }
     ]
+
+
+def test_candidate_boundary_diagnostic_reconciles_all_boundaries_without_raw_content(client: TestClient, admin_headers: dict[str, str], monkeypatch) -> None:
+    correlation_id = "diagnostic-reconcile-001"
+    commit_observations = []
+    from app.routers import analytics as analytics_router
+    from app.db import get_db as current_get_db
+
+    def observe_commit(logger, level, message, **fields):
+        with current_get_db() as db:
+            row = db.execute("SELECT id FROM analytics_events WHERE candidate_boundary_correlation_id = ?", (correlation_id,)).fetchone()
+        commit_observations.append((message, fields, row is not None))
+
+    monkeypatch.setattr(analytics_router, "log_candidate_boundary_persisted", lambda evidence: observe_commit(None, None, "candidate_boundary_persisted", boundary=evidence["boundary"], correlation_id=evidence["correlation_id"], semantic_candidates_state=evidence["state"], candidate_count=evidence["count"], persistence_result="COMMITTED"))
+    response = client.post(
+        "/api/analytics/events",
+        headers=admin_headers,
+        json={
+            "session_id": "diagnostic-session-001",
+            "event_name": "presentation_candidate_boundary_analysis",
+            "feature_name": "proposal",
+            "status": "success",
+            "metadata": {
+                "candidate_boundary_correlation_id": correlation_id,
+                "semantic_candidates_state": "EMPTY",
+                "candidate_count": 0,
+                "raw_customer_content": "must-not-appear",
+            },
+        },
+    )
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}
+    assert commit_observations == [(
+        "candidate_boundary_persisted",
+        {"boundary": "ANALYSIS", "correlation_id": correlation_id, "semantic_candidates_state": "EMPTY", "candidate_count": 0, "persistence_result": "COMMITTED"},
+        True,
+    )]
+
+    from app.db import get_db as current_get_db
+
+    with current_get_db() as db:
+        for event_name, metadata, organization_id, workspace_id in (
+            ("presentation_candidate_boundary_transport", json.dumps({"candidate_boundary_correlation_id": correlation_id, "semantic_candidates_state": "NONEMPTY", "candidate_count": 2}), 1, 1),
+            ("presentation_candidate_boundary_transport", json.dumps({"candidate_boundary_correlation_id": correlation_id, "semantic_candidates_state": "NONEMPTY", "candidate_count": 3}), 1, 1),
+                ("presentation_candidate_boundary_backend", json.dumps({"candidate_boundary_correlation_id": correlation_id, "semantic_candidates_state": "INVALID", "candidate_count": 1}), 1, 1),
+                ("presentation_candidate_boundary_backend", json.dumps({"candidate_boundary_correlation_id": correlation_id, "semantic_candidates_state": "EMPTY", "candidate_count": 0}), 1, 1),
+                ("presentation_candidate_boundary_analysis", json.dumps({"candidate_boundary_correlation_id": "wrong-correlation", "semantic_candidates_state": "EMPTY", "candidate_count": 0}), 1, 1),
+            ("presentation_candidate_boundary_backend", json.dumps({"candidate_boundary_correlation_id": correlation_id, "semantic_candidates_state": "EMPTY", "candidate_count": 0}), 2, 2),
+        ):
+            db.execute(
+                "INSERT INTO analytics_events (session_key, event_name, metadata, candidate_boundary_correlation_id, organization_id, workspace_id) VALUES (?, ?, ?, ?, ?, ?)",
+                ("diagnostic-reconcile-seed", event_name, metadata, correlation_id, organization_id, workspace_id),
+            )
+
+    result = client.get(
+        f"/api/analytics/candidate-boundary-events?candidate_boundary_correlation_id={correlation_id}",
+        headers=admin_headers,
+    )
+    assert result.status_code == 200
+    body = result.json()
+    assert "metadata" not in body
+    diagnostic = {item["boundary"]: item for item in body["diagnostic"]["boundaries"]}
+    assert diagnostic["ANALYSIS"]["status"] == "DUPLICATE"
+    assert diagnostic["TRANSPORT"]["status"] == "DUPLICATE"
+    assert diagnostic["BACKEND"]["status"] == "DUPLICATE"
+    assert all("scope_match" in item for item in diagnostic.values())
+
+
+def test_candidate_boundary_diagnostic_scope_exclusion_is_bounded(client: TestClient, admin_headers: dict[str, str]) -> None:
+    correlation_id = "diagnostic-scope-001"
+    from app.db import get_db as current_get_db
+
+    with current_get_db() as db:
+        db.execute(
+            "INSERT INTO analytics_events (session_key, event_name, metadata, candidate_boundary_correlation_id, organization_id, workspace_id) VALUES (?, ?, ?, ?, ?, ?)",
+            ("diagnostic-scope-seed", "presentation_candidate_boundary_analysis", json.dumps({"candidate_boundary_correlation_id": correlation_id, "semantic_candidates_state": "EMPTY", "candidate_count": 0}), correlation_id, 99, 99),
+        )
+    response = client.get(f"/api/analytics/candidate-boundary-events?candidate_boundary_correlation_id={correlation_id}", headers=admin_headers)
+    assert response.status_code == 200
+    boundary = next(item for item in response.json()["diagnostic"]["boundaries"] if item["boundary"] == "ANALYSIS")
+    assert boundary["status"] == "SCOPE_EXCLUDED"
+    assert boundary["physical_row_count"] == 0
+    assert boundary["valid_row_count"] == 0
+
+
+def test_candidate_boundary_committed_evidence_is_not_emitted_when_recording_fails(client: TestClient, admin_headers: dict[str, str], monkeypatch) -> None:
+    from app.routers import analytics as analytics_router
+
+    emitted = []
+
+    def fail_recording(*args, **kwargs):
+        raise RuntimeError("recording failed")
+
+    monkeypatch.setattr(analytics_router, "record_event", fail_recording)
+    monkeypatch.setattr(analytics_router, "log_candidate_boundary_persisted", emitted.append)
+    with pytest.raises(RuntimeError):
+        client.post(
+            "/api/analytics/events",
+            headers=admin_headers,
+            json={
+                "session_id": "diagnostic-failure-001",
+                "event_name": "presentation_candidate_boundary_analysis",
+                "feature_name": "proposal",
+                "status": "success",
+                "metadata": {
+                    "candidate_boundary_correlation_id": "diagnostic-failure-001",
+                    "semantic_candidates_state": "EMPTY",
+                    "candidate_count": 0,
+                },
+            },
+        )
+    assert emitted == []
