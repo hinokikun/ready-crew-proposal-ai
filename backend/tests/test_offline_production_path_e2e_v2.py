@@ -81,7 +81,7 @@ def test_offline_production_path_e2e_v2_transport_to_native_m48():
     transport = _state(base, corrected_id="action")
     transported = apply_semantic_confirmation_state(base, transport)
     ai_note = next(item for item in transported.candidates if item.id == "ai-note")
-    assert ai_note.authority == SemanticAuthority.AI_PROPOSED
+    assert ai_note.authority == SemanticAuthority.USER_EXPLICIT
     assert ai_note.review_state == SemanticReviewState.CONFIRMED
     ready = prepare_pmv3(_request(transport), semantic_candidates=base)
     assert ready.status in {AdapterStatus.READY, AdapterStatus.READY_WITH_VALID_BINDINGS}

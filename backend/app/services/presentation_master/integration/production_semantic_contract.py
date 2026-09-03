@@ -92,13 +92,15 @@ def confirm_candidate(candidate: ProductionSemanticCandidate, *, confirmation_au
         raise ValueError("rejected candidate cannot be confirmed")
     if confirmation_authority != SemanticAuthority.USER_EXPLICIT:
         raise ValueError("candidate confirmation requires USER_EXPLICIT authority")
-    return replace(candidate, review_state=SemanticReviewState.CONFIRMED, confirmation_authority=confirmation_authority)
+    effective_authority = confirmation_authority if candidate.authority == SemanticAuthority.AI_PROPOSED else candidate.authority
+    return replace(candidate, authority=effective_authority, review_state=SemanticReviewState.CONFIRMED, confirmation_authority=confirmation_authority)
 
 
 def correct_candidate(candidate: ProductionSemanticCandidate, value: str) -> ProductionSemanticCandidate:
     if not value.strip():
         raise ValueError("corrected value is required")
-    return replace(candidate, value=value.strip(), authority=SemanticAuthority.USER_EXPLICIT, review_state=SemanticReviewState.CORRECTED, inferred=False, confirmation_authority=SemanticAuthority.USER_EXPLICIT, original_candidate_id=candidate.original_candidate_id or candidate.id)
+    effective_authority = SemanticAuthority.USER_EXPLICIT if candidate.authority == SemanticAuthority.AI_PROPOSED else candidate.authority
+    return replace(candidate, value=value.strip(), authority=effective_authority, review_state=SemanticReviewState.CORRECTED, inferred=False, confirmation_authority=SemanticAuthority.USER_EXPLICIT, original_candidate_id=candidate.original_candidate_id or candidate.id)
 
 
 def reject_candidate(candidate: ProductionSemanticCandidate) -> ProductionSemanticCandidate:
