@@ -42,11 +42,22 @@ async def generate_proposal(payload: ProposalRequest) -> AnalysisResponse:
 
     analysis = enrich_analysis_with_sales_consultant_strategy(analysis, consultant_brief)
 
+    from app.services.presentation_master.integration.production_semantic_contract import (
+        ProductionSemanticCandidateSet,
+        candidate_set_to_dict,
+        extract_explicit_candidates,
+        propose_candidates_from_analysis,
+    )
+    explicit_candidates = extract_explicit_candidates(payload)
+    proposed_candidates = propose_candidates_from_analysis(analysis)
+    semantic_candidates = ProductionSemanticCandidateSet(explicit_candidates.candidates + proposed_candidates.candidates)
+
     markdown = build_markdown(analysis)
     return AnalysisResponse(
         analysis=analysis,
         markdown=markdown,
         powerpoint_generation_data=analysis.powerpoint_generation_data,
+        semantic_candidates=candidate_set_to_dict(semantic_candidates),
     )
 
 
