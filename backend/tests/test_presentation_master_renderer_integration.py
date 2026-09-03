@@ -330,6 +330,61 @@ def test_readiness_message_serialization_failure_returns_minimal_safe_message(mo
     )
 
 
+def test_candidate_state_counts_reuse_existing_unresolved_critical_authority():
+    import app.services.presentation_engine_integration as engine
+    from app.services.presentation_master.integration.production_semantic_contract import (
+        ProductionSemanticCandidate,
+        ProductionSemanticCandidateSet,
+        SemanticAuthority,
+        SemanticItemType,
+        SemanticReviewState,
+    )
+
+    def candidate(candidate_id, state):
+        return ProductionSemanticCandidate(
+            candidate_id,
+            SemanticItemType.DECISION_CONDITION,
+            "bounded value",
+            "analysis",
+            "source_field",
+            SemanticAuthority.AI_PROPOSED,
+            0.6,
+            state,
+            inferred=True,
+            confirmation_authority=(
+                SemanticAuthority.USER_EXPLICIT
+                if state in {SemanticReviewState.CONFIRMED, SemanticReviewState.CORRECTED}
+                else None
+            ),
+        )
+
+    candidates = ProductionSemanticCandidateSet(
+        (
+            candidate("candidate-id-alpha", SemanticReviewState.UNCONFIRMED),
+            candidate("candidate-id-bravo", SemanticReviewState.CONFIRMED),
+            candidate("candidate-id-charlie", SemanticReviewState.CORRECTED),
+            candidate("candidate-id-delta", SemanticReviewState.REJECTED),
+            candidate("candidate-id-echo", SemanticReviewState.UNRESOLVED),
+        )
+    )
+    metadata = engine._bounded_readiness_metadata(
+        SimpleNamespace(fallback_stage=None, selection=None, composition_readiness="NOT_READY", provenance_summary={}, diagnostics={}),
+        candidate_count=5,
+        candidate_set=candidates,
+    )
+    assert metadata["candidate_count"] == 5
+    assert metadata["confirmed_candidate_count"] == 1
+    assert metadata["corrected_candidate_count"] == 1
+    assert metadata["unconfirmed_candidate_count"] == 1
+    assert metadata["rejected_candidate_count"] == 1
+    assert metadata["unresolved_candidate_count"] == 1
+    assert metadata["unresolved_critical_count"] == len(candidates.unresolved_critical())
+    message = engine._serialize_bounded_readiness_metadata(metadata)
+    assert "candidate_count=5" in message
+    assert "unresolved_critical_count=3" in message
+    assert all(identifier not in message for identifier in ("candidate-id-alpha", "candidate-id-bravo", "candidate-id-charlie", "candidate-id-delta", "candidate-id-echo"))
+
+
 def test_readiness_observability_failure_is_non_blocking(monkeypatch):
     import app.services.presentation_engine_integration as engine
 

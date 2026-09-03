@@ -305,7 +305,11 @@ def _submit_production_shadow_after_primary(
         except Exception:
             emit_decision("INELIGIBLE", "PREPARATION_FAILED")
             return primary
-        readiness_metadata = _bounded_readiness_metadata(prepared, candidate_count=candidate_count)
+        readiness_metadata = _bounded_readiness_metadata(
+            prepared,
+            candidate_count=candidate_count,
+            candidate_set=context.binding.candidates,
+        )
         try:
             eligibility = ShadowController.eligibility(
                 summary=payload.summary,
@@ -435,6 +439,18 @@ def _serialize_bounded_readiness_metadata(metadata: dict[str, Any] | None) -> st
     if isinstance(candidate_count, int) and 0 <= candidate_count <= 100000:
         parts.append(f"candidate_count={candidate_count}")
 
+    for key in (
+        "confirmed_candidate_count",
+        "corrected_candidate_count",
+        "unconfirmed_candidate_count",
+        "rejected_candidate_count",
+        "unresolved_candidate_count",
+        "unresolved_critical_count",
+    ):
+        value = metadata.get(key)
+        if isinstance(value, int) and 0 <= value <= 100000:
+            parts.append(f"{key}={value}")
+
     provenance = metadata.get("provenance_counts")
     if isinstance(provenance, dict):
         allowed_counts = ("DIRECT", "SAFE_DERIVED", "EXISTING_SUPPLEMENT", "UNRESOLVED")
@@ -458,10 +474,40 @@ def _serialize_bounded_readiness_metadata(metadata: dict[str, Any] | None) -> st
     return " ".join(parts)
 
 
-def _bounded_readiness_metadata(prepared: Any, *, candidate_count: int) -> dict[str, Any]:
+def _bounded_readiness_metadata(
+    prepared: Any,
+    *,
+    candidate_count: int,
+    candidate_set: Any | None = None,
+) -> dict[str, Any]:
     """Extract only existing, bounded adapter metadata for the eligibility event."""
     metadata: dict[str, Any] = {"candidate_count": max(0, min(int(candidate_count), 100000))}
     try:
+        candidates = tuple(getattr(candidate_set, "candidates", ()))
+        state_counts = {
+            "confirmed_candidate_count": 0,
+            "corrected_candidate_count": 0,
+            "unconfirmed_candidate_count": 0,
+            "rejected_candidate_count": 0,
+            "unresolved_candidate_count": 0,
+        }
+        for candidate in candidates:
+            state = getattr(getattr(candidate, "review_state", None), "value", None)
+            key = {
+                "CONFIRMED": "confirmed_candidate_count",
+                "CORRECTED": "corrected_candidate_count",
+                "UNCONFIRMED": "unconfirmed_candidate_count",
+                "REJECTED": "rejected_candidate_count",
+                "UNRESOLVED": "unresolved_candidate_count",
+            }.get(state)
+            if key:
+                state_counts[key] += 1
+        if candidate_set is not None:
+            metadata.update(state_counts)
+            unresolved_critical = getattr(candidate_set, "unresolved_critical", None)
+            if callable(unresolved_critical):
+                metadata["unresolved_critical_count"] = min(max(len(unresolved_critical()), 0), 100000)
+
         stage = getattr(getattr(prepared, "fallback_stage", None), "value", None)
         if stage in _BOUNDED_READINESS_STAGES:
             metadata["fallback_stage"] = stage
