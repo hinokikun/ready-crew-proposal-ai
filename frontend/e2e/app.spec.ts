@@ -1009,6 +1009,76 @@ test("memberにはCandidate Boundary Diagnosticを表示しない", async ({ pag
   await expect(page.getByTestId("candidate-boundary-diagnostic")).toHaveCount(0);
 });
 
+test("Candidate Boundary DiagnosticのDurable結果は3境界のstate/countとbounded invalid reasonを表示する", async ({ page }) => {
+  test.setTimeout(120_000);
+  const correlationId = "7548a79cffbe484494e982dfe46b1302";
+  let currentCase = {
+    states: ["NONEMPTY", "NONEMPTY", "NONEMPTY"],
+    counts: [2, 1, 1]
+  };
+  await page.addInitScript(({ key, correlation }) => {
+    sessionStorage.setItem(key, JSON.stringify({
+      version: 1,
+      correlationId: correlation,
+      phase: "completed",
+      analysisStatus: "confirmed",
+      transportStatus: "confirmed",
+      backendStatus: "confirmed",
+      resultStatus: "available",
+      createdAt: Date.now()
+    }));
+  }, { key: "ready-crew-candidate-boundary-diagnostic-v2", correlation: correlationId });
+  await page.route("**/api/analytics/candidate-boundary-events**", async (route) => {
+    const names = [
+      "presentation_candidate_boundary_analysis",
+      "presentation_candidate_boundary_transport",
+      "presentation_candidate_boundary_backend"
+    ];
+    const events = names.map((event_name, index) => ({
+      event_name,
+      created_at: "2026-09-02 05:36:15",
+      candidate_boundary_correlation_id: correlationId,
+      semantic_candidates_state: currentCase.states[index],
+      candidate_count: currentCase.counts[index]
+    }));
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        events,
+        diagnostic: {
+          requested_correlation_id: correlationId,
+          boundaries: names.map((event_name, index) => ({
+            boundary: ["ANALYSIS", "TRANSPORT", "BACKEND"][index],
+            event_name,
+            physical_row_count: 1,
+            valid_row_count: 1,
+            status: "VALID",
+            reason: "",
+            scope_match: true
+          }))
+        }
+      })
+    });
+  });
+
+  await login(page, adminEmail);
+  await openAdminPilotDashboard(page);
+  await page.locator("#admin-product-analytics-panel").evaluate((element) => {
+    (element as HTMLDetailsElement).open = true;
+  });
+  const result = page.getByTestId("candidate-boundary-durable-result");
+  await result.getByRole("button", { name: "診断結果を取得" }).click();
+  await expect(result.locator("thead th")).toHaveText(["boundary", "status", "physical", "valid", "state", "count", "reason", "scope"]);
+  await expect(result).toContainText("ANALYSIS");
+  await expect(result).toContainText("TRANSPORT");
+  await expect(result).toContainText("BACKEND");
+  for (const state of currentCase.states) await expect(result).toContainText(state);
+  for (const count of currentCase.counts) await expect(result).toContainText(String(count));
+  await expect(result).toContainText("CANDIDATES_PRESERVED_END_TO_END");
+  await expect(result).not.toContainText(/candidate_id|proposal|organization|workspace|user_id|metadata|authorization|token|cookie/i);
+});
+
 test("adminの履歴復元は固定窓を一度だけ読み、同一相関のanalysisとtransportだけを表示する", async ({ page }) => {
   let recoveryRequests = 0;
   let recoveryUrl = "";

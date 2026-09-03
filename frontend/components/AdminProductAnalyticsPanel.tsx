@@ -59,8 +59,23 @@ type DurableDiagnosticRecoveryState = {
   transport: CandidateBoundaryEvent | null;
   backend: CandidateBoundaryEvent | null;
   classification: string;
+  diagnosticReason: string;
   diagnostic: CandidateBoundaryDiagnostic | null;
 };
+
+const DISPLAYABLE_CANDIDATE_STATES = new Set(["OMITTED", "EMPTY", "NONEMPTY"]);
+
+function boundedCandidateState(event: CandidateBoundaryEvent | undefined): string {
+  return event && DISPLAYABLE_CANDIDATE_STATES.has(event.semantic_candidates_state)
+    ? event.semantic_candidates_state
+    : "-";
+}
+
+function boundedCandidateCount(event: CandidateBoundaryEvent | undefined): string | number {
+  return event && Number.isInteger(event.candidate_count) && event.candidate_count >= 0 && event.candidate_count <= 1000
+    ? event.candidate_count
+    : "-";
+}
 
 function reconcileDurableDiagnosticEvents(events: CandidateBoundaryEvent[], requestedCorrelationId: string): DurableDiagnosticRecoveryState {
   const matching = events.filter((event) => event.candidate_boundary_correlation_id === requestedCorrelationId);
@@ -76,25 +91,36 @@ function reconcileDurableDiagnosticEvents(events: CandidateBoundaryEvent[], requ
     "presentation_candidate_boundary_backend"
   ]);
   if ([...byName.keys()].some((name) => !allowed.has(name))) {
-    return { status: "invalid", correlationId: requestedCorrelationId, analysis: null, transport: null, backend: null, classification: "DIAGNOSTIC_INVALID", diagnostic: null };
+    return { status: "invalid", correlationId: requestedCorrelationId, analysis: null, transport: null, backend: null, classification: "DIAGNOSTIC_INVALID", diagnosticReason: "UNSUPPORTED_STATE_ORDERING", diagnostic: null };
   }
   if ([...byName.values()].some((rows) => rows.length > 1)) {
-    return { status: "ambiguous", correlationId: requestedCorrelationId, analysis: null, transport: null, backend: null, classification: "DUPLICATE_BOUNDARY_EVENT", diagnostic: null };
+    return { status: "ambiguous", correlationId: requestedCorrelationId, analysis: null, transport: null, backend: null, classification: "DUPLICATE_BOUNDARY_EVENT", diagnosticReason: "", diagnostic: null };
   }
   const analysis = byName.get("presentation_candidate_boundary_analysis")?.[0] ?? null;
   const transport = byName.get("presentation_candidate_boundary_transport")?.[0] ?? null;
   const backend = byName.get("presentation_candidate_boundary_backend")?.[0] ?? null;
   if (!analysis || !transport || !backend) {
     const missing = !analysis ? "ANALYSIS_MISSING" : !transport ? "TRANSPORT_MISSING" : "BACKEND_MISSING";
-    return { status: "missing", correlationId: requestedCorrelationId, analysis, transport, backend, classification: missing, diagnostic: null };
+    return { status: "missing", correlationId: requestedCorrelationId, analysis, transport, backend, classification: missing, diagnosticReason: "", diagnostic: null };
   }
+  const boundaryEvents = [analysis, transport, backend];
+  const hasOmittedState = boundaryEvents.some((event) => event.semantic_candidates_state === "OMITTED");
+  const hasStateCountInconsistency = boundaryEvents.some((event) =>
+    (event.semantic_candidates_state === "EMPTY" && event.candidate_count > 0)
+    || (event.semantic_candidates_state === "NONEMPTY" && event.candidate_count === 0)
+  );
+  const diagnosticReason = hasOmittedState
+    ? "OMITTED_BOUNDARY_STATE"
+    : hasStateCountInconsistency
+      ? "STATE_COUNT_INCONSISTENCY"
+      : "UNSUPPORTED_STATE_ORDERING";
   let classification = "DIAGNOSTIC_COMPLETE";
   if (analysis.semantic_candidates_state === "EMPTY" && transport.semantic_candidates_state === "EMPTY" && backend.semantic_candidates_state === "EMPTY") classification = "ZERO_ORIGIN_AT_OR_BEFORE_ANALYSIS_BOUNDARY";
   else if (analysis.semantic_candidates_state === "NONEMPTY" && transport.semantic_candidates_state === "EMPTY" && backend.semantic_candidates_state === "EMPTY") classification = "CANDIDATE_LOSS_BETWEEN_ANALYSIS_AND_TRANSPORT";
   else if (analysis.semantic_candidates_state === "NONEMPTY" && transport.semantic_candidates_state === "NONEMPTY" && backend.semantic_candidates_state === "NONEMPTY") classification = "CANDIDATES_PRESERVED_END_TO_END";
   else if (analysis.semantic_candidates_state === "NONEMPTY" && transport.semantic_candidates_state === "NONEMPTY" && backend.semantic_candidates_state === "EMPTY") classification = "TRANSPORT_TO_BACKEND_REGRESSION";
   else classification = "DIAGNOSTIC_INVALID";
-  return { status: classification === "DIAGNOSTIC_INVALID" ? "invalid" : "complete", correlationId: requestedCorrelationId, analysis, transport, backend, classification, diagnostic: null };
+  return { status: classification === "DIAGNOSTIC_INVALID" ? "invalid" : "complete", correlationId: requestedCorrelationId, analysis, transport, backend, classification, diagnosticReason: classification === "DIAGNOSTIC_INVALID" ? diagnosticReason : "", diagnostic: null };
 }
 
 function reconcileHistoricalCandidateBoundaryEvents(events: CandidateBoundaryEvent[]): HistoricalRecoveryState {
@@ -179,7 +205,7 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
     transport: null
   });
   const [durableRecovery, setDurableRecovery] = useState<DurableDiagnosticRecoveryState>({
-    status: "idle", correlationId: "", analysis: null, transport: null, backend: null, classification: "", diagnostic: null
+    status: "idle", correlationId: "", analysis: null, transport: null, backend: null, classification: "", diagnosticReason: "", diagnostic: null
   });
 
   const markdown = useMemo(() => buildAnalyticsMarkdown(dashboard, releaseNotes), [dashboard, releaseNotes]);
@@ -250,16 +276,16 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
     if (durableRecovery.status !== "idle") return;
     const session = readCandidateBoundaryDiagnosticSession();
   if (!session) {
-      setDurableRecovery({ status: "invalid", correlationId: "", analysis: null, transport: null, backend: null, classification: "DIAGNOSTIC_INVALID", diagnostic: null });
+      setDurableRecovery({ status: "invalid", correlationId: "", analysis: null, transport: null, backend: null, classification: "DIAGNOSTIC_INVALID", diagnosticReason: "UNSUPPORTED_STATE_ORDERING", diagnostic: null });
       return;
     }
-    setDurableRecovery({ status: "loading", correlationId: session.correlationId, analysis: null, transport: null, backend: null, classification: "", diagnostic: null });
+    setDurableRecovery({ status: "loading", correlationId: session.correlationId, analysis: null, transport: null, backend: null, classification: "", diagnosticReason: "", diagnostic: null });
     try {
       const response = await getCandidateBoundaryDiagnosticResult(session.correlationId);
       const reconciled = reconcileDurableDiagnosticEvents(response.events, session.correlationId);
       setDurableRecovery({ ...reconciled, diagnostic: response.diagnostic ?? null });
     } catch {
-      setDurableRecovery({ status: "error", correlationId: session.correlationId, analysis: null, transport: null, backend: null, classification: "DIAGNOSTIC_INVALID", diagnostic: null });
+      setDurableRecovery({ status: "error", correlationId: session.correlationId, analysis: null, transport: null, backend: null, classification: "DIAGNOSTIC_INVALID", diagnosticReason: "UNSUPPORTED_STATE_ORDERING", diagnostic: null });
     }
   }
 
@@ -370,7 +396,7 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
               {durableRecovery.status === "loading" ? "診断結果を読み込み中…" : "診断結果を取得"}
             </button>
           </div>
-          {durableRecovery.status === "invalid" ? <p className="status-note">DIAGNOSTIC_INVALID</p> : null}
+          {durableRecovery.status === "invalid" ? <><p className="status-note">DIAGNOSTIC_INVALID</p><p className="status-note">{durableRecovery.diagnosticReason}</p></> : null}
           {durableRecovery.status === "missing" ? <p className="status-note">{durableRecovery.classification}</p> : null}
           {durableRecovery.status === "ambiguous" ? <p className="status-note">DUPLICATE_BOUNDARY_EVENT</p> : null}
           {durableRecovery.status === "error" ? <p className="status-note">診断結果を読み込めませんでした。</p> : null}
@@ -378,19 +404,24 @@ export const AdminProductAnalyticsPanel = memo(function AdminProductAnalyticsPan
             <div className="table-scroll" data-testid="candidate-boundary-diagnostic-reconciliation">
               <table className="usage-dashboard-table">
                 <thead>
-                  <tr><th>boundary</th><th>status</th><th>physical</th><th>valid</th><th>reason</th><th>scope</th></tr>
+                  <tr><th>boundary</th><th>status</th><th>physical</th><th>valid</th><th>state</th><th>count</th><th>reason</th><th>scope</th></tr>
                 </thead>
                 <tbody>
-                  {durableRecovery.diagnostic.boundaries.map((boundary) => (
+                  {durableRecovery.diagnostic.boundaries.map((boundary) => {
+                    const event = [durableRecovery.analysis, durableRecovery.transport, durableRecovery.backend].find((candidate) => candidate?.event_name === boundary.event_name);
+                    return (
                     <tr key={boundary.boundary}>
                       <td>{boundary.boundary}</td>
                       <td>{boundary.status}</td>
                       <td>{boundary.physical_row_count}</td>
                       <td>{boundary.valid_row_count}</td>
+                      <td>{boundedCandidateState(event ?? undefined)}</td>
+                      <td>{boundedCandidateCount(event ?? undefined)}</td>
                       <td>{boundary.reason || "-"}</td>
                       <td>{boundary.scope_match ? "MATCH" : "EXCLUDED"}</td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
