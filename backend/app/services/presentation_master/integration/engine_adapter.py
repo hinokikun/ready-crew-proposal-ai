@@ -69,6 +69,7 @@ def prepare_pmv3(
     semantic_envelope: Any | None = None,
     source_bindings: tuple[Any, ...] = (),
     semantic_candidates: Any | None = None,
+    semantic_relationships: tuple[Any, ...] = (),
 ) -> ProductionPmv3AdapterResult:
     try:
         try:
@@ -78,6 +79,7 @@ def prepare_pmv3(
                 semantic_envelope=semantic_envelope,
                 source_bindings=source_bindings,
                 semantic_candidates=semantic_candidates,
+                semantic_relationships=semantic_relationships,
             )
         except (TypeError, ValueError):
             reason = (

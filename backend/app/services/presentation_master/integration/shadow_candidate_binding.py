@@ -17,6 +17,7 @@ class ShadowCandidateBinding:
     detailed: bool
     candidates: ProductionSemanticCandidateSet
     confirmation_state: tuple[SemanticConfirmationTransportItem, ...]
+    relationships: tuple[Any, ...] = ()
 
 
 def bind_shadow_candidates(

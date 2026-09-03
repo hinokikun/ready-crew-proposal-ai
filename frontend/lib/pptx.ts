@@ -1,4 +1,4 @@
-import type { PowerPointData, SemanticCandidate, WinProbability } from "@/types/proposal";
+import type { PowerPointData, SemanticCandidate, SemanticRelationshipInput, WinProbability } from "@/types/proposal";
 import { getAuthHeaders } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/config";
 import { persistCandidateBoundaryCapture, trackEvent } from "@/lib/analytics";
@@ -28,6 +28,7 @@ type DownloadPptxPayload = {
   presentation_layout_decisions?: PresentationLayoutDecisionRequest[];
   semantic_confirmation_state?: SemanticConfirmationTransportItem[];
   semantic_candidates?: { candidates: SemanticCandidate[] };
+  semantic_relationships?: SemanticRelationshipInput[];
   candidate_boundary_correlation_id?: string;
 };
 
@@ -37,6 +38,7 @@ type PowerPointDesignOptions = {
   qualityState?: PresentationQualityRequestState;
   layoutDecisions?: PresentationLayoutDecisionRequest[];
   semanticCandidates?: SemanticCandidate[];
+  semanticRelationships?: SemanticRelationshipInput[];
   diagnosticCorrelationId?: string;
   onDiagnosticCaptureStatus?: (status: "TRANSPORT_CAPTURE_CONFIRMED" | "TRANSPORT_CAPTURE_FAILED") => void;
 };
@@ -289,6 +291,7 @@ async function downloadPowerPoint(
       ...(summary || !options.semanticCandidates ? {} : {
         semantic_candidates: { candidates: options.semanticCandidates },
         semantic_confirmation_state: options.semanticCandidates.map(({ id, semantic_type, review_state, value }) => ({ id, semantic_type, review_state, value })),
+        ...(options.semanticRelationships?.length ? { semantic_relationships: options.semanticRelationships } : {}),
         ...(options.diagnosticCorrelationId ? { candidate_boundary_correlation_id: options.diagnosticCorrelationId } : {})
       })
     } satisfies DownloadPptxPayload)

@@ -158,7 +158,7 @@ import {
   type CandidateBoundaryDiagnosticSession
 } from "@/lib/analytics";
 import { clearGuidedFlowDraft, getGuidedFlowDraftKey, readGuidedFlowDraft, saveGuidedFlowDraft } from "@/lib/guidedFlowDraft";
-import type { AnalysisResponse, PowerPointData, ProposalRequest, SemanticCandidate } from "@/types/proposal";
+import type { AnalysisResponse, PowerPointData, ProposalRequest, SemanticCandidate, SemanticRelationshipInput } from "@/types/proposal";
 
 import {
   MAX_ASSISTANT_QUESTIONS,
@@ -358,6 +358,7 @@ export default function Home() {
   const [reportResult, setReportResult] = useState<ReportAiResult | null>(null);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [semanticCandidatesForTransport, setSemanticCandidatesForTransport] = useState<SemanticCandidate[]>([]);
+  const [semanticRelationshipsForTransport, setSemanticRelationshipsForTransport] = useState<SemanticRelationshipInput[]>([]);
   const [candidateBoundaryDiagnostic, setCandidateBoundaryDiagnostic] = useState<CandidateBoundaryDiagnosticUiState>(() => diagnosticUiStateFromSession(readCandidateBoundaryDiagnosticSession()));
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -2089,6 +2090,7 @@ export default function Home() {
           qualityState: options.qualityState,
           layoutDecisions: options.layoutDecisions,
           semanticCandidates: summary ? undefined : semanticCandidatesForTransport,
+          semanticRelationships: summary ? undefined : semanticRelationshipsForTransport,
           diagnosticCorrelationId: !summary && candidateBoundaryDiagnosticRef.current.active ? candidateBoundaryDiagnosticRef.current.correlationId : undefined,
           onDiagnosticCaptureStatus: (status) => {
             const correlationId = candidateBoundaryDiagnosticRef.current.correlationId;
@@ -3050,6 +3052,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           onRetry={lastDownloadRetry ? () => void retryLastDownload() : undefined}
           onShowGuide={() => setShowGuideTutorial(true)}
           onSemanticCandidatesChange={setSemanticCandidatesForTransport}
+          onSemanticRelationshipsChange={setSemanticRelationshipsForTransport}
           onSourceTextChange={handleSourceTextChange}
           onToggleDetailMode={() => setIsSimpleDetailMode((current) => !current)}
           onUseSample={startSampleExperience}
@@ -3072,6 +3075,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           qualityGateComplete={isBeautifulAiQualityGateComplete}
           qualityGateIsLoading={isBeautifulAiQualityGateLoading}
           semanticCandidates={result ? { candidates: semanticCandidatesForTransport } : null}
+          semanticRelationships={result ? semanticRelationshipsForTransport : undefined}
           roleLabel={roleDisplayLabel}
           showSalesCopilotMarker
           sourceText={rawSourceText}

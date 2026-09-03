@@ -41,7 +41,7 @@ def _worker_entry(connection: Connection, workload: ShadowProcessWorkload) -> No
             connection.send(dict(workload.injected_worker()))
             return
         started = perf_counter()
-        prepared = prepare_pmv3(workload.payload, semantic_candidates=workload.binding.candidates)
+        prepared = prepare_pmv3(workload.payload, semantic_candidates=workload.binding.candidates, semantic_relationships=getattr(workload.binding, "relationships", ()))
         if prepared.status.value not in {"READY", "READY_WITH_VALID_BINDINGS"}:
             connection.send({"failure_category": "NOT_ELIGIBLE"})
             return

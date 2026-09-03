@@ -40,6 +40,7 @@ class ProductionAdapterInput:
     semantic_envelope: Any | None = None
     source_bindings: tuple[Any, ...] = ()
     semantic_candidates: Any | None = None
+    semantic_relationships: tuple[Any, ...] = ()
     source_metadata: dict[str, str] = field(default_factory=dict)
 
 

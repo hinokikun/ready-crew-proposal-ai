@@ -600,6 +600,18 @@ class SemanticConfirmationTransportItem(BaseModel):
     original_candidate_id: str | None = None
 
 
+class SemanticRelationshipTransportItem(BaseModel):
+    """Optional explicit Step3 relationship intent; backend validates authority."""
+
+    from_item: str
+    to_item: str
+    relationship_type: str
+    review_state: str
+    authority: str
+    confirmation_authority: str | None = None
+    provenance_state: str = "supplied"
+
+
 class PptxDownloadRequest(BaseModel):
     powerpoint_generation_data: PowerPointData
     win_probability: WinProbability | None = None
@@ -639,6 +651,9 @@ class PptxDownloadRequest(BaseModel):
     )
     semantic_candidates: dict | None = Field(
         None, description="Optional authoritative structured semantic candidates for the future Production Shadow path."
+    )
+    semantic_relationships: list[SemanticRelationshipTransportItem] | None = Field(
+        None, description="Optional explicitly confirmed relationships between current semantic candidate IDs."
     )
     candidate_boundary_correlation_id: str | None = Field(
         None, max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Bounded diagnostic-only candidate boundary correlation."

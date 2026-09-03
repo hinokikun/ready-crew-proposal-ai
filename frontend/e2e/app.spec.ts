@@ -243,6 +243,40 @@ test("未確認の重要項目はStep4へのナビゲーションをブロック
   await expect(page.getByTestId("guided-quality-check")).toBeVisible();
 });
 
+test("Step3で既存の確認済み項目間に因果関係を追加・削除できる", async ({ page }) => {
+  await page.route("**/api/analyze", async (route) => {
+    const response = proposalResponse(route.request().postDataJSON() as { project_brief?: string });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        ...response,
+        semantic_candidates: {
+          candidates: [
+            { id: "candidate-condition", semantic_type: "decision_condition", value: "条件", authority: "AI_PROPOSED", review_state: "UNCONFIRMED", inferred: true },
+            { id: "candidate-action", semantic_type: "execution_action", value: "実行", authority: "AI_PROPOSED", review_state: "UNCONFIRMED", inferred: true },
+            { id: "candidate-owner", semantic_type: "accountable_owner", value: "責任者", authority: "AI_PROPOSED", review_state: "UNCONFIRMED", inferred: true }
+          ]
+        }
+      })
+    });
+  });
+  await login(page, memberEmail);
+  await setTextareaValue(page, "project-source-input", "株式会社サンプル様。関係を確認する案件。");
+  await clickGuidedGenerate(page);
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).waitFor({ state: "visible", timeout: 25_000 });
+  const confirmButtons = page.getByRole("button", { name: "この内容で確定" });
+  for (let index = 0; index < 3; index += 1) await confirmButtons.first().click();
+  await expect(page.getByRole("heading", { name: "明確な関係がある場合だけ設定してください" })).toBeVisible();
+  await expect(page.getByText("candidate-owner")).toHaveCount(0);
+  await page.getByLabel("起点").selectOption("candidate-owner");
+  await page.getByLabel("終点").selectOption("candidate-action");
+  await page.getByRole("button", { name: "この関係を確認" }).click();
+  await expect(page.getByText("→ つながる")).toBeVisible();
+  await page.getByRole("button", { name: "削除" }).click();
+  await expect(page.getByText("→ つながる")).toHaveCount(0);
+});
+
 test("顧客提出チェックはAcceptance ScoreとBLOCK表示を確認できる", async ({ page }) => {
   page.setDefaultTimeout(10_000);
   await login(page, memberEmail);

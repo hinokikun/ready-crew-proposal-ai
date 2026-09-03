@@ -301,7 +301,7 @@ def _submit_production_shadow_after_primary(
             emit_decision("INELIGIBLE", "CANDIDATE_BINDING_FAILED")
             return primary
         try:
-            prepared = prepare_pmv3(payload, semantic_candidates=context.binding.candidates)
+            prepared = prepare_pmv3(payload, semantic_candidates=context.binding.candidates, semantic_relationships=context.relationships)
         except Exception:
             emit_decision("INELIGIBLE", "PREPARATION_FAILED")
             return primary
@@ -843,7 +843,7 @@ def _build_renderer_mvp_pptx_result(
                 "semantic_readiness_not_ready",
                 failure_stage="semantic_readiness",
             )
-        prepared = prepare_pmv3(payload, semantic_candidates=context.binding.candidates)
+        prepared = prepare_pmv3(payload, semantic_candidates=context.binding.candidates, semantic_relationships=context.relationships)
         if prepared.status.value not in {"READY", "READY_WITH_VALID_BINDINGS"}:
             raise RendererMvpIntegrationError(
                 "semantic_readiness_not_ready",

@@ -144,6 +144,16 @@ export type SemanticCandidateSet = {
   candidates: SemanticCandidate[];
 };
 
+export type SemanticRelationshipInput = {
+  from_item: string;
+  to_item: string;
+  relationship_type: "causality" | "dependency";
+  review_state: SemanticReviewState;
+  authority: SemanticAuthority;
+  confirmation_authority?: SemanticAuthority;
+  provenance_state: "supplied";
+};
+
 export type KnowledgeEntry = {
   id: number;
   industry: string;

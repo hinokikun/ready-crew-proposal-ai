@@ -7,7 +7,7 @@ import { SimpleErrorMessage } from "@/components/guided-flow/SimpleErrorMessage"
 import { StepFooter } from "@/components/guided-flow/StepFooter";
 import { StepNavigation } from "@/components/guided-flow/StepNavigation";
 import { ProposalValidationPanel } from "@/components/ProposalValidationPanel";
-import type { PowerPointData, SemanticCandidate, SemanticCandidateSet } from "@/types/proposal";
+import type { PowerPointData, SemanticCandidate, SemanticCandidateSet, SemanticRelationshipInput } from "@/types/proposal";
 import type {
   BeautifulAiSimpleRequirement,
   GuidedFlowPanels,
@@ -57,6 +57,7 @@ type GuidedFlowProps = {
   onRetry?: () => void;
   onShowGuide: () => void;
   onSemanticCandidatesChange?: (candidates: SemanticCandidate[]) => void;
+  onSemanticRelationshipsChange?: (relationships: SemanticRelationshipInput[]) => void;
   onSourceTextChange: (value: string) => void;
   onToggleDetailMode: () => void;
   onUseSample: () => void;
@@ -68,6 +69,7 @@ type GuidedFlowProps = {
   qualityGateComplete: boolean;
   qualityGateIsLoading: boolean;
   semanticCandidates?: SemanticCandidateSet | null;
+  semanticRelationships?: SemanticRelationshipInput[];
   roleLabel: string;
   showSalesCopilotMarker: boolean;
   sourceText: string;
@@ -197,6 +199,11 @@ function GuidedFlowBase(props: GuidedFlowProps) {
   const confirmedSemanticCount = visibleSemanticCandidates.filter((candidate) => candidate.review_state === "CONFIRMED" || candidate.review_state === "CORRECTED").length;
   const semanticConfirmationReady = semanticCandidates.length === 0 || semanticCandidates.every((candidate) => candidate.review_state === "CONFIRMED" || candidate.review_state === "CORRECTED");
   const semanticConfirmationBlockingCount = semanticCandidates.filter((candidate) => candidate.review_state !== "CONFIRMED" && candidate.review_state !== "CORRECTED").length;
+  const [relationshipFrom, setRelationshipFrom] = useState("");
+  const [relationshipTo, setRelationshipTo] = useState("");
+  const [relationshipType, setRelationshipType] = useState<"causality" | "dependency">("causality");
+  const reviewedCandidates = semanticCandidates.filter((candidate) => candidate.review_state === "CONFIRMED" || candidate.review_state === "CORRECTED");
+  const relationships = props.semanticRelationships || [];
 
   useEffect(() => {
     if (props.isGenerating) setActiveStep(2);
@@ -279,6 +286,18 @@ function GuidedFlowBase(props: GuidedFlowProps) {
 
   function rejectSemanticCandidate(candidate: SemanticCandidate) {
     props.onSemanticCandidatesChange?.(semanticCandidates.map((item) => item.id === candidate.id ? { ...item, review_state: "REJECTED" } : item));
+  }
+
+  function addRelationship() {
+    if (!relationshipFrom || !relationshipTo || relationshipFrom === relationshipTo) return;
+    if (!reviewedCandidates.some((candidate) => candidate.id === relationshipFrom) || !reviewedCandidates.some((candidate) => candidate.id === relationshipTo)) return;
+    props.onSemanticRelationshipsChange?.([...relationships, { from_item: relationshipFrom, to_item: relationshipTo, relationship_type: relationshipType, review_state: "CONFIRMED", authority: "USER_EXPLICIT", confirmation_authority: "USER_EXPLICIT", provenance_state: "supplied" }]);
+    setRelationshipFrom("");
+    setRelationshipTo("");
+  }
+
+  function removeRelationship(index: number) {
+    props.onSemanticRelationshipsChange?.(relationships.filter((_, relationshipIndex) => relationshipIndex !== index));
   }
 
   function continueToQualityGate() {
@@ -532,6 +551,46 @@ function GuidedFlowBase(props: GuidedFlowProps) {
                 ))}
               </ol>
             </div>
+          )}
+          {reviewedCandidates.length >= 2 && (
+            <section className="guided-semantic-confirmation" aria-labelledby="guided-relationship-heading">
+              <div className="guided-semantic-confirmation__header">
+                <div>
+                  <p className="eyebrow">項目同士の関係</p>
+                  <h3 id="guided-relationship-heading">明確な関係がある場合だけ設定してください</h3>
+                  <p>関係がない場合は設定せず、そのまま進められます。</p>
+                </div>
+              </div>
+              <div className="guided-semantic-edit-row">
+                <div className="guided-semantic-field">
+                <label htmlFor="relationship-from">起点</label>
+                <select id="relationship-from" value={relationshipFrom} onChange={(event) => setRelationshipFrom(event.target.value)}>
+                  <option value="">項目を選択</option>
+                  {reviewedCandidates.map((candidate) => <option key={candidate.id} value={candidate.id}>{semanticTypeLabels[candidate.semantic_type] || "確認項目"}</option>)}
+                </select>
+                </div>
+                <div className="guided-semantic-field">
+                <label htmlFor="relationship-type">関係</label>
+                <select id="relationship-type" value={relationshipType} onChange={(event) => setRelationshipType(event.target.value as "causality" | "dependency")}>
+                  <option value="causality">AがBにつながる</option>
+                  <option value="dependency">Bを行うにはAが必要</option>
+                </select>
+                </div>
+                <div className="guided-semantic-field">
+                <label htmlFor="relationship-to">終点</label>
+                <select id="relationship-to" value={relationshipTo} onChange={(event) => setRelationshipTo(event.target.value)}>
+                  <option value="">項目を選択</option>
+                  {reviewedCandidates.map((candidate) => <option key={candidate.id} value={candidate.id}>{semanticTypeLabels[candidate.semantic_type] || "確認項目"}</option>)}
+                </select>
+                </div>
+                <button className="primary-button" onClick={addRelationship} type="button" disabled={!relationshipFrom || !relationshipTo || relationshipFrom === relationshipTo}>この関係を確認</button>
+              </div>
+              {relationships.map((relationship, index) => {
+                const from = reviewedCandidates.find((candidate) => candidate.id === relationship.from_item);
+                const to = reviewedCandidates.find((candidate) => candidate.id === relationship.to_item);
+                return <div className="guided-semantic-handoff" key={`${relationship.from_item}-${relationship.to_item}-${index}`}><div className="guided-semantic-handoff__item"><small>起点</small><strong>{semanticTypeLabels[from?.semantic_type || ""] || "確認項目"}</strong></div><span className="guided-semantic-handoff__direction" aria-hidden="true">{relationship.relationship_type === "dependency" ? "→ 必要" : "→ つながる"}</span><div className="guided-semantic-handoff__item"><small>終点</small><strong>{semanticTypeLabels[to?.semantic_type || ""] || "確認項目"}</strong></div><span className="guided-semantic-handoff__status">確認済み</span><button className="text-button" onClick={() => removeRelationship(index)} type="button">削除</button></div>;
+              })}
+            </section>
           )}
           <details className="guided-detail-foldout">
             <summary>詳細分析・AIレビューを開く</summary>

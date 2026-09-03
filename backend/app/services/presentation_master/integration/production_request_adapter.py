@@ -37,6 +37,7 @@ def build_adapter_input(
     semantic_envelope: Any | None = None,
     source_bindings: tuple[Any, ...] = (),
     semantic_candidates: Any | None = None,
+    semantic_relationships: tuple[Any, ...] = (),
     source_metadata: dict[str, str] | None = None,
 ) -> ProductionAdapterInput:
     if not isinstance(payload, PptxDownloadRequest):
@@ -50,5 +51,6 @@ def build_adapter_input(
         semantic_envelope=semantic_envelope,
         source_bindings=tuple(source_bindings),
         semantic_candidates=resolved_candidates,
+        semantic_relationships=tuple(semantic_relationships),
         source_metadata=dict(source_metadata or {}),
     )

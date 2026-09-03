@@ -1810,6 +1810,76 @@ span.is-neutral {
 }
 
 @media (max-width: 640px) {
+  .v80-sidebar:not(.is-open) {
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  .v80-experience-shell > .guided-flow-shell,
+  .v80-sidebar-collapsed.v80-experience-shell > .guided-flow-shell {
+    max-width: calc(100vw - 1.5rem);
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .guided-flow-shell,
+  .guided-step-card,
+  .guided-step-card > *,
+  .guided-semantic-confirmation,
+  .guided-semantic-card,
+  .guided-semantic-edit-row {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .guided-semantic-edit-row {
+    display: grid;
+    gap: 8px;
+  }
+
+  .guided-semantic-edit-row label,
+  .guided-semantic-edit-row select,
+  .guided-semantic-edit-row button {
+    width: 100%;
+  }
+
+  .guided-semantic-field {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .guided-semantic-handoff {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    width: 100%;
+  }
+
+  .guided-semantic-handoff__item {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .guided-semantic-handoff__item small,
+  .guided-semantic-handoff__status {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .guided-semantic-handoff__item strong {
+    overflow-wrap: anywhere;
+  }
+
+  .guided-semantic-handoff__direction {
+    align-self: center;
+    color: var(--primary);
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
   .v80-experience-shell > .guided-flow-shell,
   .v80-sidebar-collapsed.v80-experience-shell > .guided-flow-shell {
     margin-left: 0.75rem;
@@ -1843,5 +1913,59 @@ span.is-neutral {
 
   .acceptance-score-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 901px) {
+  .v80-sidebar {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    visibility: visible;
+  }
+
+  .v80-experience-shell > .guided-flow-shell {
+    margin-left: calc(var(--v80-sidebar-width) + 1.25rem);
+    margin-right: 1.25rem;
+  }
+
+  .v80-sidebar-collapsed.v80-experience-shell > .guided-flow-shell {
+    margin-left: calc(var(--v80-sidebar-collapsed-width) + 1.25rem);
+  }
+
+  .guided-semantic-edit-row {
+    align-items: end;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  }
+
+  .guided-semantic-field {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .guided-semantic-field label {
+    width: auto;
+  }
+
+  .guided-semantic-field select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .guided-semantic-edit-row > .primary-button {
+    min-height: 44px;
+    white-space: nowrap;
+  }
+
+  .guided-semantic-handoff {
+    align-items: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto auto;
+    max-width: 760px;
+    padding: 12px 14px;
+    width: 100%;
   }
 }

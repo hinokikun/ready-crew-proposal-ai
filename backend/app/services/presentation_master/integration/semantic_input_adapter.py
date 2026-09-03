@@ -43,6 +43,20 @@ def prepare_semantics(source: ProductionAdapterInput) -> tuple[Any, Any | None, 
         return envelope, None, _provenance_summary(envelope), AdapterStatus.REVIEW_REQUIRED, "Source bindings are invalid or conflicting."
     enrichment = enrich_semantic_envelope(envelope)
     supplement = binding_result.supplement if binding_result is not None else ProposalSemanticSupplement()
+    if source.semantic_relationships:
+        supplement = ProposalSemanticSupplement(
+            semantic_items=supplement.semantic_items,
+            groups=supplement.groups,
+            relationships=tuple(supplement.relationships) + tuple(source.semantic_relationships),
+            metrics=supplement.metrics,
+            decision_conditions=supplement.decision_conditions,
+            stages=supplement.stages,
+            responsibilities=supplement.responsibilities,
+            evidence_bindings=supplement.evidence_bindings,
+            confidence=max(supplement.confidence, 1.0),
+            provenance_state=supplement.provenance_state,
+            review_required=supplement.review_required,
+        )
     resolution = resolve_semantic_inputs(enrichment, supplement)
     # The frozen resolver uses UNRESOLVED for an envelope with no resolver
     # requirements. That is distinct from an unresolved requirement: allow

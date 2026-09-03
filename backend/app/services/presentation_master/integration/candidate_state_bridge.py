@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
-from app.models import PptxDownloadRequest
+from app.models import PptxDownloadRequest, SemanticRelationshipTransportItem
 
 from .production_semantic_contract import (
     ProductionSemanticCandidate,
@@ -12,6 +12,8 @@ from .production_semantic_contract import (
     SemanticItemType,
     SemanticReviewState,
 )
+from app.services.presentation_master.definitions import SUPPORTED_RELATIONSHIP_TYPES
+from app.services.presentation_master.upstream_adapter import DerivationLevel, SemanticRelationship
 from .shadow_candidate_binding import ShadowCandidateBinding, bind_shadow_candidates
 
 
@@ -26,6 +28,7 @@ class ProductionShadowCandidateContext:
     request_id: str
     candidates: ProductionSemanticCandidateSet
     binding: ShadowCandidateBinding
+    relationships: tuple[SemanticRelationship, ...] = ()
 
 
 def build_candidate_state_bridge(
@@ -54,11 +57,37 @@ def build_candidate_state_bridge(
         raise CandidateStateBridgeError("candidate transport is malformed") from exc
     if binding is None:
         return None
+    relationships = relationships_from_transport(payload.semantic_relationships, binding.candidates)
+    binding = replace(binding, relationships=relationships)
     return ProductionShadowCandidateContext(
         request_id=request_id,
         candidates=candidates,
         binding=binding,
+        relationships=relationships,
     )
+
+
+def relationships_from_transport(
+    raw: list[SemanticRelationshipTransportItem] | None,
+    candidates: ProductionSemanticCandidateSet,
+) -> tuple[SemanticRelationship, ...]:
+    if not raw:
+        return ()
+    by_id = {candidate.id: candidate for candidate in candidates.candidates}
+    relationships: list[SemanticRelationship] = []
+    for item in raw:
+        if item.relationship_type not in {"causality", "dependency"} or item.relationship_type not in SUPPORTED_RELATIONSHIP_TYPES:
+            raise CandidateStateBridgeError("unsupported relationship type")
+        if item.from_item == item.to_item or item.from_item not in by_id or item.to_item not in by_id:
+            raise CandidateStateBridgeError("relationship endpoint is invalid")
+        source = by_id[item.from_item]
+        target = by_id[item.to_item]
+        if source.review_state not in {SemanticReviewState.CONFIRMED, SemanticReviewState.CORRECTED} or target.review_state not in {SemanticReviewState.CONFIRMED, SemanticReviewState.CORRECTED}:
+            raise CandidateStateBridgeError("relationship endpoint is not reviewed")
+        if item.review_state not in {"CONFIRMED", "CORRECTED"} or item.authority != SemanticAuthority.USER_EXPLICIT or item.confirmation_authority != SemanticAuthority.USER_EXPLICIT or item.provenance_state != "supplied":
+            raise CandidateStateBridgeError("relationship is not explicitly confirmed")
+        relationships.append(SemanticRelationship(item.relationship_type, item.from_item, item.to_item, 1.0, item.provenance_state, DerivationLevel.DIRECT, "explicit user-confirmed relationship", False))
+    return tuple(relationships)
 
 
 def candidate_set_from_dict(raw: Any) -> ProductionSemanticCandidateSet:
@@ -114,4 +143,5 @@ __all__ = [
     "ProductionShadowCandidateContext",
     "build_candidate_state_bridge",
     "candidate_set_from_dict",
+    "relationships_from_transport",
 ]
