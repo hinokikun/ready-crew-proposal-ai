@@ -106,6 +106,7 @@ def _build_primary_pptx_bytes_for_engine(
             request_id=request_id,
             project_id=project_id,
             routing_mode="enabled",
+            semantic_gate=True,
         )
 
     if getattr(settings, "presentation_master_v3_renderer_mvp_canary_enabled", False) and renderer_mvp_canary:
@@ -573,11 +574,17 @@ def _build_renderer_mvp_with_fallback(
     request_id: str | None = None,
     project_id: str | None = None,
     routing_mode: str,
+    semantic_gate: bool = False,
 ) -> PresentationEngineResult:
     requested_version = ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP
     started = perf_counter()
     try:
-        result = _build_renderer_mvp_pptx_result(payload, request_id=request_id, project_id=project_id)
+        result = _build_renderer_mvp_pptx_result(
+            payload,
+            request_id=request_id,
+            project_id=project_id,
+            semantic_gate=semantic_gate,
+        )
         if routing_mode == "canary":
             logger.info(
                 "v3_canary_success",
@@ -667,7 +674,49 @@ def _build_renderer_mvp_pptx_result(
     *,
     request_id: str | None = None,
     project_id: str | None = None,
+    semantic_gate: bool = False,
 ) -> PresentationEngineResult:
+    if semantic_gate:
+        from app.services.presentation_master.integration import (
+            build_candidate_state_bridge,
+            prepare_pmv3,
+            render_pmv3,
+        )
+
+        context = build_candidate_state_bridge(payload, request_id=request_id or "")
+        if context is None:
+            raise RendererMvpIntegrationError(
+                "semantic_readiness_not_ready",
+                failure_stage="semantic_readiness",
+            )
+        prepared = prepare_pmv3(payload, semantic_candidates=context.binding.candidates)
+        if prepared.status.value not in {"READY", "READY_WITH_VALID_BINDINGS"}:
+            raise RendererMvpIntegrationError(
+                "semantic_readiness_not_ready",
+                failure_stage="semantic_readiness",
+                details={"readiness_status": prepared.status.value},
+            )
+        rendered = render_pmv3(prepared)
+        return PresentationEngineResult(
+            pptx_bytes=rendered.pptx_bytes,
+            engine_mode=ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+            quality_report={
+                "requested_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+                "actual_version": ENGINE_MODE_PRESENTATION_MASTER_V3_RENDERER_MVP,
+                "fallback_used": False,
+                "fallback_reason": "",
+                "feature_flag": PRESENTATION_MASTER_V3_RENDERER_MVP_FLAG,
+                "request_id": request_id or "",
+                "project_id": project_id or "",
+                "validation_status": rendered.validation_status,
+                "slide_count": rendered.slide_count,
+                "rasterization_ratio": rendered.rasterization_ratio,
+                "clipping_count": rendered.clipping_count,
+                "overflow_count": rendered.overflow_count,
+                "off_canvas_count": rendered.off_canvas_count,
+            },
+        )
+
     from app.services.presentation_master.renderer_mvp import build_renderer_mvp_pptx
 
     renderer_result = build_renderer_mvp_pptx(payload, request_id=request_id, project_id=project_id)
