@@ -199,6 +199,50 @@ test("AI-OCR案件入力は以前のWeb案件に置き換わらない", async ({
   await expect(currentStepCard.getByText("AI-OCR導入支援ご提案書")).toHaveCount(0);
 });
 
+test("未確認の重要項目はStep4へのナビゲーションをブロックし確認後に解除する", async ({ page }) => {
+  await page.route("**/api/analyze", async (route) => {
+    const response = proposalResponse(route.request().postDataJSON() as { project_brief?: string });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        ...response,
+        semantic_candidates: {
+          candidates: [
+            { id: "candidate-1", semantic_type: "decision_condition", value: "条件1", authority: "AI_PROPOSED", review_state: "UNCONFIRMED", inferred: true },
+            { id: "candidate-2", semantic_type: "execution_action", value: "行動2", authority: "AI_PROPOSED", review_state: "UNCONFIRMED", inferred: true }
+          ]
+        }
+      })
+    });
+  });
+  await login(page, memberEmail);
+  await setTextareaValue(page, "project-source-input", "株式会社サンプル様。重要項目を確認する案件。");
+  await clickGuidedGenerate(page);
+
+  const footerNext = page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" });
+  await footerNext.waitFor({ state: "visible", timeout: 25_000 });
+  await expect(footerNext).toBeDisabled();
+  await expect(page.getByText("未確認の候補が2件あります。候補を確定または編集して内容を確定してください。")).toBeVisible();
+  const qualityStep = page.locator(".guided-step-nav").getByRole("button", { name: /提出前チェック/ });
+  await expect(qualityStep).toBeDisabled();
+  await qualityStep.evaluate((element) => {
+    element.removeAttribute("disabled");
+    (element as HTMLButtonElement).click();
+  });
+  await expect(page.getByTestId("guided-quality-check")).toHaveCount(0);
+
+  const confirmButtons = page.getByRole("button", { name: "この内容で確定" });
+  await expect(confirmButtons).toHaveCount(2);
+  await confirmButtons.first().click();
+  await page.getByRole("button", { name: "この内容で確定" }).first().click();
+  await expect(page.getByText("未確認の候補が2件あります。候補を確定または編集して内容を確定してください。")).toHaveCount(0);
+  await expect(footerNext).toBeEnabled();
+  await expect(qualityStep).toBeEnabled();
+  await qualityStep.click();
+  await expect(page.getByTestId("guided-quality-check")).toBeVisible();
+});
+
 test("顧客提出チェックはAcceptance ScoreとBLOCK表示を確認できる", async ({ page }) => {
   page.setDefaultTimeout(10_000);
   await login(page, memberEmail);

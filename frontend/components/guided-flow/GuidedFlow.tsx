@@ -195,6 +195,8 @@ function GuidedFlowBase(props: GuidedFlowProps) {
   const semanticCandidates = props.semanticCandidates?.candidates || [];
   const visibleSemanticCandidates = semanticCandidates.filter((candidate) => criticalSemanticTypes.has(candidate.semantic_type));
   const confirmedSemanticCount = visibleSemanticCandidates.filter((candidate) => candidate.review_state === "CONFIRMED" || candidate.review_state === "CORRECTED").length;
+  const semanticConfirmationReady = semanticCandidates.length === 0 || semanticCandidates.every((candidate) => candidate.review_state === "CONFIRMED" || candidate.review_state === "CORRECTED");
+  const semanticConfirmationBlockingCount = semanticCandidates.filter((candidate) => candidate.review_state !== "CONFIRMED" && candidate.review_state !== "CORRECTED").length;
 
   useEffect(() => {
     if (props.isGenerating) setActiveStep(2);
@@ -225,7 +227,8 @@ function GuidedFlowBase(props: GuidedFlowProps) {
   function isStepAvailable(step: GuidedStepId) {
     if (step === 1) return true;
     if (step === 2) return hasInput || props.hasProposal;
-    if (step === 3 || step === 4) return props.hasProposal;
+    if (step === 3) return props.hasProposal;
+    if (step === 4) return props.hasProposal && (activeStep !== 3 || semanticConfirmationReady);
     if (step === 5) return props.hasProposal;
     return false;
   }
@@ -276,6 +279,11 @@ function GuidedFlowBase(props: GuidedFlowProps) {
 
   function rejectSemanticCandidate(candidate: SemanticCandidate) {
     props.onSemanticCandidatesChange?.(semanticCandidates.map((item) => item.id === candidate.id ? { ...item, review_state: "REJECTED" } : item));
+  }
+
+  function continueToQualityGate() {
+    if (!props.hasProposal || !semanticConfirmationReady) return;
+    setActiveStep(4);
   }
 
   async function runSelectedOutput() {
@@ -534,9 +542,10 @@ function GuidedFlowBase(props: GuidedFlowProps) {
           </details>
           <StepFooter
             backLabel="AI分析へ戻る"
-            disabled={!props.hasProposal}
+            disabled={!props.hasProposal || !semanticConfirmationReady}
+            helpText={semanticConfirmationBlockingCount > 0 ? `未確認の候補が${semanticConfirmationBlockingCount}件あります。候補を確定または編集して内容を確定してください。` : undefined}
             onBack={() => setActiveStep(2)}
-            onNext={() => setActiveStep(4)}
+            onNext={continueToQualityGate}
             primaryLabel="内容を確認しました。提出前チェックへ進む"
           />
         </article>
