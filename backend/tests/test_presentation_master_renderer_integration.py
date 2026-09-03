@@ -207,3 +207,94 @@ def _composition_payload(*, summary: bool = False):
             slides=[PowerPointSlide(slide_no=1, layout="title", title="Bridge", bullets=["test"], speaker_notes="", visual_suggestion="")],
         ),
     )
+
+
+def test_readiness_event_emits_bounded_review_metadata_without_free_text(caplog):
+    import logging
+    import app.services.presentation_engine_integration as engine
+
+    caplog.set_level(logging.INFO)
+    prepared = SimpleNamespace(
+        fallback_stage=SimpleNamespace(value="SEMANTIC_RESOLUTION"),
+        selection=None,
+        composition_readiness="NOT_READY",
+        provenance_summary={"DIRECT": 2, "UNRESOLVED": 1},
+        diagnostics={"human_review_reason": "do not log this", "diagnostic_count": 99},
+    )
+    metadata = engine._bounded_readiness_metadata(prepared, candidate_count=3)
+    engine._log_shadow_eligibility_decision(
+        "request-1",
+        "INELIGIBLE",
+        "READINESS_NOT_ELIGIBLE",
+        readiness_class="REVIEW_REQUIRED",
+        readiness_metadata=metadata,
+    )
+
+    record = next(record for record in caplog.records if record.getMessage().startswith("presentation_shadow_eligibility_decision"))
+    assert record.readiness_class == "REVIEW_REQUIRED"
+    assert record.fallback_stage == "SEMANTIC_RESOLUTION"
+    assert record.candidate_count == 3
+    assert record.provenance_counts == {"DIRECT": 2, "UNRESOLVED": 1}
+    assert not hasattr(record, "fallback_reason")
+    assert "do not log this" not in str(record.__dict__)
+
+
+@pytest.mark.parametrize(
+    ("status", "stage", "selection_state", "composition_status"),
+    [
+        ("READY", None, "selected", "VALID"),
+        ("READY_WITH_VALID_BINDINGS", None, "selected", "VALID"),
+        ("REVIEW_REQUIRED", "MASTER_SELECTION", "review_required", "NOT_READY"),
+        ("REVIEW_REQUIRED", "COMPOSITION", "selected", "REVIEW_REQUIRED"),
+    ],
+)
+def test_readiness_metadata_preserves_authoritative_stage_states(status, stage, selection_state, composition_status):
+    import app.services.presentation_engine_integration as engine
+
+    prepared = SimpleNamespace(
+        status=SimpleNamespace(value=status),
+        fallback_stage=SimpleNamespace(value=stage) if stage else None,
+        selection=SimpleNamespace(state=selection_state),
+        composition_readiness=composition_status,
+        provenance_summary={},
+        diagnostics={},
+    )
+    metadata = engine._bounded_readiness_metadata(prepared, candidate_count=2)
+    assert metadata["candidate_count"] == 2
+    assert metadata["selection_state"] == selection_state
+    assert metadata["composition_status"] == composition_status
+    if stage:
+        assert metadata["fallback_stage"] == stage
+
+
+def test_readiness_metadata_only_emits_allowlisted_diagnostic_codes():
+    import app.services.presentation_engine_integration as engine
+
+    prepared = SimpleNamespace(
+        fallback_stage=None,
+        selection=None,
+        composition_readiness="NOT_READY",
+        provenance_summary={},
+        diagnostics={
+            "invalid_input_reason": "SEMANTIC_SUPPLY_INVALID",
+            "semantic_supply_invalid_reason": "NO_CANDIDATES",
+            "free_text": "secret proposal text",
+        },
+    )
+    metadata = engine._bounded_readiness_metadata(prepared, candidate_count=0)
+    assert metadata["allowlisted_diagnostic_codes"] == ("SEMANTIC_SUPPLY_INVALID", "NO_CANDIDATES")
+    assert metadata["semantic_supply_status"] == "INVALID"
+    assert "secret proposal text" not in str(metadata)
+
+
+def test_readiness_observability_failure_is_non_blocking(monkeypatch):
+    import app.services.presentation_engine_integration as engine
+
+    monkeypatch.setattr(engine, "_log_shadow_metadata", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("logging failed")))
+    engine._log_shadow_eligibility_decision(
+        "request-1",
+        "ELIGIBLE",
+        "ELIGIBLE",
+        readiness_class="READY",
+        readiness_metadata={"candidate_count": 1},
+    )

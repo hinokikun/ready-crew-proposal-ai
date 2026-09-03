@@ -212,6 +212,12 @@ _SEMANTIC_SUPPLY_INVALID_REASONS = frozenset(
         "ADMISSIBILITY_STATE_UNCLASSIFIED",
     }
 )
+_BOUNDED_READINESS_STAGES = frozenset(
+    {"INPUT_ADAPTER", "SEMANTIC_ADAPTER", "SEMANTIC_RESOLUTION", "MASTER_SELECTION", "COMPOSITION", "RENDER_PREP"}
+)
+_BOUNDED_SELECTION_STATES = frozenset({"selected", "review_required", "no_match"})
+_BOUNDED_COMPOSITION_STATES = frozenset({"VALID", "DEGRADED", "REVIEW_REQUIRED", "INVALID", "NOT_READY"})
+_BOUNDED_DIAGNOSTIC_CODES = _INVALID_INPUT_REASONS | _SEMANTIC_SUPPLY_INVALID_REASONS | {"renderer_preparation"}
 
 
 def _submit_production_shadow_after_primary(
@@ -248,6 +254,7 @@ def _submit_production_shadow_after_primary(
         readiness_class: str | None = None,
         invalid_input_reason: str | None = None,
         semantic_supply_invalid_reason: str | None = None,
+        readiness_metadata: dict[str, Any] | None = None,
     ) -> None:
         nonlocal decision_emitted
         if not decision_emitted:
@@ -258,6 +265,7 @@ def _submit_production_shadow_after_primary(
                 readiness_class=readiness_class,
                 invalid_input_reason=invalid_input_reason,
                 semantic_supply_invalid_reason=semantic_supply_invalid_reason,
+                readiness_metadata=readiness_metadata,
             )
             decision_emitted = True
 
@@ -297,6 +305,7 @@ def _submit_production_shadow_after_primary(
         except Exception:
             emit_decision("INELIGIBLE", "PREPARATION_FAILED")
             return primary
+        readiness_metadata = _bounded_readiness_metadata(prepared, candidate_count=candidate_count)
         try:
             eligibility = ShadowController.eligibility(
                 summary=payload.summary,
@@ -331,6 +340,7 @@ def _submit_production_shadow_after_primary(
                 readiness_class=prepared.status.value,
                 invalid_input_reason=invalid_input_reason,
                 semantic_supply_invalid_reason=semantic_supply_invalid_reason,
+                readiness_metadata=readiness_metadata,
             )
             return primary
         global _PRODUCTION_SHADOW_CONTROLLER
@@ -350,7 +360,7 @@ def _submit_production_shadow_after_primary(
             composition_status=prepared.composition_readiness,
             workload=ShadowProcessWorkload(payload=payload, binding=context.binding),
         )
-        emit_decision("ELIGIBLE", "ELIGIBLE", readiness_class=prepared.status.value)
+        emit_decision("ELIGIBLE", "ELIGIBLE", readiness_class=prepared.status.value, readiness_metadata=readiness_metadata)
         submitted = _PRODUCTION_SHADOW_CONTROLLER.submit(job, eligibility=eligibility)
         del submitted
     except Exception:
@@ -366,6 +376,7 @@ def _log_shadow_eligibility_decision(
     readiness_class: str | None = None,
     invalid_input_reason: str | None = None,
     semantic_supply_invalid_reason: str | None = None,
+    readiness_metadata: dict[str, Any] | None = None,
 ) -> None:
     """Emit one bounded, opaque eligibility decision without affecting Primary."""
     try:
@@ -388,9 +399,56 @@ def _log_shadow_eligibility_decision(
             correlation_id = hashlib.sha256(request_id.encode()).hexdigest()[:16]
             fields["correlation_id"] = correlation_id
             message += f" correlation_id={correlation_id}"
+        if isinstance(readiness_metadata, dict):
+            for key, value in readiness_metadata.items():
+                if value is not None:
+                    fields[key] = value
         _log_shadow_metadata(message, **fields)
     except Exception:
         return
+
+
+def _bounded_readiness_metadata(prepared: Any, *, candidate_count: int) -> dict[str, Any]:
+    """Extract only existing, bounded adapter metadata for the eligibility event."""
+    metadata: dict[str, Any] = {"candidate_count": max(0, min(int(candidate_count), 100000))}
+    try:
+        stage = getattr(getattr(prepared, "fallback_stage", None), "value", None)
+        if stage in _BOUNDED_READINESS_STAGES:
+            metadata["fallback_stage"] = stage
+
+        selection_state = getattr(getattr(prepared, "selection", None), "state", None)
+        if selection_state in _BOUNDED_SELECTION_STATES:
+            metadata["selection_state"] = selection_state
+
+        composition_status = getattr(prepared, "composition_readiness", None)
+        if composition_status in _BOUNDED_COMPOSITION_STATES:
+            metadata["composition_status"] = composition_status
+
+        provenance = getattr(prepared, "provenance_summary", None)
+        if isinstance(provenance, dict):
+            bounded_provenance = {
+                str(key): max(0, min(int(value), 100000))
+                for key, value in provenance.items()
+                if isinstance(key, str) and isinstance(value, int) and value >= 0
+            }
+            if bounded_provenance:
+                metadata["provenance_counts"] = bounded_provenance
+
+        diagnostics = getattr(prepared, "diagnostics", None)
+        if isinstance(diagnostics, dict):
+            codes = tuple(
+                value
+                for value in diagnostics.values()
+                if isinstance(value, str) and value in _BOUNDED_DIAGNOSTIC_CODES
+            )
+            if codes:
+                metadata["allowlisted_diagnostic_codes"] = codes[:16]
+            metadata["diagnostic_count"] = min(len(diagnostics), 32)
+            if diagnostics.get("semantic_supply_invalid_reason") in _SEMANTIC_SUPPLY_INVALID_REASONS:
+                metadata["semantic_supply_status"] = "INVALID"
+    except Exception:
+        return {"candidate_count": metadata["candidate_count"]}
+    return metadata
 
 
 def _log_shadow_metadata(event: str, **fields: Any) -> None:
