@@ -231,6 +231,13 @@ def test_readiness_event_emits_bounded_review_metadata_without_free_text(caplog)
     )
 
     record = next(record for record in caplog.records if record.getMessage().startswith("presentation_shadow_eligibility_decision"))
+    message = record.getMessage()
+    assert "readiness_class=REVIEW_REQUIRED" in message
+    assert "candidate_count=3" in message
+    assert "fallback_stage=SEMANTIC_RESOLUTION" in message
+    assert "provenance_counts=DIRECT:2,UNRESOLVED:1" in message
+    assert "diagnostic_count=2" in message
+    assert message.index("fallback_stage=SEMANTIC_RESOLUTION") < message.index("candidate_count=3")
     assert record.readiness_class == "REVIEW_REQUIRED"
     assert record.fallback_stage == "SEMANTIC_RESOLUTION"
     assert record.candidate_count == 3
@@ -285,6 +292,42 @@ def test_readiness_metadata_only_emits_allowlisted_diagnostic_codes():
     assert metadata["allowlisted_diagnostic_codes"] == ("SEMANTIC_SUPPLY_INVALID", "NO_CANDIDATES")
     assert metadata["semantic_supply_status"] == "INVALID"
     assert "secret proposal text" not in str(metadata)
+
+
+def test_readiness_message_serialization_is_deterministic_and_omits_unavailable_fields():
+    import app.services.presentation_engine_integration as engine
+
+    metadata = {
+        "candidate_count": 1,
+        "fallback_stage": None,
+        "selection_state": "selected",
+        "composition_status": "VALID",
+        "provenance_counts": {"UNRESOLVED": 0, "DIRECT": 1},
+        "allowlisted_diagnostic_codes": ("NO_CANDIDATES", "SEMANTIC_SUPPLY_INVALID"),
+        "diagnostic_count": 2,
+    }
+    first = engine._serialize_bounded_readiness_metadata(metadata)
+    second = engine._serialize_bounded_readiness_metadata(dict(reversed(tuple(metadata.items()))))
+    assert first == second
+    assert "fallback_stage=" not in first
+    assert first == (
+        "selection_state=selected composition_status=VALID candidate_count=1 "
+        "provenance_counts=DIRECT:1,UNRESOLVED:0 "
+        "diagnostic_codes=NO_CANDIDATES,SEMANTIC_SUPPLY_INVALID diagnostic_count=2"
+    )
+
+
+def test_readiness_message_serialization_failure_returns_minimal_safe_message(monkeypatch):
+    import app.services.presentation_engine_integration as engine
+
+    monkeypatch.setattr(engine, "_serialize_bounded_readiness_metadata", lambda metadata: (_ for _ in ()).throw(RuntimeError("serialization failed")))
+    engine._log_shadow_eligibility_decision(
+        "request-1",
+        "INELIGIBLE",
+        "READINESS_NOT_ELIGIBLE",
+        readiness_class="REVIEW_REQUIRED",
+        readiness_metadata={"candidate_count": 1},
+    )
 
 
 def test_readiness_observability_failure_is_non_blocking(monkeypatch):

@@ -395,6 +395,12 @@ def _log_shadow_eligibility_decision(
         ):
             fields["semantic_supply_invalid_reason"] = semantic_supply_invalid_reason
             message += f" semantic_supply_invalid_reason={semantic_supply_invalid_reason}"
+        try:
+            serialized_metadata = _serialize_bounded_readiness_metadata(readiness_metadata)
+        except Exception:
+            serialized_metadata = ""
+        if serialized_metadata:
+            message += f" {serialized_metadata}"
         if request_id:
             correlation_id = hashlib.sha256(request_id.encode()).hexdigest()[:16]
             fields["correlation_id"] = correlation_id
@@ -406,6 +412,50 @@ def _log_shadow_eligibility_decision(
         _log_shadow_metadata(message, **fields)
     except Exception:
         return
+
+
+def _serialize_bounded_readiness_metadata(metadata: dict[str, Any] | None) -> str:
+    """Serialize approved readiness fields in a fixed, message-visible order."""
+    if not isinstance(metadata, dict):
+        return ""
+    parts: list[str] = []
+    scalar_fields = (
+        ("readiness_class", _READINESS_CLASSES),
+        ("fallback_stage", _BOUNDED_READINESS_STAGES),
+        ("selection_state", _BOUNDED_SELECTION_STATES),
+        ("composition_status", _BOUNDED_COMPOSITION_STATES),
+        ("semantic_supply_status", {"INVALID"}),
+    )
+    for key, allowed in scalar_fields:
+        value = metadata.get(key)
+        if isinstance(value, str) and value in allowed:
+            parts.append(f"{key}={value}")
+
+    candidate_count = metadata.get("candidate_count")
+    if isinstance(candidate_count, int) and 0 <= candidate_count <= 100000:
+        parts.append(f"candidate_count={candidate_count}")
+
+    provenance = metadata.get("provenance_counts")
+    if isinstance(provenance, dict):
+        allowed_counts = ("DIRECT", "SAFE_DERIVED", "EXISTING_SUPPLEMENT", "UNRESOLVED")
+        counts = [
+            f"{key}:{provenance[key]}"
+            for key in allowed_counts
+            if isinstance(provenance.get(key), int) and 0 <= provenance[key] <= 100000
+        ]
+        if counts:
+            parts.append(f"provenance_counts={','.join(counts)}")
+
+    diagnostic_codes = metadata.get("allowlisted_diagnostic_codes")
+    if isinstance(diagnostic_codes, (tuple, list)):
+        codes = sorted({code for code in diagnostic_codes if isinstance(code, str) and code in _BOUNDED_DIAGNOSTIC_CODES})[:16]
+        if codes:
+            parts.append(f"diagnostic_codes={','.join(codes)}")
+
+    diagnostic_count = metadata.get("diagnostic_count")
+    if isinstance(diagnostic_count, int) and 0 <= diagnostic_count <= 32:
+        parts.append(f"diagnostic_count={diagnostic_count}")
+    return " ".join(parts)
 
 
 def _bounded_readiness_metadata(prepared: Any, *, candidate_count: int) -> dict[str, Any]:
