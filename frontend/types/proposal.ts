@@ -147,7 +147,7 @@ export type SemanticCandidateSet = {
 export type SemanticRelationshipInput = {
   from_item: string;
   to_item: string;
-  relationship_type: "causality" | "dependency";
+  relationship_type: "causality" | "dependency" | "decision_boundary";
   review_state: SemanticReviewState;
   authority: SemanticAuthority;
   confirmation_authority?: SemanticAuthority;

@@ -203,7 +203,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
   const semanticConfirmationBlockingCount = semanticCandidates.filter((candidate) => candidate.review_state !== "CONFIRMED" && candidate.review_state !== "CORRECTED" && candidate.review_state !== "REJECTED").length;
   const [relationshipFrom, setRelationshipFrom] = useState("");
   const [relationshipTo, setRelationshipTo] = useState("");
-  const [relationshipType, setRelationshipType] = useState<"causality" | "dependency">("causality");
+  const [relationshipType, setRelationshipType] = useState<"causality" | "dependency" | "decision_boundary">("causality");
   const reviewedCandidates = semanticCandidates.filter((candidate) => candidate.review_state === "CONFIRMED" || candidate.review_state === "CORRECTED");
   const relationships = props.semanticRelationships || [];
 
@@ -573,9 +573,10 @@ function GuidedFlowBase(props: GuidedFlowProps) {
                 </div>
                 <div className="guided-semantic-field">
                 <label htmlFor="relationship-type">関係</label>
-                <select id="relationship-type" value={relationshipType} onChange={(event) => setRelationshipType(event.target.value as "causality" | "dependency")}>
+                <select id="relationship-type" value={relationshipType} onChange={(event) => setRelationshipType(event.target.value as "causality" | "dependency" | "decision_boundary")}>
                   <option value="causality">AがBにつながる</option>
                   <option value="dependency">Bを行うにはAが必要</option>
+                  <option value="decision_boundary">Aの判断を境にBへ進む</option>
                 </select>
                 </div>
                 <div className="guided-semantic-field">
@@ -590,7 +591,8 @@ function GuidedFlowBase(props: GuidedFlowProps) {
               {relationships.map((relationship, index) => {
                 const from = reviewedCandidates.find((candidate) => candidate.id === relationship.from_item);
                 const to = reviewedCandidates.find((candidate) => candidate.id === relationship.to_item);
-                return <div className="guided-semantic-handoff" key={`${relationship.from_item}-${relationship.to_item}-${index}`}><div className="guided-semantic-handoff__item"><small>起点</small><strong>{semanticTypeLabels[from?.semantic_type || ""] || "確認項目"}</strong></div><span className="guided-semantic-handoff__direction" aria-hidden="true">{relationship.relationship_type === "dependency" ? "→ 必要" : "→ つながる"}</span><div className="guided-semantic-handoff__item"><small>終点</small><strong>{semanticTypeLabels[to?.semantic_type || ""] || "確認項目"}</strong></div><span className="guided-semantic-handoff__status">確認済み</span><button className="text-button" onClick={() => removeRelationship(index)} type="button">削除</button></div>;
+                const relationshipLabel = relationship.relationship_type === "dependency" ? "→ 必要" : relationship.relationship_type === "decision_boundary" ? "→ 判断を境に進む" : "→ つながる";
+                return <div className="guided-semantic-handoff" key={`${relationship.from_item}-${relationship.to_item}-${index}`}><div className="guided-semantic-handoff__item"><small>起点</small><strong>{semanticTypeLabels[from?.semantic_type || ""] || "確認項目"}</strong></div><span className="guided-semantic-handoff__direction" aria-hidden="true">{relationshipLabel}</span><div className="guided-semantic-handoff__item"><small>終点</small><strong>{semanticTypeLabels[to?.semantic_type || ""] || "確認項目"}</strong></div><span className="guided-semantic-handoff__status">確認済み</span><button className="text-button" onClick={() => removeRelationship(index)} type="button">削除</button></div>;
               })}
             </section>
           )}

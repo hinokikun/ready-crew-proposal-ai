@@ -9,7 +9,7 @@ from zipfile import ZipFile
 
 import pytest
 
-from app.models import PowerPointData, PowerPointSlide, PptxDownloadRequest, ProposalRequest
+from app.models import PowerPointData, PowerPointSlide, PptxDownloadRequest, ProposalRequest, SemanticRelationshipTransportItem
 from app.services.presentation_master.integration import (
     AdapterStatus, ProductionSemanticCandidate, ProductionSemanticCandidateSet,
     SemanticAuthority, SemanticItemType, SemanticReviewState, build_adapter_input,
@@ -18,6 +18,7 @@ from app.services.presentation_master.integration import (
     propose_candidates_from_analysis, reject_candidate, render_pmv3,
 )
 from app.services.presentation_master.integration.production_semantic_contract import candidate_set_to_dict
+from app.services.presentation_master.integration.candidate_state_bridge import CandidateStateBridgeError, relationships_from_transport
 
 
 def _request(text: str = "案件概要") -> PptxDownloadRequest:
@@ -52,6 +53,67 @@ def test_candidate_model_and_authority_validation():
     assert candidate.admissible_for_supply is False
     with pytest.raises(ValueError):
         ProductionSemanticCandidate("", SemanticItemType.EVIDENCE, "x", "x", "x", SemanticAuthority.USER_EXPLICIT, 1, SemanticReviewState.CONFIRMED)
+
+
+@pytest.mark.parametrize("relationship_type", ["causality", "dependency", "decision_boundary"])
+def test_explicit_relationship_bridge_preserves_supported_product_types(relationship_type):
+    candidates = ProductionSemanticCandidateSet((
+        _candidate("condition", SemanticItemType.DECISION_CONDITION, "判断条件"),
+        _candidate("action", SemanticItemType.EXECUTION_ACTION, "実行内容"),
+    ))
+    item = SemanticRelationshipTransportItem(
+        from_item="condition", to_item="action", relationship_type=relationship_type,
+        review_state="CONFIRMED", authority="USER_EXPLICIT",
+        confirmation_authority="USER_EXPLICIT", provenance_state="supplied",
+    )
+
+    relationships = relationships_from_transport([item], candidates)
+
+    assert len(relationships) == 1
+    assert relationships[0].relationship_type == relationship_type
+    assert relationships[0].from_ref == "condition"
+    assert relationships[0].to_ref == "action"
+    assert relationships[0].derivation_level.value == "DIRECT"
+
+
+@pytest.mark.parametrize("relationship_type", ["sequence", "handoff"])
+def test_m48_only_relationship_types_are_not_product_transport_types(relationship_type):
+    candidates = ProductionSemanticCandidateSet((
+        _candidate("condition", SemanticItemType.DECISION_CONDITION, "判断条件"),
+        _candidate("action", SemanticItemType.EXECUTION_ACTION, "実行内容"),
+    ))
+    item = SemanticRelationshipTransportItem(
+        from_item="condition", to_item="action", relationship_type=relationship_type,
+        review_state="CONFIRMED", authority="USER_EXPLICIT",
+        confirmation_authority="USER_EXPLICIT", provenance_state="supplied",
+    )
+
+    with pytest.raises(CandidateStateBridgeError, match="unsupported relationship type"):
+        relationships_from_transport([item], candidates)
+
+
+def test_product_decision_boundary_control_reaches_ready_without_fixture_only_types():
+    base = _confirmed_m48()
+    candidates = ProductionSemanticCandidateSet(tuple(
+        replace(item, relationship_type="decision_boundary") if item.id == "context" else item
+        for item in base.candidates
+    ))
+
+    result = prepare_pmv3(_request(), semantic_candidates=candidates)
+
+    assert result.status == AdapterStatus.READY
+    assert result.selected_master_id == "M48" and result.composition_readiness == "VALID"
+    rendered = render_pmv3(result)
+    assert rendered.pptx_bytes[:2] == b"PK" and len(rendered.pptx_bytes) > 0
+    assert rendered.rasterization_ratio == 0
+    assert rendered.clipping_count == 0
+    assert rendered.overflow_count == 0
+    assert rendered.off_canvas_count == 0
+    with ZipFile(BytesIO(rendered.pptx_bytes)) as package:
+        names = set(package.namelist())
+        assert "[Content_Types].xml" in names and "ppt/presentation.xml" in names
+        assert package.testzip() is None
+        assert any(name.startswith("ppt/slides/slide") and name.endswith(".xml") for name in names)
 
 
 def test_ai_confirmation_correction_and_rejection_preserve_provenance():

@@ -76,7 +76,7 @@ def relationships_from_transport(
     by_id = {candidate.id: candidate for candidate in candidates.candidates}
     relationships: list[SemanticRelationship] = []
     for item in raw:
-        if item.relationship_type not in {"causality", "dependency"} or item.relationship_type not in SUPPORTED_RELATIONSHIP_TYPES:
+        if item.relationship_type not in {"causality", "dependency", "decision_boundary"} or item.relationship_type not in SUPPORTED_RELATIONSHIP_TYPES:
             raise CandidateStateBridgeError("unsupported relationship type")
         if item.from_item == item.to_item or item.from_item not in by_id or item.to_item not in by_id:
             raise CandidateStateBridgeError("relationship endpoint is invalid")
