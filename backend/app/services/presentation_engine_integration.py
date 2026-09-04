@@ -9,6 +9,7 @@ from typing import Any, TYPE_CHECKING
 from app.config import settings
 from app.models import PptxDownloadRequest
 from app.services.pptx_service import build_pptx_context, build_pptx_result
+from app.services.presentation_master.definitions import SUPPORTED_RELATIONSHIP_TYPES
 
 if TYPE_CHECKING:
     from app.strategy_engine.models import HumanReviewReport, PresentationContext
@@ -217,6 +218,8 @@ _BOUNDED_READINESS_STAGES = frozenset(
 )
 _BOUNDED_SELECTION_STATES = frozenset({"selected", "review_required", "no_match"})
 _BOUNDED_COMPOSITION_STATES = frozenset({"VALID", "DEGRADED", "REVIEW_REQUIRED", "INVALID", "NOT_READY"})
+_BOUNDED_AUTHORITIES = frozenset({"USER_EXPLICIT", "SYSTEM_EXTRACTED", "AI_PROPOSED", "EXTERNAL_VERIFIED", "UNRESOLVED"})
+_BOUNDED_RELATIONSHIPS = frozenset(SUPPORTED_RELATIONSHIP_TYPES)
 _BOUNDED_DIAGNOSTIC_CODES = _INVALID_INPUT_REASONS | _SEMANTIC_SUPPLY_INVALID_REASONS | {"renderer_preparation"}
 
 
@@ -429,6 +432,7 @@ def _serialize_bounded_readiness_metadata(metadata: dict[str, Any] | None) -> st
         ("selection_state", _BOUNDED_SELECTION_STATES),
         ("composition_status", _BOUNDED_COMPOSITION_STATES),
         ("semantic_supply_status", {"INVALID"}),
+        ("diagnostic_status", {"AVAILABLE", "UNAVAILABLE"}),
     )
     for key, allowed in scalar_fields:
         value = metadata.get(key)
@@ -446,10 +450,28 @@ def _serialize_bounded_readiness_metadata(metadata: dict[str, Any] | None) -> st
         "rejected_candidate_count",
         "unresolved_candidate_count",
         "unresolved_critical_count",
+        "admitted_candidate_count",
+        "relationship_count",
     ):
         value = metadata.get(key)
         if isinstance(value, int) and 0 <= value <= 100000:
             parts.append(f"{key}={value}")
+
+    authority_counts = metadata.get("candidate_authority_counts")
+    if isinstance(authority_counts, dict):
+        counts = [
+            f"{key}:{authority_counts[key]}"
+            for key in sorted(_BOUNDED_AUTHORITIES)
+            if isinstance(authority_counts.get(key), int) and 0 <= authority_counts[key] <= 100000
+        ]
+        if counts:
+            parts.append(f"candidate_authority_counts={','.join(counts)}")
+
+    relationship_types = metadata.get("relationship_types")
+    if isinstance(relationship_types, (tuple, list)):
+        types = sorted({value for value in relationship_types if isinstance(value, str) and value in _BOUNDED_RELATIONSHIPS})[:16]
+        if types:
+            parts.append(f"relationship_types={','.join(types)}")
 
     provenance = metadata.get("provenance_counts")
     if isinstance(provenance, dict):
@@ -479,10 +501,17 @@ def _bounded_readiness_metadata(
     *,
     candidate_count: int,
     candidate_set: Any | None = None,
+    relationships: tuple[Any, ...] = (),
 ) -> dict[str, Any]:
     """Extract only existing, bounded adapter metadata for the eligibility event."""
-    metadata: dict[str, Any] = {"candidate_count": max(0, min(int(candidate_count), 100000))}
+    metadata: dict[str, Any] = {
+        "diagnostic_status": "AVAILABLE",
+        "candidate_count": max(0, min(int(candidate_count), 100000)),
+    }
     try:
+        readiness_class = getattr(getattr(prepared, "status", None), "value", None)
+        if readiness_class in _READINESS_CLASSES:
+            metadata["readiness_class"] = readiness_class
         candidates = tuple(getattr(candidate_set, "candidates", ()))
         state_counts = {
             "confirmed_candidate_count": 0,
@@ -507,6 +536,28 @@ def _bounded_readiness_metadata(
             unresolved_critical = getattr(candidate_set, "unresolved_critical", None)
             if callable(unresolved_critical):
                 metadata["unresolved_critical_count"] = min(max(len(unresolved_critical()), 0), 100000)
+            admissible = getattr(candidate_set, "admissible", None)
+            if callable(admissible):
+                metadata["admitted_candidate_count"] = min(max(len(tuple(admissible())), 0), 100000)
+            authority_counts = {authority: 0 for authority in _BOUNDED_AUTHORITIES}
+            for candidate in candidates:
+                authority = getattr(getattr(candidate, "authority", None), "value", None)
+                if authority in authority_counts:
+                    authority_counts[authority] += 1
+            metadata["candidate_authority_counts"] = authority_counts
+
+        if isinstance(relationships, tuple):
+            metadata["relationship_count"] = min(max(len(relationships), 0), 64)
+            relationship_types = sorted(
+                {
+                    relationship_type
+                    for relationship in relationships
+                    for relationship_type in (getattr(relationship, "relationship_type", None),)
+                    if isinstance(relationship_type, str) and relationship_type in _BOUNDED_RELATIONSHIPS
+                }
+            )
+            if relationship_types:
+                metadata["relationship_types"] = tuple(relationship_types[:16])
 
         stage = getattr(getattr(prepared, "fallback_stage", None), "value", None)
         if stage in _BOUNDED_READINESS_STAGES:
@@ -543,7 +594,7 @@ def _bounded_readiness_metadata(
             if diagnostics.get("semantic_supply_invalid_reason") in _SEMANTIC_SUPPLY_INVALID_REASONS:
                 metadata["semantic_supply_status"] = "INVALID"
     except Exception:
-        return {"candidate_count": metadata["candidate_count"]}
+        return {"diagnostic_status": "UNAVAILABLE", "candidate_count": metadata["candidate_count"]}
     return metadata
 
 
@@ -686,11 +737,20 @@ def build_renderer_mvp_internal_canary_pptx_bytes(
         error_type = _bounded_canary_failure_value(exc.__class__.__name__, "Exception")
         bounded_reason = _bounded_canary_failure_value(reason, error_type)
         failure_stage_class = _canary_failure_stage(failure_stage)
+        details = getattr(exc, "details", None)
+        readiness_metadata = details.get("readiness_metadata") if isinstance(details, dict) else None
+        try:
+            serialized_readiness = _serialize_bounded_readiness_metadata(readiness_metadata)
+        except Exception:
+            serialized_readiness = "diagnostic_status=UNAVAILABLE"
+        if not serialized_readiness:
+            serialized_readiness = "diagnostic_status=UNAVAILABLE"
         logger.warning(
-            "v3_internal_canary_failure error_type=%s failure_stage=%s reason=%s",
+            "v3_internal_canary_failure error_type=%s failure_stage=%s reason=%s %s",
             error_type,
             failure_stage_class,
             bounded_reason,
+            serialized_readiness,
             extra={
                 "requested_version": requested_version,
                 "actual_version": "",
@@ -878,13 +938,23 @@ def _build_renderer_mvp_pptx_result(
             raise RendererMvpIntegrationError(
                 "semantic_readiness_not_ready",
                 failure_stage="semantic_bridge",
+                details={"diagnostic_status": "UNAVAILABLE"},
             )
         prepared = prepare_pmv3(payload, semantic_candidates=context.binding.candidates, semantic_relationships=context.relationships)
         if prepared.status.value not in {"READY", "READY_WITH_VALID_BINDINGS"}:
+            readiness_metadata = _bounded_readiness_metadata(
+                prepared,
+                candidate_count=len(context.binding.candidates.candidates),
+                candidate_set=context.binding.candidates,
+                relationships=context.relationships,
+            )
             raise RendererMvpIntegrationError(
                 "semantic_readiness_not_ready",
                 failure_stage="semantic_readiness",
-                details={"readiness_status": prepared.status.value},
+                details={
+                    "readiness_status": prepared.status.value,
+                    "readiness_metadata": readiness_metadata,
+                },
             )
         rendered = render_pmv3(prepared)
         return PresentationEngineResult(

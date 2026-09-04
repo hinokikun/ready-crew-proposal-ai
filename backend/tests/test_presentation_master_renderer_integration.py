@@ -385,6 +385,62 @@ def test_candidate_state_counts_reuse_existing_unresolved_critical_authority():
     assert all(identifier not in message for identifier in ("candidate-id-alpha", "candidate-id-bravo", "candidate-id-charlie", "candidate-id-delta", "candidate-id-echo"))
 
 
+def test_readiness_metadata_includes_only_bounded_relationship_and_admission_data():
+    import app.services.presentation_engine_integration as engine
+    from app.services.presentation_master.integration.production_semantic_contract import (
+        ProductionSemanticCandidate,
+        ProductionSemanticCandidateSet,
+        SemanticAuthority,
+        SemanticItemType,
+        SemanticReviewState,
+    )
+
+    def candidate(candidate_id, state, authority):
+        return ProductionSemanticCandidate(
+            candidate_id,
+            SemanticItemType.DECISION_CONDITION,
+            "bounded value",
+            "analysis",
+            "source_field",
+            authority,
+            0.8,
+            state,
+            confirmation_authority=(SemanticAuthority.USER_EXPLICIT if state == SemanticReviewState.CONFIRMED else None),
+        )
+
+    candidates = ProductionSemanticCandidateSet(
+        (
+            candidate("confirmed", SemanticReviewState.CONFIRMED, SemanticAuthority.USER_EXPLICIT),
+            candidate("rejected", SemanticReviewState.REJECTED, SemanticAuthority.AI_PROPOSED),
+        )
+    )
+    prepared = SimpleNamespace(
+        status=SimpleNamespace(value="REVIEW_REQUIRED"),
+        fallback_stage=SimpleNamespace(value="SEMANTIC_ADAPTER"),
+        selection=None,
+        composition_readiness="NOT_READY",
+        provenance_summary={},
+        diagnostics={"invalid_input_reason": "raw text must not be logged"},
+    )
+    metadata = engine._bounded_readiness_metadata(
+        prepared,
+        candidate_count=2,
+        candidate_set=candidates,
+        relationships=(SimpleNamespace(relationship_type="decision_boundary"),),
+    )
+    message = engine._serialize_bounded_readiness_metadata(metadata)
+
+    assert metadata["diagnostic_status"] == "AVAILABLE"
+    assert metadata["readiness_class"] == "REVIEW_REQUIRED"
+    assert metadata["admitted_candidate_count"] == 1
+    assert metadata["relationship_count"] == 1
+    assert metadata["relationship_types"] == ("decision_boundary",)
+    assert "admitted_candidate_count=1" in message
+    assert "relationship_count=1" in message
+    assert "relationship_types=decision_boundary" in message
+    assert "raw text must not be logged" not in message
+
+
 def test_readiness_observability_failure_is_non_blocking(monkeypatch):
     import app.services.presentation_engine_integration as engine
 

@@ -277,3 +277,59 @@ def test_internal_canary_failures_are_explicit_errors_not_legacy_success(
     assert normal_response.status_code == 200
     assert normal_response.content[:2] == b"PK"
     assert normal_response.headers.get("x-presentation-canary") is None
+
+
+def test_internal_canary_non_ready_failure_logs_bounded_readiness_metadata(
+    monkeypatch: pytest.MonkeyPatch,
+    client: TestClient,
+    admin_headers: dict[str, str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    integration, _ = _runtime_modules()
+    renderer_module = importlib.import_module("app.services.presentation_master.renderer_mvp")
+    caplog.set_level("WARNING", logger=integration.logger.name)
+
+    def _raise(_payload, *, request_id=None, project_id=None, semantic_gate=False):
+        assert semantic_gate is True
+        raise renderer_module.RendererMvpIntegrationError(
+            "semantic_readiness_not_ready",
+            failure_stage="semantic_readiness",
+            details={
+                "readiness_metadata": {
+                    "diagnostic_status": "AVAILABLE",
+                    "readiness_class": "REVIEW_REQUIRED",
+                    "fallback_stage": "SEMANTIC_ADAPTER",
+                    "candidate_count": 5,
+                    "confirmed_candidate_count": 3,
+                    "corrected_candidate_count": 0,
+                    "rejected_candidate_count": 2,
+                    "unresolved_critical_count": 2,
+                    "admitted_candidate_count": 3,
+                    "relationship_count": 1,
+                    "selection_state": "review_required",
+                    "composition_status": "NOT_READY",
+                }
+            },
+        )
+
+    settings, originals = _set_v3_flags(canary=True, renderer_mvp=False, shadow=True)
+    monkeypatch.setattr(integration, "_build_renderer_mvp_pptx_result", _raise)
+    try:
+        response = client.post(ENDPOINT, headers=admin_headers, json=_canary_payload())
+    finally:
+        _restore_flags(settings, originals)
+
+    assert response.status_code == 500
+    failure_logs = [record.getMessage() for record in caplog.records if record.getMessage().startswith("v3_internal_canary_failure")]
+    assert failure_logs
+    message = failure_logs[-1]
+    assert "readiness=REVIEW_REQUIRED" not in message
+    assert "readiness_class=REVIEW_REQUIRED" in message
+    assert "fallback_stage=SEMANTIC_ADAPTER" in message
+    assert "candidate_count=5" in message
+    assert "confirmed_candidate_count=3" in message
+    assert "rejected_candidate_count=2" in message
+    assert "admitted_candidate_count=3" in message
+    assert "relationship_count=1" in message
+    assert "selection_state=review_required" in message
+    assert "composition_status=NOT_READY" in message
