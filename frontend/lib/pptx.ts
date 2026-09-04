@@ -207,6 +207,50 @@ export async function downloadSummaryProposalPowerPoint(
   );
 }
 
+export async function downloadInternalCanaryProposalPowerPoint(
+  data: PowerPointData,
+  winProbability?: WinProbability,
+  projectBrief = "",
+  clientCompanyInfo = "",
+  competitorSiteUrl = "",
+  competitorCompanyName = "",
+  estimatedPageCount = "",
+  cmsRequired = "",
+  contactFormRequired = "",
+  specialFunctionRequired = "",
+  seoRequired = "",
+  contentCreationRequired = "",
+  desiredLaunchTiming = "",
+  budgetRange = "",
+  ownServiceInfo = "",
+  pastProposalTemplate = "",
+  caseStudies = "",
+  options: PowerPointDesignOptions = {}
+): Promise<PowerPointDownloadResult> {
+  return downloadPowerPoint(
+    data,
+    winProbability,
+    projectBrief,
+    clientCompanyInfo,
+    competitorSiteUrl,
+    competitorCompanyName,
+    estimatedPageCount,
+    cmsRequired,
+    contactFormRequired,
+    specialFunctionRequired,
+    seoRequired,
+    contentCreationRequired,
+    desiredLaunchTiming,
+    budgetRange,
+    ownServiceInfo,
+    pastProposalTemplate,
+    caseStudies,
+    false,
+    options,
+    "/api/internal/presentation-master-v3/canary/download-pptx"
+  );
+}
+
 async function downloadPowerPoint(
   data: PowerPointData,
   winProbability?: WinProbability,
@@ -226,7 +270,8 @@ async function downloadPowerPoint(
   pastProposalTemplate = "",
   caseStudies = "",
   summary = false,
-  options: PowerPointDesignOptions = {}
+  options: PowerPointDesignOptions = {},
+  endpointPath = "/api/download-pptx"
 ) {
   if (!summary) {
     const transportCandidateCount = options.semanticCandidates?.length ?? 0;
@@ -259,45 +304,41 @@ async function downloadPowerPoint(
       }
     }
   }
-  const response = await fetch(`${API_BASE_URL}/api/download-pptx`, {
+  const response = await fetch(`${API_BASE_URL}${endpointPath}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...getAuthHeaders()
     },
     body: JSON.stringify({
-      powerpoint_generation_data: data,
-      win_probability: winProbability,
-      project_brief: projectBrief,
-      client_company_info: clientCompanyInfo,
-      competitor_site_url: competitorSiteUrl,
-      competitor_company_name: competitorCompanyName,
-      estimated_page_count: estimatedPageCount,
-      cms_required: cmsRequired,
-      contact_form_required: contactFormRequired,
-      special_function_required: specialFunctionRequired,
-      seo_required: seoRequired,
-      content_creation_required: contentCreationRequired,
-      desired_launch_timing: desiredLaunchTiming,
-      budget_range: budgetRange,
-      own_service_info: ownServiceInfo,
-      past_proposal_template: pastProposalTemplate,
-      case_studies: caseStudies,
-      summary,
-      design_template: options.designTemplate,
-      brand_settings: options.brandSettings,
-      presentation_quality_state: options.qualityState,
-      presentation_layout_decisions: options.layoutDecisions,
-      ...(summary || !options.semanticCandidates ? {} : {
-        semantic_candidates: { candidates: options.semanticCandidates },
-        semantic_confirmation_state: options.semanticCandidates.map(({ id, semantic_type, review_state, value }) => ({ id, semantic_type, review_state, value })),
-        ...(options.semanticRelationships?.length ? { semantic_relationships: options.semanticRelationships } : {}),
-        ...(options.diagnosticCorrelationId ? { candidate_boundary_correlation_id: options.diagnosticCorrelationId } : {})
-      })
+      ...buildDownloadPptxPayload(
+        data,
+        winProbability,
+        projectBrief,
+        clientCompanyInfo,
+        competitorSiteUrl,
+        competitorCompanyName,
+        estimatedPageCount,
+        cmsRequired,
+        contactFormRequired,
+        specialFunctionRequired,
+        seoRequired,
+        contentCreationRequired,
+        desiredLaunchTiming,
+        budgetRange,
+        ownServiceInfo,
+        pastProposalTemplate,
+        caseStudies,
+        summary,
+        options
+      )
     } satisfies DownloadPptxPayload)
   });
 
   if (!response.ok) {
+    if (endpointPath === "/api/internal/presentation-master-v3/canary/download-pptx" && response.status === 404) {
+      throw new Error("internal_canary_disabled");
+    }
     const friendlyMessage = await readPowerPointErrorMessage(response.clone(), response.status);
     if (friendlyMessage) {
       throw new Error(friendlyMessage);
@@ -328,6 +369,59 @@ async function downloadPowerPoint(
   anchor.click();
   URL.revokeObjectURL(url);
   return { filename, qualityReport };
+}
+
+function buildDownloadPptxPayload(
+  data: PowerPointData,
+  winProbability: WinProbability | undefined,
+  projectBrief: string,
+  clientCompanyInfo: string,
+  competitorSiteUrl: string,
+  competitorCompanyName: string,
+  estimatedPageCount: string,
+  cmsRequired: string,
+  contactFormRequired: string,
+  specialFunctionRequired: string,
+  seoRequired: string,
+  contentCreationRequired: string,
+  desiredLaunchTiming: string,
+  budgetRange: string,
+  ownServiceInfo: string,
+  pastProposalTemplate: string,
+  caseStudies: string,
+  summary: boolean,
+  options: PowerPointDesignOptions
+): DownloadPptxPayload {
+  return {
+    powerpoint_generation_data: data,
+    win_probability: winProbability,
+    project_brief: projectBrief,
+    client_company_info: clientCompanyInfo,
+    competitor_site_url: competitorSiteUrl,
+    competitor_company_name: competitorCompanyName,
+    estimated_page_count: estimatedPageCount,
+    cms_required: cmsRequired,
+    contact_form_required: contactFormRequired,
+    special_function_required: specialFunctionRequired,
+    seo_required: seoRequired,
+    content_creation_required: contentCreationRequired,
+    desired_launch_timing: desiredLaunchTiming,
+    budget_range: budgetRange,
+    own_service_info: ownServiceInfo,
+    past_proposal_template: pastProposalTemplate,
+    case_studies: caseStudies,
+    summary,
+    design_template: options.designTemplate,
+    brand_settings: options.brandSettings,
+    presentation_quality_state: options.qualityState,
+    presentation_layout_decisions: options.layoutDecisions,
+    ...(summary || !options.semanticCandidates ? {} : {
+      semantic_candidates: { candidates: options.semanticCandidates },
+      semantic_confirmation_state: options.semanticCandidates.map(({ id, semantic_type, review_state, value }) => ({ id, semantic_type, review_state, value })),
+      ...(options.semanticRelationships?.length ? { semantic_relationships: options.semanticRelationships } : {}),
+      ...(options.diagnosticCorrelationId ? { candidate_boundary_correlation_id: options.diagnosticCorrelationId } : {})
+    })
+  };
 }
 
 type CustomerReadyBlockedDetail = {

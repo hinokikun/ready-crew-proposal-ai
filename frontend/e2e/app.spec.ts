@@ -293,6 +293,40 @@ test("不採用候補はStep3の判断済みに含めるがSemantic採用とRela
   await expect(page.getByTestId("guided-quality-check")).toBeVisible();
 });
 
+test("Internal CanaryはadminのStep5だけに表示され通常出力と同じpayloadを使う", async ({ page }) => {
+  await login(page, adminEmail);
+  await setTextareaValue(page, "project-source-input", "株式会社サンプル様。判断条件と実行内容を含む検証案件。");
+  await clickGuidedGenerate(page);
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).waitFor({ state: "visible", timeout: 25_000 });
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).click();
+  await page.getByRole("button", { name: "出力方法を選ぶ" }).click();
+  await expect(page.getByRole("heading", { name: "提案書を出力できます" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Internal CanaryでPPTXを確認" })).toBeVisible();
+
+  await page.getByRole("button", { name: "詳細版PowerPoint" }).click();
+  const normalRequestPromise = page.waitForRequest((request) => request.url().endsWith("/api/download-pptx"));
+  await page.getByRole("button", { name: "選択した形式でダウンロード" }).click();
+  const normalRequest = await normalRequestPromise;
+  const normalPayload = normalRequest.postDataJSON();
+
+  const canaryRequestPromise = page.waitForRequest((request) => request.url().endsWith("/api/internal/presentation-master-v3/canary/download-pptx"));
+  await page.getByRole("button", { name: "Internal CanaryでPPTXを確認" }).click();
+  const canaryRequest = await canaryRequestPromise;
+  expect(canaryRequest.postDataJSON()).toEqual(normalPayload);
+  await expect(page.getByRole("button", { name: "Internal CanaryでPPTXを確認" })).toBeVisible();
+});
+
+test("Internal Canaryはmemberに表示されず無効時は通常出力へfallbackしない", async ({ page }) => {
+  await login(page, memberEmail);
+  await setTextareaValue(page, "project-source-input", "株式会社サンプル様。通常出力の確認案件。");
+  await clickGuidedGenerate(page);
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).waitFor({ state: "visible", timeout: 25_000 });
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).click();
+  await page.getByRole("button", { name: "出力方法を選ぶ" }).click();
+  await expect(page.getByRole("heading", { name: "提案書を出力できます" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Internal CanaryでPPTXを確認" })).toHaveCount(0);
+});
+
 test("Step3で既存の確認済み項目間に因果関係を追加・削除できる", async ({ page }) => {
   await page.route("**/api/analyze", async (route) => {
     const response = proposalResponse(route.request().postDataJSON() as { project_brief?: string });
@@ -1957,6 +1991,16 @@ async function mockApi(page: Page, options: MockOptions = {}) {
           }))
         },
         body: "PK mock pptx content"
+      });
+    }
+    if (path.endsWith("/api/internal/presentation-master-v3/canary/download-pptx")) {
+      return route.fulfill({
+        status: 200,
+        headers: {
+          "content-type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "content-disposition": "attachment; filename*=UTF-8''ProposalPilot_canary_mock.pptx"
+        },
+        body: "PK mock canary pptx content"
       });
     }
     if (path.endsWith("/api/organizations/context")) {

@@ -33,14 +33,17 @@ type GuidedFlowProps = {
   canGenerate: boolean;
   canSeeDetailMode: boolean;
   canDownloadMainOutputs: boolean;
+  canUseInternalCanary: boolean;
   detailMode: boolean;
   draftNotice?: string;
   draftSaveStatus?: string;
   errorMessage: string;
+  internalCanaryError: string;
   generationStages: GuidedProgressStage[];
   hasDownloadedSummary: boolean;
   hasProposal: boolean;
   isDownloadingDetail: boolean;
+  isDownloadingInternalCanary: boolean;
   isDownloadingPdf: boolean;
   isDownloadingSummary: boolean;
   isGenerating: boolean;
@@ -48,6 +51,7 @@ type GuidedFlowProps = {
   onCreateBeautifulAi: () => Promise<void> | void;
   onDiscardDraft?: () => void;
   onDownloadDetail: () => Promise<void> | void;
+  onDownloadInternalCanary: () => Promise<void> | void;
   onDownloadPdf: () => Promise<void> | void;
   onDownloadSummary: () => Promise<void> | void;
   onGenerate: () => Promise<boolean | string | void> | boolean | string | void;
@@ -189,7 +193,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
   const [editingCandidateId, setEditingCandidateId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const hasInput = props.sourceText.trim().length > 0;
-  const isOutputBusy = props.isDownloadingSummary || props.isDownloadingDetail || props.isDownloadingPdf || props.beautifulAiIsCreating;
+  const isOutputBusy = props.isDownloadingSummary || props.isDownloadingDetail || props.isDownloadingInternalCanary || props.isDownloadingPdf || props.beautifulAiIsCreating;
   const qualityItems = useMemo(() => qualityItemsForSource(props.sourceText), [props.sourceText]);
   const uncheckedCount = qualityItems.filter((item) => !checkedItems[item]).length;
   const allQualityChecked = uncheckedCount === 0;
@@ -718,6 +722,20 @@ function GuidedFlowBase(props: GuidedFlowProps) {
             onNext={() => void runSelectedOutput()}
             primaryLabel={selectedOutput === "beautiful" ? "Beautiful.aiで提案書を作成" : "選択した形式でダウンロード"}
           />
+          {props.canUseInternalCanary && (
+            <div className="guided-internal-canary-action">
+              <p className="guided-inline-note">管理者向け・Presentation Master V3 検証用</p>
+              <button
+                className="secondary-button"
+                disabled={!props.canDownloadMainOutputs || isOutputBusy}
+                onClick={() => void props.onDownloadInternalCanary()}
+                type="button"
+              >
+                {props.isDownloadingInternalCanary ? "Internal Canaryを実行中…" : "Internal CanaryでPPTXを確認"}
+              </button>
+              {props.internalCanaryError && <p className="guided-inline-warning" role="alert">{props.internalCanaryError}</p>}
+            </div>
+          )}
           <details className="guided-detail-foldout">
             <summary>出力設定・詳細機能を開く</summary>
             <div className="guided-panel-stack">

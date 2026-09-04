@@ -144,7 +144,7 @@ import {
 import { getUserFriendlyErrorMessage, toFriendlyError } from "@/lib/errorMessage";
 import { logger } from "@/lib/logger";
 import { downloadEstimatePdf } from "@/lib/pdf";
-import { downloadProposalPowerPoint, downloadSummaryProposalPowerPoint } from "@/lib/pptx";
+import { downloadInternalCanaryProposalPowerPoint, downloadProposalPowerPoint, downloadSummaryProposalPowerPoint } from "@/lib/pptx";
 import type { PresentationLayoutDecisionRequest, PresentationQualityDownloadReport, PresentationQualityRequestState } from "@/lib/pptx";
 import { canUseWorkFeatures, getRoleLabel, isAdminRole, isManagerCompatibleRole, type CreatableUserRole } from "@/lib/roles";
 import { appendUsageLog, buildScopedStorageKey, readUsageLogs, type UsageLogEntry } from "@/lib/storage";
@@ -364,6 +364,7 @@ export default function Home() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDownloadingPowerPoint, setIsDownloadingPowerPoint] = useState(false);
+  const [isDownloadingInternalCanary, setIsDownloadingInternalCanary] = useState(false);
   const [isDownloadingSummaryPowerPoint, setIsDownloadingSummaryPowerPoint] = useState(false);
   const [isDownloadingEstimatePdf, setIsDownloadingEstimatePdf] = useState(false);
   const [isCreatingBeautifulAi, setIsCreatingBeautifulAi] = useState(false);
@@ -375,6 +376,7 @@ export default function Home() {
   const [beautifulAiNotice, setBeautifulAiNotice] = useState("");
   const [beautifulAiManualUrl, setBeautifulAiManualUrl] = useState("");
   const [error, setError] = useState("");
+  const [internalCanaryError, setInternalCanaryError] = useState("");
   const [lastDownloadRetry, setLastDownloadRetry] = useState<"pptx" | "summary-pptx" | "estimate-pdf" | "beautiful-ai" | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
   const [healthSnapshot, setHealthSnapshot] = useState<HealthSnapshot | null>(null);
@@ -2061,7 +2063,8 @@ export default function Home() {
     targetResult: AnalysisResponse,
     targetForm: ProposalRequest,
     summary: boolean,
-    options: { powerpointData?: PowerPointData; qualityState?: PresentationQualityRequestState; layoutDecisions?: PresentationLayoutDecisionRequest[] } = {}
+    options: { powerpointData?: PowerPointData; qualityState?: PresentationQualityRequestState; layoutDecisions?: PresentationLayoutDecisionRequest[] } = {},
+    internalCanary = false
   ) {
     if (isMaintenanceMode) {
       showMaintenanceError();
@@ -2077,9 +2080,12 @@ export default function Home() {
     }
     if (summary) {
       setIsDownloadingSummaryPowerPoint(true);
+    } else if (internalCanary) {
+      setIsDownloadingInternalCanary(true);
     } else {
       setIsDownloadingPowerPoint(true);
     }
+    if (internalCanary) setInternalCanaryError("");
     setError("");
     const downloadStartedAt = performance.now();
     const downloadEventName = summary ? "summary_ppt_download" : "detail_ppt_download";
@@ -2089,7 +2095,9 @@ export default function Home() {
       if (!summary && candidateBoundaryDiagnosticRef.current.active && !isCandidateBoundaryCorrelationId(candidateBoundaryDiagnosticRef.current.correlationId)) {
         throw new Error("DIAGNOSTIC_CORRELATION_MISSING");
       }
-      const downloader = summary ? downloadSummaryProposalPowerPoint : downloadProposalPowerPoint;
+      const downloader = internalCanary
+        ? downloadInternalCanaryProposalPowerPoint
+        : summary ? downloadSummaryProposalPowerPoint : downloadProposalPowerPoint;
       const downloadResult = await downloader(
         options.powerpointData ?? targetResult.powerpoint_generation_data,
         targetResult.analysis.win_probability,
@@ -2146,6 +2154,11 @@ export default function Home() {
       void refreshAccountData();
     } catch (caught) {
       const friendly = toFriendlyError(caught);
+      if (internalCanary) {
+        setInternalCanaryError(caught instanceof Error && caught.message === "internal_canary_disabled"
+          ? "Internal Canary は現在無効です。"
+          : `${friendly.title}。${friendly.action}`);
+      }
       trackEvent({
         name: downloadEventName,
         feature: downloadFeatureName,
@@ -2155,11 +2168,15 @@ export default function Home() {
         meta: { category: friendly.category }
       });
       recordUsage(summary ? "要約PowerPoint" : "PowerPoint", allInputText(targetForm).length, summary ? "summary-pptx" : "pptx", "failure", friendly.category);
-      setLastDownloadRetry(summary ? "summary-pptx" : "pptx");
-      setError(`${friendly.title}。${friendly.action}`);
+      if (!internalCanary) {
+        setLastDownloadRetry(summary ? "summary-pptx" : "pptx");
+        setError(`${friendly.title}。${friendly.action}`);
+      }
     } finally {
       if (summary) {
         setIsDownloadingSummaryPowerPoint(false);
+      } else if (internalCanary) {
+        setIsDownloadingInternalCanary(false);
       } else {
         setIsDownloadingPowerPoint(false);
       }
@@ -2169,6 +2186,11 @@ export default function Home() {
   async function downloadPowerPoint(powerpointData?: PowerPointData, qualityState?: PresentationQualityRequestState, layoutDecisions?: PresentationLayoutDecisionRequest[]) {
     if (!result) return;
     await downloadPowerPointFor(result, form, false, { powerpointData, qualityState, layoutDecisions });
+  }
+
+  async function downloadInternalCanaryPowerPoint() {
+    if (!result || !isAdminRole(currentUser?.role)) return;
+    await downloadPowerPointFor(result, form, false, {}, true);
   }
 
   async function downloadSummaryPowerPoint() {
@@ -3057,6 +3079,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           hasDownloadedSummary={hasDownloadedSummary}
           hasProposal={Boolean(result)}
           isDownloadingDetail={isDownloadingPowerPoint}
+          isDownloadingInternalCanary={isDownloadingInternalCanary}
           isDownloadingPdf={isDownloadingEstimatePdf}
           isDownloadingSummary={isDownloadingSummaryPowerPoint}
           isGenerating={isLoading}
@@ -3064,6 +3087,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           onCreateBeautifulAi={() => createBeautifulAiCurrent()}
           onDiscardDraft={discardGuidedFlowDraft}
           onDownloadDetail={() => downloadPowerPoint()}
+          onDownloadInternalCanary={() => downloadInternalCanaryPowerPoint()}
           onDownloadPdf={() => downloadEstimatePdfCurrent()}
           onDownloadSummary={() => downloadSummaryPowerPoint()}
           onGenerate={async () => {
@@ -3100,6 +3124,8 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           semanticCandidates={result ? { candidates: semanticCandidatesForTransport } : null}
           semanticRelationships={result ? semanticRelationshipsForTransport : undefined}
           roleLabel={roleDisplayLabel}
+          canUseInternalCanary={isAdminRole(currentUser?.role)}
+          internalCanaryError={internalCanaryError}
           showSalesCopilotMarker
           sourceText={rawSourceText}
           summaryItems={guidedSummaryItems}
