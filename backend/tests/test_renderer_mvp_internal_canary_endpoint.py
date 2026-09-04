@@ -70,11 +70,11 @@ def _quality_report(response) -> dict[str, Any]:
 
 def _canary_payload(
     *,
-    client_name: str = "株式会社フラワーオークションジャパン",
-    deck_title: str = "画像認識AI導入PoC提案",
-    project_brief: str = "花卉の商品画像から品質候補を出し、人の最終判断と理由を記録して次回判断へ使う。",
-    hearing_result: str = "対象画像、撮影条件、AI候補、人判断、一致と差異、例外条件をPoCで確認したい。",
-    own_service_info: str = "画像認識AIと判定記録の運用設計を支援。",
+    client_name: str = "株式会社サンプル",
+    deck_title: str = "業務判断高度化提案",
+    project_brief: str = "業務情報を整理し、責任者の判断と実行計画をつなぐ。",
+    hearing_result: str = "現状業務、判断条件、責任者、承認者、実行内容を確認したい。",
+    own_service_info: str = "業務設計と導入計画の整理を支援。",
     special_function_required: str = "",
 ) -> dict[str, Any]:
     return {
@@ -99,6 +99,28 @@ def _canary_payload(
                 }
             ],
         },
+        "semantic_candidates": {
+            "candidates": [
+                {"id": "prep", "semantic_type": "preparation_analysis", "value": "現状業務と要件を確認する", "source_type": "user_text", "source_field": "hearing_result", "authority": "SYSTEM_EXTRACTED", "confidence": 0.8, "review_state": "CONFIRMED"},
+                {"id": "condition", "semantic_type": "decision_condition", "value": "要件と予算を確認できた場合に次工程へ進む", "source_type": "user_text", "source_field": "hearing_result", "authority": "SYSTEM_EXTRACTED", "confidence": 0.8, "review_state": "CONFIRMED"},
+                {"id": "owner", "semantic_type": "accountable_owner", "value": "顧客責任者", "source_type": "user_text", "source_field": "hearing_result", "authority": "SYSTEM_EXTRACTED", "confidence": 0.8, "review_state": "CONFIRMED"},
+                {"id": "approver", "semantic_type": "approver", "value": "顧客責任者", "source_type": "user_text", "source_field": "hearing_result", "authority": "SYSTEM_EXTRACTED", "confidence": 0.8, "review_state": "CONFIRMED"},
+                {"id": "action", "semantic_type": "execution_action", "value": "合意した実行計画を開始する", "source_type": "user_text", "source_field": "hearing_result", "authority": "SYSTEM_EXTRACTED", "confidence": 0.8, "review_state": "CONFIRMED"},
+                {"id": "context", "semantic_type": "decision_context", "value": "導入判断", "source_type": "user_text", "source_field": "hearing_result", "authority": "SYSTEM_EXTRACTED", "confidence": 0.8, "review_state": "CONFIRMED", "from_item": "owner", "to_item": "approver", "relationship_type": "handoff"},
+                {"id": "escalation", "semantic_type": "escalation", "value": "未解決事項は顧客責任者へ確認する", "source_type": "user_text", "source_field": "hearing_result", "authority": "SYSTEM_EXTRACTED", "confidence": 0.8, "review_state": "CONFIRMED"},
+                {"id": "evidence", "semantic_type": "evidence", "value": "顧客ヒアリング記録", "source_type": "user_text", "source_field": "hearing_result", "authority": "SYSTEM_EXTRACTED", "confidence": 0.8, "review_state": "CONFIRMED", "admissible_as_evidence": True, "source_reference": "hearing_result:evidence"},
+                {"id": "ai-note", "semantic_type": "kpi_name", "value": "導入判断メモ", "source_type": "user_text", "source_field": "hearing_result", "authority": "SYSTEM_EXTRACTED", "confidence": 0.8, "review_state": "CONFIRMED"},
+            ]
+        },
+        "semantic_confirmation_state": [
+            {"id": candidate_id, "semantic_type": semantic_type, "review_state": "CONFIRMED"}
+            for candidate_id, semantic_type in (
+                ("prep", "preparation_analysis"), ("condition", "decision_condition"),
+                ("owner", "accountable_owner"), ("approver", "approver"),
+                ("action", "execution_action"), ("context", "decision_context"),
+                ("escalation", "escalation"), ("evidence", "evidence"), ("ai-note", "kpi_name"),
+            )
+        ],
     }
 
 
@@ -198,7 +220,8 @@ def test_internal_canary_failures_are_explicit_errors_not_legacy_success(
     integration, _ = _runtime_modules()
     renderer_module = importlib.import_module("app.services.presentation_master.renderer_mvp")
 
-    def _raise(_payload, *, request_id=None, project_id=None):
+    def _raise(_payload, *, request_id=None, project_id=None, semantic_gate=False):
+        assert semantic_gate is True
         if exception == "invalid_contract":
             raise renderer_module.RendererMvpIntegrationError(
                 "renderer_mvp_invalid_contract",

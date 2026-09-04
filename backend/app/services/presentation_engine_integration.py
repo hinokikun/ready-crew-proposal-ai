@@ -592,7 +592,12 @@ def build_renderer_mvp_internal_canary_pptx_bytes(
         },
     )
     try:
-        result = _build_renderer_mvp_pptx_result(payload, request_id=request_id, project_id=project_id)
+        result = _build_renderer_mvp_pptx_result(
+            payload,
+            request_id=request_id,
+            project_id=project_id,
+            semantic_gate=True,
+        )
         if result.engine_mode != requested_version:
             from app.services.presentation_master.renderer_mvp import RendererMvpIntegrationError
 
@@ -836,6 +841,7 @@ def _build_renderer_mvp_pptx_result(
             prepare_pmv3,
             render_pmv3,
         )
+        from app.services.presentation_master.renderer_mvp import RendererMvpIntegrationError
 
         context = build_candidate_state_bridge(payload, request_id=request_id or "")
         if context is None:
