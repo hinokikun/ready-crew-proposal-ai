@@ -555,6 +555,30 @@ def _log_shadow_metadata(event: str, **fields: Any) -> None:
         return
 
 
+_CANARY_FAILURE_STAGE_MAP = {
+    "semantic_bridge": "SEMANTIC_BRIDGE",
+    "semantic_readiness": "SEMANTIC_ADAPTER",
+    "master_selection": "MASTER_SELECTION",
+    "selection": "MASTER_SELECTION",
+    "composition": "COMPOSITION",
+    "renderer": "RENDERER",
+    "runtime_validation": "RENDERER",
+    "contract_validation": "RENDERER",
+    "visual_qa": "RENDERER",
+    "pptx_validation": "CANARY_WRAPPER",
+    "internal_canary_validation": "CANARY_WRAPPER",
+}
+
+
+def _bounded_canary_failure_value(value: Any, fallback: str) -> str:
+    raw = str(value or fallback)[:96]
+    return "".join(character if character.isalnum() or character in "._-" else "_" for character in raw)
+
+
+def _canary_failure_stage(value: Any) -> str:
+    return _CANARY_FAILURE_STAGE_MAP.get(str(value or ""), "UNKNOWN")
+
+
 def build_renderer_mvp_internal_canary_pptx_bytes(
     payload: PptxDownloadRequest,
     *,
@@ -659,8 +683,14 @@ def build_renderer_mvp_internal_canary_pptx_bytes(
         failure_stage = getattr(exc, "failure_stage", "internal_canary_generation")
         fallback_category = fallback_category_for_exception(exc)
         duration_ms = round((perf_counter() - started) * 1000)
+        error_type = _bounded_canary_failure_value(exc.__class__.__name__, "Exception")
+        bounded_reason = _bounded_canary_failure_value(reason, error_type)
+        failure_stage_class = _canary_failure_stage(failure_stage)
         logger.warning(
-            "v3_internal_canary_failure",
+            "v3_internal_canary_failure error_type=%s failure_stage=%s reason=%s",
+            error_type,
+            failure_stage_class,
+            bounded_reason,
             extra={
                 "requested_version": requested_version,
                 "actual_version": "",
@@ -847,7 +877,7 @@ def _build_renderer_mvp_pptx_result(
         if context is None:
             raise RendererMvpIntegrationError(
                 "semantic_readiness_not_ready",
-                failure_stage="semantic_readiness",
+                failure_stage="semantic_bridge",
             )
         prepared = prepare_pmv3(payload, semantic_candidates=context.binding.candidates, semantic_relationships=context.relationships)
         if prepared.status.value not in {"READY", "READY_WITH_VALID_BINDINGS"}:

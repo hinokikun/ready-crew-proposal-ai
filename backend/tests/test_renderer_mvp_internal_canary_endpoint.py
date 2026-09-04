@@ -214,11 +214,13 @@ def test_internal_canary_failures_are_explicit_errors_not_legacy_success(
     monkeypatch: pytest.MonkeyPatch,
     client: TestClient,
     admin_headers: dict[str, str],
+    caplog: pytest.LogCaptureFixture,
     exception: Any,
     expected_reason: str,
 ) -> None:
     integration, _ = _runtime_modules()
     renderer_module = importlib.import_module("app.services.presentation_master.renderer_mvp")
+    caplog.set_level("WARNING", logger=integration.logger.name)
 
     def _raise(_payload, *, request_id=None, project_id=None, semantic_gate=False):
         assert semantic_gate is True
@@ -264,6 +266,14 @@ def test_internal_canary_failures_are_explicit_errors_not_legacy_success(
     assert detail["error_type"] == "internal_canary_generation_failed"
     assert detail["fallback_used"] is False
     assert detail["fallback_reason"] == expected_reason
+    failure_logs = [record.getMessage() for record in caplog.records if record.getMessage().startswith("v3_internal_canary_failure")]
+    assert failure_logs
+    assert f"error_type={'RendererMvpIntegrationError' if isinstance(exception, str) or exception == 'malformed_pptx' or exception in {'evidence_violation', 'qa_blocking', 'unsupported_primitive'} else type(exception).__name__}" in failure_logs[-1]
+    assert "Authorization" not in failure_logs[-1]
+    assert "Bearer" not in failure_logs[-1]
+    assert "Product" not in failure_logs[-1]
+    if isinstance(exception, BaseException):
+        assert str(exception) not in failure_logs[-1]
     assert normal_response.status_code == 200
     assert normal_response.content[:2] == b"PK"
     assert normal_response.headers.get("x-presentation-canary") is None
