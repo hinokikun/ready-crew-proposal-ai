@@ -84,7 +84,7 @@ class ProductionSemanticCandidateSet:
         return tuple(candidate for candidate in self.candidates if candidate.admissible_for_supply)
 
     def unresolved_critical(self) -> tuple[str, ...]:
-        return tuple(candidate.id for candidate in self.candidates if candidate.review_state in {SemanticReviewState.UNCONFIRMED, SemanticReviewState.UNRESOLVED} or candidate.review_state == SemanticReviewState.REJECTED)
+        return tuple(candidate.id for candidate in self.candidates if candidate.review_state in {SemanticReviewState.UNCONFIRMED, SemanticReviewState.UNRESOLVED})
 
 
 def confirm_candidate(candidate: ProductionSemanticCandidate, *, confirmation_authority: SemanticAuthority = SemanticAuthority.USER_EXPLICIT) -> ProductionSemanticCandidate:

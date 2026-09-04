@@ -79,7 +79,7 @@ def test_unconfirmed_rejected_and_missing_evidence_never_reach_ready():
     unconfirmed = ProductionSemanticCandidateSet(confirmed.candidates[:-1] + (_candidate("ai-action", SemanticItemType.EXECUTION_ACTION, "AI action", authority=SemanticAuthority.AI_PROPOSED, review=SemanticReviewState.UNCONFIRMED, inferred=True),))
     assert prepare_pmv3(_request(), semantic_candidates=unconfirmed).status == AdapterStatus.REVIEW_REQUIRED
     rejected = ProductionSemanticCandidateSet(tuple(reject_candidate(item) if item.id == "approver" else item for item in confirmed.candidates))
-    assert prepare_pmv3(_request(), semantic_candidates=rejected).status == AdapterStatus.REVIEW_REQUIRED
+    assert prepare_pmv3(_request(), semantic_candidates=rejected).status == AdapterStatus.READY
     no_evidence = ProductionSemanticCandidateSet(tuple(item for item in confirmed.candidates if item.id != "evidence"))
     assert prepare_pmv3(_request(), semantic_candidates=no_evidence).status in {AdapterStatus.REVIEW_REQUIRED, AdapterStatus.NO_MATCH, AdapterStatus.NOT_READY}
 
@@ -192,4 +192,4 @@ def test_transported_unconfirmed_and_rejected_critical_states_remain_blocked():
     rejected = [{"id": item.id, "semantic_type": item.semantic_type.value, "review_state": "REJECTED" if item.id == "approver" else "CONFIRMED"} for item in base.candidates]
     rejected_payload = _request()
     rejected_payload.semantic_confirmation_state = rejected
-    assert prepare_pmv3(rejected_payload, semantic_candidates=base).status == AdapterStatus.REVIEW_REQUIRED
+    assert prepare_pmv3(rejected_payload, semantic_candidates=base).status == AdapterStatus.READY

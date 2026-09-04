@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from app.models import PowerPointData, PowerPointSlide, PptxDownloadRequest
@@ -78,6 +80,7 @@ def test_rejected_candidate_is_not_admissible():
     result = apply_semantic_confirmation_state(_base(), [_state("condition", review_state="REJECTED")])
     assert result.candidates[0].review_state == SemanticReviewState.REJECTED
     assert result.admissible() == ()
+    assert result.unresolved_critical() == ("action",)
 
 
 def test_mixed_states_apply_only_to_matching_candidates():
@@ -105,7 +108,33 @@ def test_unconfirmed_rejected_and_unresolved_ai_candidates_remain_inadmissible()
     assert rejected.candidates[0].authority == SemanticAuthority.AI_PROPOSED
     assert unconfirmed.admissible() == ()
     assert rejected.admissible() == ()
-    assert "condition" in rejected.unresolved_critical()
+    assert "condition" in unconfirmed.unresolved_critical()
+    assert rejected.unresolved_critical() == ("action",)
+
+
+def test_mixed_confirmed_and_rejected_candidates_separate_review_from_supply():
+    result = apply_semantic_confirmation_state(_base(), [
+        _state("condition"),
+        _state("action", semantic_type=SemanticItemType.EXECUTION_ACTION.value, review_state="REJECTED"),
+    ])
+    assert result.unresolved_critical() == ()
+    assert len(result.admissible()) == 1
+
+
+def test_unconfirmed_and_unresolved_candidates_remain_critical():
+    result = ProductionSemanticCandidateSet(tuple(
+        replace(item, review_state=SemanticReviewState.UNCONFIRMED if item.id == "condition" else SemanticReviewState.UNRESOLVED)
+        for item in _base().candidates
+    ))
+    assert set(result.unresolved_critical()) == {"condition", "action"}
+
+
+def test_all_rejected_candidates_remain_fail_closed_for_supply():
+    rejected = ProductionSemanticCandidateSet(tuple(replace(item, review_state=SemanticReviewState.REJECTED) for item in _base().candidates))
+    assert rejected.unresolved_critical() == ()
+    assert rejected.admissible() == ()
+    prepared = prepare_pmv3(_request(), semantic_candidates=rejected)
+    assert prepared.status == AdapterStatus.INVALID_INPUT
 
 
 def test_unresolved_transport_fails_closed_without_authority_promotion():
