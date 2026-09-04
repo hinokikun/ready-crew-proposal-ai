@@ -196,9 +196,11 @@ function GuidedFlowBase(props: GuidedFlowProps) {
   const missingQuestions = props.summaryItems.filter((item) => item.inferred || /未定|要確認|未入力/.test(item.value)).slice(0, 3);
   const semanticCandidates = props.semanticCandidates?.candidates || [];
   const visibleSemanticCandidates = semanticCandidates.filter((candidate) => criticalSemanticTypes.has(candidate.semantic_type));
-  const confirmedSemanticCount = visibleSemanticCandidates.filter((candidate) => candidate.review_state === "CONFIRMED" || candidate.review_state === "CORRECTED").length;
-  const semanticConfirmationReady = semanticCandidates.length === 0 || semanticCandidates.every((candidate) => candidate.review_state === "CONFIRMED" || candidate.review_state === "CORRECTED");
-  const semanticConfirmationBlockingCount = semanticCandidates.filter((candidate) => candidate.review_state !== "CONFIRMED" && candidate.review_state !== "CORRECTED").length;
+  const acceptedSemanticCount = visibleSemanticCandidates.filter((candidate) => candidate.review_state === "CONFIRMED" || candidate.review_state === "CORRECTED").length;
+  const rejectedSemanticCount = visibleSemanticCandidates.filter((candidate) => candidate.review_state === "REJECTED").length;
+  const resolvedSemanticCount = acceptedSemanticCount + rejectedSemanticCount;
+  const semanticConfirmationReady = semanticCandidates.length === 0 || semanticCandidates.every((candidate) => candidate.review_state === "CONFIRMED" || candidate.review_state === "CORRECTED" || candidate.review_state === "REJECTED");
+  const semanticConfirmationBlockingCount = semanticCandidates.filter((candidate) => candidate.review_state !== "CONFIRMED" && candidate.review_state !== "CORRECTED" && candidate.review_state !== "REJECTED").length;
   const [relationshipFrom, setRelationshipFrom] = useState("");
   const [relationshipTo, setRelationshipTo] = useState("");
   const [relationshipType, setRelationshipType] = useState<"causality" | "dependency">("causality");
@@ -500,7 +502,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
                   <h3 id="guided-semantic-confirmation-heading">AIが整理した重要項目を確認してください</h3>
                   <p>AIが整理した内容のうち、提出前に確認が必要な項目だけ表示しています。</p>
                 </div>
-                <strong aria-live="polite">{confirmedSemanticCount} / {visibleSemanticCandidates.length} 確認済み</strong>
+                <strong aria-live="polite">判断済み {resolvedSemanticCount} / {visibleSemanticCandidates.length}（採用 {acceptedSemanticCount}・不採用 {rejectedSemanticCount}）</strong>
               </div>
               <div className="guided-semantic-card-list">
                 {visibleSemanticCandidates.map((candidate) => {
@@ -539,7 +541,7 @@ function GuidedFlowBase(props: GuidedFlowProps) {
                   );
                 })}
               </div>
-              {confirmedSemanticCount < visibleSemanticCandidates.length && <p className="guided-semantic-confirmation__hint" role="status">一部の項目は未確認です。必要に応じて確認してください。</p>}
+              {semanticConfirmationBlockingCount > 0 && <p className="guided-semantic-confirmation__hint" role="status">一部の項目は未確認です。必要に応じて確認してください。</p>}
             </section>
           )}
           {missingQuestions.length > 0 && (

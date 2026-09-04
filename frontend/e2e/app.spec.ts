@@ -243,6 +243,56 @@ test("未確認の重要項目はStep4へのナビゲーションをブロック
   await expect(page.getByTestId("guided-quality-check")).toBeVisible();
 });
 
+test("不採用候補はStep3の判断済みに含めるがSemantic採用とRelationship対象には含めない", async ({ page }) => {
+  await page.route("**/api/analyze", async (route) => {
+    const response = proposalResponse(route.request().postDataJSON() as { project_brief?: string });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        ...response,
+        semantic_candidates: {
+          candidates: [
+            { id: "accepted-1", semantic_type: "decision_condition", value: "条件1", authority: "AI_PROPOSED", review_state: "UNCONFIRMED", inferred: true },
+            { id: "accepted-2", semantic_type: "execution_action", value: "行動2", authority: "AI_PROPOSED", review_state: "UNCONFIRMED", inferred: true },
+            { id: "accepted-3", semantic_type: "approver", value: "承認者3", authority: "AI_PROPOSED", review_state: "UNCONFIRMED", inferred: true },
+            { id: "rejected-1", semantic_type: "accountable_owner", value: "候補責任者1", authority: "AI_PROPOSED", review_state: "UNCONFIRMED", inferred: true },
+            { id: "rejected-2", semantic_type: "evidence", value: "候補根拠2", authority: "AI_PROPOSED", review_state: "UNCONFIRMED", inferred: true }
+          ]
+        }
+      })
+    });
+  });
+  await login(page, memberEmail);
+  await setTextareaValue(page, "project-source-input", "株式会社サンプル様。不採用候補を確認する案件。");
+  await clickGuidedGenerate(page);
+
+  const footerNext = page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" });
+  await footerNext.waitFor({ state: "visible", timeout: 25_000 });
+  await expect(footerNext).toBeDisabled();
+  const cards = page.locator(".guided-semantic-card");
+  await expect(cards).toHaveCount(5);
+
+  await cards.nth(0).getByRole("button", { name: "この内容で確定" }).click();
+  await cards.nth(1).getByRole("button", { name: "編集" }).click();
+  await cards.nth(1).locator("input").fill("修正済み行動2");
+  await cards.nth(1).getByRole("button", { name: "内容を確定" }).click();
+  await cards.nth(2).getByRole("button", { name: "この内容で確定" }).click();
+  await cards.nth(3).getByRole("button", { name: "この候補を使わない" }).click();
+  await cards.nth(4).getByRole("button", { name: "この候補を使わない" }).click();
+
+  await expect(page.getByText("判断済み 5 / 5（採用 3・不採用 2）")).toBeVisible();
+  await expect(page.getByText(/未確認の候補が/)).toHaveCount(0);
+  await expect(footerNext).toBeEnabled();
+  await expect(page.locator("#relationship-from option[value='accepted-1']")).toHaveCount(1);
+  await expect(page.locator("#relationship-from option[value='accepted-2']")).toHaveCount(1);
+  await expect(page.locator("#relationship-from option[value='accepted-3']")).toHaveCount(1);
+  await expect(page.locator("#relationship-from option[value='rejected-1']")).toHaveCount(0);
+  await expect(page.locator("#relationship-from option[value='rejected-2']")).toHaveCount(0);
+  await footerNext.click();
+  await expect(page.getByTestId("guided-quality-check")).toBeVisible();
+});
+
 test("Step3で既存の確認済み項目間に因果関係を追加・削除できる", async ({ page }) => {
   await page.route("**/api/analyze", async (route) => {
     const response = proposalResponse(route.request().postDataJSON() as { project_brief?: string });
