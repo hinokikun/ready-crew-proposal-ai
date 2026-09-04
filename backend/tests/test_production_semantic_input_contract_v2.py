@@ -87,7 +87,7 @@ def test_unconfirmed_rejected_and_missing_evidence_never_reach_ready():
 def test_confirmed_production_supply_reaches_m48_and_renders_native_pptx():
     candidates = _confirmed_m48()
     envelope = build_semantic_envelope_from_confirmed_candidates(candidates)
-    assert envelope.decision_context == "department_head"
+    assert envelope.decision_context == "導入判断"
     prepared = prepare_pmv3(build_adapter_input(_request(), semantic_candidates=candidates))
     assert prepared.status in {AdapterStatus.READY, AdapterStatus.READY_WITH_VALID_BINDINGS}
     assert prepared.selected_master_id == "M48" and prepared.composition_readiness == "VALID"
@@ -102,6 +102,51 @@ def test_confirmed_production_supply_reaches_m48_and_renders_native_pptx():
         assert "[Content_Types].xml" in names and "ppt/presentation.xml" in names
         assert package.testzip() is None
         assert any(name.startswith("ppt/slides/slide") and name.endswith(".xml") for name in names)
+
+
+def test_explicit_decision_context_is_preserved_without_hardcoded_fallback():
+    candidates = ProductionSemanticCandidateSet(tuple(item for item in _confirmed_m48().candidates if item.id != "context"))
+    explicit = _candidate("decision-context", SemanticItemType.DECISION_CONTEXT, "営業部長")
+    envelope = build_semantic_envelope_from_confirmed_candidates(ProductionSemanticCandidateSet(candidates.candidates + (explicit,)))
+    assert envelope.decision_context == "営業部長"
+    assert "department_head" not in envelope.decision_context
+
+
+def test_multiple_decision_context_values_fail_closed_independent_of_tuple_order():
+    base = _confirmed_m48()
+    non_context = tuple(item for item in base.candidates if item.semantic_type != SemanticItemType.DECISION_CONTEXT)
+    first = _candidate("context-a", SemanticItemType.DECISION_CONTEXT, "営業部長")
+    second = _candidate("context-b", SemanticItemType.DECISION_CONTEXT, "代表取締役")
+    for ordered in ((first, second), (second, first)):
+        envelope = build_semantic_envelope_from_confirmed_candidates(ProductionSemanticCandidateSet(non_context + ordered))
+        assert envelope.decision_context == ""
+        assert any(gap.gap_id == "decision_context_unclear" for gap in envelope.unresolved_gaps)
+
+
+def test_same_decision_context_values_collapse_without_order_dependency():
+    base = _confirmed_m48()
+    non_context = tuple(item for item in base.candidates if item.semantic_type != SemanticItemType.DECISION_CONTEXT)
+    first = _candidate("context-a", SemanticItemType.DECISION_CONTEXT, "営業部長")
+    second = _candidate("context-b", SemanticItemType.DECISION_CONTEXT, "営業部長")
+    for ordered in ((first, second), (second, first)):
+        envelope = build_semantic_envelope_from_confirmed_candidates(ProductionSemanticCandidateSet(non_context + ordered))
+        assert envelope.decision_context == "営業部長"
+        assert envelope.unresolved_gaps == ()
+
+
+def test_missing_decision_context_is_not_fabricated_and_remains_review_required():
+    candidates = ProductionSemanticCandidateSet(tuple(item for item in _confirmed_m48().candidates if item.id != "context"))
+    envelope = build_semantic_envelope_from_confirmed_candidates(candidates)
+    assert envelope.decision_context == ""
+    assert any(gap.gap_id == "decision_context_unclear" for gap in envelope.unresolved_gaps)
+    assert prepare_pmv3(_request(), semantic_candidates=candidates).status == AdapterStatus.REVIEW_REQUIRED
+
+
+def test_owner_candidate_is_not_reused_as_decision_context():
+    candidates = ProductionSemanticCandidateSet(tuple(item for item in _confirmed_m48().candidates if item.id != "context"))
+    envelope = build_semantic_envelope_from_confirmed_candidates(candidates)
+    assert any(item.item_id == "owner" and item.content_type == "owner" for item in envelope.items)
+    assert envelope.decision_context == ""
 
 
 def test_analysis_response_optional_field_remains_backward_compatible():

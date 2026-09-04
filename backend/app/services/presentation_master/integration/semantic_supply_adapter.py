@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any
 
 from app.models import PptxDownloadRequest
-from app.services.presentation_master.upstream_adapter import DerivationLevel, SemanticEnvelope, SemanticGroup, SemanticItem, SemanticRelationship
+from app.services.presentation_master.upstream_adapter import DerivationLevel, SemanticEnvelope, SemanticGap, SemanticGroup, SemanticItem, SemanticRelationship
 
 from .production_semantic_contract import ProductionSemanticCandidateSet, SemanticAuthority, SemanticItemType
 
@@ -55,6 +55,12 @@ def build_semantic_envelope_from_confirmed_candidates(candidate_set: ProductionS
         SemanticItemType.EVIDENCE: ("evidence", "evidence", "evidence"),
     }
     items: list[SemanticItem] = []
+    decision_context_values = tuple(dict.fromkeys(
+        candidate.value.strip()
+        for candidate in candidates
+        if candidate.semantic_type == SemanticItemType.DECISION_CONTEXT and candidate.value.strip()
+    ))
+    decision_context = decision_context_values[0] if len(decision_context_values) == 1 else ""
     for candidate in candidates:
         if candidate.semantic_type not in role_map:
             continue
@@ -68,7 +74,8 @@ def build_semantic_envelope_from_confirmed_candidates(candidate_set: ProductionS
     signals = {"process", "responsibility", "approval", "execution"}
     if relationships:
         signals.add("handoff")
-    return SemanticEnvelope("production_semantic_contract_v2", "governed execution", "department_head", "operating model", frozenset(signals), tuple(items), groups, relationships, frozenset({"provided"}) if any(item.admissible_as_evidence for item in candidates) else frozenset({"missing"}), (), min(item.confidence for item in candidates), False, ())
+    unresolved_gaps = () if decision_context else (SemanticGap("decision_context_unclear", "Decision maker is unknown, absent, or conflicting.", ("decision_context",)),)
+    return SemanticEnvelope("production_semantic_contract_v2", "governed execution", decision_context, "operating model", frozenset(signals), tuple(items), groups, relationships, frozenset({"provided"}) if any(item.admissible_as_evidence for item in candidates) else frozenset({"missing"}), unresolved_gaps, min(item.confidence for item in candidates), False, ())
 
 
 def _has_text(payload: PptxDownloadRequest, names: tuple[str, ...]) -> bool:

@@ -1945,6 +1945,29 @@ export default function Home() {
       trackEvent({ name: "ai_analysis_complete", feature: "proposal", status: "success", durationMs, meta: { mode: inputMode } });
       trackEvent({ name: "proposal_generated", feature: "proposal", status: "success", durationMs, meta: { output: "markdown" } });
       const analysisCandidates = response.semantic_candidates?.candidates;
+      let explicitDecisionMaker = "";
+      try {
+        const savedStudioDraft = window.localStorage.getItem("ready-crew-v80-prompt-builder");
+        const parsedStudioDraft = savedStudioDraft ? JSON.parse(savedStudioDraft) as { decisionMaker?: unknown } : null;
+        explicitDecisionMaker = typeof parsedStudioDraft?.decisionMaker === "string" ? parsedStudioDraft.decisionMaker.trim() : "";
+      } catch {
+        explicitDecisionMaker = "";
+      }
+      const transportCandidates = [...(analysisCandidates ?? [])];
+      if (explicitDecisionMaker) {
+        transportCandidates.push({
+          id: "explicit:decision_context:step1",
+          semantic_type: "decision_context",
+          value: explicitDecisionMaker,
+          source_type: "user_input",
+          source_field: "Step1.decisionMaker",
+          authority: "USER_EXPLICIT",
+          confidence: 1,
+          review_state: "UNCONFIRMED",
+          inferred: false,
+          source_reference: "Step1.decisionMaker"
+        });
+      }
       const analysisCandidateState = response.semantic_candidates == null
         ? "OMITTED"
         : analysisCandidates?.length ? "NONEMPTY" : "EMPTY";
@@ -1974,7 +1997,7 @@ export default function Home() {
           }
         });
       }
-      setSemanticCandidatesForTransport(response.semantic_candidates?.candidates ?? []);
+      setSemanticCandidatesForTransport(transportCandidates);
       setBeautifulAiResult(null);
       setBeautifulAiError("");
       setHasDownloadedSummary(false);
