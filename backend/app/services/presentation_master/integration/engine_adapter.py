@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import logging
 from time import perf_counter
 from typing import Any
 
@@ -9,12 +11,143 @@ from app.services.presentation_master.definitions import MASTER_REGISTRY
 from app.services.presentation_master.renderer_integration import build_renderer_integration_spec
 from app.services.presentation_master.renderer_mvp import RendererMvpNativeRenderer, inspect_pptx_bytes
 from app.services.presentation_master.renderer_structural_bridge import build_renderer_structural_contract, validate_renderer_structural_contract
-from app.services.presentation_master.selection import select_master
+from app.services.presentation_master.selection import select_master, suitability_metadata
 from app.services.presentation_master.upstream_adapter import composition_items_for_master
 
 from .models import AdapterStatus, FallbackStage, Pmv3RenderResult, ProductionAdapterInput, ProductionPmv3AdapterResult
 from .production_request_adapter import build_adapter_input
 from .semantic_input_adapter import prepare_semantics
+
+
+logger = logging.getLogger(__name__)
+
+_PRESELECTION_EVENT = "presentation_master_preselection_snapshot"
+_SELECTION_DIAGNOSTICS_EVENT = "presentation_master_selection_diagnostics"
+_BOUNDED_MASTERS = frozenset(f"M{i}" for i in range(45, 55))
+_BOUNDED_GROUPS = frozenset(
+    group.group_id for definition in MASTER_REGISTRY.all() for group in definition.information_groups
+)
+_BOUNDED_RELATIONSHIPS = frozenset(
+    relationship.relationship_type for definition in MASTER_REGISTRY.all() for relationship in definition.relationships
+)
+_BOUNDED_SIGNALS = frozenset(
+    signal
+    for master_id in _BOUNDED_MASTERS
+    for signal in suitability_metadata(master_id).positive_signals
+)
+_BOUNDED_EVIDENCE_STATES = frozenset({"missing", "provided", "confirmed", "source_backed", "unverified"})
+_BOUNDED_MISSING_KEYS = _BOUNDED_SIGNALS | {f"group:{group}" for group in _BOUNDED_GROUPS} | {
+    "decision_context_unclear",
+    "kpi_values_missing",
+    "evidence_item_binding_missing",
+    "stage_items_missing",
+    "low_confidence",
+}
+_BOUNDED_PROVENANCE_KEYS = frozenset({"DIRECT", "SAFE_DERIVED", "EXISTING_SUPPLEMENT", "UNRESOLVED"})
+_BOUNDED_DECISION_CONTEXTS = frozenset(
+    context for master_id in _BOUNDED_MASTERS for context in suitability_metadata(master_id).decision_contexts
+)
+_BOUNDED_CANDIDATE_STATES = frozenset({"CONFIRMED", "CORRECTED", "UNCONFIRMED", "REJECTED", "UNRESOLVED"})
+
+
+def _bounded_keys(values: Any, allowed: frozenset[str], *, limit: int = 64) -> tuple[str, ...]:
+    if not isinstance(values, (set, frozenset, tuple, list)):
+        return ()
+    return tuple(sorted(value for value in values if isinstance(value, str) and value in allowed)[:limit])
+
+
+def _correlation_id(adapter_input: ProductionAdapterInput, request_id: str | None) -> str:
+    value = getattr(adapter_input.payload, "candidate_boundary_correlation_id", None)
+    if isinstance(value, str) and value:
+        return value[:64]
+    if request_id:
+        return hashlib.sha256(request_id.encode()).hexdigest()[:16]
+    return "missing"
+
+
+def _candidate_state_counts(candidate_set: Any) -> dict[str, int]:
+    counts = {"confirmed": 0, "corrected": 0, "unconfirmed": 0, "rejected": 0, "unresolved": 0, "unresolved_critical": 0}
+    candidates = tuple(getattr(candidate_set, "candidates", ())) if candidate_set is not None else ()
+    for candidate in candidates:
+        state = getattr(getattr(candidate, "review_state", None), "value", getattr(candidate, "review_state", None))
+        if isinstance(state, str):
+            key = state.lower()
+            if key in counts:
+                counts[key] += 1
+    critical = getattr(candidate_set, "unresolved_critical", None) if candidate_set is not None else None
+    if callable(critical):
+        counts["unresolved_critical"] = min(max(len(tuple(critical())), 0), 100000)
+    return counts
+
+
+def _emit_preselection_snapshot(selection_input: Any, provenance: Any, adapter_input: ProductionAdapterInput, request_id: str | None) -> None:
+    try:
+        content_counts = getattr(selection_input, "content_counts", {})
+        bounded_counts = {
+            key: min(max(int(value), 0), 100000)
+            for key, value in content_counts.items()
+            if isinstance(key, str) and key in _BOUNDED_GROUPS and isinstance(value, int) and value >= 0
+        }
+        groups = _bounded_keys(getattr(selection_input, "available_groups", ()), _BOUNDED_GROUPS)
+        fields = {
+            "correlation_id": _correlation_id(adapter_input, request_id),
+            "decision_context": (
+                selection_input.decision_context
+                if selection_input.decision_context in _BOUNDED_DECISION_CONTEXTS
+                else ("empty" if not selection_input.decision_context else "unknown")
+            ),
+            "semantic_signal_keys": _bounded_keys(getattr(selection_input, "semantic_signals", ()), _BOUNDED_SIGNALS),
+            "available_group_keys": groups,
+            "group_counts": bounded_counts,
+            "relationship_type_keys": _bounded_keys(getattr(selection_input, "relationship_types", ()), _BOUNDED_RELATIONSHIPS),
+            "relationship_count": min(len(getattr(selection_input, "relationship_types", ())), 64),
+            "content_counts": bounded_counts,
+            "evidence_state_keys": _bounded_keys(getattr(selection_input, "evidence_states", ()), _BOUNDED_EVIDENCE_STATES),
+            "source_binding_count": min(len(getattr(adapter_input, "source_bindings", ())), 100000),
+            "unresolved_requirement_keys": _bounded_keys(getattr(selection_input, "missing_information", ()), _BOUNDED_MISSING_KEYS),
+            "provenance_counts": {
+                str(key): min(max(int(value), 0), 100000)
+                for key, value in (provenance.items() if isinstance(provenance, dict) else ())
+                if isinstance(key, str) and key in _BOUNDED_PROVENANCE_KEYS and isinstance(value, int) and value >= 0
+            },
+            "candidate_state_counts": _candidate_state_counts(getattr(adapter_input, "semantic_candidates", None)),
+        }
+        logger.info(_PRESELECTION_EVENT, extra=fields)
+    except Exception:
+        return
+
+
+def _emit_selection_diagnostics(selection: Any, adapter_input: ProductionAdapterInput, request_id: str | None) -> None:
+    try:
+        diagnostics = []
+        for rank, candidate in enumerate(getattr(selection, "ranked_candidates", ())[:10], start=1):
+            master_id = getattr(candidate, "master_id", None)
+            if master_id not in _BOUNDED_MASTERS:
+                continue
+            diagnostics.append(
+                {
+                    "master_id": master_id,
+                    "rank": rank,
+                    "score": int(getattr(candidate, "score", 0)),
+                    "missing_keys": _bounded_keys(getattr(candidate, "missing_signals", ()), _BOUNDED_MISSING_KEYS),
+                    "missing_groups": tuple(
+                        sorted(
+                            key[6:]
+                            for key in getattr(candidate, "missing_signals", ())
+                            if isinstance(key, str) and key.startswith("group:") and key[6:] in _BOUNDED_GROUPS
+                        )
+                    ),
+                    "unsupported_topology": "unavailable",
+                    "cardinality": getattr(candidate, "dimension_scores", {}).get("cardinality", "unavailable"),
+                    "eligible": bool(getattr(candidate, "eligible", False)),
+                }
+            )
+        logger.info(
+            _SELECTION_DIAGNOSTICS_EVENT,
+            extra={"correlation_id": _correlation_id(adapter_input, request_id), "masters": tuple(diagnostics)},
+        )
+    except Exception:
+        return
 
 
 _INVALID_INPUT_REASONS = frozenset(
@@ -124,6 +257,7 @@ def prepare_pmv3(
         if early_status is not None:
             return _fallback(early_status, FallbackStage.SEMANTIC_ADAPTER, reason, provenance_summary=provenance)
         selection_input = resolution.merged_envelope.to_selection_input()
+        _emit_preselection_snapshot(selection_input, provenance, adapter_input, None)
         try:
             selection = select_master(selection_input)
         except (TypeError, ValueError):
@@ -133,6 +267,7 @@ def prepare_pmv3(
                 "Invalid master selection input.",
                 diagnostics={"invalid_input_reason": "MASTER_SELECTION_INVALID"},
             )
+        _emit_selection_diagnostics(selection, adapter_input, None)
         if selection.state == "no_match":
             return _fallback(AdapterStatus.NO_MATCH, FallbackStage.MASTER_SELECTION, selection.selection_reason, selection=selection, provenance_summary=provenance)
         if selection.state == "review_required":
