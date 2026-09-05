@@ -452,3 +452,57 @@ def test_readiness_observability_failure_is_non_blocking(monkeypatch):
         readiness_class="READY",
         readiness_metadata={"candidate_count": 1},
     )
+
+
+def test_resolution_diagnostics_decompose_existing_result_without_free_text():
+    import app.services.presentation_master.integration.engine_adapter as adapter
+
+    resolution = SimpleNamespace(
+        status=SimpleNamespace(value="PARTIALLY_RESOLVED"),
+        unresolved_requirement_ids=("relationship:direction", "user-provided-secret"),
+        conflicts=(SimpleNamespace(semantic_role="metric", reason="raw Product text"), SimpleNamespace(semantic_role="raw-owner")),
+    )
+
+    diagnostics = adapter._resolution_diagnostics(resolution)
+
+    assert diagnostics["resolution_diagnostic_status"] == "AVAILABLE"
+    assert diagnostics["resolution_status"] == "PARTIALLY_RESOLVED"
+    assert diagnostics["resolution_has_unresolved_requirements"] is True
+    assert diagnostics["resolution_has_conflicts"] is True
+    assert diagnostics["resolution_status_requires_review"] is True
+    assert diagnostics["unresolved_requirement_count"] == 2
+    assert diagnostics["unresolved_requirements"] == ("relationship:direction",)
+    assert diagnostics["conflict_count"] == 2
+    assert diagnostics["conflict_types"] == ("metric",)
+    assert "raw Product text" not in str(diagnostics)
+    assert "user-provided-secret" not in str(diagnostics)
+
+
+def test_resolution_diagnostics_fail_safe_when_existing_result_is_unreadable():
+    import app.services.presentation_master.integration.engine_adapter as adapter
+
+    class BrokenResolution:
+        @property
+        def status(self):
+            raise RuntimeError("must not escape")
+
+    diagnostics = adapter._resolution_diagnostics(BrokenResolution())
+
+    assert diagnostics == {"resolution_diagnostic_status": "UNAVAILABLE"}
+
+
+def test_resolution_diagnostics_all_false_for_resolved_result():
+    import app.services.presentation_master.integration.engine_adapter as adapter
+
+    diagnostics = adapter._resolution_diagnostics(
+        SimpleNamespace(
+            status=SimpleNamespace(value="RESOLVED"),
+            unresolved_requirement_ids=(),
+            conflicts=(),
+        )
+    )
+
+    assert diagnostics["resolution_status"] == "RESOLVED"
+    assert diagnostics["resolution_has_unresolved_requirements"] is False
+    assert diagnostics["resolution_has_conflicts"] is False
+    assert diagnostics["resolution_status_requires_review"] is False

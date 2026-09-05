@@ -169,6 +169,24 @@ _SEMANTIC_SUPPLY_INVALID_REASONS = frozenset(
         "ADMISSIBILITY_STATE_UNCLASSIFIED",
     }
 )
+_BOUNDED_RESOLUTION_STATUSES = frozenset({"RESOLVED", "PARTIALLY_RESOLVED", "UNRESOLVED", "CONFLICT", "REVIEW_REQUIRED"})
+_BOUNDED_REQUIREMENT_IDS = frozenset(
+    {
+        "kpi:value",
+        "kpi:threshold",
+        "stage:explicit_items",
+        "responsibility:owner",
+        "relationship:direction",
+        "evidence_item_binding_missing",
+        "kpi_values_missing",
+        "stage_items_missing",
+        "decision_context_unclear",
+        "low_confidence",
+        "conflict:duplicate_item_id",
+        "conflict:multiple_owners",
+    }
+)
+_BOUNDED_CONFLICT_TYPES = frozenset({"metric", "accountable_owner", "semantic_item_identity", "responsible_owner"})
 
 
 def _semantic_supply_invalid_reason(candidate_set: Any) -> str:
@@ -193,6 +211,47 @@ def _fallback(status: AdapterStatus, stage: FallbackStage, reason: str, **kwargs
         fallback_stage=stage,
         **kwargs,
     )
+
+
+def _resolution_diagnostics(resolution: Any) -> dict[str, Any]:
+    """Expose only bounded fields already present on the frozen resolution result."""
+    diagnostics: dict[str, Any] = {"resolution_diagnostic_status": "AVAILABLE"}
+    try:
+        status = getattr(getattr(resolution, "status", None), "value", None)
+        if status in _BOUNDED_RESOLUTION_STATUSES:
+            diagnostics["resolution_status"] = status
+            diagnostics["resolution_status_requires_review"] = status in {"PARTIALLY_RESOLVED", "UNRESOLVED", "CONFLICT", "REVIEW_REQUIRED"}
+
+        unresolved = tuple(getattr(resolution, "unresolved_requirement_ids", ()))
+        diagnostics["unresolved_requirement_count"] = min(max(len(unresolved), 0), 64)
+        diagnostics["resolution_has_unresolved_requirements"] = bool(unresolved)
+        safe_unresolved = tuple(
+            item for item in unresolved
+            if isinstance(item, str) and item in _BOUNDED_REQUIREMENT_IDS
+        )
+        if safe_unresolved:
+            diagnostics["unresolved_requirements"] = safe_unresolved[:16]
+
+        conflicts = tuple(getattr(resolution, "conflicts", ()))
+        diagnostics["conflict_count"] = min(max(len(conflicts), 0), 64)
+        diagnostics["resolution_has_conflicts"] = bool(conflicts)
+        safe_conflict_types = tuple(
+            role for role in sorted(
+                {
+                    getattr(conflict, "semantic_role", None)
+                    for conflict in conflicts
+                    if isinstance(getattr(conflict, "semantic_role", None), str)
+                    and getattr(conflict, "semantic_role", None) in _BOUNDED_CONFLICT_TYPES
+                }
+            )
+        )
+        if safe_conflict_types:
+            diagnostics["conflict_types"] = safe_conflict_types[:16]
+        elif conflicts:
+            diagnostics["conflict_types"] = ("UNAVAILABLE",)
+    except Exception:
+        return {"resolution_diagnostic_status": "UNAVAILABLE"}
+    return diagnostics
 
 
 def prepare_pmv3(
@@ -255,7 +314,8 @@ def prepare_pmv3(
                 diagnostics={"invalid_input_reason": "SEMANTIC_PREPARATION_INVALID"},
             )
         if early_status is not None:
-            return _fallback(early_status, FallbackStage.SEMANTIC_ADAPTER, reason, provenance_summary=provenance)
+            diagnostics = _resolution_diagnostics(resolution) if resolution is not None else {"resolution_diagnostic_status": "UNAVAILABLE"}
+            return _fallback(early_status, FallbackStage.SEMANTIC_ADAPTER, reason, provenance_summary=provenance, diagnostics=diagnostics)
         selection_input = resolution.merged_envelope.to_selection_input()
         _emit_preselection_snapshot(selection_input, provenance, adapter_input, None)
         try:

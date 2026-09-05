@@ -220,6 +220,24 @@ _BOUNDED_SELECTION_STATES = frozenset({"selected", "review_required", "no_match"
 _BOUNDED_COMPOSITION_STATES = frozenset({"VALID", "DEGRADED", "REVIEW_REQUIRED", "INVALID", "NOT_READY"})
 _BOUNDED_AUTHORITIES = frozenset({"USER_EXPLICIT", "SYSTEM_EXTRACTED", "AI_PROPOSED", "EXTERNAL_VERIFIED", "UNRESOLVED"})
 _BOUNDED_RELATIONSHIPS = frozenset(SUPPORTED_RELATIONSHIP_TYPES)
+_BOUNDED_RESOLUTION_STATUSES = frozenset({"RESOLVED", "PARTIALLY_RESOLVED", "UNRESOLVED", "CONFLICT", "REVIEW_REQUIRED"})
+_BOUNDED_RESOLUTION_REQUIREMENT_IDS = frozenset(
+    {
+        "kpi:value",
+        "kpi:threshold",
+        "stage:explicit_items",
+        "responsibility:owner",
+        "relationship:direction",
+        "evidence_item_binding_missing",
+        "kpi_values_missing",
+        "stage_items_missing",
+        "decision_context_unclear",
+        "low_confidence",
+        "conflict:duplicate_item_id",
+        "conflict:multiple_owners",
+    }
+)
+_BOUNDED_CONFLICT_TYPES = frozenset({"metric", "accountable_owner", "semantic_item_identity", "responsible_owner", "UNAVAILABLE"})
 _BOUNDED_DIAGNOSTIC_CODES = _INVALID_INPUT_REASONS | _SEMANTIC_SUPPLY_INVALID_REASONS | {"renderer_preparation"}
 
 
@@ -433,6 +451,8 @@ def _serialize_bounded_readiness_metadata(metadata: dict[str, Any] | None) -> st
         ("composition_status", _BOUNDED_COMPOSITION_STATES),
         ("semantic_supply_status", {"INVALID"}),
         ("diagnostic_status", {"AVAILABLE", "UNAVAILABLE"}),
+        ("resolution_diagnostic_status", {"AVAILABLE", "UNAVAILABLE"}),
+        ("resolution_status", _BOUNDED_RESOLUTION_STATUSES),
     )
     for key, allowed in scalar_fields:
         value = metadata.get(key)
@@ -452,10 +472,35 @@ def _serialize_bounded_readiness_metadata(metadata: dict[str, Any] | None) -> st
         "unresolved_critical_count",
         "admitted_candidate_count",
         "relationship_count",
+        "unresolved_requirement_count",
+        "conflict_count",
     ):
         value = metadata.get(key)
         if isinstance(value, int) and 0 <= value <= 100000:
             parts.append(f"{key}={value}")
+
+    for key in (
+        "resolution_has_unresolved_requirements",
+        "resolution_has_conflicts",
+        "resolution_status_requires_review",
+    ):
+        value = metadata.get(key)
+        if isinstance(value, bool):
+            parts.append(f"{key}={'true' if value else 'false'}")
+
+    unresolved_requirements = metadata.get("unresolved_requirements")
+    if isinstance(unresolved_requirements, (tuple, list)):
+        identifiers = sorted(
+            {value for value in unresolved_requirements if isinstance(value, str) and value in _BOUNDED_RESOLUTION_REQUIREMENT_IDS}
+        )[:16]
+        if identifiers:
+            parts.append(f"unresolved_requirements={','.join(identifiers)}")
+
+    conflict_types = metadata.get("conflict_types")
+    if isinstance(conflict_types, (tuple, list)):
+        types = sorted({value for value in conflict_types if isinstance(value, str) and value in _BOUNDED_CONFLICT_TYPES})[:16]
+        if types:
+            parts.append(f"conflict_types={','.join(types)}")
 
     authority_counts = metadata.get("candidate_authority_counts")
     if isinstance(authority_counts, dict):
@@ -593,6 +638,37 @@ def _bounded_readiness_metadata(
             metadata["diagnostic_count"] = min(len(diagnostics), 32)
             if diagnostics.get("semantic_supply_invalid_reason") in _SEMANTIC_SUPPLY_INVALID_REASONS:
                 metadata["semantic_supply_status"] = "INVALID"
+            resolution_status = diagnostics.get("resolution_status")
+            if isinstance(resolution_status, str) and resolution_status in _BOUNDED_RESOLUTION_STATUSES:
+                metadata["resolution_status"] = resolution_status
+            resolution_status = diagnostics.get("resolution_diagnostic_status")
+            if isinstance(resolution_status, str) and resolution_status in {"AVAILABLE", "UNAVAILABLE"}:
+                metadata["resolution_diagnostic_status"] = resolution_status
+            for key in (
+                "resolution_has_unresolved_requirements",
+                "resolution_has_conflicts",
+                "resolution_status_requires_review",
+            ):
+                if isinstance(diagnostics.get(key), bool):
+                    metadata[key] = diagnostics[key]
+            count = diagnostics.get("unresolved_requirement_count")
+            if isinstance(count, int) and 0 <= count <= 64:
+                metadata["unresolved_requirement_count"] = count
+            count = diagnostics.get("conflict_count")
+            if isinstance(count, int) and 0 <= count <= 64:
+                metadata["conflict_count"] = count
+            identifiers = diagnostics.get("unresolved_requirements")
+            if isinstance(identifiers, (tuple, list)):
+                metadata["unresolved_requirements"] = tuple(
+                    value for value in identifiers
+                    if isinstance(value, str) and value in _BOUNDED_RESOLUTION_REQUIREMENT_IDS
+                )[:16]
+            conflict_types = diagnostics.get("conflict_types")
+            if isinstance(conflict_types, (tuple, list)):
+                metadata["conflict_types"] = tuple(
+                    value for value in conflict_types
+                    if isinstance(value, str) and value in _BOUNDED_CONFLICT_TYPES
+                )[:16]
     except Exception:
         return {"diagnostic_status": "UNAVAILABLE", "candidate_count": metadata["candidate_count"]}
     return metadata
