@@ -344,7 +344,7 @@ def prepare_pmv3(
             )
         if composition.composition is None or composition.state == "INVALID":
             return _fallback(AdapterStatus.NOT_READY, FallbackStage.COMPOSITION, "Composition is invalid.", selection=selection, selected_master_id=selection.selected_master_id, composition_readiness=composition.state, provenance_summary=provenance)
-        if composition.state in {"DEGRADED", "REVIEW_REQUIRED"}:
+        if composition.state == "REVIEW_REQUIRED":
             return _fallback(AdapterStatus.REVIEW_REQUIRED, FallbackStage.COMPOSITION, "Composition requires review.", selection=selection, selected_master_id=selection.selected_master_id, composition_readiness=composition.state, provenance_summary=provenance)
         try:
             definition = MASTER_REGISTRY.get(selection.selected_master_id)

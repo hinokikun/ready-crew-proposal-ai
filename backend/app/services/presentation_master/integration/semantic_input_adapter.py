@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
 from app.services.presentation_master.semantic_enrichment import enrich_semantic_envelope
@@ -58,6 +59,17 @@ def prepare_semantics(source: ProductionAdapterInput) -> tuple[Any, Any | None, 
             review_required=supplement.review_required,
         )
     resolution = resolve_semantic_inputs(enrichment, supplement)
+    resolution_is_ready = resolution.status.value in {"RESOLVED", "UNRESOLVED"}
+    current_review_required = bool(
+        resolution.unresolved_requirement_ids
+        or resolution.conflicts
+        or not resolution_is_ready
+    )
+    normalized_envelope = replace(
+        resolution.merged_envelope,
+        human_review_required=current_review_required,
+    )
+    resolution = replace(resolution, merged_envelope=normalized_envelope)
     # The frozen resolver uses UNRESOLVED for an envelope with no resolver
     # requirements. That is distinct from an unresolved requirement: allow
     # selection when there are no unresolved IDs or conflicts, and preserve

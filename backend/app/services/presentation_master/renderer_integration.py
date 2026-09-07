@@ -164,6 +164,8 @@ def build_renderer_integration_spec(composition: CompositionInstance, definition
     for group_id in definition.reading_order:
         group_objects = tuple(item for item in objects if item.group_id == group_id)
         group = next(group for group in definition.information_groups if group.group_id == group_id)
+        if not group.required and not group_objects:
+            continue
         pages.append(RendererIntegrationPage(f"group:{group_id}", group_id, group_order[group_id], group_objects, group.semantic_purpose, group.required))
 
     relationships: list[RendererIntegrationRelationship] = []

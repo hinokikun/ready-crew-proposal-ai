@@ -81,6 +81,34 @@ def test_decision_boundary_review_and_degraded_states_remain_explicit():
     assert degraded_spec.integration_state == IntegrationState.DEGRADED
 
 
+def test_m48_optional_empty_escalation_page_is_omitted_without_losing_degradation():
+    fixture = fixtures_for("M48", FixtureKind.MINIMUM_SUFFICIENT)
+    items = composition_items_for_master(fixture.envelope, "M48")
+    outcome = build_composition_for_master("M48", items)
+    spec = build_renderer_integration_spec(outcome.composition, MASTER_REGISTRY.get("M48"))
+    assert outcome.state == "DEGRADED"
+    assert "optional group omitted: escalation" in outcome.degradation_reasons
+    assert [page.group_id for page in spec.pages] == ["preparation", "decision", "approval", "execution"]
+    assert "optional group omitted: escalation" in spec.degradation_reasons
+
+
+def test_optional_nonempty_and_required_empty_pages_keep_existing_contract():
+    m48 = fixtures_for("M48", FixtureKind.NORMAL_SUFFICIENT)
+    m48_items = composition_items_for_master(m48.envelope, "M48")
+    m48_spec = build_renderer_integration_spec(
+        build_composition_for_master("M48", m48_items).composition,
+        MASTER_REGISTRY.get("M48"),
+    )
+    assert "escalation" in [page.group_id for page in m48_spec.pages]
+
+    m45 = fixtures_for("M45", FixtureKind.INSUFFICIENT)
+    m45_spec = build_renderer_integration_spec(
+        build_composition_for_master("M45", composition_items_for_master(m45.envelope, "M45")).composition,
+        MASTER_REGISTRY.get("M45"),
+    )
+    assert "thesis" in [page.group_id for page in m45_spec.pages]
+
+
 def test_invalid_composition_and_master_mismatch_are_rejected():
     outcome = _composition("M47")
     invalid = replace(outcome.composition, state="INVALID")
