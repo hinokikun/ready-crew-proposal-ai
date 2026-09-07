@@ -133,6 +133,7 @@ def suitability_metadata(master_id: str) -> SuitabilityMetadata:
 def _candidate(definition: MasterDefinition, selection: MasterSelectionInput) -> CandidateScore:
     metadata = suitability_metadata(definition.master_id)
     definition_groups = {group.group_id for group in definition.information_groups}
+    required_groups = {group.group_id for group in definition.information_groups if group.required}
     definition_relationships = {relationship.relationship_type for relationship in definition.relationships}
     signals = set(selection.semantic_signals)
     matched = tuple(sorted(signals & metadata.positive_signals))
@@ -154,7 +155,7 @@ def _candidate(definition: MasterDefinition, selection: MasterSelectionInput) ->
     density = 5 if len(signals) <= 12 else 2
     dimensions = {"semantic": semantic, "topology": topology, "groups": groups, "evidence": evidence, "decision": decision, "cardinality": cardinality, "density": density}
     unsupported_topology = bool(selection.relationship_types) and not selection.relationship_types.intersection(definition_relationships)
-    missing_groups = definition_groups - selection.available_groups if selection.available_groups else set()
+    missing_groups = required_groups - selection.available_groups
     eligible = not missing and not unsupported_topology and not missing_groups and cardinality == 5
     if not eligible:
         reason = "candidate rejected by required semantic signal, group, topology, or cardinality boundary"
