@@ -41,6 +41,42 @@ from app.services.presentation_engine_integration import (
     build_pptx_bytes_for_engine,
     build_renderer_mvp_internal_canary_pptx_bytes,
 )
+from app.services.presentation_master.integration.m30_presentation_content_proposal_api import (
+    M30PresentationContentProposalRequest,
+    M30PresentationContentProposalResponse,
+    M30PresentationContentRequestError,
+    build_m30_presentation_content_proposal_response,
+)
+from app.services.presentation_master.integration.m30_canonical_node_proposal_api import (
+    M30CanonicalNodeProposalAPIError,
+    M30CanonicalNodeProposalRequest,
+    M30CanonicalNodeProposalResponse,
+    build_m30_canonical_node_proposal_response,
+)
+from app.services.presentation_master.integration.m30_canonical_node_review_api import (
+    M30CanonicalNodeReviewAPIError,
+    M30CanonicalNodeReviewRequest,
+    M30CanonicalNodeReviewResponse,
+    reconstruct_m30_canonical_node_review_response,
+)
+from app.services.presentation_master.integration.m30_causality_relationship_proposal_api import (
+    M30CausalityRelationshipProposalAPIError,
+    M30CausalityRelationshipProposalRequestModel,
+    M30CausalityRelationshipProposalResponse,
+    build_m30_causality_relationship_proposal_response,
+)
+from app.services.presentation_master.integration.m30_causality_relationship_review_api import (
+    M30CausalityRelationshipReviewAPIError,
+    M30CausalityRelationshipReviewRequest,
+    M30CausalityRelationshipReviewResponse,
+    reconstruct_m30_causality_relationship_review_response,
+)
+from app.services.presentation_master.integration.presentation_content_review_api import (
+    PresentationContentReviewAPIError,
+    PresentationContentReviewRequest,
+    PresentationContentReviewResponse,
+    reconstruct_reviewed_presentation_content,
+)
 from app.services.proposal_metadata_service import extract_contact_person, extract_customer_name, proposal_input_length, pptx_input_length
 
 
@@ -108,8 +144,26 @@ def _is_development_origin(origin: str) -> bool:
     return normalized.startswith("http://localhost") or normalized.startswith("http://127.0.0.1")
 
 
+def _normalize_cors_origin(origin: str) -> str:
+    normalized = origin.strip()
+    if not normalized or normalized == "*":
+        return ""
+    from urllib.parse import urlsplit
+
+    parsed = urlsplit(normalized)
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+        return ""
+    if parsed.path not in {"", "/"} or parsed.query or parsed.fragment or parsed.username or parsed.password:
+        return ""
+    canonical = f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"
+    if canonical == "https://your-vercel-app.vercel.app":
+        return ""
+    return canonical
+
+
 def _resolved_cors_origins() -> list[str]:
-    origins = {origin.strip() for origin in settings.cors_origins if origin.strip() and origin.strip() != "*"}
+    origins = {_normalize_cors_origin(origin) for origin in settings.cors_origins}
+    origins.discard("")
     if _is_local_environment():
         origins.update(DEV_CORS_ORIGINS)
     else:
@@ -121,8 +175,8 @@ def _resolved_cors_origin_regex() -> str | None:
     regex = settings.cors_origin_regex
     if not regex:
         return None
-    if settings.environment.strip().lower() in PRODUCTION_ENVIRONMENTS and regex.strip() in {".*", "^.*$"}:
-        logger.warning("Ignoring unsafe wildcard CORS regex in production.")
+    if settings.environment.strip().lower() in PRODUCTION_ENVIRONMENTS:
+        logger.warning("Ignoring CORS origin regex in production; use explicit CORS_ORIGINS.")
         return None
     return regex
 
@@ -351,6 +405,84 @@ async def analyze(
                 proposal_generation_duration_ms=duration_ms,
             )
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@app.post("/api/presentation-content/proposals", response_model=M30PresentationContentProposalResponse)
+async def propose_presentation_content_for_m30(
+    payload: M30PresentationContentProposalRequest,
+    user: dict = Depends(require_roles("admin", "member")),
+    _: None = Depends(rate_limit_dependency("generation")),
+):
+    ensure_not_maintenance_mode()
+    try:
+        return build_m30_presentation_content_proposal_response(payload)
+    except M30PresentationContentRequestError as exc:
+        raise HTTPException(status_code=422, detail={"error_type": exc.category, "message": "プレゼンテーション候補入力を検証できませんでした。"}) from exc
+
+
+@app.post("/api/m30/canonical/proposals", response_model=M30CanonicalNodeProposalResponse)
+async def propose_m30_canonical_nodes(
+    payload: M30CanonicalNodeProposalRequest,
+    user: dict = Depends(require_roles("admin", "member")),
+    _: None = Depends(rate_limit_dependency("generation")),
+):
+    ensure_not_maintenance_mode()
+    try:
+        return build_m30_canonical_node_proposal_response(payload)
+    except M30CanonicalNodeProposalAPIError as exc:
+        raise HTTPException(status_code=exc.status_code, detail={"error_type": exc.category, "message": "M30 canonical proposal could not be generated."}) from exc
+
+
+@app.post("/api/m30/canonical/reviews", response_model=M30CanonicalNodeReviewResponse)
+async def review_m30_canonical_node(
+    payload: M30CanonicalNodeReviewRequest,
+    user: dict = Depends(require_roles("admin", "member")),
+    _: None = Depends(rate_limit_dependency("generation")),
+):
+    ensure_not_maintenance_mode()
+    try:
+        return reconstruct_m30_canonical_node_review_response(payload)
+    except M30CanonicalNodeReviewAPIError as exc:
+        raise HTTPException(status_code=exc.status_code, detail={"error_type": exc.category, "message": "M30 canonical review could not be reconstructed."}) from exc
+
+
+@app.post("/api/m30/causality/proposals", response_model=M30CausalityRelationshipProposalResponse)
+async def propose_m30_causality_relationships(
+    payload: M30CausalityRelationshipProposalRequestModel,
+    user: dict = Depends(require_roles("admin", "member")),
+    _: None = Depends(rate_limit_dependency("generation")),
+):
+    ensure_not_maintenance_mode()
+    try:
+        return build_m30_causality_relationship_proposal_response(payload)
+    except M30CausalityRelationshipProposalAPIError as exc:
+        raise HTTPException(status_code=exc.status_code, detail={"error_type": exc.category, "message": "M30 causality relationship proposal could not be generated."}) from exc
+
+
+@app.post("/api/m30/causality/reviews", response_model=M30CausalityRelationshipReviewResponse)
+async def review_m30_causality_relationship(
+    payload: M30CausalityRelationshipReviewRequest,
+    user: dict = Depends(require_roles("admin", "member")),
+    _: None = Depends(rate_limit_dependency("generation")),
+):
+    ensure_not_maintenance_mode()
+    try:
+        return reconstruct_m30_causality_relationship_review_response(payload)
+    except M30CausalityRelationshipReviewAPIError as exc:
+        raise HTTPException(status_code=exc.status_code, detail={"error_type": exc.category, "message": "M30 causality relationship review could not be reconstructed."}) from exc
+
+
+@app.post("/api/presentation-content/review", response_model=PresentationContentReviewResponse)
+async def review_presentation_content(
+    payload: PresentationContentReviewRequest,
+    user: dict = Depends(require_roles("admin", "member")),
+    _: None = Depends(rate_limit_dependency("generation")),
+):
+    ensure_not_maintenance_mode()
+    try:
+        return reconstruct_reviewed_presentation_content(payload)
+    except PresentationContentReviewAPIError as exc:
+        raise HTTPException(status_code=422, detail={"error_type": exc.category, "message": "プレゼンテーションレビューを検証できませんでした。"}) from exc
 
 
 @app.post("/api/download-pptx")

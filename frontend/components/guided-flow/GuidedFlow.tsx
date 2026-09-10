@@ -7,6 +7,10 @@ import { SimpleErrorMessage } from "@/components/guided-flow/SimpleErrorMessage"
 import { StepFooter } from "@/components/guided-flow/StepFooter";
 import { StepNavigation } from "@/components/guided-flow/StepNavigation";
 import { ProposalValidationPanel } from "@/components/ProposalValidationPanel";
+import { M30CanonicalReviewPanel } from "@/components/guided-flow/M30CanonicalReviewPanel";
+import { M30RelationshipReviewPanel } from "@/components/guided-flow/M30RelationshipReviewPanel";
+import type { M30CanonicalCandidateDto, M30CausalityRelationshipProposalDto } from "@/types/m30Api";
+import type { M30StateEnvelope } from "@/types/m30State";
 import type { PowerPointData, SemanticCandidate, SemanticCandidateSet, SemanticRelationshipInput } from "@/types/proposal";
 import type {
   BeautifulAiSimpleRequirement,
@@ -29,6 +33,9 @@ type GuidedFlowProps = {
   beautifulAiNotice?: string;
   beautifulAiRequirements: BeautifulAiSimpleRequirement[];
   beautifulAiResult?: { editor_url?: string; player_url?: string } | null;
+  accountableOwner: string;
+  preparationAnalysis: string;
+  evidence: string;
   canCompleteQualityGate: boolean;
   canGenerate: boolean;
   canSeeDetailMode: boolean;
@@ -62,11 +69,22 @@ type GuidedFlowProps = {
   onShowGuide: () => void;
   onSemanticCandidatesChange?: (candidates: SemanticCandidate[]) => void;
   onSemanticRelationshipsChange?: (relationships: SemanticRelationshipInput[]) => void;
+  onAccountableOwnerChange: (value: string) => void;
+  onPreparationAnalysisChange: (value: string) => void;
+  onPresentationTopicChange: (value: string) => void;
+  onEvidenceChange: (value: string) => void;
+  onDecisionMakerChange: (value: string) => void;
   onSourceTextChange: (value: string) => void;
   onToggleDetailMode: () => void;
   onUseSample: () => void;
+  m30State: M30StateEnvelope;
+  onM30CanonicalProposal: (role: "visible_issue" | "root_cause" | "causal_state" | "business_implication" | "solution_direction", requestedCount: number) => Promise<unknown>;
+  onM30CanonicalReview: (candidate: M30CanonicalCandidateDto, action: "CONFIRM" | "CORRECT" | "REJECT", correctedValue?: string) => Promise<unknown>;
+  onM30RelationshipProposal: (requestedCount: number) => Promise<unknown>;
+  onM30RelationshipReview: (relationship: M30CausalityRelationshipProposalDto, action: "CONFIRM" | "CORRECT" | "REJECT", correctedFromId?: string, correctedToId?: string) => Promise<unknown>;
   organizationName: string;
   panels: GuidedFlowPanels;
+  presentationTopic: string;
   powerpointData?: PowerPointData | null;
   proposalContext?: Record<string, unknown>;
   qualityGate: GuidedQualityGate | null;
@@ -77,6 +95,7 @@ type GuidedFlowProps = {
   roleLabel: string;
   showSalesCopilotMarker: boolean;
   sourceText: string;
+  decisionMaker: string;
   summaryItems: GuidedSummaryItem[];
   workspaceName: string;
 };
@@ -168,14 +187,15 @@ function outputTitle(choice: OutputChoice) {
   return "要約版PowerPoint";
 }
 
-const criticalSemanticTypes = new Set(["decision_condition", "accountable_owner", "approver", "execution_action", "evidence", "decision_context"]);
+const criticalSemanticTypes = new Set(["decision_condition", "accountable_owner", "approver", "execution_action", "evidence", "decision_context", "preparation_analysis"]);
 const semanticTypeLabels: Record<string, string> = {
   decision_condition: "判断条件",
   accountable_owner: "責任者",
   approver: "承認者",
   execution_action: "実行内容",
-  evidence: "根拠・出典",
-  decision_context: "判断の対象"
+  evidence: "判断の根拠・確認できる情報",
+  decision_context: "判断の対象",
+  preparation_analysis: "判断前に整理する情報"
 };
 function semanticStatusLabel(candidate: SemanticCandidate) {
   if (candidate.review_state === "CONFIRMED") return "確認済み";
@@ -408,6 +428,56 @@ function GuidedFlowBase(props: GuidedFlowProps) {
             />
           </label>
           <p id="guided-source-help" className="guided-field-help">案件概要だけでも大丈夫です。不明な情報はAIが「要確認」として整理します。</p>
+          <div className="guided-explicit-semantics">
+            <label className="field" htmlFor="guided-decision-maker">
+              <span>意思決定者</span>
+              <input
+                id="guided-decision-maker"
+                value={props.decisionMaker}
+                onChange={(event) => props.onDecisionMakerChange(event.target.value)}
+                placeholder="この提案を最終的に判断する人・役割（任意）"
+              />
+            </label>
+            <label className="field" htmlFor="guided-accountable-owner">
+              <span>責任者</span>
+              <input
+                id="guided-accountable-owner"
+                value={props.accountableOwner}
+                onChange={(event) => props.onAccountableOwnerChange(event.target.value)}
+                placeholder="この施策を実行・推進する責任者（任意）"
+              />
+            </label>
+            <label className="field" htmlFor="guided-preparation-analysis">
+              <span>判断前に整理する情報</span>
+              <textarea
+                id="guided-preparation-analysis"
+                onChange={(event) => props.onPreparationAnalysisChange(event.target.value)}
+                placeholder="判断に必要な現状・前提・確認事項を入力（任意）"
+                rows={3}
+                value={props.preparationAnalysis}
+              />
+            </label>
+            <label className="field" htmlFor="guided-evidence">
+              <span>判断の根拠・確認できる情報</span>
+              <textarea
+                id="guided-evidence"
+                onChange={(event) => props.onEvidenceChange(event.target.value)}
+                placeholder="議事録・既存資料・数値など、判断に使える確認済み情報を入力（任意）"
+                rows={3}
+                value={props.evidence}
+              />
+            </label>
+            <label className="field" htmlFor="guided-presentation-topic">
+              <span>プレゼンテーマ（任意）</span>
+              <input
+                id="guided-presentation-topic"
+                value={props.presentationTopic}
+                onChange={(event) => props.onPresentationTopicChange(event.target.value)}
+                placeholder="資料全体で伝えたいテーマを入力してください。"
+              />
+              <small className="guided-field-help">資料全体で伝えたいテーマを入力してください。</small>
+            </label>
+          </div>
           {props.draftNotice && (
             <div className="guided-draft-notice" role="status">
               <span>{props.draftNotice}</span>
@@ -548,6 +618,16 @@ function GuidedFlowBase(props: GuidedFlowProps) {
               {semanticConfirmationBlockingCount > 0 && <p className="guided-semantic-confirmation__hint" role="status">一部の項目は未確認です。必要に応じて確認してください。</p>}
             </section>
           )}
+          <M30CanonicalReviewPanel
+            state={props.m30State}
+            onPropose={props.onM30CanonicalProposal}
+            onReview={props.onM30CanonicalReview}
+          />
+          <M30RelationshipReviewPanel
+            state={props.m30State}
+            onPropose={props.onM30RelationshipProposal}
+            onReview={props.onM30RelationshipReview}
+          />
           {missingQuestions.length > 0 && (
             <div className="guided-question-card">
               <strong>提案書をより正確にするため、あと{missingQuestions.length}点だけ確認してください</strong>

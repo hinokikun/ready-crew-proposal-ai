@@ -612,6 +612,45 @@ class SemanticRelationshipTransportItem(BaseModel):
     provenance_state: str = "supplied"
 
 
+class SemanticBusinessTransportItem(BaseModel):
+    """Shared additive transport shape for M30 problem-structure values."""
+
+    id: str = Field(..., min_length=1, max_length=160)
+    value: str = Field(..., min_length=1, max_length=2000)
+    source_type: str = Field(..., min_length=1, max_length=80)
+    source_field: str = Field(..., min_length=1, max_length=160)
+    source_reference: str = Field(..., min_length=1, max_length=240)
+    authority: str = Field(..., min_length=1, max_length=64)
+    review_state: str = Field(..., min_length=1, max_length=32)
+    confirmation_authority: str | None = Field(None, max_length=64)
+    inferred: bool = False
+    original_candidate_id: str | None = Field(None, max_length=160)
+
+
+class ProblemObjectTransportItem(SemanticBusinessTransportItem):
+    role: Literal["visible_issue", "root_cause", "causal_state"]
+
+
+class BusinessImplicationTransportItem(SemanticBusinessTransportItem):
+    pass
+
+
+class SolutionDirectionTransportItem(SemanticBusinessTransportItem):
+    pass
+
+
+class BusinessRelationshipTransportItem(BaseModel):
+    id: str = Field(..., min_length=1, max_length=160)
+    from_item: str = Field(..., min_length=1, max_length=160)
+    to_item: str = Field(..., min_length=1, max_length=160)
+    relationship_type: Literal["causality"]
+    review_state: str = Field(..., min_length=1, max_length=32)
+    authority: str = Field(..., min_length=1, max_length=64)
+    confirmation_authority: str | None = Field(None, max_length=64)
+    provenance_state: Literal["supplied"] = "supplied"
+    source_reference: str = Field(..., min_length=1, max_length=240)
+
+
 class PptxDownloadRequest(BaseModel):
     powerpoint_generation_data: PowerPointData
     win_probability: WinProbability | None = None
@@ -654,6 +693,18 @@ class PptxDownloadRequest(BaseModel):
     )
     semantic_relationships: list[SemanticRelationshipTransportItem] | None = Field(
         None, description="Optional explicitly confirmed relationships between current semantic candidate IDs."
+    )
+    problem_objects: list[ProblemObjectTransportItem] = Field(
+        default_factory=list, description="Optional additive M30 problem-structure objects."
+    )
+    business_implications: list[BusinessImplicationTransportItem] = Field(
+        default_factory=list, description="Optional additive M30 business implications."
+    )
+    solution_direction: SolutionDirectionTransportItem | None = Field(
+        None, description="Optional additive M30 solution direction."
+    )
+    business_relationships: list[BusinessRelationshipTransportItem] = Field(
+        default_factory=list, description="Optional additive causality relationships for M30."
     )
     candidate_boundary_correlation_id: str | None = Field(
         None, max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Bounded diagnostic-only candidate boundary correlation."

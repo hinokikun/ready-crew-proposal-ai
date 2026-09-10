@@ -203,7 +203,8 @@ export async function downloadSummaryProposalPowerPoint(
     pastProposalTemplate,
     caseStudies,
     true,
-    options
+    options,
+    "/api/download-summary-pptx"
   );
 }
 
@@ -359,6 +360,9 @@ async function downloadPowerPoint(
   }
 
   const blob = await response.blob();
+  if (blob.size === 0) {
+    throw new Error("PowerPointの生成結果が空でした。ダウンロードを中止しました。");
+  }
   const fallbackTitle = summary ? `${data.deck_title}_要約版` : data.deck_title;
   const filename = getDownloadFilename(response.headers.get("Content-Disposition"), fallbackTitle);
   const qualityReport = getQualityReport(response.headers.get("X-Presentation-Quality-Report"));

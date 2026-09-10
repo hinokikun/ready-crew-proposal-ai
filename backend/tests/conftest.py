@@ -7,10 +7,18 @@ import pytest
 from fastapi.testclient import TestClient
 
 
-def _reload_app_modules() -> None:
+def _refresh_app_settings() -> None:
+    config = importlib.import_module("app.config")
+    previous_settings = config.settings
+    config = importlib.reload(config)
+    current_settings = config.settings
+
     for module_name in list(sys.modules):
-        if module_name == "app" or module_name.startswith("app."):
-            del sys.modules[module_name]
+        if module_name != "app" and not module_name.startswith("app."):
+            continue
+        module = sys.modules.get(module_name)
+        if module is not None and getattr(module, "settings", None) is previous_settings:
+            setattr(module, "settings", current_settings)
 
 
 @pytest.fixture()
@@ -28,8 +36,9 @@ def client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> TestClient:
     monkeypatch.setenv("BEAUTIFUL_AI_ENABLED", "false")
     monkeypatch.setenv("BEAUTIFUL_AI_API_KEY", "")
     monkeypatch.setenv("BEAUTIFUL_AI_MOCK", "false")
-    _reload_app_modules()
-    main = importlib.import_module("app.main")
+    _refresh_app_settings()
+    main_module = sys.modules.get("app.main")
+    main = importlib.reload(main_module) if main_module is not None else importlib.import_module("app.main")
     with TestClient(main.app) as test_client:
         yield test_client
 

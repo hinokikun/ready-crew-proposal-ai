@@ -178,6 +178,56 @@ test("案件入力欄へ入力できる", async ({ page }) => {
   await expect(input).toHaveValue(/株式会社サンプル/);
 });
 
+test("Step1の明示的な意思決定者と責任者を入力できる", async ({ page }) => {
+  await login(page, memberEmail);
+  await setTextareaValue(page, "project-source-input", "株式会社サンプル様。業務改善提案の相談です。意思決定と実行体制を確認します。");
+  const decisionMaker = page.getByLabel("意思決定者");
+  const accountableOwner = page.getByLabel("責任者");
+  await expect(decisionMaker).toBeVisible();
+  await expect(accountableOwner).toBeVisible();
+  await decisionMaker.fill("営業部長");
+  await accountableOwner.fill("営業企画責任者");
+  await expect(decisionMaker).toHaveValue("営業部長");
+  await expect(accountableOwner).toHaveValue("営業企画責任者");
+});
+
+test("PreparationとEvidenceは明示入力時だけStep3へ未確認候補として届く", async ({ page }) => {
+  await page.route("**/api/analyze", async (route) => {
+    const response = proposalResponse(route.request().postDataJSON() as { project_brief?: string });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ...response, semantic_candidates: { candidates: [] } })
+    });
+  });
+  await login(page, memberEmail);
+  await setTextareaValue(page, "project-source-input", "株式会社サンプル様。判断前の整理と根拠を確認する案件です。");
+  await page.getByLabel("判断前に整理する情報").fill("現状の業務手順と確認事項を整理する");
+  await page.getByLabel("判断の根拠・確認できる情報").fill("顧客ヒアリング記録");
+  await clickGuidedGenerate(page);
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).waitFor({ state: "visible", timeout: 25_000 });
+  await expect(page.locator(".guided-semantic-card")).toHaveCount(2);
+  await expect(page.getByText("判断前に整理する情報").last()).toBeVisible();
+  await expect(page.getByText("判断の根拠・確認できる情報").last()).toBeVisible();
+  await expect(page.getByText("未確認の候補が2件あります。候補を確定または編集して内容を確定してください。")).toBeVisible();
+});
+
+test("PreparationとEvidenceが空欄なら候補を生成しない", async ({ page }) => {
+  await page.route("**/api/analyze", async (route) => {
+    const response = proposalResponse(route.request().postDataJSON() as { project_brief?: string });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ...response, semantic_candidates: { candidates: [] } })
+    });
+  });
+  await login(page, memberEmail);
+  await setTextareaValue(page, "project-source-input", "株式会社サンプル様。任意入力を空欄のまま確認する案件です。");
+  await clickGuidedGenerate(page);
+  await page.getByRole("button", { name: "内容を確認しました。提出前チェックへ進む" }).waitFor({ state: "visible", timeout: 25_000 });
+  await expect(page.locator(".guided-semantic-card")).toHaveCount(0);
+});
+
 test("AI-OCR案件入力は以前のWeb案件に置き換わらない", async ({ page }) => {
   await login(page, memberEmail);
   await setTextareaValue(
@@ -1414,6 +1464,146 @@ test("Beautiful.ai未設定時は既存PPTXの導線を残す", async ({ page })
   await expect(page.getByRole("button", { name: "選択した形式でダウンロード" })).toBeVisible();
 });
 
+test("見積PDFは既存payloadで1回だけPOSTしPDFをダウンロードする", async ({ page }) => {
+  let requestCount = 0;
+  let requestBody: Record<string, unknown> | undefined;
+  await page.route("**/api/download-estimate-pdf", async (route) => {
+    requestCount += 1;
+    requestBody = route.request().postDataJSON() as Record<string, unknown>;
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "content-type": "application/pdf",
+        "content-disposition": "attachment; filename*=UTF-8''proposal-estimate.pdf"
+      },
+      body: "%PDF-e2e-estimate%"
+    });
+  });
+
+  await login(page, memberEmail);
+  await useGuidedSample(page);
+  await scrollToOutputs(page);
+  const guided = page.getByTestId("guided-flow");
+  await guided.getByRole("button", { name: /^見積PDF/ }).click();
+  const outputButton = guided.getByRole("button", { name: "選択した形式でダウンロード", exact: true });
+  const downloadPromise = page.waitForEvent("download");
+  await outputButton.click();
+  const download = await downloadPromise;
+
+  expect(requestCount).toBe(1);
+  expect(requestBody?.powerpoint_generation_data).toBeTruthy();
+  expect(typeof requestBody?.project_brief).toBe("string");
+  expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
+  await expect(outputButton).toBeEnabled();
+  const secondDownloadPromise = page.waitForEvent("download");
+  await outputButton.click();
+  const secondDownload = await secondDownloadPromise;
+  expect(requestCount).toBe(2);
+  expect(secondDownload.suggestedFilename()).toMatch(/\.pdf$/i);
+  await expect(outputButton).toBeEnabled();
+});
+
+test("見積PDFのHTTPエラーはダウンロードせずbusyを解除する", async ({ page }) => {
+  let downloadCount = 0;
+  let requestCount = 0;
+  let routeHit = false;
+  page.on("download", () => { downloadCount += 1; });
+  await page.route("**/api/download-estimate-pdf", async (route) => {
+    routeHit = true;
+    requestCount += 1;
+    if (requestCount === 1) {
+      await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ detail: "estimate unavailable" }) });
+      return;
+    }
+    await route.fulfill({ status: 200, headers: { "content-type": "application/pdf", "content-disposition": "attachment; filename=estimate-retry.pdf" }, body: "%PDF-e2e-estimate%" });
+  });
+
+  await login(page, memberEmail);
+  await useGuidedSample(page);
+  await scrollToOutputs(page);
+  const guided = page.getByTestId("guided-flow");
+  await guided.getByRole("button", { name: /^見積PDF/ }).click();
+  const outputButton = guided.getByRole("button", { name: "選択した形式でダウンロード", exact: true });
+  await outputButton.click();
+  const errorAlert = guided.getByRole("alert").filter({ hasText: "提案書を作成できませんでした" });
+  await expect(errorAlert).toBeVisible();
+  await expect(errorAlert).toContainText("通信が不安定、または一時的に処理できませんでした。");
+  await expect(errorAlert.getByRole("button", { name: "再試行", exact: true })).toBeVisible();
+  await expect(outputButton).toBeEnabled();
+  expect(routeHit).toBe(true);
+  expect(downloadCount).toBe(0);
+  const retryDownloadPromise = page.waitForEvent("download");
+  await outputButton.click();
+  await retryDownloadPromise;
+  expect(requestCount).toBe(2);
+  expect(downloadCount).toBe(1);
+});
+
+test("見積PDFの空Blobはダウンロードせずbusyを解除する", async ({ page }) => {
+  let downloadCount = 0;
+  let requestCount = 0;
+  let routeHit = false;
+  page.on("download", () => { downloadCount += 1; });
+  await page.route("**/api/download-estimate-pdf", async (route) => {
+    routeHit = true;
+    requestCount += 1;
+    if (requestCount === 1) {
+      await route.fulfill({ status: 200, headers: { "content-type": "application/pdf" }, body: "" });
+      return;
+    }
+    await route.fulfill({ status: 200, headers: { "content-type": "application/pdf", "content-disposition": "attachment; filename=estimate-retry.pdf" }, body: "%PDF-e2e-estimate%" });
+  });
+
+  await login(page, memberEmail);
+  await useGuidedSample(page);
+  await scrollToOutputs(page);
+  const guided = page.getByTestId("guided-flow");
+  await guided.getByRole("button", { name: /^見積PDF/ }).click();
+  const outputButton = guided.getByRole("button", { name: "選択した形式でダウンロード", exact: true });
+  await outputButton.click();
+  const errorAlert = guided.getByRole("alert").filter({ hasText: "提案書を作成できませんでした" });
+  await expect(errorAlert).toBeVisible();
+  await expect(errorAlert).toContainText("入力内容または通信状況を確認して、もう一度お試しください。");
+  await expect(errorAlert.getByRole("button", { name: "再試行", exact: true })).toBeVisible();
+  await expect(outputButton).toBeEnabled();
+  expect(routeHit).toBe(true);
+  expect(downloadCount).toBe(0);
+  const retryDownloadPromise = page.waitForEvent("download");
+  await outputButton.click();
+  await retryDownloadPromise;
+  expect(requestCount).toBe(2);
+  expect(downloadCount).toBe(1);
+});
+
+test("見積PDF生成中はCTAをdisabledにして二重送信しない", async ({ page }) => {
+  let requestCount = 0;
+  let release!: () => void;
+  const pendingResponse = new Promise<void>((resolve) => { release = resolve; });
+  await page.route("**/api/download-estimate-pdf", async (route) => {
+    requestCount += 1;
+    await pendingResponse;
+    await route.fulfill({
+      status: 200,
+      headers: { "content-type": "application/pdf", "content-disposition": "attachment; filename=estimate.pdf" },
+      body: "%PDF-e2e-estimate%"
+    });
+  });
+
+  await login(page, memberEmail);
+  await useGuidedSample(page);
+  await scrollToOutputs(page);
+  const guided = page.getByTestId("guided-flow");
+  await guided.getByRole("button", { name: /^見積PDF/ }).click();
+  const outputButton = guided.getByRole("button", { name: "選択した形式でダウンロード", exact: true });
+  const downloadPromise = page.waitForEvent("download");
+  await outputButton.click();
+  await expect(outputButton).toBeDisabled();
+  expect(requestCount).toBe(1);
+  release();
+  await downloadPromise;
+  await expect(outputButton).toBeEnabled();
+});
+
 test("Beautiful.ai作成後に編集と表示リンクが出る", async ({ page }) => {
   await login(page, memberEmail);
   await useGuidedSample(page);
@@ -1960,7 +2150,7 @@ async function mockApi(page: Page, options: MockOptions = {}) {
     if (path.endsWith("/api/proposal-validation/validate")) {
       return json(route, proposalValidationResponse(options.proposalValidationJudge));
     }
-    if (path.endsWith("/api/download-pptx")) {
+    if (path.endsWith("/api/download-pptx") || path.endsWith("/api/download-summary-pptx")) {
       return route.fulfill({
         status: 200,
         headers: {

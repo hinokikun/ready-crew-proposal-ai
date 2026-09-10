@@ -37,12 +37,14 @@ uvicorn app.main:app --host 0.0.0.0 --port $PORT
 6. Set health check path:
 
 ```text
-/health
+/health/live
 ```
 
-7. Configure environment variables listed below.
-8. Deploy.
-9. Confirm `/health` and `/health/ready`.
+7. Set `APP_ENV=production`, `APP_AUTH_SECRET`, and `DATABASE_URL` in Render. Set `INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD` only when the database has no administrator; the bootstrap never overwrites an existing user.
+8. Set `CORS_ORIGINS` to the exact Vercel production origin. Do not use localhost, `*`, or a guessed Vercel URL.
+9. Configure the remaining environment variables listed below.
+10. Deploy.
+11. Confirm `/health/live`, then `/health` and `/health/ready`.
 
 ## Vercel Frontend Deployment
 
@@ -62,13 +64,13 @@ npm run build
 
 | Variable | Required | Example / Notes |
 |---|---|---|
-| `APP_ENV` | Recommended | `production` |
+| `APP_ENV` | Yes | `production` |
 | `APP_AUTH_SECRET` | Yes | Strong random secret. Never log or commit. |
 | `INITIAL_ADMIN_EMAIL` | First deploy | Initial admin email. Used only when absent in DB. |
 | `INITIAL_ADMIN_PASSWORD` | First deploy | Strong one-time admin password. Not overwritten later. |
 | `DATABASE_URL` | Yes | PostgreSQL URL recommended. |
-| `CORS_ORIGINS` | Yes | Vercel production URL and required local URLs. |
-| `CORS_ORIGIN_REGEX` | Optional | Vercel preview URL regex if previews are allowed. |
+| `CORS_ORIGINS` | Yes | Exact Vercel production origin only; local origins are not accepted in production. |
+| `CORS_ORIGIN_REGEX` | Development only | Not used for production; production requires explicit `CORS_ORIGINS`. |
 | `OPENAI_API_KEY` | Production AI | Required when `USE_MOCK_AI=false`. |
 | `OPENAI_MODEL` | Recommended | Example: `gpt-4.1-mini`. |
 | `USE_MOCK_AI` | Yes | `false` for production AI. |
@@ -95,6 +97,20 @@ npm run build
 | `NEXT_PUBLIC_BUILD_TIME` | Optional | Build timestamp. |
 | `NEXT_PUBLIC_SALES_ASSISTANT_ENABLED` | Optional | UI display helper only. |
 | `NEXT_PUBLIC_PROPOSAL_EXPORT_ENABLED` | Optional | UI display helper only. |
+
+## Release Order
+
+1. Prepare the Git repository and select the intended release commit.
+2. Create the Render backend service from `render.yaml` and configure its Human-supplied values.
+3. Deploy the backend and record its generated HTTPS URL.
+4. Configure Vercel with `frontend` as the project root and set `NEXT_PUBLIC_API_URL` to that backend URL.
+5. Deploy the frontend and record its production origin.
+6. Update Render `CORS_ORIGINS` with that exact origin and redeploy/restart the backend if Render requires it.
+7. Check `/health/live`, `/health`, and `/health/ready` without sending an AI request.
+8. Run authentication, normal output, summary output, estimate PDF, and history smoke checks.
+9. Run the M30 live smoke only after OpenAI billing and credentials are available.
+
+Do not enable or change M30/M48, Shadow, Canary, or renderer flags as part of this handoff. Their values require a separate, explicit acceptance decision.
 
 ## API Keys
 
@@ -138,16 +154,12 @@ npm.cmd run test:e2e
 
 After production deployment:
 
-1. Open Backend `/health`.
-2. Open Backend `/health/ready`.
-3. Open Frontend Vercel URL.
-4. Login as admin.
-5. Run system diagnostics from admin screen.
-6. Confirm Beautiful.ai status if enabled.
-7. Generate a small proposal.
-8. Download PowerPoint.
-9. Download PDF estimate.
-10. Create Beautiful.ai presentation if enabled.
+1. Open Backend `/health/live`.
+2. Open Backend `/health` and `/health/ready`.
+3. Open the Frontend Vercel URL.
+4. Login as admin and member.
+5. Run normal proposal and output/history smoke checks.
+6. Run M30 live smoke only after OpenAI billing is restored.
 
 ## Smoke Test Checklist
 

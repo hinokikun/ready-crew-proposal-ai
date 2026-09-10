@@ -158,6 +158,15 @@ import {
   type CandidateBoundaryDiagnosticSession
 } from "@/lib/analytics";
 import { clearGuidedFlowDraft, getGuidedFlowDraftKey, readGuidedFlowDraft, saveGuidedFlowDraft } from "@/lib/guidedFlowDraft";
+import {
+  proposeM30Canonical,
+  proposeM30Relationships,
+  reviewM30Canonical,
+  reviewM30Relationship
+} from "@/lib/m30Orchestration";
+import { createM30StateEnvelope, markM30StatePossiblyStale } from "@/lib/m30StateEnvelope";
+import type { M30StateEnvelope } from "@/types/m30State";
+import type { M30CanonicalCandidateDto, M30CausalityRelationshipProposalDto } from "@/types/m30Api";
 import type { AnalysisResponse, PowerPointData, ProposalRequest, SemanticCandidate, SemanticRelationshipInput } from "@/types/proposal";
 
 import {
@@ -359,6 +368,18 @@ export default function Home() {
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [semanticCandidatesForTransport, setSemanticCandidatesForTransport] = useState<SemanticCandidate[]>([]);
   const [semanticRelationshipsForTransport, setSemanticRelationshipsForTransport] = useState<SemanticRelationshipInput[]>([]);
+  const [guidedDecisionMaker, setGuidedDecisionMaker] = useState("");
+  const [guidedAccountableOwner, setGuidedAccountableOwner] = useState("");
+  const [guidedPreparationAnalysis, setGuidedPreparationAnalysis] = useState("");
+  const [guidedEvidence, setGuidedEvidence] = useState("");
+  const [m30State, setM30State] = useState<M30StateEnvelope>(() => createM30StateEnvelope());
+  const previousM30ProductValuesRef = useRef({
+    project_brief: initialForm.project_brief,
+    decisionMaker: "",
+    accountableOwner: "",
+    preparationAnalysis: "",
+    evidence: ""
+  });
   const [candidateBoundaryDiagnostic, setCandidateBoundaryDiagnostic] = useState<CandidateBoundaryDiagnosticUiState>(() => diagnosticUiStateFromSession(readCandidateBoundaryDiagnosticSession()));
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -367,6 +388,7 @@ export default function Home() {
   const [isDownloadingInternalCanary, setIsDownloadingInternalCanary] = useState(false);
   const [isDownloadingSummaryPowerPoint, setIsDownloadingSummaryPowerPoint] = useState(false);
   const [isDownloadingEstimatePdf, setIsDownloadingEstimatePdf] = useState(false);
+  const activeOutputDownloadRef = useRef<"pptx" | "summary-pptx" | "estimate-pdf" | null>(null);
   const [isCreatingBeautifulAi, setIsCreatingBeautifulAi] = useState(false);
   const [beautifulAiStatus, setBeautifulAiStatus] = useState<BeautifulAiStatus | null>(null);
   const [beautifulAiStatusProbe, setBeautifulAiStatusProbe] = useState<BeautifulAiStatusProbe | null>(null);
@@ -458,6 +480,30 @@ export default function Home() {
     setHasPersistedGuidedFlowDraft(Boolean(guidedDraftScopeKey && readGuidedFlowDraft(guidedDraftScope)));
   }, [guidedDraftScope, guidedDraftScopeKey]);
 
+  const currentM30ProductValues = useMemo(() => ({
+    project_brief: form.project_brief,
+    decisionMaker: guidedDecisionMaker,
+    accountableOwner: guidedAccountableOwner,
+    preparationAnalysis: guidedPreparationAnalysis,
+    evidence: guidedEvidence
+  }), [form.project_brief, guidedAccountableOwner, guidedDecisionMaker, guidedEvidence, guidedPreparationAnalysis]);
+
+  useEffect(() => {
+    const previous = previousM30ProductValuesRef.current;
+    const changed = Object.keys(currentM30ProductValues).some((key) => {
+      const field = key as keyof typeof currentM30ProductValues;
+      return currentM30ProductValues[field] !== previous[field];
+    });
+    previousM30ProductValuesRef.current = currentM30ProductValues;
+    const hasAuditState = m30State.canonicalProposals.length > 0 ||
+      m30State.canonicalReviews.length > 0 ||
+      m30State.relationshipProposals.length > 0 ||
+      m30State.relationshipReviews.length > 0;
+    if (changed && hasAuditState && !m30State.possiblyStale) {
+      setM30State((current) => markM30StatePossiblyStale(current));
+    }
+  }, [currentM30ProductValues, m30State]);
+
   useEffect(() => {
     isAppShellMountedRef.current = true;
     setHistory(safeHistoryParse(window.localStorage.getItem(buildScopedStorageKey(HISTORY_KEY))));
@@ -485,7 +531,7 @@ export default function Home() {
     if (!draft) return;
     guidedDraftHydratingRef.current = true;
     setRawSourceText(draft.rawSourceText);
-    setForm(initialForm);
+    setForm({ ...initialForm, presentation_topic: draft.presentationTopic ?? "" });
     resetProposalDerivedState(draft.rawSourceText);
     setGuidedDraftNotice("前回の入力を復元しました");
     setGuidedDraftSaveStatus("");
@@ -508,7 +554,7 @@ export default function Home() {
       return;
     }
     guidedDraftSaveTimerRef.current = setTimeout(() => {
-      const saved = saveGuidedFlowDraft(guidedDraftScope, rawSourceText);
+      const saved = saveGuidedFlowDraft(guidedDraftScope, rawSourceText, form.presentation_topic ?? "");
       if (saved) {
         setGuidedDraftSaveStatus("入力を保存しました");
         refreshGuidedDraftAvailability();
@@ -517,7 +563,7 @@ export default function Home() {
     return () => {
       if (guidedDraftSaveTimerRef.current) clearTimeout(guidedDraftSaveTimerRef.current);
     };
-  }, [experienceView, guidedDraftScopeKey, rawSourceText, result, refreshGuidedDraftAvailability]);
+  }, [experienceView, guidedDraftScopeKey, rawSourceText, form.presentation_topic, result, refreshGuidedDraftAvailability]);
 
   useEffect(() => {
     if (rawSourceText.trim().length >= 10 && !pasteAnalyticsTrackedRef.current) {
@@ -624,6 +670,11 @@ export default function Home() {
     setGuidedDraftSaveStatus("");
     setResult(null);
     setSemanticCandidatesForTransport([]);
+    setGuidedDecisionMaker("");
+    setGuidedAccountableOwner("");
+    setGuidedPreparationAnalysis("");
+    setGuidedEvidence("");
+    setM30State(createM30StateEnvelope());
     setEditablePreviewSlides([]);
     setCompanyResearch(null);
     setExtractedInfo(null);
@@ -648,6 +699,39 @@ export default function Home() {
     setIsAutoGenerationPaused(false);
     setError("");
     setLastDownloadRetry(null);
+  }
+
+  async function handleM30CanonicalProposal(semanticRole: string, requestedCount: number) {
+    const next = await proposeM30Canonical({ currentValues: currentM30ProductValues, semanticRole, requestedCount, envelope: m30State });
+    setM30State(next.envelope);
+    return next;
+  }
+
+  async function handleM30CanonicalReview(
+    originalCandidate: M30CanonicalCandidateDto,
+    action: "CONFIRM" | "CORRECT" | "REJECT",
+    correctedValue?: string
+  ) {
+    const next = await reviewM30Canonical({ originalCandidate, action, correctedValue, currentValues: currentM30ProductValues, envelope: m30State });
+    setM30State(next.envelope);
+    return next;
+  }
+
+  async function handleM30RelationshipProposal(requestedCount: number) {
+    const next = await proposeM30Relationships({ currentValues: currentM30ProductValues, requestedCount, envelope: m30State });
+    setM30State(next.envelope);
+    return next;
+  }
+
+  async function handleM30RelationshipReview(
+    originalRelationship: M30CausalityRelationshipProposalDto,
+    action: "CONFIRM" | "CORRECT" | "REJECT",
+    correctedFromId?: string,
+    correctedToId?: string
+  ) {
+    const next = await reviewM30Relationship({ originalRelationship, action, correctedFromId, correctedToId, currentValues: currentM30ProductValues, envelope: m30State });
+    setM30State(next.envelope);
+    return next;
   }
 
   async function handleWorkspaceSwitch(organizationId: number, workspaceId: number) {
@@ -1802,7 +1886,7 @@ export default function Home() {
 
   function handleSourceTextChange(value: string) {
     setRawSourceText(value);
-    setForm(initialForm);
+    setForm((current) => ({ ...initialForm, presentation_topic: current.presentation_topic ?? "" }));
     setGuidedDraftNotice("");
     setGuidedDraftSaveStatus("");
     resetProposalDerivedState(value);
@@ -1824,6 +1908,11 @@ export default function Home() {
     setExtractedInfo(null);
     setUrlInsight(null);
     setForm(initialForm);
+    setGuidedDecisionMaker("");
+    setGuidedAccountableOwner("");
+    setGuidedPreparationAnalysis("");
+    setGuidedEvidence("");
+    setM30State(createM30StateEnvelope());
     resetProposalDerivedState("");
   }
 
@@ -1835,6 +1924,11 @@ export default function Home() {
     setRawSourceText("");
     setCompanyHomeUrl("");
     setForm(initialForm);
+    setGuidedDecisionMaker("");
+    setGuidedAccountableOwner("");
+    setGuidedPreparationAnalysis("");
+    setGuidedEvidence("");
+    setM30State(createM30StateEnvelope());
     resetProposalDerivedState("");
     setGuidedDraftNotice("");
     setGuidedDraftSaveStatus("");
@@ -1947,16 +2041,21 @@ export default function Home() {
       trackEvent({ name: "ai_analysis_complete", feature: "proposal", status: "success", durationMs, meta: { mode: inputMode } });
       trackEvent({ name: "proposal_generated", feature: "proposal", status: "success", durationMs, meta: { output: "markdown" } });
       const analysisCandidates = response.semantic_candidates?.candidates;
-      let explicitDecisionMaker = "";
-      try {
-        const savedStudioDraft = window.localStorage.getItem("ready-crew-v80-prompt-builder");
-        const parsedStudioDraft = savedStudioDraft ? JSON.parse(savedStudioDraft) as { decisionMaker?: unknown } : null;
-        explicitDecisionMaker = typeof parsedStudioDraft?.decisionMaker === "string" ? parsedStudioDraft.decisionMaker.trim() : "";
-      } catch {
-        explicitDecisionMaker = "";
+      let explicitDecisionMaker = guidedDecisionMaker.trim();
+      if (!showGuidedFlow && !explicitDecisionMaker) {
+        try {
+          const savedStudioDraft = window.localStorage.getItem("ready-crew-v80-prompt-builder");
+          const parsedStudioDraft = savedStudioDraft ? JSON.parse(savedStudioDraft) as { decisionMaker?: unknown } : null;
+          explicitDecisionMaker = typeof parsedStudioDraft?.decisionMaker === "string" ? parsedStudioDraft.decisionMaker.trim() : "";
+        } catch {
+          explicitDecisionMaker = "";
+        }
       }
+      const explicitAccountableOwner = guidedAccountableOwner.trim();
+      const explicitPreparationAnalysis = guidedPreparationAnalysis.trim();
+      const explicitEvidence = guidedEvidence.trim();
       const transportCandidates = [...(analysisCandidates ?? [])];
-      if (explicitDecisionMaker) {
+      if (explicitDecisionMaker && !transportCandidates.some((candidate) => candidate.id === "explicit:decision_context:step1")) {
         transportCandidates.push({
           id: "explicit:decision_context:step1",
           semantic_type: "decision_context",
@@ -1968,6 +2067,49 @@ export default function Home() {
           review_state: "UNCONFIRMED",
           inferred: false,
           source_reference: "Step1.decisionMaker"
+        });
+      }
+      if (explicitAccountableOwner && !transportCandidates.some((candidate) => candidate.id === "explicit:accountable_owner:step1")) {
+        transportCandidates.push({
+          id: "explicit:accountable_owner:step1",
+          semantic_type: "accountable_owner",
+          value: explicitAccountableOwner,
+          source_type: "user_input",
+          source_field: "Step1.accountableOwner",
+          authority: "USER_EXPLICIT",
+          confidence: 1,
+          review_state: "UNCONFIRMED",
+          inferred: false,
+          source_reference: "Step1.accountableOwner"
+        });
+      }
+      if (explicitPreparationAnalysis && !transportCandidates.some((candidate) => candidate.id === "explicit:preparation_analysis:step1")) {
+        transportCandidates.push({
+          id: "explicit:preparation_analysis:step1",
+          semantic_type: "preparation_analysis",
+          value: explicitPreparationAnalysis,
+          source_type: "user_input",
+          source_field: "Step1.preparationAnalysis",
+          authority: "USER_EXPLICIT",
+          confidence: 1,
+          review_state: "UNCONFIRMED",
+          inferred: false,
+          source_reference: "Step1.preparationAnalysis"
+        });
+      }
+      if (explicitEvidence && !transportCandidates.some((candidate) => candidate.id === "explicit:evidence:step1")) {
+        transportCandidates.push({
+          id: "explicit:evidence:step1",
+          semantic_type: "evidence",
+          value: explicitEvidence,
+          source_type: "user_input",
+          source_field: "Step1.evidence",
+          authority: "USER_EXPLICIT",
+          confidence: 1,
+          review_state: "UNCONFIRMED",
+          inferred: false,
+          admissible_as_evidence: true,
+          source_reference: "Step1.evidence"
         });
       }
       const analysisCandidateState = response.semantic_candidates == null
@@ -2078,6 +2220,8 @@ export default function Home() {
       setError("提出前確認ゲートを完了すると、PowerPointをダウンロードできます。AI Workspaceの確認項目をチェックしてください。");
       return;
     }
+    if (activeOutputDownloadRef.current) return;
+    activeOutputDownloadRef.current = summary ? "summary-pptx" : "pptx";
     if (summary) {
       setIsDownloadingSummaryPowerPoint(true);
     } else if (internalCanary) {
@@ -2173,6 +2317,7 @@ export default function Home() {
         setError(`${friendly.title}。${friendly.action}`);
       }
     } finally {
+      activeOutputDownloadRef.current = null;
       if (summary) {
         setIsDownloadingSummaryPowerPoint(false);
       } else if (internalCanary) {
@@ -2211,6 +2356,8 @@ export default function Home() {
       setError("提出前確認ゲートを完了すると、見積PDFをダウンロードできます。AI Workspaceの確認項目をチェックしてください。");
       return;
     }
+    if (activeOutputDownloadRef.current) return;
+    activeOutputDownloadRef.current = "estimate-pdf";
     setIsDownloadingEstimatePdf(true);
     setError("");
     const pdfStartedAt = performance.now();
@@ -2245,6 +2392,7 @@ export default function Home() {
       setLastDownloadRetry("estimate-pdf");
       setError(`${friendly.title}。${friendly.action}`);
     } finally {
+      activeOutputDownloadRef.current = null;
       setIsDownloadingEstimatePdf(false);
     }
   }
@@ -3059,6 +3207,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
 
       {currentUser && showGuidedFlow && (
         <GuidedFlow
+          accountableOwner={guidedAccountableOwner}
           beautifulAiCanCreate={canCreateBeautifulAiOutput}
           beautifulAiDisabledReason={beautifulAiSimpleDisabledReason}
           beautifulAiError={beautifulAiError}
@@ -3100,9 +3249,19 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           onShowGuide={() => setShowGuideTutorial(true)}
           onSemanticCandidatesChange={setSemanticCandidatesForTransport}
           onSemanticRelationshipsChange={setSemanticRelationshipsForTransport}
+          onAccountableOwnerChange={setGuidedAccountableOwner}
+          onPreparationAnalysisChange={setGuidedPreparationAnalysis}
+          onPresentationTopicChange={(value) => setForm((current) => ({ ...current, presentation_topic: value }))}
+          onEvidenceChange={setGuidedEvidence}
+          onDecisionMakerChange={setGuidedDecisionMaker}
           onSourceTextChange={handleSourceTextChange}
           onToggleDetailMode={() => setIsSimpleDetailMode((current) => !current)}
           onUseSample={startSampleExperience}
+          m30State={m30State}
+          onM30CanonicalProposal={(role, requestedCount) => handleM30CanonicalProposal(role, requestedCount)}
+          onM30CanonicalReview={(candidate, action, correctedValue) => handleM30CanonicalReview(candidate, action, correctedValue)}
+          onM30RelationshipProposal={(requestedCount) => handleM30RelationshipProposal(requestedCount)}
+          onM30RelationshipReview={(relationship, action, correctedFromId, correctedToId) => handleM30RelationshipReview(relationship, action, correctedFromId, correctedToId)}
           organizationName={workspaceContext?.current?.organization_name || "Ready Crew"}
           panels={{
             workspaceProgress: guidedWorkspacePanel,
@@ -3110,6 +3269,7 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
             proposalOptimization: guidedProposalOptimizationPanel,
             beautifulAiDiagnostics: renderBeautifulAiDiagnosticsPanel("detail")
           }}
+          presentationTopic={form.presentation_topic ?? ""}
           powerpointData={result?.powerpoint_generation_data ?? null}
           proposalContext={{
             project_brief: form.project_brief,
@@ -3128,6 +3288,9 @@ Web改善の重点：サービス内容、問い合わせ導線、更新体制�
           internalCanaryError={internalCanaryError}
           showSalesCopilotMarker
           sourceText={rawSourceText}
+          decisionMaker={guidedDecisionMaker}
+          preparationAnalysis={guidedPreparationAnalysis}
+          evidence={guidedEvidence}
           summaryItems={guidedSummaryItems}
           workspaceName={workspaceContext?.current?.workspace_name || "営業部"}
         />

@@ -68,6 +68,9 @@ export async function downloadEstimatePdf(data: PowerPointData, form: ProposalRe
   }
 
   const blob = await response.blob();
+  if (blob.size === 0) {
+    throw new Error("見積書PDFの生成結果が空でした。ダウンロードを中止しました。");
+  }
   const filename = getDownloadFilename(
     response.headers.get("Content-Disposition"),
     `${sanitizeFileName(extractClientName(data, form))}_概算見積書.pdf`
