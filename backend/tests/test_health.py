@@ -131,6 +131,241 @@ def test_database_url_scheme_classification(url: str, expected_scheme: str) -> N
     assert database_health._database_url_scheme(url) == expected_scheme
 
 
+def test_conninfo_preflight_disabled_does_not_run(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_health, "_conninfo_preflight_cache", None)
+    monkeypatch.setattr(database_health, "settings", types.SimpleNamespace(enable_db_conninfo_preflight=False))
+    monkeypatch.setattr(database_health, "_run_conninfo_preflight", lambda _: pytest.fail("preflight ran"))
+
+    result = database_health.run_conninfo_preflight_once()
+
+    assert result["enabled"] is False
+    assert result["executed"] is False
+    assert result["conninfo_parse_status"] == "not_run"
+    assert result["attempts_count"] == "unknown"
+
+
+def _install_fake_conninfo(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    parse,
+    timeout,
+    attempts,
+) -> None:
+    conninfo_module = types.ModuleType("psycopg.conninfo")
+    conninfo_module.conninfo_to_dict = parse
+    conninfo_module.timeout_from_conninfo = timeout
+    conninfo_module.conninfo_attempts = attempts
+    psycopg_module = types.ModuleType("psycopg")
+    psycopg_module.__path__ = []
+    monkeypatch.setitem(sys.modules, "psycopg", psycopg_module)
+    monkeypatch.setitem(sys.modules, "psycopg.conninfo", conninfo_module)
+
+
+def test_run_conninfo_preflight_success_exercises_direct_stages(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[str] = []
+
+    def parse(value: str) -> dict[str, str]:
+        calls.append("parse")
+        assert value.startswith("postgresql://")
+        return {"hostaddr": "127.0.0.1", "user": "secret-user", "password": "secret-pass", "dbname": "secret-db"}
+
+    def timeout(params: dict[str, str]) -> int:
+        calls.append("timeout")
+        return 130
+
+    def attempts(params: dict[str, str]) -> list[dict[str, str]]:
+        calls.append("attempts")
+        return [{"hostaddr": "127.0.0.1"}]
+
+    _install_fake_conninfo(monkeypatch, parse=parse, timeout=timeout, attempts=attempts)
+    result = database_health._run_conninfo_preflight("postgresql://secret-user:secret-pass@secret-host/secret-db")
+
+    assert calls == ["parse", "timeout", "attempts"]
+    assert result["executed"] is True
+    assert result["conninfo_parse_status"] == "success"
+    assert result["timeout_status"] == "success"
+    assert result["conninfo_attempts_status"] == "success"
+    assert result["attempts_count"] == 1
+    assert result["dns_resolution_status"] == "not_required"
+    assert "secret-host" not in repr(result)
+    assert "secret-user" not in repr(result)
+    assert "secret-pass" not in repr(result)
+    assert "secret-db" not in repr(result)
+
+
+def test_run_conninfo_preflight_parse_failure_is_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
+    class ProgrammingError(Exception):
+        pass
+
+    def parse(_: str) -> dict[str, str]:
+        raise ProgrammingError("postgresql://secret-user:secret-pass@secret-host/secret-db")
+
+    _install_fake_conninfo(
+        monkeypatch,
+        parse=parse,
+        timeout=lambda _: pytest.fail("timeout ran"),
+        attempts=lambda _: pytest.fail("attempts ran"),
+    )
+    result = database_health._run_conninfo_preflight("postgresql://secret")
+
+    assert result["executed"] is True
+    assert result["conninfo_parse_status"] == "failure"
+    assert result["timeout_status"] == "not_run"
+    assert result["conninfo_attempts_status"] == "not_run"
+    assert result["exception_class"] == "ProgrammingError"
+    assert "secret-user" not in repr(result)
+
+
+def test_run_conninfo_preflight_timeout_failure_is_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
+    def timeout(_: dict[str, str]) -> int:
+        raise TimeoutError("secret timeout")
+
+    _install_fake_conninfo(
+        monkeypatch,
+        parse=lambda _: {"host": "secret-host"},
+        timeout=timeout,
+        attempts=lambda _: pytest.fail("attempts ran"),
+    )
+    result = database_health._run_conninfo_preflight("postgresql://secret")
+
+    assert result["conninfo_parse_status"] == "success"
+    assert result["timeout_status"] == "failure"
+    assert result["conninfo_attempts_status"] == "not_run"
+    assert result["exception_class"] == "TimeoutError"
+
+
+@pytest.mark.parametrize("error_type", ["OperationalError", "AssertionError"])
+def test_run_conninfo_preflight_attempts_failures_are_bounded(
+    monkeypatch: pytest.MonkeyPatch,
+    error_type: str,
+) -> None:
+    class OperationalError(Exception):
+        pass
+
+    error_class = OperationalError if error_type == "OperationalError" else AssertionError
+
+    def attempts(_: dict[str, str]) -> list[dict[str, str]]:
+        raise error_class("postgresql://secret-user:secret-pass@secret-host/secret-db")
+
+    _install_fake_conninfo(
+        monkeypatch,
+        parse=lambda _: {"host": "secret-host"},
+        timeout=lambda _: 130,
+        attempts=attempts,
+    )
+    result = database_health._run_conninfo_preflight("postgresql://secret")
+
+    assert result["conninfo_parse_status"] == "success"
+    assert result["timeout_status"] == "success"
+    assert result["conninfo_attempts_status"] == "failure"
+    assert result["attempts_count"] == "unknown"
+    assert result["dns_resolution_status"] == "unknown"
+    assert result["exception_class"] == error_type
+    assert "secret-host" not in repr(result)
+    assert "secret-user" not in repr(result)
+    assert "secret-pass" not in repr(result)
+    assert "secret-db" not in repr(result)
+
+
+def test_conninfo_preflight_runs_once_and_returns_bounded_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_health, "_conninfo_preflight_cache", None)
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(enable_db_conninfo_preflight=True, database_url="postgresql://secret-user:secret-pass@secret-host/secret-db"),
+    )
+    calls: list[str] = []
+
+    def fake_preflight(url: str) -> dict[str, object]:
+        calls.append(url)
+        return {
+            "enabled": True,
+            "executed": True,
+            "conninfo_parse_status": "success",
+            "timeout_status": "success",
+            "conninfo_attempts_status": "success",
+            "attempts_count": 1,
+            "dns_resolution_status": "success",
+            "exception_class": "unknown",
+        }
+
+    monkeypatch.setattr(database_health, "_run_conninfo_preflight", fake_preflight)
+    first = database_health.run_conninfo_preflight_once()
+    second = database_health.run_conninfo_preflight_once()
+
+    assert len(calls) == 1
+    assert first == second
+    assert first["attempts_count"] == 1
+    assert set(first) == {
+        "enabled", "executed", "conninfo_parse_status", "timeout_status",
+        "conninfo_attempts_status", "attempts_count", "dns_resolution_status", "exception_class",
+    }
+
+
+def test_conninfo_preflight_once_cache_runs_direct_preflight_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_health, "_conninfo_preflight_cache", None)
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(enable_db_conninfo_preflight=True, database_url="postgresql://secret"),
+    )
+    attempts_calls = 0
+
+    def attempts(_: dict[str, str]) -> list[dict[str, str]]:
+        nonlocal attempts_calls
+        attempts_calls += 1
+        return [{"hostaddr": "127.0.0.1"}]
+
+    _install_fake_conninfo(
+        monkeypatch,
+        parse=lambda _: {"host": "secret-host"},
+        timeout=lambda _: 130,
+        attempts=attempts,
+    )
+    first = database_health.run_conninfo_preflight_once()
+    second = database_health.run_conninfo_preflight_once()
+
+    assert attempts_calls == 1
+    assert first == second
+    assert first["executed"] is True
+    assert first["attempts_count"] == 1
+
+
+@pytest.mark.parametrize(
+    ("failure", "expected_stage"),
+    [
+        ("parse", "conninfo_parse_status"),
+        ("timeout", "timeout_status"),
+        ("attempts", "conninfo_attempts_status"),
+    ],
+)
+def test_conninfo_preflight_failures_are_non_fatal_and_allowlisted(
+    monkeypatch: pytest.MonkeyPatch,
+    failure: str,
+    expected_stage: str,
+) -> None:
+    monkeypatch.setattr(database_health, "_conninfo_preflight_cache", None)
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(enable_db_conninfo_preflight=True, database_url="postgresql://secret"),
+    )
+
+    def fake_preflight(_: str) -> dict[str, object]:
+        result = database_health._preflight_result(True)
+        result["executed"] = True
+        result[expected_stage] = "failure"
+        result["exception_class"] = "AssertionError" if failure == "attempts" else "unknown"
+        return result
+
+    monkeypatch.setattr(database_health, "_run_conninfo_preflight", fake_preflight)
+    result = database_health.run_conninfo_preflight_once()
+
+    assert result["executed"] is True
+    assert result[expected_stage] == "failure"
+    assert result["exception_class"] in database_health._PREFLIGHT_EXCEPTION_CLASSES | {"unknown"}
+
+
 class _StageCursor:
     def __init__(self, error: BaseException | None = None) -> None:
         self.error = error

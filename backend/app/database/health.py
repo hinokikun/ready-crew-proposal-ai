@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from threading import Lock
 from pathlib import Path
 import re
 from typing import Any
@@ -32,6 +33,125 @@ _DATABASE_URL_QUERY_KEYS = (
     "connect_timeout",
     "target_session_attrs",
 )
+_PREFLIGHT_STATUSES = frozenset({"success", "failure", "not_run"})
+_PREFLIGHT_EXCEPTION_CLASSES = frozenset({
+    "AssertionError",
+    "OperationalError",
+    "ProgrammingError",
+    "InterfaceError",
+    "DatabaseError",
+    "Error",
+    "OSError",
+    "TimeoutError",
+    "gaierror",
+})
+_conninfo_preflight_cache: dict[str, Any] | None = None
+_conninfo_preflight_lock = Lock()
+
+
+def _disabled_conninfo_preflight() -> dict[str, Any]:
+    return {
+        "enabled": False,
+        "executed": False,
+        "conninfo_parse_status": "not_run",
+        "timeout_status": "not_run",
+        "conninfo_attempts_status": "not_run",
+        "attempts_count": "unknown",
+        "dns_resolution_status": "unknown",
+        "exception_class": "unknown",
+    }
+
+
+def _safe_preflight_exception_class(error: BaseException) -> str:
+    name = type(error).__name__
+    return name if name in _PREFLIGHT_EXCEPTION_CLASSES else "unknown"
+
+
+def _preflight_result(enabled: bool) -> dict[str, Any]:
+    result = _disabled_conninfo_preflight()
+    result["enabled"] = enabled
+    if enabled:
+        result["dns_resolution_status"] = "unknown"
+    return result
+
+
+def _dns_not_required(params: dict[str, Any]) -> bool:
+    host = params.get("host")
+    if not host or params.get("hostaddr"):
+        return True
+    if isinstance(host, str) and (host.startswith("/") or host[1:2] == ":"):
+        return True
+    try:
+        import ipaddress
+
+        return all(ipaddress.ip_address(item.strip("[]")) for item in str(host).split(","))
+    except Exception:
+        return False
+
+
+def _run_conninfo_preflight(database_url: str) -> dict[str, Any]:
+    result = _preflight_result(True)
+    # Reaching this function means the enabled preflight has executed, even
+    # when parsing or a later diagnostic step fails.
+    result["executed"] = True
+    try:
+        from psycopg.conninfo import conninfo_attempts, conninfo_to_dict, timeout_from_conninfo
+    except Exception as exc:
+        result["conninfo_parse_status"] = "failure"
+        result["exception_class"] = _safe_preflight_exception_class(exc)
+        return result
+
+    try:
+        params = conninfo_to_dict(database_url)
+        result["conninfo_parse_status"] = "success"
+    except Exception as exc:
+        result["conninfo_parse_status"] = "failure"
+        result["exception_class"] = _safe_preflight_exception_class(exc)
+        return result
+
+    try:
+        timeout_from_conninfo(params)
+        result["timeout_status"] = "success"
+    except Exception as exc:
+        result["timeout_status"] = "failure"
+        result["exception_class"] = _safe_preflight_exception_class(exc)
+        return result
+
+    try:
+        attempts = conninfo_attempts(params)
+        result["conninfo_attempts_status"] = "success"
+        result["attempts_count"] = len(attempts) if len(attempts) >= 0 else "unknown"
+        result["dns_resolution_status"] = "not_required" if _dns_not_required(params) else "success"
+    except Exception as exc:
+        result["conninfo_attempts_status"] = "failure"
+        result["exception_class"] = _safe_preflight_exception_class(exc)
+        return result
+    return result
+
+
+def run_conninfo_preflight_once() -> dict[str, Any]:
+    """Run the opt-in conninfo/DNS preflight at most once per process."""
+    global _conninfo_preflight_cache
+    enabled = bool(getattr(settings, "enable_db_conninfo_preflight", False))
+    if not enabled:
+        return _disabled_conninfo_preflight()
+    with _conninfo_preflight_lock:
+        if _conninfo_preflight_cache is None:
+            try:
+                _conninfo_preflight_cache = _run_conninfo_preflight(settings.database_url)
+            except Exception as exc:
+                _conninfo_preflight_cache = _preflight_result(True)
+                _conninfo_preflight_cache["executed"] = True
+                _conninfo_preflight_cache["exception_class"] = _safe_preflight_exception_class(exc)
+            _conninfo_preflight_cache["executed"] = True
+        return dict(_conninfo_preflight_cache)
+
+
+def get_conninfo_preflight_diagnostic() -> dict[str, Any]:
+    if _conninfo_preflight_cache is None:
+        enabled = bool(getattr(settings, "enable_db_conninfo_preflight", False))
+        return _preflight_result(enabled)
+    return dict(_conninfo_preflight_cache)
 
 
 def _database_url_scheme(database_url: str) -> str:
@@ -66,6 +186,7 @@ def _unknown_database_diagnostic() -> dict[str, Any]:
 def get_database_diagnostic() -> dict[str, Any]:
     """Return bounded PostgreSQL metadata without connecting or exposing URL values."""
     diagnostic = _unknown_database_diagnostic()
+    diagnostic["conninfo_preflight"] = get_conninfo_preflight_diagnostic()
     if ENGINE_DIALECT != "postgresql":
         return diagnostic
 
