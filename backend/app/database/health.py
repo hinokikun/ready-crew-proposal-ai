@@ -202,7 +202,10 @@ def check_db() -> bool:
         }
         if sqlstate is not None:
             fields["sqlstate"] = sqlstate
-        logger.warning("database_connectivity_failed", extra=fields)
+        message = "database_connectivity_failed db_dialect={db_dialect} exception_class={exception_class} failure_category={failure_category}".format(**fields)
+        if sqlstate is not None:
+            message += " sqlstate=" + sqlstate
+        logger.warning(message)
         return False
 
 

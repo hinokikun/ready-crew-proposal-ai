@@ -25,11 +25,11 @@ def test_check_db_logs_only_bounded_safe_fields_without_exception_text(monkeypat
 
     assert database_health.check_db() is False
 
-    record = next(record for record in caplog.records if record.getMessage() == "database_connectivity_failed")
-    assert record.db_dialect == database_health.ENGINE_DIALECT
-    assert record.exception_class == "SecretConnectionError"
-    assert record.sqlstate == "28P01"
-    assert record.failure_category == "authentication"
+    message = next(record.getMessage() for record in caplog.records if record.getMessage().startswith("database_connectivity_failed"))
+    assert "db_dialect=" + database_health.ENGINE_DIALECT in message
+    assert "exception_class=SecretConnectionError" in message
+    assert "failure_category=authentication" in message
+    assert "sqlstate=28P01" in message
     assert "secret-user" not in caplog.text
     assert "secret-pass" not in caplog.text
     assert "secret-host" not in caplog.text
@@ -47,10 +47,10 @@ def test_check_db_without_sqlstate_logs_fixed_category_and_returns_false(monkeyp
 
     assert database_health.check_db() is False
 
-    record = next(record for record in caplog.records if record.getMessage() == "database_connectivity_failed")
-    assert record.exception_class == "UnclassifiedConnectionError"
-    assert record.failure_category == "unknown"
-    assert not hasattr(record, "sqlstate")
+    message = next(record.getMessage() for record in caplog.records if record.getMessage().startswith("database_connectivity_failed"))
+    assert "exception_class=UnclassifiedConnectionError" in message
+    assert "failure_category=unknown" in message
+    assert " sqlstate=" not in message
 
 
 def test_check_db_success_remains_true(monkeypatch: pytest.MonkeyPatch) -> None:
