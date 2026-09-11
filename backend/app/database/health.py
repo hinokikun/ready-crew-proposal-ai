@@ -1,11 +1,68 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
+import re
 from typing import Any
 
 from app.config import settings
 from app.database.connection import ENGINE_DIALECT, get_db, get_db_type
 from app.database.migration import _existing_columns, _quality_gate_unique_state, _table_exists
+
+
+logger = logging.getLogger(__name__)
+
+
+_DB_FAILURE_CATEGORIES = frozenset({
+    "authentication",
+    "dns",
+    "connection_refused",
+    "timeout",
+    "ssl",
+    "database_unavailable",
+    "unknown",
+})
+
+
+def _safe_sqlstate(error: BaseException) -> str | None:
+    candidates: list[Any] = [error]
+    try:
+        original = getattr(error, "orig", None)
+    except Exception:
+        original = None
+    if original is not None:
+        candidates.append(original)
+    for candidate in candidates:
+        for attribute in ("sqlstate", "pgcode"):
+            try:
+                value = getattr(candidate, attribute, None)
+            except Exception:
+                continue
+            if isinstance(value, str) and re.fullmatch(r"[0-9A-Za-z]{5}", value):
+                return value
+    return None
+
+
+def _db_failure_category(error: BaseException, sqlstate: str | None) -> str:
+    if sqlstate:
+        if sqlstate.startswith("28"):
+            return "authentication"
+        if sqlstate.startswith("08"):
+            return "database_unavailable"
+    exception_class = type(error).__name__.lower()
+    if exception_class in {"timeouterror", "connecttimeouterror"}:
+        return "timeout"
+    if exception_class in {"sslerror", "sslsyscallerror", "sslcertverificationerror"}:
+        return "ssl"
+    if exception_class in {"gaierror", "dnserror"}:
+        return "dns"
+    if exception_class == "connectionrefusederror":
+        return "connection_refused"
+    if exception_class in {"authenticationerror", "invalidpassworderror"}:
+        return "authentication"
+    if exception_class in {"operationalerror", "interfaceerror", "connectionerror"}:
+        return "database_unavailable"
+    return "unknown"
 
 
 def get_schema_readiness() -> dict[str, Any]:
@@ -133,7 +190,19 @@ def check_db() -> bool:
         with get_db() as db:
             db.execute("SELECT 1")
         return True
-    except Exception:
+    except Exception as exc:
+        sqlstate = _safe_sqlstate(exc)
+        failure_category = _db_failure_category(exc, sqlstate)
+        if failure_category not in _DB_FAILURE_CATEGORIES:
+            failure_category = "unknown"
+        fields: dict[str, str] = {
+            "db_dialect": ENGINE_DIALECT,
+            "exception_class": type(exc).__name__,
+            "failure_category": failure_category,
+        }
+        if sqlstate is not None:
+            fields["sqlstate"] = sqlstate
+        logger.warning("database_connectivity_failed", extra=fields)
         return False
 
 
