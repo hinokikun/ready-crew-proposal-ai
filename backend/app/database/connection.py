@@ -3,9 +3,11 @@ from __future__ import annotations
 import re
 import sqlite3
 from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any, Iterable
 
+from sqlalchemy import event
 from sqlalchemy import create_engine
 from sqlalchemy.engine import make_url
 
@@ -13,6 +15,9 @@ from app.config import settings
 
 
 DB_CONNECT_STAGES = frozenset({
+    "dbapi_connect_start",
+    "connect_event",
+    "checkout_event",
     "engine_connect",
     "driver_connection",
     "adapter",
@@ -21,6 +26,21 @@ DB_CONNECT_STAGES = frozenset({
     "commit",
     "close",
 })
+
+_connect_observation_stage: ContextVar[str] = ContextVar(
+    "db_connect_observation_stage",
+    default="engine_connect",
+)
+
+
+def _set_connect_observation_stage(stage: str) -> None:
+    if stage in DB_CONNECT_STAGES:
+        _connect_observation_stage.set(stage)
+
+
+def _observed_connect_stage(default: str) -> str:
+    stage = _connect_observation_stage.get()
+    return stage if stage in DB_CONNECT_STAGES else default
 
 
 def _mark_connect_stage(error: BaseException, stage: str) -> None:
@@ -81,6 +101,29 @@ engine = create_engine(
     connect_args=_connect_args(),
     pool_pre_ping=True,
 )
+
+
+def _observe_dbapi_connect(dialect: Any, connection_record: Any, cargs: Any, cparams: Any) -> None:
+    _set_connect_observation_stage("dbapi_connect_start")
+    return None
+
+
+def _observe_connect_event(dbapi_connection: Any, connection_record: Any) -> None:
+    _set_connect_observation_stage("connect_event")
+
+
+def _observe_checkout_event(
+    dbapi_connection: Any,
+    connection_record: Any,
+    connection_proxy: Any,
+) -> None:
+    _set_connect_observation_stage("checkout_event")
+
+
+if ENGINE_DIALECT == "postgresql":
+    event.listen(engine, "do_connect", _observe_dbapi_connect)
+    event.listen(engine, "connect", _observe_connect_event)
+    event.listen(engine, "checkout", _observe_checkout_event)
 
 
 class _CursorAdapter:
@@ -161,6 +204,7 @@ def _split_sql_script(script: str) -> list[str]:
 def get_db():
     raw_connection = None
     stage = "engine_connect"
+    observation_token = _connect_observation_stage.set(stage)
     try:
         raw_connection = engine.raw_connection()
         stage = "driver_connection"
@@ -178,15 +222,23 @@ def get_db():
         stage = "commit"
         raw_connection.commit()
     except BaseException as exc:
-        _mark_connect_stage(exc, stage)
+        failure_stage = (
+            _observed_connect_stage(stage)
+            if stage == "engine_connect"
+            else stage
+        )
+        _mark_connect_stage(exc, failure_stage)
         raise
     finally:
-        if raw_connection is not None:
-            try:
-                raw_connection.close()
-            except BaseException as exc:
-                _mark_connect_stage(exc, "close")
-                raise
+        try:
+            if raw_connection is not None:
+                try:
+                    raw_connection.close()
+                except BaseException as exc:
+                    _mark_connect_stage(exc, "close")
+                    raise
+        finally:
+            _connect_observation_stage.reset(observation_token)
 
 
 def get_db_type() -> str:

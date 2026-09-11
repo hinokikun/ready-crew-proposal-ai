@@ -145,6 +145,28 @@ def test_get_db_marks_engine_connect_and_driver_connection_without_changing_exce
     assert getattr(raised.value, "_db_connect_stage") == "driver_connection"
 
 
+@pytest.mark.parametrize("observed_stage", ["engine_connect", "dbapi_connect_start"])
+def test_get_db_uses_observed_stage_only_for_raw_connection_failure(
+    monkeypatch: pytest.MonkeyPatch,
+    observed_stage: str,
+) -> None:
+    class ObservedFailureEngine:
+        def raw_connection(self) -> object:
+            if observed_stage != "engine_connect":
+                database_connection._set_connect_observation_stage(observed_stage)
+            raise AssertionError("secret")
+
+    token = database_connection._connect_observation_stage.set("outer_context")
+    try:
+        monkeypatch.setattr(database_connection, "engine", ObservedFailureEngine())
+        with pytest.raises(AssertionError) as raised:
+            with database_connection.get_db():
+                pass
+        assert getattr(raised.value, "_db_connect_stage") == observed_stage
+    finally:
+        database_connection._connect_observation_stage.reset(token)
+
+
 @pytest.mark.parametrize(
     ("connection", "expected_stage"),
     [
@@ -179,12 +201,57 @@ def test_get_db_marks_commit_stage_and_closes_after_commit_failure(monkeypatch: 
     )
     monkeypatch.setattr(database_connection, "engine", _StageEngine(raw))
 
-    with pytest.raises(AssertionError) as raised:
-        with database_connection.get_db() as db:
-            db.execute("SELECT 1")
+    token = database_connection._connect_observation_stage.set("engine_connect")
+    try:
+        with pytest.raises(AssertionError) as raised:
+            with database_connection.get_db() as db:
+                db.execute("SELECT 1")
+    finally:
+        database_connection._connect_observation_stage.reset(token)
 
     assert getattr(raised.value, "_db_connect_stage") == "commit"
     assert raw.close_called is True
+
+
+def test_do_connect_observer_marks_start_without_calling_or_changing_dbapi_args() -> None:
+    cargs = ["safe-arg"]
+    cparams = {"safe_key": "safe-value"}
+    original_args = list(cargs)
+    original_params = dict(cparams)
+    token = database_connection._connect_observation_stage.set("engine_connect")
+    try:
+        assert database_connection._observe_dbapi_connect(object(), None, cargs, cparams) is None
+        assert database_connection._connect_observation_stage.get() == "dbapi_connect_start"
+        assert cargs == original_args
+        assert cparams == original_params
+    finally:
+        database_connection._connect_observation_stage.reset(token)
+
+
+def test_connect_and_checkout_events_mark_post_dbapi_boundaries() -> None:
+    connection = object()
+    token = database_connection._connect_observation_stage.set("engine_connect")
+    try:
+        database_connection._observe_connect_event(connection, None)
+        assert database_connection._connect_observation_stage.get() == "connect_event"
+
+        database_connection._observe_checkout_event(connection, None, None)
+        assert database_connection._connect_observation_stage.get() == "checkout_event"
+    finally:
+        database_connection._connect_observation_stage.reset(token)
+
+
+def test_get_db_resets_connect_observation_context_after_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    outer_stage = "outer_context"
+    token = database_connection._connect_observation_stage.set(outer_stage)
+    try:
+        monkeypatch.setattr(database_connection, "engine", _StageEngine(AssertionError("secret")))
+        with pytest.raises(AssertionError):
+            with database_connection.get_db():
+                pass
+        assert database_connection._connect_observation_stage.get() == outer_stage
+    finally:
+        database_connection._connect_observation_stage.reset(token)
 
 
 def test_health_endpoint_reports_runtime_status(client: TestClient) -> None:
