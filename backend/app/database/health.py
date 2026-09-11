@@ -6,7 +6,7 @@ import re
 from typing import Any
 
 from app.config import settings
-from app.database.connection import ENGINE_DIALECT, get_db, get_db_type
+from app.database.connection import DB_CONNECT_STAGES, ENGINE_DIALECT, get_db, get_db_type
 from app.database.migration import _existing_columns, _quality_gate_unique_state, _table_exists
 
 
@@ -63,6 +63,14 @@ def _db_failure_category(error: BaseException, sqlstate: str | None) -> str:
     if exception_class in {"operationalerror", "interfaceerror", "connectionerror"}:
         return "database_unavailable"
     return "unknown"
+
+
+def _safe_connect_stage(error: BaseException) -> str | None:
+    try:
+        stage = getattr(error, "_db_connect_stage", None)
+    except Exception:
+        return None
+    return stage if isinstance(stage, str) and stage in DB_CONNECT_STAGES else None
 
 
 def get_schema_readiness() -> dict[str, Any]:
@@ -193,16 +201,18 @@ def check_db() -> bool:
     except Exception as exc:
         sqlstate = _safe_sqlstate(exc)
         failure_category = _db_failure_category(exc, sqlstate)
+        connect_stage = _safe_connect_stage(exc)
         if failure_category not in _DB_FAILURE_CATEGORIES:
             failure_category = "unknown"
         fields: dict[str, str] = {
+            "db_connect_stage": connect_stage or "unknown",
             "db_dialect": ENGINE_DIALECT,
             "exception_class": type(exc).__name__,
             "failure_category": failure_category,
         }
         if sqlstate is not None:
             fields["sqlstate"] = sqlstate
-        message = "database_connectivity_failed db_dialect={db_dialect} exception_class={exception_class} failure_category={failure_category}".format(**fields)
+        message = "database_connectivity_failed db_connect_stage={db_connect_stage} db_dialect={db_dialect} exception_class={exception_class} failure_category={failure_category}".format(**fields)
         if sqlstate is not None:
             message += " sqlstate=" + sqlstate
         logger.warning(message)

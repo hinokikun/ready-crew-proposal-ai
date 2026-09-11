@@ -12,6 +12,29 @@ from sqlalchemy.engine import make_url
 from app.config import settings
 
 
+DB_CONNECT_STAGES = frozenset({
+    "engine_connect",
+    "driver_connection",
+    "adapter",
+    "cursor",
+    "execute",
+    "commit",
+    "close",
+})
+
+
+def _mark_connect_stage(error: BaseException, stage: str) -> None:
+    if stage not in DB_CONNECT_STAGES:
+        return
+    try:
+        existing = getattr(error, "_db_connect_stage", None)
+        if existing in DB_CONNECT_STAGES:
+            return
+        setattr(error, "_db_connect_stage", stage)
+    except Exception:
+        return
+
+
 def _normalise_database_url(database_url: str) -> str:
     url = (database_url or "sqlite:///app.db").strip() or "sqlite:///app.db"
     if url.startswith("postgresql://"):
@@ -84,13 +107,21 @@ class _PostgresConnectionAdapter:
         self._connection = connection
 
     def execute(self, sql: str, params: Iterable[Any] | None = None) -> _CursorAdapter:
-        cursor = self._connection.cursor()
+        try:
+            cursor = self._connection.cursor()
+        except BaseException as exc:
+            _mark_connect_stage(exc, "cursor")
+            raise
         statement = _postgres_sql(sql)
         values = tuple(params or ())
         is_insert_with_id = statement.lstrip().upper().startswith("INSERT INTO") and " RETURNING " not in statement.upper()
         if is_insert_with_id:
             statement = statement.rstrip().rstrip(";") + " RETURNING id"
-        cursor.execute(statement, values)
+        try:
+            cursor.execute(statement, values)
+        except BaseException as exc:
+            _mark_connect_stage(exc, "execute")
+            raise
         lastrowid = None
         if is_insert_with_id:
             try:
@@ -128,20 +159,34 @@ def _split_sql_script(script: str) -> list[str]:
 
 @contextmanager
 def get_db():
-    raw_connection = engine.raw_connection()
-    connection = raw_connection.driver_connection if hasattr(raw_connection, "driver_connection") else raw_connection
-    if ENGINE_DIALECT == "sqlite":
-        connection.row_factory = sqlite3.Row
-        db = connection
-    elif ENGINE_DIALECT == "postgresql":
-        db = _PostgresConnectionAdapter(connection)
-    else:
-        db = connection
+    raw_connection = None
+    stage = "engine_connect"
     try:
+        raw_connection = engine.raw_connection()
+        stage = "driver_connection"
+        connection = raw_connection.driver_connection if hasattr(raw_connection, "driver_connection") else raw_connection
+        if ENGINE_DIALECT == "sqlite":
+            connection.row_factory = sqlite3.Row
+            db = connection
+        elif ENGINE_DIALECT == "postgresql":
+            stage = "adapter"
+            db = _PostgresConnectionAdapter(connection)
+        else:
+            db = connection
+        stage = "execute"
         yield db
+        stage = "commit"
         raw_connection.commit()
+    except BaseException as exc:
+        _mark_connect_stage(exc, stage)
+        raise
     finally:
-        raw_connection.close()
+        if raw_connection is not None:
+            try:
+                raw_connection.close()
+            except BaseException as exc:
+                _mark_connect_stage(exc, "close")
+                raise
 
 
 def get_db_type() -> str:

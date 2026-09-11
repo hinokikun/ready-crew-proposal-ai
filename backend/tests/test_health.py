@@ -5,6 +5,7 @@ import logging
 import pytest
 
 from app.database import health as database_health
+from app.database import connection as database_connection
 
 
 @contextmanager
@@ -64,6 +65,126 @@ def test_check_db_success_remains_true(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(database_health, "get_db", successful_db)
     assert database_health.check_db() is True
+
+
+class _StageCursor:
+    def __init__(self, error: BaseException | None = None) -> None:
+        self.error = error
+
+    def execute(self, query: str, params: tuple[object, ...]) -> None:
+        if self.error is not None:
+            raise self.error
+
+
+class _StageConnection:
+    def __init__(self, cursor_error: BaseException | None = None, execute_error: BaseException | None = None) -> None:
+        self.cursor_error = cursor_error
+        self.cursor_value = _StageCursor(execute_error)
+
+    def cursor(self) -> _StageCursor:
+        if self.cursor_error is not None:
+            raise self.cursor_error
+        return self.cursor_value
+
+
+class _StageRawConnection:
+    def __init__(
+        self,
+        connection: object,
+        close_error: BaseException | None = None,
+        commit_error: BaseException | None = None,
+    ) -> None:
+        self.connection = connection
+        self.close_error = close_error
+        self.commit_error = commit_error
+        self.close_called = False
+
+    @property
+    def driver_connection(self) -> object:
+        return self.connection
+
+    def commit(self) -> None:
+        if self.commit_error is not None:
+            raise self.commit_error
+        return None
+
+    def close(self) -> None:
+        self.close_called = True
+        if self.close_error is not None:
+            raise self.close_error
+
+
+class _StageEngine:
+    def __init__(self, raw_connection: object) -> None:
+        self.raw_connection_value = raw_connection
+
+    def raw_connection(self) -> object:
+        if isinstance(self.raw_connection_value, BaseException):
+            raise self.raw_connection_value
+        return self.raw_connection_value
+
+
+def test_get_db_marks_engine_connect_and_driver_connection_without_changing_exception_type(monkeypatch: pytest.MonkeyPatch) -> None:
+    engine_error = AssertionError("postgresql://secret-user:secret-pass@secret-host/secret-db")
+    monkeypatch.setattr(database_connection, "engine", _StageEngine(engine_error))
+    with pytest.raises(AssertionError) as raised:
+        with database_connection.get_db():
+            pass
+    assert getattr(raised.value, "_db_connect_stage") == "engine_connect"
+
+    class DriverFailureRaw(_StageRawConnection):
+        @property
+        def driver_connection(self) -> object:
+            raise AssertionError("secret driver detail")
+
+    driver_error_raw = DriverFailureRaw(object())
+    monkeypatch.setattr(database_connection, "engine", _StageEngine(driver_error_raw))
+    with pytest.raises(AssertionError) as raised:
+        with database_connection.get_db():
+            pass
+    assert getattr(raised.value, "_db_connect_stage") == "driver_connection"
+
+
+@pytest.mark.parametrize(
+    ("connection", "expected_stage"),
+    [
+        (_StageConnection(cursor_error=AssertionError("secret cursor")), "cursor"),
+        (_StageConnection(execute_error=AssertionError("secret execute")), "execute"),
+    ],
+)
+def test_get_db_marks_cursor_and_execute_stages(monkeypatch: pytest.MonkeyPatch, connection: _StageConnection, expected_stage: str) -> None:
+    monkeypatch.setattr(database_connection, "ENGINE_DIALECT", "postgresql")
+    monkeypatch.setattr(database_connection, "engine", _StageEngine(_StageRawConnection(connection)))
+    with pytest.raises(AssertionError) as raised:
+        with database_connection.get_db() as db:
+            db.execute("SELECT 1")
+    assert getattr(raised.value, "_db_connect_stage") == expected_stage
+
+
+def test_get_db_marks_close_stage_without_replacing_exception_type(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_connection, "ENGINE_DIALECT", "postgresql")
+    raw = _StageRawConnection(_StageConnection(), close_error=AssertionError("secret close"))
+    monkeypatch.setattr(database_connection, "engine", _StageEngine(raw))
+    with pytest.raises(AssertionError) as raised:
+        with database_connection.get_db() as db:
+            db.execute("SELECT 1")
+    assert getattr(raised.value, "_db_connect_stage") == "close"
+
+
+def test_get_db_marks_commit_stage_and_closes_after_commit_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_connection, "ENGINE_DIALECT", "postgresql")
+    raw = _StageRawConnection(
+        _StageConnection(),
+        commit_error=AssertionError("secret commit detail"),
+    )
+    monkeypatch.setattr(database_connection, "engine", _StageEngine(raw))
+
+    with pytest.raises(AssertionError) as raised:
+        with database_connection.get_db() as db:
+            db.execute("SELECT 1")
+
+    assert getattr(raised.value, "_db_connect_stage") == "commit"
+    assert raw.close_called is True
 
 
 def test_health_endpoint_reports_runtime_status(client: TestClient) -> None:
