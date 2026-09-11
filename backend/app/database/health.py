@@ -5,6 +5,8 @@ from pathlib import Path
 import re
 from typing import Any
 
+from sqlalchemy.engine import make_url
+
 from app.config import settings
 from app.database.connection import DB_CONNECT_STAGES, ENGINE_DIALECT, get_db, get_db_type
 from app.database.migration import _existing_columns, _quality_gate_unique_state, _table_exists
@@ -22,6 +24,76 @@ _DB_FAILURE_CATEGORIES = frozenset({
     "database_unavailable",
     "unknown",
 })
+
+_PSYCOPG_IMPLEMENTATIONS = frozenset({"python", "c", "binary"})
+_DATABASE_URL_QUERY_KEYS = (
+    "sslmode",
+    "sslrootcert",
+    "connect_timeout",
+    "target_session_attrs",
+)
+
+
+def _database_url_scheme(database_url: str) -> str:
+    try:
+        drivername = make_url(database_url).drivername
+    except Exception:
+        return "unknown"
+    if drivername == "postgresql+psycopg":
+        return "postgresql_psycopg"
+    if drivername == "postgresql":
+        return "postgresql"
+    if drivername == "postgres":
+        return "postgres"
+    if drivername:
+        return "other"
+    return "unknown"
+
+
+def _unknown_database_diagnostic() -> dict[str, Any]:
+    return {
+        "psycopg_implementation": "unknown",
+        "libpq_version": "unknown",
+        "database_url_scheme": "unknown",
+        "database_url_host_present": False,
+        "database_url_port_present": False,
+        "database_url_username_present": False,
+        "database_url_password_present": False,
+        **{f"{key}_present": False for key in _DATABASE_URL_QUERY_KEYS},
+    }
+
+
+def get_database_diagnostic() -> dict[str, Any]:
+    """Return bounded PostgreSQL metadata without connecting or exposing URL values."""
+    diagnostic = _unknown_database_diagnostic()
+    if ENGINE_DIALECT != "postgresql":
+        return diagnostic
+
+    diagnostic["database_url_scheme"] = _database_url_scheme(settings.database_url)
+    try:
+        url = make_url(settings.database_url)
+        diagnostic.update({
+            "database_url_host_present": url.host is not None,
+            "database_url_port_present": url.port is not None,
+            "database_url_username_present": url.username is not None,
+            "database_url_password_present": url.password is not None,
+            **{f"{key}_present": key in url.query for key in _DATABASE_URL_QUERY_KEYS},
+        })
+    except Exception:
+        pass
+
+    try:
+        import psycopg
+
+        implementation = getattr(psycopg.pq, "__impl__", None)
+        if implementation in _PSYCOPG_IMPLEMENTATIONS:
+            diagnostic["psycopg_implementation"] = implementation
+        version = psycopg.pq.version()
+        if isinstance(version, int) and not isinstance(version, bool) and version >= 0:
+            diagnostic["libpq_version"] = version
+    except Exception:
+        pass
+    return diagnostic
 
 
 def _safe_sqlstate(error: BaseException) -> str | None:
@@ -235,5 +307,6 @@ def get_db_health() -> dict[str, Any]:
         "db_type": get_db_type(),
         "db_tables_count": get_tables_count() if connected else 0,
         "startup_schema_migration_enabled": settings.allow_startup_schema_migration,
+        "database_diagnostic": get_database_diagnostic(),
         **migration_state,
     }

@@ -1,6 +1,8 @@
 from fastapi.testclient import TestClient
 from contextlib import contextmanager
 import logging
+import sys
+import types
 
 import pytest
 
@@ -65,6 +67,68 @@ def test_check_db_success_remains_true(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(database_health, "get_db", successful_db)
     assert database_health.check_db() is True
+
+
+def test_database_diagnostic_is_secret_free_and_reports_allowed_url_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_health, "ENGINE_DIALECT", "postgresql")
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(database_url="postgresql://secret-user:secret-pass@secret-host:5432/secret-db?sslmode=require&connect_timeout=5&private=secret"),
+    )
+    fake_pq = types.SimpleNamespace(__impl__="binary", version=lambda: 180005)
+    monkeypatch.setitem(sys.modules, "psycopg", types.SimpleNamespace(pq=fake_pq))
+
+    diagnostic = database_health.get_database_diagnostic()
+
+    assert diagnostic["psycopg_implementation"] == "binary"
+    assert diagnostic["libpq_version"] == 180005
+    assert diagnostic["database_url_scheme"] == "postgresql"
+    assert diagnostic["database_url_host_present"] is True
+    assert diagnostic["database_url_port_present"] is True
+    assert diagnostic["database_url_username_present"] is True
+    assert diagnostic["database_url_password_present"] is True
+    assert diagnostic["sslmode_present"] is True
+    assert diagnostic["connect_timeout_present"] is True
+    assert diagnostic["sslrootcert_present"] is False
+    assert diagnostic["target_session_attrs_present"] is False
+    serialized = repr(diagnostic)
+    for secret in ("secret-user", "secret-pass", "secret-host", "secret-db", "postgresql://"):
+        assert secret not in serialized
+
+
+def test_database_diagnostic_handles_unknown_implementation_and_version_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_health, "ENGINE_DIALECT", "postgresql")
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(database_url="postgresql+psycopg://user@host/db"),
+    )
+    fake_pq = types.SimpleNamespace(
+        __impl__="unexpected",
+        version=lambda: (_ for _ in ()).throw(AssertionError("secret")),
+    )
+    monkeypatch.setitem(sys.modules, "psycopg", types.SimpleNamespace(pq=fake_pq))
+
+    diagnostic = database_health.get_database_diagnostic()
+
+    assert diagnostic["psycopg_implementation"] == "unknown"
+    assert diagnostic["libpq_version"] == "unknown"
+    assert diagnostic["database_url_scheme"] == "postgresql_psycopg"
+
+
+@pytest.mark.parametrize(
+    ("url", "expected_scheme"),
+    [
+        ("postgresql+psycopg://user@host/db", "postgresql_psycopg"),
+        ("postgresql://user@host/db", "postgresql"),
+        ("postgres://user@host/db", "postgres"),
+        ("sqlite:///app.db", "other"),
+        ("not a url", "unknown"),
+    ],
+)
+def test_database_url_scheme_classification(url: str, expected_scheme: str) -> None:
+    assert database_health._database_url_scheme(url) == expected_scheme
 
 
 class _StageCursor:
