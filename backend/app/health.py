@@ -54,6 +54,7 @@ def build_health_payload(app: FastAPI) -> dict[str, Any]:
         "db_type": db_health["db_type"],
         "db_tables_count": db_health["db_tables_count"],
         "startup_schema_migration_enabled": db_health.get("startup_schema_migration_enabled", False),
+        "database_diagnostic": db_health.get("database_diagnostic", {}),
         "migration_current": db_health.get("migration_current", ""),
         "migration_head": db_health.get("migration_head", ""),
         "migration_ready": migration_ready,

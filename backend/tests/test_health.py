@@ -341,6 +341,9 @@ def test_health_endpoint_reports_runtime_status(client: TestClient) -> None:
     assert body["db_connected"] is True
     assert body["db_type"] == "sqlite"
     assert body["db_tables_count"] >= 10
+    assert isinstance(body["database_diagnostic"], dict)
+    assert "postgresql://" not in str(body["database_diagnostic"])
+    assert "DATABASE_URL" not in body["database_diagnostic"]
     assert body["timestamp"]
     assert "DATABASE_URL" not in body
     assert "OPENAI_API_KEY" not in body
@@ -374,3 +377,6 @@ def test_health_ready_endpoint_reports_dependency_status(client: TestClient) -> 
     assert body["status"] == "ok"
     assert body["db_connected"] is True
     assert body["auth_configured"] is True
+    assert isinstance(body["database_diagnostic"], dict)
+    assert "postgresql://" not in str(body["database_diagnostic"])
+    assert "DATABASE_URL" not in body["database_diagnostic"]
