@@ -15,7 +15,11 @@ from app.auth import ensure_not_maintenance_mode, require_roles
 from app.analytics.repositories import build_candidate_boundary_evidence, log_candidate_boundary_persisted
 from app.analytics.services import record_event
 from app.db import get_db, get_db_health, init_db, seed_default_organization, seed_default_templates
-from app.database.health import run_conninfo_preflight_once, run_pgconn_stage_diagnostic_once
+from app.database.health import (
+    run_conninfo_preflight_once,
+    run_pgconn_level3_diagnostic_once,
+    run_pgconn_stage_diagnostic_once,
+)
 from app.health import build_health_payload as build_application_health_payload
 from app.knowledge.services import add_knowledge_entry, build_best_practices, search_similar_knowledge
 from app.models import (
@@ -111,6 +115,7 @@ async def lifespan(app: FastAPI):
     _log_runtime_flag_config()
     run_conninfo_preflight_once()
     run_pgconn_stage_diagnostic_once()
+    run_pgconn_level3_diagnostic_once()
     init_db()
     db_tables_count = get_db_health().get("db_tables_count", 0)
     if db_tables_count:

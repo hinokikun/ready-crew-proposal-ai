@@ -520,6 +520,260 @@ def test_pgconn_stage_diagnostic_once_cache_and_disabled_state(monkeypatch: pyte
     assert calls == {"start": 1, "poll": 1, "finish": 1}
 
 
+class _RecordingSelector:
+    instances: list["_RecordingSelector"] = []
+
+    def __init__(self) -> None:
+        self.registered: list[tuple[int, int]] = []
+        self.unregistered: list[int] = []
+        self.closed = False
+        _RecordingSelector.instances.append(self)
+
+    def register(self, fileobj: int, events: int) -> None:
+        self.registered.append((fileobj, events))
+
+    def select(self, timeout: float) -> list[object]:
+        assert timeout > 0
+        return [object()]
+
+    def unregister(self, fileobj: int) -> None:
+        self.unregistered.append(fileobj)
+
+    def close(self) -> None:
+        self.closed = True
+
+
+def _install_fake_level3(
+    monkeypatch: pytest.MonkeyPatch,
+    poll_values: list[object],
+    *,
+    start_error: Exception | None = None,
+    poll_error_at: int | None = None,
+    status: object | None = None,
+    socket_value: int = 42,
+    finish_error: Exception | None = None,
+) -> dict[str, int]:
+    from psycopg.pq import ConnStatus, PollingStatus
+
+    calls = {"start": 0, "poll": 0, "finish": 0}
+
+    class FakePGconn:
+        socket = socket_value
+
+        @classmethod
+        def connect_start(cls, conninfo: bytes) -> "FakePGconn":
+            assert isinstance(conninfo, bytes)
+            calls["start"] += 1
+            if start_error is not None:
+                raise start_error
+            return cls()
+
+        @property
+        def status(self) -> object:
+            return ConnStatus.OK if status is None else status
+
+        def connect_poll(self) -> object:
+            index = calls["poll"]
+            calls["poll"] += 1
+            if poll_error_at == index:
+                raise AssertionError("secret-host")
+            return poll_values[index]
+
+        def finish(self) -> None:
+            calls["finish"] += 1
+            if finish_error is not None:
+                raise finish_error
+
+    conninfo_module = types.ModuleType("psycopg.conninfo")
+    conninfo_module.conninfo_to_dict = lambda _: {"host": "secret-host"}
+    conninfo_module.timeout_from_conninfo = lambda _: 5
+    conninfo_module.conninfo_attempts = lambda _: [{"host": "secret-host"}]
+    conninfo_module.make_conninfo = lambda _, **__: "host=secret-host"
+    pq_module = types.ModuleType("psycopg.pq")
+    pq_module.PGconn = FakePGconn
+    pq_module.ConnStatus = ConnStatus
+    pq_module.PollingStatus = PollingStatus
+    psycopg_module = types.ModuleType("psycopg")
+    psycopg_module.__path__ = []
+    monkeypatch.setitem(sys.modules, "psycopg", psycopg_module)
+    monkeypatch.setitem(sys.modules, "psycopg.conninfo", conninfo_module)
+    monkeypatch.setitem(sys.modules, "psycopg.pq", pq_module)
+    _RecordingSelector.instances = []
+    monkeypatch.setattr(database_health.selectors, "DefaultSelector", _RecordingSelector)
+    return calls
+
+
+def test_pgconn_level3_writing_reading_and_ok(monkeypatch: pytest.MonkeyPatch) -> None:
+    from psycopg.pq import PollingStatus
+
+    calls = _install_fake_level3(
+        monkeypatch,
+        [PollingStatus.WRITING, PollingStatus.READING, PollingStatus.OK],
+    )
+    result = database_health._run_pgconn_level3_diagnostic("postgresql://secret")
+
+    assert calls == {"start": 1, "poll": 3, "finish": 1}
+    assert result["poll_sequence"] == ["writing", "reading", "ok"]
+    assert result["low_level_connection_status"] == "success"
+    assert len(_RecordingSelector.instances) == 2
+    assert _RecordingSelector.instances[0].registered[0][1] == database_health.selectors.EVENT_WRITE
+    assert _RecordingSelector.instances[1].registered[0][1] == database_health.selectors.EVENT_READ
+    assert all(item.closed for item in _RecordingSelector.instances)
+    assert all(item.unregistered == [42] for item in _RecordingSelector.instances)
+    _assert_pgconn_safe_result(result)
+
+
+def test_pgconn_level3_second_poll_assertion_is_classified_and_cleaned(monkeypatch: pytest.MonkeyPatch) -> None:
+    from psycopg.pq import PollingStatus
+
+    calls = _install_fake_level3(
+        monkeypatch,
+        [PollingStatus.WRITING, PollingStatus.READING],
+        poll_error_at=1,
+    )
+    result = database_health._run_pgconn_level3_diagnostic("postgresql://secret")
+
+    assert calls == {"start": 1, "poll": 2, "finish": 1}
+    assert result["exception_stage"] == "connect_poll_2_or_later"
+    assert result["exception_class"] == "AssertionError"
+    assert result["low_level_connection_status"] == "exception"
+    _assert_pgconn_safe_result(result)
+
+
+def test_pgconn_level3_first_poll_assertion_and_failed_poll_are_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
+    from psycopg.pq import PollingStatus
+
+    calls = _install_fake_level3(monkeypatch, [PollingStatus.READING], poll_error_at=0)
+    first_failure = database_health._run_pgconn_level3_diagnostic("postgresql://secret")
+    assert first_failure["exception_stage"] == "connect_poll_1"
+    assert first_failure["poll_iterations"] == 1
+    assert calls["finish"] == 1
+
+    calls = _install_fake_level3(monkeypatch, [PollingStatus.FAILED])
+    failed = database_health._run_pgconn_level3_diagnostic("postgresql://secret")
+    assert failed["low_level_connection_status"] == "failed"
+    assert failed["poll_sequence"] == ["failed"]
+    assert calls["finish"] == 1
+
+
+def test_pgconn_level3_selector_timeout_and_cleanup_failure_preserve_primary_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from psycopg.pq import PollingStatus
+
+    calls = _install_fake_level3(monkeypatch, [PollingStatus.WRITING])
+    monkeypatch.setattr(_RecordingSelector, "select", lambda self, timeout: [])
+    timeout = database_health._run_pgconn_level3_diagnostic("postgresql://secret")
+    assert timeout["low_level_connection_status"] == "diagnostic_timeout"
+    assert timeout["cleanup_status"] == "success"
+    assert calls["finish"] == 1
+
+    calls = _install_fake_level3(
+        monkeypatch,
+        [PollingStatus.WRITING],
+        poll_error_at=0,
+        finish_error=RuntimeError("secret-cleanup"),
+    )
+    cleanup_failure = database_health._run_pgconn_level3_diagnostic("postgresql://secret")
+    assert cleanup_failure["exception_stage"] == "connect_poll_1"
+    assert cleanup_failure["exception_class"] == "AssertionError"
+    assert cleanup_failure["cleanup_status"] == "failure"
+    assert calls["finish"] == 1
+
+
+def test_pgconn_level3_timeout_active_and_status_mismatch_are_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
+    from psycopg.pq import ConnStatus, PollingStatus
+
+    calls = _install_fake_level3(monkeypatch, [PollingStatus.ACTIVE])
+    active = database_health._run_pgconn_level3_diagnostic("postgresql://secret")
+    assert active["low_level_connection_status"] == "unexpected_active"
+    assert calls == {"start": 1, "poll": 1, "finish": 1}
+
+    calls = _install_fake_level3(monkeypatch, [PollingStatus.OK], status=ConnStatus.BAD)
+    mismatch = database_health._run_pgconn_level3_diagnostic("postgresql://secret")
+    assert mismatch["low_level_connection_status"] == "status_mismatch"
+    assert calls == {"start": 1, "poll": 1, "finish": 1}
+
+
+def test_pgconn_level3_invalid_socket_and_failed_poll_do_not_close_socket(monkeypatch: pytest.MonkeyPatch) -> None:
+    from psycopg.pq import PollingStatus
+
+    calls = _install_fake_level3(monkeypatch, [PollingStatus.WRITING], socket_value=-1)
+    monkeypatch.setattr(
+        database_health,
+        "selectors",
+        types.SimpleNamespace(
+            EVENT_READ=1,
+            EVENT_WRITE=2,
+            DefaultSelector=lambda: pytest.fail("selector must not run"),
+        ),
+    )
+    result = database_health._run_pgconn_level3_diagnostic("postgresql://secret")
+    assert result["low_level_connection_status"] == "exception"
+    assert result["exception_stage"] == "socket_check"
+    assert calls["finish"] == 1
+
+
+def test_pgconn_level3_deadline_and_iteration_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+    from psycopg.pq import PollingStatus
+
+    calls = _install_fake_level3(monkeypatch, [PollingStatus.WRITING])
+    monkeypatch.setattr(database_health, "monotonic", lambda: 100.0)
+    monkeypatch.setattr(database_health, "LEVEL3_HARD_DEADLINE_SECONDS", -1.0)
+    timeout = database_health._run_pgconn_level3_diagnostic("postgresql://secret")
+    assert timeout["low_level_connection_status"] == "diagnostic_timeout"
+    assert timeout["poll_iterations"] == 0
+    assert calls == {"start": 1, "poll": 0, "finish": 1}
+
+    calls = _install_fake_level3(monkeypatch, [PollingStatus.WRITING] * 64)
+    monkeypatch.setattr(database_health, "monotonic", lambda: 0.0)
+    monkeypatch.setattr(database_health, "LEVEL3_HARD_DEADLINE_SECONDS", 5.0)
+    monkeypatch.setattr(_RecordingSelector, "select", lambda self, timeout: [object()])
+    limited = database_health._run_pgconn_level3_diagnostic("postgresql://secret")
+    assert limited["low_level_connection_status"] == "iteration_limit"
+    assert limited["poll_iterations"] == 64
+    assert calls == {"start": 1, "poll": 64, "finish": 1}
+
+
+def test_pgconn_level3_flag_disabled_and_cache_prevent_reexecution(monkeypatch: pytest.MonkeyPatch) -> None:
+    from psycopg.pq import PollingStatus
+
+    original_runner = database_health._run_pgconn_level3_diagnostic
+    monkeypatch.setattr(database_health, "_pgconn_level3_diagnostic_cache", None)
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(
+            enable_db_pgconn_level3_diagnostic=False,
+            database_url="postgresql://secret",
+        ),
+    )
+    monkeypatch.setattr(
+        database_health,
+        "_run_pgconn_level3_diagnostic",
+        lambda _: pytest.fail("level3 diagnostic ran while disabled"),
+    )
+    disabled = database_health.run_pgconn_level3_diagnostic_once()
+    assert disabled["executed"] is False
+    assert disabled["low_level_connection_status"] == "not_run"
+
+    calls = _install_fake_level3(monkeypatch, [PollingStatus.OK])
+    monkeypatch.setattr(database_health, "_pgconn_level3_diagnostic_cache", None)
+    monkeypatch.setattr(database_health, "_run_pgconn_level3_diagnostic", original_runner)
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(
+            enable_db_pgconn_level3_diagnostic=True,
+            database_url="postgresql://secret",
+        ),
+    )
+    first = database_health.run_pgconn_level3_diagnostic_once()
+    second = database_health.run_pgconn_level3_diagnostic_once()
+    assert first == second
+    assert calls == {"start": 1, "poll": 1, "finish": 1}
+
+
 class _StageCursor:
     def __init__(self, error: BaseException | None = None) -> None:
         self.error = error

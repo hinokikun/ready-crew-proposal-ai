@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import logging
+import selectors
 from threading import Lock
 from pathlib import Path
 import re
+from time import monotonic
 from typing import Any
 
 from sqlalchemy.engine import make_url
@@ -51,6 +53,24 @@ _conninfo_preflight_lock = Lock()
 _pgconn_stage_diagnostic_cache: dict[str, Any] | None = None
 _pgconn_stage_diagnostic_lock = Lock()
 _PGCONN_EXCEPTION_STAGES = frozenset({"none", "connect_start", "first_connect_poll"})
+_pgconn_level3_diagnostic_cache: dict[str, Any] | None = None
+_pgconn_level3_diagnostic_lock = Lock()
+_LEVEL3_POLL_RESULTS = frozenset({"ok", "reading", "writing", "failed", "active", "unknown"})
+_LEVEL3_CONNECTION_STATUSES = frozenset({
+    "not_run",
+    "in_progress",
+    "success",
+    "failed",
+    "diagnostic_timeout",
+    "iteration_limit",
+    "invalid_socket",
+    "unexpected_active",
+    "unknown_poll_status",
+    "status_mismatch",
+    "exception",
+})
+LEVEL3_HARD_DEADLINE_SECONDS = 5.0
+MAX_POLL_ITERATIONS = 64
 
 
 def _disabled_conninfo_preflight() -> dict[str, Any]:
@@ -285,6 +305,233 @@ def get_pgconn_stage_diagnostic() -> dict[str, Any]:
     return dict(_pgconn_stage_diagnostic_cache)
 
 
+def _disabled_pgconn_level3_diagnostic() -> dict[str, Any]:
+    return {
+        "enabled": False,
+        "executed": False,
+        "attempts_count": "unknown",
+        "connect_start_status": "not_run",
+        "poll_iterations": 0,
+        "poll_sequence": [],
+        "low_level_connection_status": "not_run",
+        "exception_stage": "none",
+        "exception_class": "unknown",
+        "cleanup_status": "not_run",
+    }
+
+
+def _pgconn_level3_result() -> dict[str, Any]:
+    result = _disabled_pgconn_level3_diagnostic()
+    result["enabled"] = True
+    result["executed"] = True
+    result["low_level_connection_status"] = "in_progress"
+    return result
+
+
+def _safe_level3_poll_result(status: Any) -> str:
+    try:
+        from psycopg.pq import PollingStatus
+
+        mapping = {
+            PollingStatus.OK: "ok",
+            PollingStatus.READING: "reading",
+            PollingStatus.WRITING: "writing",
+            PollingStatus.FAILED: "failed",
+            PollingStatus.ACTIVE: "active",
+        }
+        return mapping.get(status, "unknown")
+    except Exception:
+        return "unknown"
+
+
+def _safe_level3_exception_stage(stage: str) -> str:
+    allowed = {
+        "none",
+        "conninfo_prepare",
+        "connect_start",
+        "connect_poll_1",
+        "connect_poll_2_or_later",
+        "readiness_wait",
+        "socket_check",
+        "status_check",
+        "cleanup",
+        "unknown",
+    }
+    return stage if stage in allowed else "unknown"
+
+
+def _run_pgconn_level3_diagnostic(database_url: str) -> dict[str, Any]:
+    """Complete a bounded low-level poll diagnostic without using psycopg Connection.connect."""
+    result = _pgconn_level3_result()
+    pgconn: Any = None
+    primary_result_set = False
+    deadline = monotonic() + LEVEL3_HARD_DEADLINE_SECONDS
+
+    try:
+        from psycopg.conninfo import conninfo_attempts, conninfo_to_dict, make_conninfo, timeout_from_conninfo
+        from psycopg.pq import ConnStatus, PGconn
+
+        params = conninfo_to_dict(database_url)
+        timeout_from_conninfo(params)
+        attempts = conninfo_attempts(params)
+        result["attempts_count"] = len(attempts) if len(attempts) >= 0 else "unknown"
+        if not attempts:
+            result.update({
+                "low_level_connection_status": "failed",
+                "exception_stage": "conninfo_prepare",
+            })
+            primary_result_set = True
+            return result
+
+        # Memory-only conninfo. It is never logged, returned, repr'd, or attached to an exception.
+        conninfo_bytes = make_conninfo("", **attempts[0]).encode()
+        try:
+            pgconn = PGconn.connect_start(conninfo_bytes)
+            result["connect_start_status"] = "success"
+        except Exception as exc:
+            result.update({
+                "connect_start_status": "failure",
+                "low_level_connection_status": "exception",
+                "exception_stage": "connect_start",
+                "exception_class": _safe_pgconn_exception_class(exc),
+            })
+            primary_result_set = True
+            return result
+
+        while True:
+            if result["poll_iterations"] >= MAX_POLL_ITERATIONS:
+                result["low_level_connection_status"] = "iteration_limit"
+                primary_result_set = True
+                break
+            if monotonic() >= deadline:
+                result["low_level_connection_status"] = "diagnostic_timeout"
+                primary_result_set = True
+                break
+
+            poll_iteration = int(result["poll_iterations"]) + 1
+            result["poll_iterations"] = poll_iteration
+            try:
+                poll_status = pgconn.connect_poll()
+            except Exception as exc:
+                result.update({
+                    "low_level_connection_status": "exception",
+                    "exception_stage": "connect_poll_1" if poll_iteration == 1 else "connect_poll_2_or_later",
+                    "exception_class": _safe_pgconn_exception_class(exc),
+                })
+                primary_result_set = True
+                break
+
+            poll_result = _safe_level3_poll_result(poll_status)
+            result["poll_sequence"].append(poll_result)
+            if poll_result == "ok":
+                try:
+                    connection_status = pgconn.status
+                except Exception as exc:
+                    result.update({
+                        "low_level_connection_status": "exception",
+                        "exception_stage": "status_check",
+                        "exception_class": _safe_pgconn_exception_class(exc),
+                    })
+                else:
+                    result["low_level_connection_status"] = (
+                        "success" if connection_status == ConnStatus.OK else "status_mismatch"
+                    )
+                primary_result_set = True
+                break
+            if poll_result == "failed":
+                result["low_level_connection_status"] = "failed"
+                primary_result_set = True
+                break
+            if poll_result == "active":
+                result["low_level_connection_status"] = "unexpected_active"
+                primary_result_set = True
+                break
+            if poll_result == "unknown":
+                result["low_level_connection_status"] = "unknown_poll_status"
+                primary_result_set = True
+                break
+
+            remaining = deadline - monotonic()
+            if remaining <= 0:
+                result["low_level_connection_status"] = "diagnostic_timeout"
+                primary_result_set = True
+                break
+
+            try:
+                socket_fd = pgconn.socket
+                if not isinstance(socket_fd, int) or socket_fd < 0:
+                    raise ValueError
+                selector = selectors.DefaultSelector()
+                events = selectors.EVENT_READ if poll_result == "reading" else selectors.EVENT_WRITE
+                try:
+                    selector.register(socket_fd, events)
+                    ready = selector.select(timeout=remaining)
+                finally:
+                    try:
+                        selector.unregister(socket_fd)
+                    except Exception:
+                        pass
+                    selector.close()
+            except Exception as exc:
+                result.update({
+                    "low_level_connection_status": "exception",
+                    "exception_stage": "socket_check" if isinstance(exc, ValueError) else "readiness_wait",
+                    "exception_class": _safe_pgconn_exception_class(exc),
+                })
+                primary_result_set = True
+                break
+            if not ready:
+                result["low_level_connection_status"] = "diagnostic_timeout"
+                primary_result_set = True
+                break
+    except Exception as exc:
+        result.update({
+            "low_level_connection_status": "exception",
+            "exception_stage": _safe_level3_exception_stage("conninfo_prepare"),
+            "exception_class": _safe_pgconn_exception_class(exc),
+        })
+        primary_result_set = True
+    finally:
+        if pgconn is not None:
+            try:
+                pgconn.finish()
+                result["cleanup_status"] = "success"
+            except Exception:
+                result["cleanup_status"] = "failure"
+                if not primary_result_set:
+                    result["exception_stage"] = "cleanup"
+                    result["low_level_connection_status"] = "exception"
+    return result
+
+
+def run_pgconn_level3_diagnostic_once() -> dict[str, Any]:
+    """Run the opt-in Level 3 diagnostic at most once per process."""
+    global _pgconn_level3_diagnostic_cache
+    enabled = bool(getattr(settings, "enable_db_pgconn_level3_diagnostic", False))
+    if not enabled:
+        return _disabled_pgconn_level3_diagnostic()
+    with _pgconn_level3_diagnostic_lock:
+        if _pgconn_level3_diagnostic_cache is None:
+            try:
+                _pgconn_level3_diagnostic_cache = _run_pgconn_level3_diagnostic(settings.database_url)
+            except Exception as exc:
+                _pgconn_level3_diagnostic_cache = _pgconn_level3_result()
+                _pgconn_level3_diagnostic_cache["low_level_connection_status"] = "exception"
+                _pgconn_level3_diagnostic_cache["exception_stage"] = "unknown"
+                _pgconn_level3_diagnostic_cache["exception_class"] = _safe_pgconn_exception_class(exc)
+            _pgconn_level3_diagnostic_cache["executed"] = True
+        return dict(_pgconn_level3_diagnostic_cache)
+
+
+def get_pgconn_level3_diagnostic() -> dict[str, Any]:
+    if _pgconn_level3_diagnostic_cache is None:
+        enabled = bool(getattr(settings, "enable_db_pgconn_level3_diagnostic", False))
+        result = _disabled_pgconn_level3_diagnostic()
+        result["enabled"] = enabled
+        return result
+    return dict(_pgconn_level3_diagnostic_cache)
+
+
 def _database_url_scheme(database_url: str) -> str:
     try:
         drivername = make_url(database_url).drivername
@@ -319,6 +566,7 @@ def get_database_diagnostic() -> dict[str, Any]:
     diagnostic = _unknown_database_diagnostic()
     diagnostic["conninfo_preflight"] = get_conninfo_preflight_diagnostic()
     diagnostic["pgconn_stage_diagnostic"] = get_pgconn_stage_diagnostic()
+    diagnostic["pgconn_level3_diagnostic"] = get_pgconn_level3_diagnostic()
     if ENGINE_DIALECT != "postgresql":
         return diagnostic
 
