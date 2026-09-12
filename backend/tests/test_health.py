@@ -303,6 +303,124 @@ def test_database_diagnostic_exposes_cached_version_shape_without_connecting(mon
     assert diagnostic["version_shape_diagnostic"] == cached
 
 
+class _AdapterDescription:
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+
+class _AdapterCursor:
+    def __init__(self, rows: list[object], description: object = None) -> None:
+        self.rows = list(rows)
+        self.description = description
+        self.rowcount = 1
+        self.executed: tuple[str, tuple[object, ...]] | None = None
+
+    def execute(self, sql: str, params: tuple[object, ...]) -> None:
+        self.executed = (sql, params)
+
+    def fetchone(self) -> object:
+        return self.rows.pop(0) if self.rows else None
+
+    def fetchall(self) -> list[object]:
+        rows = list(self.rows)
+        self.rows.clear()
+        return rows
+
+
+class _AdapterConnection:
+    def __init__(self, cursor: _AdapterCursor) -> None:
+        self.cursor_value = cursor
+
+    def cursor(self) -> _AdapterCursor:
+        return self.cursor_value
+
+
+def test_postgres_engine_connect_args_no_longer_set_global_dict_row(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_connection, "ENGINE_DIALECT", "postgresql")
+
+    assert database_connection._connect_args() == {}
+
+
+def test_postgres_cursor_adapter_converts_tuple_fetchone_to_dict_like_row() -> None:
+    cursor = _AdapterCursor(
+        [("abc", 123)],
+        [_AdapterDescription("id"), _AdapterDescription("value")],
+    )
+
+    row = database_connection._CursorAdapter(cursor).fetchone()
+
+    assert row["id"] == "abc"
+    assert row.get("value") == 123
+    assert dict(row) == {"id": "abc", "value": 123}
+
+
+def test_postgres_cursor_adapter_fetchall_preserves_order_and_empty_result() -> None:
+    cursor = _AdapterCursor(
+        [("a", 1), ("b", 2)],
+        [("id",), ("value",)],
+    )
+    adapter = database_connection._CursorAdapter(cursor)
+
+    assert adapter.fetchall() == [{"id": "a", "value": 1}, {"id": "b", "value": 2}]
+    assert adapter.fetchall() == []
+
+
+def test_postgres_cursor_adapter_preserves_mapping_none_and_descriptionless_rows() -> None:
+    mapping = {"id": "existing"}
+    mapping_cursor = _AdapterCursor([mapping], [_AdapterDescription("id")])
+    none_cursor = _AdapterCursor([None], [_AdapterDescription("id")])
+    raw_cursor = _AdapterCursor([("abc",)], None)
+
+    assert database_connection._CursorAdapter(mapping_cursor).fetchone() is mapping
+    assert database_connection._CursorAdapter(none_cursor).fetchone() is None
+    assert database_connection._CursorAdapter(raw_cursor).fetchone() == ("abc",)
+
+
+@pytest.mark.parametrize("raw", ["abc", b"abc", bytearray(b"abc")])
+def test_postgres_cursor_adapter_does_not_convert_scalar_text_or_bytes_rows(raw: object) -> None:
+    description = [
+        _AdapterDescription("one"),
+        _AdapterDescription("two"),
+        _AdapterDescription("three"),
+    ]
+
+    result = database_connection._application_row(raw, description)
+
+    assert result is raw
+
+
+def test_postgres_cursor_adapter_still_converts_valid_tuple_rows() -> None:
+    description = [_AdapterDescription("id"), _AdapterDescription("value")]
+
+    result = database_connection._application_row(("abc", 123), description)
+
+    assert result == {"id": "abc", "value": 123}
+
+
+def test_postgres_cursor_adapter_preserves_returning_id_extraction() -> None:
+    cursor = _AdapterCursor(
+        [(42,)],
+        [_AdapterDescription("id")],
+    )
+    adapter = database_connection._PostgresConnectionAdapter(_AdapterConnection(cursor))
+
+    result = adapter.execute("INSERT INTO example (name) VALUES (?)", ("sample",))
+
+    assert result.lastrowid == 42
+    assert cursor.executed is not None
+    assert "RETURNING id" in cursor.executed[0]
+
+
+def test_sqlalchemy_row_machinery_receives_sequence_rows_for_version_scalar() -> None:
+    from sqlalchemy.engine.result import result_tuple
+
+    make_row = result_tuple(["version"])
+    row = make_row(("PostgreSQL 18.0 on Linux",))
+
+    assert row[0] == "PostgreSQL 18.0 on Linux"
+    assert database_health._VERSION_SHAPE_REGEX.match(row[0]) is not None
+
+
 @pytest.mark.parametrize(
     ("url", "expected_scheme"),
     [

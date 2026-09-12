@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import sqlite3
+from collections.abc import Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
@@ -133,13 +134,6 @@ ENGINE_DIALECT = make_url(ENGINE_URL).get_backend_name()
 def _connect_args() -> dict[str, Any]:
     if ENGINE_DIALECT == "sqlite":
         return {"check_same_thread": False}
-    if ENGINE_DIALECT == "postgresql":
-        try:
-            from psycopg.rows import dict_row
-
-            return {"row_factory": dict_row}
-        except Exception:
-            return {}
     return {}
 
 
@@ -187,10 +181,44 @@ class _CursorAdapter:
         self.lastrowid = lastrowid
 
     def fetchone(self) -> Any:
-        return self._cursor.fetchone()
+        return _application_row(self._cursor.fetchone(), getattr(self._cursor, "description", None))
 
     def fetchall(self) -> list[Any]:
-        return self._cursor.fetchall()
+        rows = self._cursor.fetchall()
+        return [_application_row(row, getattr(self._cursor, "description", None)) for row in rows]
+
+
+def _description_column_names(description: Any) -> list[str] | None:
+    if not description:
+        return None
+    names: list[str] = []
+    for item in description:
+        name = getattr(item, "name", None)
+        if name is None:
+            try:
+                name = item[0]
+            except (IndexError, KeyError, TypeError):
+                return None
+        if not isinstance(name, str):
+            return None
+        names.append(name)
+    return names or None
+
+
+def _application_row(row: Any, description: Any) -> Any:
+    if row is None or isinstance(row, Mapping):
+        return row
+    if isinstance(row, (str, bytes, bytearray)):
+        return row
+    names = _description_column_names(description)
+    if names is None:
+        return row
+    try:
+        if len(row) != len(names):
+            return row
+        return dict(zip(names, row))
+    except (TypeError, ValueError):
+        return row
 
 
 class _PostgresConnectionAdapter:
