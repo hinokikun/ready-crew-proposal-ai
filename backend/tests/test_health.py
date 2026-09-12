@@ -42,6 +42,156 @@ def test_check_db_logs_only_bounded_safe_fields_without_exception_text(monkeypat
     assert "secret" not in caplog.text
 
 
+class _SchemaStateDb:
+    def __init__(self, *, revision: str | None = None, existing: set[str] | None = None) -> None:
+        self.queries: list[str] = []
+        self.revision = revision
+        self.existing = existing or set()
+
+    def execute(self, statement: str):
+        self.queries.append(statement)
+        assert statement.lstrip().upper().startswith("SELECT")
+        if "COUNT(*) AS public_table_count" in statement:
+            return types.SimpleNamespace(fetchone=lambda: {"public_table_count": len(self.existing)})
+        if "version_num" in statement:
+            return types.SimpleNamespace(fetchone=lambda: {"version_num": self.revision} if self.revision else None)
+        return types.SimpleNamespace(
+            fetchone=lambda: {
+                "alembic_version_table_exists": "alembic_version" in self.existing,
+                "organizations_exists": "organizations" in self.existing,
+                "workspaces_exists": "workspaces" in self.existing,
+                "users_exists": "users" in self.existing,
+                "organization_memberships_exists": "organization_memberships" in self.existing,
+            }
+        )
+
+
+def test_schema_state_diagnostic_disabled_does_not_query(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_health, "_schema_state_diagnostic_cache", None)
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(enable_db_schema_state_diagnostic=False),
+    )
+    monkeypatch.setattr(database_health, "_run_schema_state_diagnostic", lambda: pytest.fail("diagnostic ran"))
+
+    result = database_health.run_schema_state_diagnostic_once()
+
+    assert result["enabled"] is False
+    assert result["executed"] is False
+    assert result["failure_category"] == "none"
+
+
+def test_schema_state_diagnostic_reads_only_fixed_catalog_and_caches_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    db = _SchemaStateDb(
+        revision="20260711_1701",
+        existing={"alembic_version", "organizations", "workspaces", "users", "organization_memberships"},
+    )
+
+    @contextmanager
+    def db_context():
+        yield db
+
+    monkeypatch.setattr(database_health, "_schema_state_diagnostic_cache", None)
+    monkeypatch.setattr(database_health, "ENGINE_DIALECT", "postgresql")
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(enable_db_schema_state_diagnostic=True),
+    )
+    monkeypatch.setattr(database_health, "get_db", db_context)
+
+    first = database_health.run_schema_state_diagnostic_once()
+    second = database_health.run_schema_state_diagnostic_once()
+
+    assert first == second
+    assert first["enabled"] is True
+    assert first["executed"] is True
+    assert first["public_table_count"] == 5
+    assert first["alembic_version_table_exists"] is True
+    assert first["alembic_current_revision"] == "20260711_1701"
+    assert first["organizations_exists"] is True
+    assert first["workspaces_exists"] is True
+    assert first["users_exists"] is True
+    assert first["organization_memberships_exists"] is True
+    assert len(db.queries) == 3
+    assert all(query.lstrip().upper().startswith("SELECT") for query in db.queries)
+
+
+def test_schema_state_diagnostic_empty_schema_has_no_revision_or_secret_data(monkeypatch: pytest.MonkeyPatch) -> None:
+    db = _SchemaStateDb()
+
+    @contextmanager
+    def db_context():
+        yield db
+
+    monkeypatch.setattr(database_health, "_schema_state_diagnostic_cache", None)
+    monkeypatch.setattr(database_health, "ENGINE_DIALECT", "postgresql")
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(enable_db_schema_state_diagnostic=True),
+    )
+    monkeypatch.setattr(database_health, "get_db", db_context)
+
+    result = database_health.run_schema_state_diagnostic_once()
+
+    assert result["public_table_count"] == 0
+    assert result["alembic_version_table_exists"] is False
+    assert result["alembic_current_revision"] == ""
+    assert not any(value in repr(result) for value in ("DATABASE_URL", "secret-host", "secret-user", "secret-db"))
+
+
+def test_schema_state_diagnostic_failure_is_bounded_and_secret_free(monkeypatch: pytest.MonkeyPatch) -> None:
+    class SecretDatabaseError(Exception):
+        sqlstate = "08001"
+
+        def __str__(self) -> str:
+            return "postgresql://secret-user:secret-pass@secret-host:5432/secret-db"
+
+    @contextmanager
+    def db_context():
+        raise SecretDatabaseError("secret")
+        yield
+
+    monkeypatch.setattr(database_health, "_schema_state_diagnostic_cache", None)
+    monkeypatch.setattr(database_health, "ENGINE_DIALECT", "postgresql")
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(enable_db_schema_state_diagnostic=True),
+    )
+    monkeypatch.setattr(database_health, "get_db", db_context)
+
+    result = database_health.run_schema_state_diagnostic_once()
+    serialized = repr(result)
+
+    assert result["executed"] is True
+    assert result["failure_category"] == "database_unavailable"
+    for secret in ("postgresql://", "secret-user", "secret-pass", "secret-host", "secret-db"):
+        assert secret not in serialized
+
+
+def test_schema_state_diagnostic_getter_returns_cached_result_without_query(monkeypatch: pytest.MonkeyPatch) -> None:
+    cached = database_health._schema_state_result(True)
+    cached["executed"] = True
+    cached["users_exists"] = True
+    monkeypatch.setattr(database_health, "_schema_state_diagnostic_cache", cached)
+    monkeypatch.setattr(database_health, "_run_schema_state_diagnostic", lambda: pytest.fail("getter re-ran diagnostic"))
+
+    assert database_health.get_schema_state_diagnostic() == cached
+
+
+def test_database_diagnostic_exposes_schema_state_cache_without_rerunning(monkeypatch: pytest.MonkeyPatch) -> None:
+    cached = database_health._schema_state_result(True)
+    cached["executed"] = True
+    cached["public_table_count"] = 5
+    monkeypatch.setattr(database_health, "_schema_state_diagnostic_cache", cached)
+    monkeypatch.setattr(database_health, "_run_schema_state_diagnostic", lambda: pytest.fail("health getter re-ran diagnostic"))
+
+    assert database_health.get_database_diagnostic()["schema_state"] == cached
+
+
 def test_check_db_without_sqlstate_logs_fixed_category_and_returns_false(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture) -> None:
     class UnclassifiedConnectionError(Exception):
         pass

@@ -56,6 +56,8 @@ _PREFLIGHT_EXCEPTION_CLASSES = frozenset({
 })
 _conninfo_preflight_cache: dict[str, Any] | None = None
 _conninfo_preflight_lock = Lock()
+_schema_state_diagnostic_cache: dict[str, Any] | None = None
+_schema_state_diagnostic_lock = Lock()
 _pgconn_stage_diagnostic_cache: dict[str, Any] | None = None
 _pgconn_stage_diagnostic_lock = Lock()
 _PGCONN_EXCEPTION_STAGES = frozenset({"none", "connect_start", "first_connect_poll"})
@@ -133,6 +135,102 @@ _VERSION_SHAPE_FAILURES = frozenset({
     "connect_failed",
     "diagnostic_failed",
 })
+
+_SCHEMA_STATE_TABLES = (
+    "alembic_version",
+    "organizations",
+    "workspaces",
+    "users",
+    "organization_memberships",
+)
+
+
+def _schema_state_result(enabled: bool) -> dict[str, Any]:
+    return {
+        "enabled": enabled,
+        "executed": False,
+        "public_table_count": 0,
+        "alembic_version_table_exists": False,
+        "alembic_current_revision": "",
+        "organizations_exists": False,
+        "workspaces_exists": False,
+        "users_exists": False,
+        "organization_memberships_exists": False,
+        "failure_category": "none",
+    }
+
+
+def _safe_revision(value: Any) -> str:
+    if isinstance(value, str) and re.fullmatch(r"[0-9A-Za-z_.-]{1,64}", value):
+        return value
+    return ""
+
+
+def _run_schema_state_diagnostic() -> dict[str, Any]:
+    result = _schema_state_result(True)
+    try:
+        with get_db() as db:
+            count_row = db.execute(
+                """
+                SELECT COUNT(*) AS public_table_count
+                FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+                """
+            ).fetchone()
+            result["public_table_count"] = max(0, int(count_row["public_table_count"] if count_row else 0))
+
+            exists_row = db.execute(
+                """
+                SELECT
+                    EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'alembic_version') AS alembic_version_table_exists,
+                    EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organizations') AS organizations_exists,
+                    EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'workspaces') AS workspaces_exists,
+                    EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users') AS users_exists,
+                    EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'organization_memberships') AS organization_memberships_exists
+                """
+            ).fetchone()
+            if exists_row:
+                result["alembic_version_table_exists"] = bool(exists_row["alembic_version_table_exists"])
+                result["organizations_exists"] = bool(exists_row["organizations_exists"])
+                result["workspaces_exists"] = bool(exists_row["workspaces_exists"])
+                result["users_exists"] = bool(exists_row["users_exists"])
+                result["organization_memberships_exists"] = bool(exists_row["organization_memberships_exists"])
+
+            if result["alembic_version_table_exists"]:
+                revision_row = db.execute(
+                    """
+                    SELECT version_num
+                    FROM public.alembic_version
+                    ORDER BY version_num DESC
+                    LIMIT 1
+                    """
+                ).fetchone()
+                result["alembic_current_revision"] = _safe_revision(
+                    revision_row["version_num"] if revision_row else ""
+                )
+    except Exception as exc:
+        result["failure_category"] = _db_failure_category(exc, _safe_sqlstate(exc))
+    result["executed"] = True
+    return result
+
+
+def run_schema_state_diagnostic_once() -> dict[str, Any]:
+    """Run the opt-in read-only PostgreSQL schema inspection at most once per process."""
+    global _schema_state_diagnostic_cache
+    enabled = bool(getattr(settings, "enable_db_schema_state_diagnostic", False)) and ENGINE_DIALECT == "postgresql"
+    if not enabled:
+        return _schema_state_result(False)
+    with _schema_state_diagnostic_lock:
+        if _schema_state_diagnostic_cache is None:
+            _schema_state_diagnostic_cache = _run_schema_state_diagnostic()
+        return dict(_schema_state_diagnostic_cache)
+
+
+def get_schema_state_diagnostic() -> dict[str, Any]:
+    if _schema_state_diagnostic_cache is None:
+        enabled = bool(getattr(settings, "enable_db_schema_state_diagnostic", False)) and ENGINE_DIALECT == "postgresql"
+        return _schema_state_result(enabled)
+    return dict(_schema_state_diagnostic_cache)
 
 
 def _disabled_version_shape_diagnostic() -> dict[str, Any]:
@@ -852,6 +950,7 @@ def _unknown_database_diagnostic() -> dict[str, Any]:
 def get_database_diagnostic() -> dict[str, Any]:
     """Return bounded PostgreSQL metadata without connecting or exposing URL values."""
     diagnostic = _unknown_database_diagnostic()
+    diagnostic["schema_state"] = get_schema_state_diagnostic()
     diagnostic["conninfo_preflight"] = get_conninfo_preflight_diagnostic()
     diagnostic["pgconn_stage_diagnostic"] = get_pgconn_stage_diagnostic()
     diagnostic["pgconn_level3_diagnostic"] = get_pgconn_level3_diagnostic()

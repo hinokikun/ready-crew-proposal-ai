@@ -65,6 +65,10 @@ class Settings:
     initial_admin_email: str = os.getenv("INITIAL_ADMIN_EMAIL", "").strip().lower()
     initial_admin_password: str = os.getenv("INITIAL_ADMIN_PASSWORD", "")
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///app.db")
+    enable_db_schema_state_diagnostic: bool = _as_bool(
+        os.getenv("ENABLE_DB_SCHEMA_STATE_DIAGNOSTIC"),
+        False,
+    )
     enable_db_conninfo_preflight: bool = _as_bool(os.getenv("ENABLE_DB_CONNINFO_PREFLIGHT"), False)
     enable_db_pgconn_stage_diagnostic: bool = _as_bool(
         os.getenv("ENABLE_DB_PGCONN_STAGE_DIAGNOSTIC"),
