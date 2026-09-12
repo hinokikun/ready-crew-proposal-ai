@@ -847,6 +847,127 @@ def test_formal_first_connect_observer_has_no_connection_side_effect(monkeypatch
     assert database_connection.get_high_level_stage_diagnostic()["first_connect_reached"] is True
 
 
+def _reset_safe_exception_location_state() -> None:
+    database_health._safe_exception_location_state.clear()
+    database_health._safe_exception_location_state.update({
+        "captured": False,
+        "exception_class": "unknown",
+        "module_id": "unknown",
+        "function_id": "unknown",
+        "line_number": None,
+        "failure_category": "unclassified",
+    })
+
+
+def test_safe_exception_location_disabled_does_not_scan_traceback(monkeypatch: pytest.MonkeyPatch) -> None:
+    _reset_safe_exception_location_state()
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(enable_db_safe_exception_location_diagnostic=False),
+    )
+    database_health._capture_safe_exception_location(AssertionError("secret-url"))
+    assert database_health.get_safe_exception_location_diagnostic() == {
+        "enabled": False,
+        "captured": False,
+        "exception_class": "unknown",
+        "module_id": "unknown",
+        "function_id": "unknown",
+        "line_number": None,
+        "failure_category": "unclassified",
+    }
+
+
+def test_safe_exception_location_maps_known_sqlalchemy_frames(monkeypatch: pytest.MonkeyPatch) -> None:
+    _reset_safe_exception_location_state()
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(enable_db_safe_exception_location_diagnostic=True),
+    )
+    namespace: dict[str, object] = {}
+    exec(compile(
+        "def _get_server_version_info():\n    raise AssertionError('postgresql://secret-user:secret-pass@secret-host/secret-db')\n",
+        "C:/venv/Lib/site-packages/sqlalchemy/dialects/postgresql/base.py",
+        "exec",
+    ), namespace)
+    try:
+        namespace["_get_server_version_info"]()  # type: ignore[operator]
+    except AssertionError as exc:
+        database_health._capture_safe_exception_location(exc)
+    diagnostic = database_health.get_safe_exception_location_diagnostic()
+    assert diagnostic["captured"] is True
+    assert diagnostic["exception_class"] == "AssertionError"
+    assert diagnostic["module_id"] == "postgresql_base"
+    assert diagnostic["function_id"] == "get_server_version_info"
+    assert diagnostic["failure_category"] == "server_version_parse"
+    assert isinstance(diagnostic["line_number"], int)
+    assert "secret" not in repr(diagnostic)
+
+
+def test_safe_exception_location_unknown_frame_and_args_are_not_exposed(monkeypatch: pytest.MonkeyPatch) -> None:
+    _reset_safe_exception_location_state()
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(enable_db_safe_exception_location_diagnostic=True),
+    )
+    error = ValueError("postgresql://secret-user:secret-pass@secret-host/secret-db")
+    error.args = ("secret-user", "secret-pass", "secret-host", "secret-db")
+    database_health._capture_safe_exception_location(error)
+    diagnostic = database_health.get_safe_exception_location_diagnostic()
+    assert diagnostic["module_id"] == "unknown"
+    assert diagnostic["function_id"] == "unknown"
+    assert diagnostic["line_number"] is None
+    assert diagnostic["failure_category"] == "unclassified"
+    assert "secret" not in repr(diagnostic)
+
+
+def test_safe_exception_location_selects_innermost_allowed_frame(monkeypatch: pytest.MonkeyPatch) -> None:
+    _reset_safe_exception_location_state()
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(enable_db_safe_exception_location_diagnostic=True),
+    )
+    outer: dict[str, object] = {}
+    inner: dict[str, object] = {}
+    exec(compile(
+        "def first_connect():\n    raise AssertionError('secret')\n",
+        "C:/venv/Lib/site-packages/sqlalchemy/engine/create.py",
+        "exec",
+    ), outer)
+    exec(compile(
+        "def _get_server_version_info():\n    first_connect()\n",
+        "C:/venv/Lib/site-packages/sqlalchemy/dialects/postgresql/base.py",
+        "exec",
+    ), inner)
+    inner["first_connect"] = outer["first_connect"]
+    try:
+        inner["_get_server_version_info"]()  # type: ignore[operator]
+    except AssertionError as exc:
+        database_health._capture_safe_exception_location(exc)
+    diagnostic = database_health.get_safe_exception_location_diagnostic()
+    assert diagnostic["module_id"] == "engine_create"
+    assert diagnostic["function_id"] == "engine_first_connect"
+    assert diagnostic["failure_category"] == "engine_first_connect"
+
+
+def test_check_db_captures_safe_location_without_changing_failure_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    _reset_safe_exception_location_state()
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(enable_db_safe_exception_location_diagnostic=True),
+    )
+    monkeypatch.setattr(database_health, "get_db", lambda: _failing_db(AssertionError("postgresql://secret")))
+    assert database_health.check_db() is False
+    diagnostic = database_health.get_safe_exception_location_diagnostic()
+    assert diagnostic["captured"] is True
+    assert diagnostic["exception_class"] == "AssertionError"
+    assert "secret" not in repr(diagnostic)
+
+
 class _StageCursor:
     def __init__(self, error: BaseException | None = None) -> None:
         self.error = error

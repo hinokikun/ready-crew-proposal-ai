@@ -61,6 +61,42 @@ _pgconn_stage_diagnostic_lock = Lock()
 _PGCONN_EXCEPTION_STAGES = frozenset({"none", "connect_start", "first_connect_poll"})
 _pgconn_level3_diagnostic_cache: dict[str, Any] | None = None
 _pgconn_level3_diagnostic_lock = Lock()
+_SAFE_LOCATION_EXCEPTION_CLASSES = frozenset({
+    "AssertionError",
+    "OperationalError",
+    "DatabaseError",
+    "InterfaceError",
+})
+_SAFE_LOCATION_MODULES = frozenset({
+    "postgresql_base",
+    "postgresql_psycopg",
+    "engine_create",
+    "pool_base",
+    "unknown",
+})
+_SAFE_LOCATION_FUNCTIONS = frozenset({
+    "get_server_version_info",
+    "psycopg_initialize",
+    "engine_first_connect",
+    "pool_connection_record_connect",
+    "unknown",
+})
+_SAFE_LOCATION_CATEGORIES = frozenset({
+    "server_version_parse",
+    "psycopg_initialize",
+    "engine_first_connect",
+    "pool_internal",
+    "unclassified",
+})
+_safe_exception_location_lock = Lock()
+_safe_exception_location_state: dict[str, Any] = {
+    "captured": False,
+    "exception_class": "unknown",
+    "module_id": "unknown",
+    "function_id": "unknown",
+    "line_number": None,
+    "failure_category": "unclassified",
+}
 _LEVEL3_POLL_RESULTS = frozenset({"ok", "reading", "writing", "failed", "active", "unknown"})
 _LEVEL3_CONNECTION_STATUSES = frozenset({
     "not_run",
@@ -538,6 +574,87 @@ def get_pgconn_level3_diagnostic() -> dict[str, Any]:
     return dict(_pgconn_level3_diagnostic_cache)
 
 
+def _safe_exception_location_default(enabled: bool) -> dict[str, Any]:
+    return {
+        "enabled": enabled,
+        "captured": False,
+        "exception_class": "unknown",
+        "module_id": "unknown",
+        "function_id": "unknown",
+        "line_number": None,
+        "failure_category": "unclassified",
+    }
+
+
+def _safe_location_exception_class(error: Exception) -> str:
+    name = type(error).__name__
+    return name if name in _SAFE_LOCATION_EXCEPTION_CLASSES else "unknown"
+
+
+def _safe_location_frame(frame: Any) -> tuple[str, str, str] | None:
+    try:
+        filename = frame.f_code.co_filename.replace("\\", "/")
+        function_name = frame.f_code.co_name
+    except Exception:
+        return None
+
+    mappings = (
+        ("/sqlalchemy/dialects/postgresql/base.py", "_get_server_version_info", "postgresql_base", "get_server_version_info", "server_version_parse"),
+        ("/sqlalchemy/dialects/postgresql/psycopg.py", "initialize", "postgresql_psycopg", "psycopg_initialize", "psycopg_initialize"),
+        ("/sqlalchemy/engine/create.py", "first_connect", "engine_create", "engine_first_connect", "engine_first_connect"),
+        ("/sqlalchemy/pool/base.py", "__connect", "pool_base", "pool_connection_record_connect", "pool_internal"),
+    )
+    for suffix, expected_function, module_id, function_id, category in mappings:
+        if filename.endswith(suffix) and function_name == expected_function:
+            return module_id, function_id, category
+    return None
+
+
+def _capture_safe_exception_location(error: Exception) -> None:
+    if not bool(getattr(settings, "enable_db_safe_exception_location_diagnostic", False)):
+        return
+    try:
+        selected: tuple[str, str, str, int] | None = None
+        traceback = error.__traceback__
+        while traceback is not None:
+            mapped = _safe_location_frame(traceback.tb_frame)
+            if mapped is not None:
+                selected = (*mapped, int(traceback.tb_lineno))
+            traceback = traceback.tb_next
+        if selected is None:
+            values = {
+                "captured": True,
+                "exception_class": _safe_location_exception_class(error),
+                "module_id": "unknown",
+                "function_id": "unknown",
+                "line_number": None,
+                "failure_category": "unclassified",
+            }
+        else:
+            module_id, function_id, category, line_number = selected
+            values = {
+                "captured": True,
+                "exception_class": _safe_location_exception_class(error),
+                "module_id": module_id if module_id in _SAFE_LOCATION_MODULES else "unknown",
+                "function_id": function_id if function_id in _SAFE_LOCATION_FUNCTIONS else "unknown",
+                "line_number": line_number if isinstance(line_number, int) and line_number >= 1 else None,
+                "failure_category": category if category in _SAFE_LOCATION_CATEGORIES else "unclassified",
+            }
+        with _safe_exception_location_lock:
+            _safe_exception_location_state.clear()
+            _safe_exception_location_state.update(values)
+    except Exception:
+        return
+
+
+def get_safe_exception_location_diagnostic() -> dict[str, Any]:
+    enabled = bool(getattr(settings, "enable_db_safe_exception_location_diagnostic", False))
+    if not enabled:
+        return _safe_exception_location_default(False)
+    with _safe_exception_location_lock:
+        return {"enabled": True, **_safe_exception_location_state}
+
+
 def _database_url_scheme(database_url: str) -> str:
     try:
         drivername = make_url(database_url).drivername
@@ -574,6 +691,7 @@ def get_database_diagnostic() -> dict[str, Any]:
     diagnostic["pgconn_stage_diagnostic"] = get_pgconn_stage_diagnostic()
     diagnostic["pgconn_level3_diagnostic"] = get_pgconn_level3_diagnostic()
     diagnostic["high_level_stage_diagnostic"] = get_high_level_stage_diagnostic()
+    diagnostic["safe_exception_location_diagnostic"] = get_safe_exception_location_diagnostic()
     if ENGINE_DIALECT != "postgresql":
         return diagnostic
 
@@ -779,6 +897,7 @@ def check_db() -> bool:
             db.execute("SELECT 1")
         return True
     except Exception as exc:
+        _capture_safe_exception_location(exc)
         sqlstate = _safe_sqlstate(exc)
         failure_category = _db_failure_category(exc, sqlstate)
         connect_stage = _safe_connect_stage(exc)
