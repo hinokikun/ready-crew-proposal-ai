@@ -11,7 +11,13 @@ from typing import Any
 from sqlalchemy.engine import make_url
 
 from app.config import settings
-from app.database.connection import DB_CONNECT_STAGES, ENGINE_DIALECT, get_db, get_db_type
+from app.database.connection import (
+    DB_CONNECT_STAGES,
+    ENGINE_DIALECT,
+    get_db,
+    get_db_type,
+    get_high_level_stage_diagnostic,
+)
 from app.database.migration import _existing_columns, _quality_gate_unique_state, _table_exists
 
 
@@ -567,6 +573,7 @@ def get_database_diagnostic() -> dict[str, Any]:
     diagnostic["conninfo_preflight"] = get_conninfo_preflight_diagnostic()
     diagnostic["pgconn_stage_diagnostic"] = get_pgconn_stage_diagnostic()
     diagnostic["pgconn_level3_diagnostic"] = get_pgconn_level3_diagnostic()
+    diagnostic["high_level_stage_diagnostic"] = get_high_level_stage_diagnostic()
     if ENGINE_DIALECT != "postgresql":
         return diagnostic
 

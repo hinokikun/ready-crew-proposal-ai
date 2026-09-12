@@ -74,6 +74,10 @@ class Settings:
         os.getenv("ENABLE_DB_PGCONN_LEVEL3_DIAGNOSTIC"),
         False,
     )
+    enable_db_high_level_stage_diagnostic: bool = _as_bool(
+        os.getenv("ENABLE_DB_HIGH_LEVEL_STAGE_DIAGNOSTIC"),
+        False,
+    )
     log_level: str = os.getenv("LOG_LEVEL", "INFO").upper()
     allow_startup_schema_migration: bool = _as_bool(
         os.getenv("AUTO_SCHEMA_PATCH"),

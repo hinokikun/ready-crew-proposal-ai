@@ -5,6 +5,7 @@ import sqlite3
 from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
+from threading import Lock
 from typing import Any, Iterable
 
 from sqlalchemy import event
@@ -31,6 +32,52 @@ _connect_observation_stage: ContextVar[str] = ContextVar(
     "db_connect_observation_stage",
     default="engine_connect",
 )
+
+_HIGH_LEVEL_STAGE_ORDER = {
+    "none": 0,
+    "do_connect": 1,
+    "first_connect": 2,
+    "application_connect": 3,
+}
+_high_level_stage_lock = Lock()
+_high_level_stage_state: dict[str, Any] = {
+    "do_connect_reached": False,
+    "first_connect_reached": False,
+    "application_connect_reached": False,
+    "last_stage": "none",
+}
+
+
+def _high_level_diagnostic_enabled() -> bool:
+    return bool(getattr(settings, "enable_db_high_level_stage_diagnostic", False))
+
+
+def _mark_high_level_stage(stage: str) -> None:
+    if not _high_level_diagnostic_enabled() or stage not in _HIGH_LEVEL_STAGE_ORDER:
+        return
+    with _high_level_stage_lock:
+        if stage == "do_connect":
+            _high_level_stage_state["do_connect_reached"] = True
+        elif stage == "first_connect":
+            _high_level_stage_state["first_connect_reached"] = True
+        elif stage == "application_connect":
+            _high_level_stage_state["application_connect_reached"] = True
+        if _HIGH_LEVEL_STAGE_ORDER[stage] > _HIGH_LEVEL_STAGE_ORDER[_high_level_stage_state["last_stage"]]:
+            _high_level_stage_state["last_stage"] = stage
+
+
+def get_high_level_stage_diagnostic() -> dict[str, Any]:
+    enabled = _high_level_diagnostic_enabled()
+    if not enabled:
+        return {
+            "enabled": False,
+            "do_connect_reached": False,
+            "first_connect_reached": False,
+            "application_connect_reached": False,
+            "last_stage": "none",
+        }
+    with _high_level_stage_lock:
+        return {"enabled": True, **_high_level_stage_state}
 
 
 def _set_connect_observation_stage(stage: str) -> None:
@@ -104,11 +151,18 @@ engine = create_engine(
 
 
 def _observe_dbapi_connect(dialect: Any, connection_record: Any, cargs: Any, cparams: Any) -> None:
+    _mark_high_level_stage("do_connect")
     _set_connect_observation_stage("dbapi_connect_start")
     return None
 
 
+def _observe_first_connect(dbapi_connection: Any, connection_record: Any) -> None:
+    """Formal PoolEvents.first_connect: creator returned a DBAPI connection."""
+    _mark_high_level_stage("first_connect")
+
+
 def _observe_connect_event(dbapi_connection: Any, connection_record: Any) -> None:
+    _mark_high_level_stage("application_connect")
     _set_connect_observation_stage("connect_event")
 
 
@@ -122,6 +176,7 @@ def _observe_checkout_event(
 
 if ENGINE_DIALECT == "postgresql":
     event.listen(engine, "do_connect", _observe_dbapi_connect)
+    event.listen(engine.pool, "first_connect", _observe_first_connect)
     event.listen(engine, "connect", _observe_connect_event)
     event.listen(engine, "checkout", _observe_checkout_event)
 

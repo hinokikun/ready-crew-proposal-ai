@@ -774,6 +774,79 @@ def test_pgconn_level3_flag_disabled_and_cache_prevent_reexecution(monkeypatch: 
     assert calls == {"start": 1, "poll": 1, "finish": 1}
 
 
+def test_high_level_stage_diagnostic_disabled_is_read_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        database_connection,
+        "settings",
+        types.SimpleNamespace(enable_db_high_level_stage_diagnostic=False),
+    )
+    database_connection._high_level_stage_state.update({
+        "do_connect_reached": False,
+        "first_connect_reached": False,
+        "application_connect_reached": False,
+        "last_stage": "none",
+    })
+
+    database_connection._observe_dbapi_connect(None, None, [], {})
+    database_connection._observe_first_connect(object(), object())
+    database_connection._observe_connect_event(object(), object())
+
+    assert database_connection.get_high_level_stage_diagnostic() == {
+        "enabled": False,
+        "do_connect_reached": False,
+        "first_connect_reached": False,
+        "application_connect_reached": False,
+        "last_stage": "none",
+    }
+
+
+def test_high_level_stage_diagnostic_is_monotonic_and_observers_do_not_replace_values(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        database_connection,
+        "settings",
+        types.SimpleNamespace(enable_db_high_level_stage_diagnostic=True),
+    )
+    database_connection._high_level_stage_state.update({
+        "do_connect_reached": False,
+        "first_connect_reached": False,
+        "application_connect_reached": False,
+        "last_stage": "none",
+    })
+
+    assert database_connection._observe_dbapi_connect(None, None, [], {}) is None
+    database_connection._observe_first_connect(object(), object())
+    database_connection._observe_connect_event(object(), object())
+    database_connection._observe_dbapi_connect(None, None, [], {})
+
+    assert database_connection.get_high_level_stage_diagnostic() == {
+        "enabled": True,
+        "do_connect_reached": True,
+        "first_connect_reached": True,
+        "application_connect_reached": True,
+        "last_stage": "application_connect",
+    }
+
+
+def test_formal_first_connect_observer_has_no_connection_side_effect(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        database_connection,
+        "settings",
+        types.SimpleNamespace(enable_db_high_level_stage_diagnostic=True),
+    )
+    database_connection._high_level_stage_state.update({
+        "do_connect_reached": False,
+        "first_connect_reached": False,
+        "application_connect_reached": False,
+        "last_stage": "none",
+    })
+    marker = object()
+
+    assert database_connection._observe_first_connect(marker, marker) is None
+    assert database_connection.get_high_level_stage_diagnostic()["first_connect_reached"] is True
+
+
 class _StageCursor:
     def __init__(self, error: BaseException | None = None) -> None:
         self.error = error
