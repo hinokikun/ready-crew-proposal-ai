@@ -44,9 +44,13 @@ _PREFLIGHT_EXCEPTION_CLASSES = frozenset({
     "OSError",
     "TimeoutError",
     "gaierror",
+    "MemoryError",
 })
 _conninfo_preflight_cache: dict[str, Any] | None = None
 _conninfo_preflight_lock = Lock()
+_pgconn_stage_diagnostic_cache: dict[str, Any] | None = None
+_pgconn_stage_diagnostic_lock = Lock()
+_PGCONN_EXCEPTION_STAGES = frozenset({"none", "connect_start", "first_connect_poll"})
 
 
 def _disabled_conninfo_preflight() -> dict[str, Any]:
@@ -154,6 +158,133 @@ def get_conninfo_preflight_diagnostic() -> dict[str, Any]:
     return dict(_conninfo_preflight_cache)
 
 
+def _disabled_pgconn_stage_diagnostic() -> dict[str, Any]:
+    return {
+        "enabled": False,
+        "executed": False,
+        "attempts_count": "unknown",
+        "pgconn_connect_start_status": "not_run",
+        "pgconn_connect_poll_status": "not_run",
+        "first_poll_result": "not_run",
+        "poll_iterations": 0,
+        "exception_stage": "none",
+        "exception_class": "unknown",
+        "cleanup_status": "not_run",
+    }
+
+
+def _pgconn_stage_result() -> dict[str, Any]:
+    result = _disabled_pgconn_stage_diagnostic()
+    result["enabled"] = True
+    result["executed"] = True
+    return result
+
+
+def _safe_pgconn_exception_class(error: Exception) -> str:
+    name = type(error).__name__
+    return name if name in _PREFLIGHT_EXCEPTION_CLASSES else "unknown"
+
+
+def _safe_poll_result(status: Any) -> str:
+    try:
+        from psycopg.pq import PollingStatus
+
+        mapping = {
+            PollingStatus.OK: "ok",
+            PollingStatus.READING: "reading",
+            PollingStatus.WRITING: "writing",
+            PollingStatus.FAILED: "failed",
+            PollingStatus.ACTIVE: "active",
+        }
+        return mapping.get(status, "unknown")
+    except Exception:
+        return "unknown"
+
+
+def _run_pgconn_stage_diagnostic(database_url: str) -> dict[str, Any]:
+    """Run one low-level start/first-poll observation without replacing normal DB connection code."""
+    result = _pgconn_stage_result()
+    pgconn: Any = None
+    primary_failure = False
+    try:
+        from psycopg.conninfo import conninfo_attempts, conninfo_to_dict, make_conninfo, timeout_from_conninfo
+        from psycopg.pq import PGconn
+
+        params = conninfo_to_dict(database_url)
+        timeout_from_conninfo(params)
+        attempts = conninfo_attempts(params)
+        result["attempts_count"] = len(attempts) if len(attempts) >= 0 else "unknown"
+        if not attempts:
+            result["pgconn_connect_start_status"] = "failure"
+            result["exception_stage"] = "connect_start"
+            result["exception_class"] = "unknown"
+            return result
+
+        # The generated conninfo is memory-only and is never logged or returned.
+        conninfo_bytes = make_conninfo("", **attempts[0]).encode()
+        try:
+            pgconn = PGconn.connect_start(conninfo_bytes)
+            result["pgconn_connect_start_status"] = "success"
+        except Exception as exc:
+            primary_failure = True
+            result["pgconn_connect_start_status"] = "failure"
+            result["exception_stage"] = "connect_start"
+            result["exception_class"] = _safe_pgconn_exception_class(exc)
+            return result
+
+        try:
+            poll_status = pgconn.connect_poll()
+            result["pgconn_connect_poll_status"] = "success"
+            result["first_poll_result"] = _safe_poll_result(poll_status)
+            result["poll_iterations"] = 1
+        except Exception as exc:
+            primary_failure = True
+            result["pgconn_connect_poll_status"] = "failure"
+            result["exception_stage"] = "first_connect_poll"
+            result["exception_class"] = _safe_pgconn_exception_class(exc)
+    except Exception as exc:
+        result["pgconn_connect_start_status"] = "failure"
+        result["exception_stage"] = "connect_start"
+        result["exception_class"] = _safe_pgconn_exception_class(exc)
+        primary_failure = True
+    finally:
+        if pgconn is not None:
+            try:
+                pgconn.finish()
+                result["cleanup_status"] = "success"
+            except Exception:
+                result["cleanup_status"] = "failure"
+                if not primary_failure and result["exception_stage"] not in _PGCONN_EXCEPTION_STAGES:
+                    result["exception_stage"] = "none"
+    return result
+
+
+def run_pgconn_stage_diagnostic_once() -> dict[str, Any]:
+    """Run the opt-in low-level diagnostic at most once per process."""
+    global _pgconn_stage_diagnostic_cache
+    enabled = bool(getattr(settings, "enable_db_pgconn_stage_diagnostic", False))
+    if not enabled:
+        return _disabled_pgconn_stage_diagnostic()
+    with _pgconn_stage_diagnostic_lock:
+        if _pgconn_stage_diagnostic_cache is None:
+            try:
+                _pgconn_stage_diagnostic_cache = _run_pgconn_stage_diagnostic(settings.database_url)
+            except Exception as exc:
+                _pgconn_stage_diagnostic_cache = _pgconn_stage_result()
+                _pgconn_stage_diagnostic_cache["exception_class"] = _safe_pgconn_exception_class(exc)
+            _pgconn_stage_diagnostic_cache["executed"] = True
+        return dict(_pgconn_stage_diagnostic_cache)
+
+
+def get_pgconn_stage_diagnostic() -> dict[str, Any]:
+    if _pgconn_stage_diagnostic_cache is None:
+        enabled = bool(getattr(settings, "enable_db_pgconn_stage_diagnostic", False))
+        result = _disabled_pgconn_stage_diagnostic()
+        result["enabled"] = enabled
+        return result
+    return dict(_pgconn_stage_diagnostic_cache)
+
+
 def _database_url_scheme(database_url: str) -> str:
     try:
         drivername = make_url(database_url).drivername
@@ -187,6 +318,7 @@ def get_database_diagnostic() -> dict[str, Any]:
     """Return bounded PostgreSQL metadata without connecting or exposing URL values."""
     diagnostic = _unknown_database_diagnostic()
     diagnostic["conninfo_preflight"] = get_conninfo_preflight_diagnostic()
+    diagnostic["pgconn_stage_diagnostic"] = get_pgconn_stage_diagnostic()
     if ENGINE_DIALECT != "postgresql":
         return diagnostic
 

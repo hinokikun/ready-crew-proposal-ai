@@ -3,6 +3,7 @@ from contextlib import contextmanager
 import logging
 import sys
 import types
+import enum
 
 import pytest
 
@@ -364,6 +365,159 @@ def test_conninfo_preflight_failures_are_non_fatal_and_allowlisted(
     assert result["executed"] is True
     assert result[expected_stage] == "failure"
     assert result["exception_class"] in database_health._PREFLIGHT_EXCEPTION_CLASSES | {"unknown"}
+
+
+class _FakePollingStatus(enum.Enum):
+    FAILED = 0
+    READING = 1
+    WRITING = 2
+    OK = 3
+    ACTIVE = 4
+
+
+def _install_fake_pgconn(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    start_error: Exception | None = None,
+    poll_error: Exception | None = None,
+    poll_status: _FakePollingStatus = _FakePollingStatus.READING,
+    finish_error: Exception | None = None,
+) -> dict[str, int]:
+    calls = {"start": 0, "poll": 0, "finish": 0}
+
+    class FakePGconn:
+        @classmethod
+        def connect_start(cls, conninfo: bytes) -> "FakePGconn":
+            assert isinstance(conninfo, bytes)
+            calls["start"] += 1
+            if start_error is not None:
+                raise start_error
+            return cls()
+
+        def connect_poll(self) -> _FakePollingStatus:
+            calls["poll"] += 1
+            if poll_error is not None:
+                raise poll_error
+            return poll_status
+
+        def finish(self) -> None:
+            calls["finish"] += 1
+            if finish_error is not None:
+                raise finish_error
+
+    conninfo_module = types.ModuleType("psycopg.conninfo")
+    conninfo_module.conninfo_to_dict = lambda _: {"host": "secret-host"}
+    conninfo_module.timeout_from_conninfo = lambda _: 5
+    conninfo_module.conninfo_attempts = lambda _: [{"host": "secret-host"}]
+    conninfo_module.make_conninfo = lambda _, **kwargs: "host=secret-host"
+    pq_module = types.ModuleType("psycopg.pq")
+    pq_module.PGconn = FakePGconn
+    pq_module.PollingStatus = _FakePollingStatus
+    psycopg_module = types.ModuleType("psycopg")
+    psycopg_module.__path__ = []
+    monkeypatch.setitem(sys.modules, "psycopg", psycopg_module)
+    monkeypatch.setitem(sys.modules, "psycopg.conninfo", conninfo_module)
+    monkeypatch.setitem(sys.modules, "psycopg.pq", pq_module)
+    return calls
+
+
+def _assert_pgconn_safe_result(result: dict[str, object]) -> None:
+    assert "secret-host" not in repr(result)
+    assert "postgresql://" not in repr(result)
+    assert result["exception_class"] in database_health._PREFLIGHT_EXCEPTION_CLASSES | {"unknown"}
+
+
+def test_pgconn_stage_diagnostic_level_two_first_poll_and_cleanup(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = _install_fake_pgconn(monkeypatch)
+
+    result = database_health._run_pgconn_stage_diagnostic("postgresql://secret")
+
+    assert calls == {"start": 1, "poll": 1, "finish": 1}
+    assert result["pgconn_connect_start_status"] == "success"
+    assert result["pgconn_connect_poll_status"] == "success"
+    assert result["first_poll_result"] == "reading"
+    assert result["poll_iterations"] == 1
+    assert result["cleanup_status"] == "success"
+    assert result["exception_stage"] == "none"
+    _assert_pgconn_safe_result(result)
+
+
+def test_pgconn_stage_diagnostic_start_assertion_stops_before_poll(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = _install_fake_pgconn(monkeypatch, start_error=AssertionError("secret-host"))
+
+    result = database_health._run_pgconn_stage_diagnostic("postgresql://secret")
+
+    assert calls == {"start": 1, "poll": 0, "finish": 0}
+    assert result["pgconn_connect_start_status"] == "failure"
+    assert result["pgconn_connect_poll_status"] == "not_run"
+    assert result["exception_stage"] == "connect_start"
+    assert result["exception_class"] == "AssertionError"
+    _assert_pgconn_safe_result(result)
+
+
+def test_pgconn_stage_diagnostic_first_poll_assertion_finishes_connection(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = _install_fake_pgconn(monkeypatch, poll_error=AssertionError("secret-host"))
+
+    result = database_health._run_pgconn_stage_diagnostic("postgresql://secret")
+
+    assert calls == {"start": 1, "poll": 1, "finish": 1}
+    assert result["pgconn_connect_start_status"] == "success"
+    assert result["pgconn_connect_poll_status"] == "failure"
+    assert result["first_poll_result"] == "not_run"
+    assert result["exception_stage"] == "first_connect_poll"
+    assert result["exception_class"] == "AssertionError"
+    _assert_pgconn_safe_result(result)
+
+
+def test_pgconn_stage_diagnostic_cleanup_failure_does_not_replace_primary_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = _install_fake_pgconn(
+        monkeypatch,
+        poll_error=AssertionError("secret-host"),
+        finish_error=RuntimeError("secret-cleanup"),
+    )
+
+    result = database_health._run_pgconn_stage_diagnostic("postgresql://secret")
+
+    assert calls == {"start": 1, "poll": 1, "finish": 1}
+    assert result["exception_stage"] == "first_connect_poll"
+    assert result["exception_class"] == "AssertionError"
+    assert result["cleanup_status"] == "failure"
+    _assert_pgconn_safe_result(result)
+
+
+def test_pgconn_stage_diagnostic_once_cache_and_disabled_state(monkeypatch: pytest.MonkeyPatch) -> None:
+    original_runner = database_health._run_pgconn_stage_diagnostic
+    monkeypatch.setattr(database_health, "_pgconn_stage_diagnostic_cache", None)
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(
+            enable_db_pgconn_stage_diagnostic=False,
+            database_url="postgresql://secret",
+        ),
+    )
+    monkeypatch.setattr(database_health, "_run_pgconn_stage_diagnostic", lambda _: pytest.fail("diagnostic ran"))
+    disabled = database_health.run_pgconn_stage_diagnostic_once()
+    assert disabled["executed"] is False
+    assert disabled["pgconn_connect_start_status"] == "not_run"
+
+    calls = _install_fake_pgconn(monkeypatch)
+    monkeypatch.setattr(database_health, "_run_pgconn_stage_diagnostic", original_runner)
+    monkeypatch.setattr(database_health, "_pgconn_stage_diagnostic_cache", None)
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(
+            enable_db_pgconn_stage_diagnostic=True,
+            database_url="postgresql://secret",
+        ),
+    )
+    first = database_health.run_pgconn_stage_diagnostic_once()
+    second = database_health.run_pgconn_stage_diagnostic_once()
+    assert first == second
+    assert calls == {"start": 1, "poll": 1, "finish": 1}
 
 
 class _StageCursor:
