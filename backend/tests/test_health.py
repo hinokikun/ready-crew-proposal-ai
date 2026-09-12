@@ -118,6 +118,191 @@ def test_database_diagnostic_handles_unknown_implementation_and_version_failure(
     assert diagnostic["database_url_scheme"] == "postgresql_psycopg"
 
 
+class _VersionShapeCursor:
+    def __init__(self, value: object = "PostgreSQL 18.0 on Linux") -> None:
+        self.value = value
+        self.execute_calls = 0
+        self.close_calls = 0
+
+    def execute(self, query: str) -> None:
+        self.execute_calls += 1
+        assert query == "select pg_catalog.version()"
+
+    def fetchone(self) -> tuple[object]:
+        return (self.value,)
+
+    def close(self) -> None:
+        self.close_calls += 1
+
+
+class _VersionShapeConnection:
+    def __init__(self, value: object = "PostgreSQL 18.0 on Linux") -> None:
+        self.cursor_value = _VersionShapeCursor(value)
+        self.close_calls = 0
+
+    def cursor(self) -> _VersionShapeCursor:
+        return self.cursor_value
+
+    def close(self) -> None:
+        self.close_calls += 1
+
+
+def _version_shape_settings(enabled: bool = True) -> types.SimpleNamespace:
+    return types.SimpleNamespace(
+        enable_db_version_shape_diagnostic=enabled,
+        database_url="postgresql+psycopg://secret-user:secret-pass@secret-host/secret-db",
+    )
+
+
+def test_version_shape_diagnostic_disabled_does_not_connect(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_health, "_version_shape_diagnostic_cache", None)
+    monkeypatch.setattr(database_health, "settings", _version_shape_settings(False))
+
+    def fail_connect(_: str) -> None:
+        pytest.fail("version shape diagnostic connected while disabled")
+
+    monkeypatch.setitem(sys.modules, "psycopg", types.SimpleNamespace(connect=fail_connect))
+    result = database_health.run_version_shape_diagnostic_once()
+
+    assert result["enabled"] is False
+    assert result["executed"] is False
+    assert result["failure_category"] == "none"
+
+
+def test_version_shape_diagnostic_success_is_bounded_and_closes(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_health, "_version_shape_diagnostic_cache", None)
+    monkeypatch.setattr(database_health, "settings", _version_shape_settings())
+    connection = _VersionShapeConnection()
+    monkeypatch.setitem(sys.modules, "psycopg", types.SimpleNamespace(connect=lambda _: connection))
+
+    result = database_health.run_version_shape_diagnostic_once()
+
+    assert result["enabled"] is True
+    assert result["executed"] is True
+    assert result["result_type"] == "str"
+    assert result["contains_postgresql_token"] is True
+    assert result["sqlalchemy_regex_match"] is True
+    assert result["parsed_major_bucket"] == "18"
+    assert result["failure_category"] == "none"
+    assert connection.cursor_value.execute_calls == 1
+    assert connection.cursor_value.close_calls == 1
+    assert connection.close_calls == 1
+
+
+@pytest.mark.parametrize(
+    ("raw", "result_type", "failure_category"),
+    [
+        ("", "str", "empty"),
+        (None, "none", "non_string"),
+        (b"PostgreSQL 18.0", "bytes", "non_string"),
+        (object(), "other", "non_string"),
+    ],
+)
+def test_version_shape_diagnostic_rejects_non_string_shapes(
+    raw: object,
+    result_type: str,
+    failure_category: str,
+) -> None:
+    result = database_health._classify_version_shape(raw)
+
+    assert result["result_type"] == result_type
+    assert result["failure_category"] == failure_category
+    assert result["sqlalchemy_regex_match"] is False
+    assert result["parsed_major_bucket"] == "unavailable"
+    assert set(result["failure_category"]) <= set("none_regex_miss_non_string_empty_query_failed_connect_failed_diagnostic_failed")
+
+
+def test_version_shape_diagnostic_preserves_regex_and_prefix_shape_without_raw_value() -> None:
+    enterprise = database_health._classify_version_shape("EnterpriseDB 17.2 on x")
+    token_miss = database_health._classify_version_shape("build PostgreSQL-ish")
+
+    assert enterprise["contains_enterprisedb_token"] is True
+    assert enterprise["prefix_category"] == "enterprisedb"
+    assert enterprise["parsed_major_bucket"] == "other_numeric"
+    assert token_miss["contains_postgresql_token"] is True
+    assert token_miss["sqlalchemy_regex_match"] is False
+    assert token_miss["failure_category"] == "regex_miss"
+
+
+def test_version_shape_diagnostic_failure_is_secret_free_and_non_fatal(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_health, "_version_shape_diagnostic_cache", None)
+    monkeypatch.setattr(database_health, "settings", _version_shape_settings())
+
+    class SecretError(Exception):
+        pass
+
+    def fail_connect(_: str) -> None:
+        raise SecretError("postgresql://secret-user:secret-pass@secret-host/secret-db")
+
+    monkeypatch.setitem(sys.modules, "psycopg", types.SimpleNamespace(connect=fail_connect))
+    result = database_health.run_version_shape_diagnostic_once()
+    serialized = repr(result)
+
+    assert result["failure_category"] == "connect_failed"
+    for secret in ("secret-user", "secret-pass", "secret-host", "secret-db", "postgresql://"):
+        assert secret not in serialized
+
+
+def test_version_shape_diagnostic_query_failure_is_non_fatal(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_health, "_version_shape_diagnostic_cache", None)
+    monkeypatch.setattr(database_health, "settings", _version_shape_settings())
+
+    class FailingCursor(_VersionShapeCursor):
+        def execute(self, query: str) -> None:
+            raise AssertionError("secret query detail")
+
+    connection = _VersionShapeConnection()
+    connection.cursor_value = FailingCursor()
+    monkeypatch.setitem(sys.modules, "psycopg", types.SimpleNamespace(connect=lambda _: connection))
+
+    result = database_health.run_version_shape_diagnostic_once()
+
+    assert result["failure_category"] == "query_failed"
+    assert connection.close_calls == 1
+
+
+def test_version_shape_diagnostic_runs_once_and_health_getter_only_reads_cache(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_health, "_version_shape_diagnostic_cache", None)
+    monkeypatch.setattr(database_health, "settings", _version_shape_settings())
+    calls = {"connect": 0}
+    connection = _VersionShapeConnection()
+
+    def connect(_: str) -> _VersionShapeConnection:
+        calls["connect"] += 1
+        return connection
+
+    monkeypatch.setitem(sys.modules, "psycopg", types.SimpleNamespace(connect=connect))
+    first = database_health.run_version_shape_diagnostic_once()
+    second = database_health.run_version_shape_diagnostic_once()
+    monkeypatch.setattr(database_health, "run_version_shape_diagnostic_once", lambda: pytest.fail("health getter executed diagnostic"))
+    cached = database_health.get_version_shape_diagnostic()
+
+    assert first == second == cached
+    assert calls["connect"] == 1
+
+
+def test_database_diagnostic_exposes_cached_version_shape_without_connecting(monkeypatch: pytest.MonkeyPatch) -> None:
+    cached = database_health._classify_version_shape("PostgreSQL 18.0")
+    monkeypatch.setattr(database_health, "_version_shape_diagnostic_cache", cached)
+    monkeypatch.setattr(database_health, "ENGINE_DIALECT", "sqlite")
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(
+            enable_db_version_shape_diagnostic=True,
+            enable_db_conninfo_preflight=False,
+            enable_db_pgconn_stage_diagnostic=False,
+            enable_db_pgconn_level3_diagnostic=False,
+            enable_db_safe_exception_location_diagnostic=False,
+        ),
+    )
+    monkeypatch.setattr(database_health, "run_version_shape_diagnostic_once", lambda: pytest.fail("health getter executed diagnostic"))
+
+    diagnostic = database_health.get_database_diagnostic()
+
+    assert diagnostic["version_shape_diagnostic"] == cached
+
+
 @pytest.mark.parametrize(
     ("url", "expected_scheme"),
     [

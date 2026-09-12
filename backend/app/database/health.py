@@ -61,6 +61,8 @@ _pgconn_stage_diagnostic_lock = Lock()
 _PGCONN_EXCEPTION_STAGES = frozenset({"none", "connect_start", "first_connect_poll"})
 _pgconn_level3_diagnostic_cache: dict[str, Any] | None = None
 _pgconn_level3_diagnostic_lock = Lock()
+_version_shape_diagnostic_cache: dict[str, Any] | None = None
+_version_shape_diagnostic_lock = Lock()
 _SAFE_LOCATION_EXCEPTION_CLASSES = frozenset({
     "AssertionError",
     "OperationalError",
@@ -113,6 +115,169 @@ _LEVEL3_CONNECTION_STATUSES = frozenset({
 })
 LEVEL3_HARD_DEADLINE_SECONDS = 5.0
 MAX_POLL_ITERATIONS = 64
+
+_VERSION_SHAPE_REGEX = re.compile(
+    r".*(?:PostgreSQL|EnterpriseDB) "
+    r"(\d+)\.?((?:\d+))?(?:\.(\d+))?(?:\.\d+)?(?:devel|beta)?"
+)
+_VERSION_SHAPE_RESULT_TYPES = frozenset({"str", "bytes", "none", "other", "unknown"})
+_VERSION_SHAPE_MAJOR_BUCKETS = frozenset({"18", "other_numeric", "unavailable"})
+_VERSION_SHAPE_LENGTH_BUCKETS = frozenset({"0", "1_31", "32_63", "64_127", "128_plus", "unknown"})
+_VERSION_SHAPE_PREFIXES = frozenset({"postgresql", "enterprisedb", "other", "unavailable"})
+_VERSION_SHAPE_FAILURES = frozenset({
+    "none",
+    "regex_miss",
+    "non_string",
+    "empty",
+    "query_failed",
+    "connect_failed",
+    "diagnostic_failed",
+})
+
+
+def _disabled_version_shape_diagnostic() -> dict[str, Any]:
+    return {
+        "enabled": False,
+        "executed": False,
+        "result_type": "unknown",
+        "contains_postgresql_token": False,
+        "contains_enterprisedb_token": False,
+        "sqlalchemy_regex_match": False,
+        "parsed_major_present": False,
+        "parsed_major_numeric": False,
+        "parsed_major_bucket": "unavailable",
+        "length_bucket": "unknown",
+        "prefix_category": "unavailable",
+        "failure_category": "none",
+    }
+
+
+def _version_shape_result() -> dict[str, Any]:
+    result = _disabled_version_shape_diagnostic()
+    result["enabled"] = True
+    result["executed"] = True
+    return result
+
+
+def _version_length_bucket(value: str) -> str:
+    length = len(value)
+    if length == 0:
+        return "0"
+    if length <= 31:
+        return "1_31"
+    if length <= 63:
+        return "32_63"
+    if length <= 127:
+        return "64_127"
+    return "128_plus"
+
+
+def _classify_version_shape(raw: Any) -> dict[str, Any]:
+    result = _version_shape_result()
+    if isinstance(raw, str):
+        result["result_type"] = "str"
+        result["length_bucket"] = _version_length_bucket(raw)
+        if not raw:
+            result["failure_category"] = "empty"
+            return result
+        contains_postgresql = "PostgreSQL" in raw
+        contains_enterprisedb = "EnterpriseDB" in raw
+        result["contains_postgresql_token"] = contains_postgresql
+        result["contains_enterprisedb_token"] = contains_enterprisedb
+        if raw.startswith("PostgreSQL"):
+            result["prefix_category"] = "postgresql"
+        elif raw.startswith("EnterpriseDB"):
+            result["prefix_category"] = "enterprisedb"
+        else:
+            result["prefix_category"] = "other"
+        match = _VERSION_SHAPE_REGEX.match(raw)
+        result["sqlalchemy_regex_match"] = match is not None
+        if match is None:
+            result["failure_category"] = "regex_miss"
+            return result
+        major_text = match.group(1)
+        result["parsed_major_present"] = major_text is not None
+        try:
+            major = int(major_text)
+        except (TypeError, ValueError):
+            result["failure_category"] = "regex_miss"
+            return result
+        result["parsed_major_numeric"] = True
+        result["parsed_major_bucket"] = "18" if major == 18 else "other_numeric"
+        return result
+
+    if raw is None:
+        result["result_type"] = "none"
+    elif isinstance(raw, bytes):
+        result["result_type"] = "bytes"
+    else:
+        result["result_type"] = "other"
+    result["failure_category"] = "non_string"
+    return result
+
+
+def _psycopg_database_url(database_url: str) -> str:
+    value = (database_url or "").strip()
+    if value.startswith("postgresql+psycopg://"):
+        return value.replace("postgresql+psycopg://", "postgresql://", 1)
+    return value
+
+
+def _run_version_shape_diagnostic(database_url: str) -> dict[str, Any]:
+    result = _version_shape_result()
+    connection: Any = None
+    cursor: Any = None
+    try:
+        import psycopg
+        connection = psycopg.connect(_psycopg_database_url(database_url))
+    except Exception:
+        result["failure_category"] = "connect_failed"
+        return result
+    try:
+        cursor = connection.cursor()
+        cursor.execute("select pg_catalog.version()")
+        row = cursor.fetchone()
+        raw = row[0] if row else None
+        result = _classify_version_shape(raw)
+    except Exception:
+        result["failure_category"] = "query_failed"
+    finally:
+        if cursor is not None:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+        if connection is not None:
+            try:
+                connection.close()
+            except Exception:
+                pass
+    return result
+
+
+def run_version_shape_diagnostic_once() -> dict[str, Any]:
+    """Run the opt-in version-shape query at most once per process."""
+    global _version_shape_diagnostic_cache
+    enabled = bool(getattr(settings, "enable_db_version_shape_diagnostic", False))
+    if not enabled:
+        return _disabled_version_shape_diagnostic()
+    with _version_shape_diagnostic_lock:
+        if _version_shape_diagnostic_cache is None:
+            try:
+                _version_shape_diagnostic_cache = _run_version_shape_diagnostic(settings.database_url)
+            except Exception:
+                _version_shape_diagnostic_cache = _version_shape_result()
+                _version_shape_diagnostic_cache["failure_category"] = "diagnostic_failed"
+        return dict(_version_shape_diagnostic_cache)
+
+
+def get_version_shape_diagnostic() -> dict[str, Any]:
+    if _version_shape_diagnostic_cache is None:
+        enabled = bool(getattr(settings, "enable_db_version_shape_diagnostic", False))
+        result = _disabled_version_shape_diagnostic()
+        result["enabled"] = enabled
+        return result
+    return dict(_version_shape_diagnostic_cache)
 
 
 def _disabled_conninfo_preflight() -> dict[str, Any]:
@@ -690,6 +855,7 @@ def get_database_diagnostic() -> dict[str, Any]:
     diagnostic["conninfo_preflight"] = get_conninfo_preflight_diagnostic()
     diagnostic["pgconn_stage_diagnostic"] = get_pgconn_stage_diagnostic()
     diagnostic["pgconn_level3_diagnostic"] = get_pgconn_level3_diagnostic()
+    diagnostic["version_shape_diagnostic"] = get_version_shape_diagnostic()
     diagnostic["high_level_stage_diagnostic"] = get_high_level_stage_diagnostic()
     diagnostic["safe_exception_location_diagnostic"] = get_safe_exception_location_diagnostic()
     if ENGINE_DIALECT != "postgresql":

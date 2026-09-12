@@ -19,6 +19,7 @@ from app.database.health import (
     run_conninfo_preflight_once,
     run_pgconn_level3_diagnostic_once,
     run_pgconn_stage_diagnostic_once,
+    run_version_shape_diagnostic_once,
 )
 from app.health import build_health_payload as build_application_health_payload
 from app.knowledge.services import add_knowledge_entry, build_best_practices, search_similar_knowledge
@@ -116,6 +117,7 @@ async def lifespan(app: FastAPI):
     run_conninfo_preflight_once()
     run_pgconn_stage_diagnostic_once()
     run_pgconn_level3_diagnostic_once()
+    run_version_shape_diagnostic_once()
     init_db()
     db_tables_count = get_db_health().get("db_tables_count", 0)
     if db_tables_count:
