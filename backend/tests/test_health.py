@@ -4,6 +4,7 @@ import logging
 import sys
 import types
 import enum
+from pathlib import Path
 
 import pytest
 
@@ -190,6 +191,70 @@ def test_database_diagnostic_exposes_schema_state_cache_without_rerunning(monkey
     monkeypatch.setattr(database_health, "_run_schema_state_diagnostic", lambda: pytest.fail("health getter re-ran diagnostic"))
 
     assert database_health.get_database_diagnostic()["schema_state"] == cached
+
+
+def test_migration_head_uses_authoritative_backend_alembic_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    config_path = database_health._authoritative_alembic_config_path()
+
+    assert config_path == Path(database_health.__file__).resolve().parents[2] / "alembic.ini"
+    assert config_path.exists()
+    assert config_path != Path(database_health.__file__).resolve().parents[1] / "alembic.ini"
+
+    monkeypatch.setattr(database_health, "ENGINE_DIALECT", "sqlite")
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(allow_startup_schema_migration=False),
+    )
+    monkeypatch.setattr(database_health, "check_db", lambda: True)
+    monkeypatch.setattr(database_health, "get_schema_readiness", lambda: {
+        "schema_ready": False,
+        "schema_missing": [],
+        "quality_gate_unique_scoped": False,
+        "quality_gate_legacy_project_unique": False,
+    })
+    monkeypatch.setattr(database_health, "_table_exists", lambda *_: False)
+
+    @contextmanager
+    def empty_db():
+        yield object()
+
+    monkeypatch.setattr(database_health, "get_db", empty_db)
+
+    assert database_health.get_migration_state()["migration_head"] == "20260903_8000"
+
+
+def test_migration_head_resolution_fails_safely_for_missing_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        database_health,
+        "_authoritative_alembic_config_path",
+        lambda: Path(database_health.__file__).with_name("missing-alembic.ini"),
+    )
+    monkeypatch.setattr(database_health, "ENGINE_DIALECT", "sqlite")
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(allow_startup_schema_migration=False),
+    )
+    monkeypatch.setattr(database_health, "check_db", lambda: True)
+    monkeypatch.setattr(database_health, "get_schema_readiness", lambda: {
+        "schema_ready": False,
+        "schema_missing": [],
+        "quality_gate_unique_scoped": False,
+        "quality_gate_legacy_project_unique": False,
+    })
+    monkeypatch.setattr(database_health, "_table_exists", lambda *_: False)
+
+    @contextmanager
+    def empty_db():
+        yield object()
+
+    monkeypatch.setattr(database_health, "get_db", empty_db)
+
+    result = database_health.get_migration_state()
+
+    assert result["migration_head"] == ""
+    assert result["migration_current"] == ""
 
 
 def test_check_db_without_sqlstate_logs_fixed_category_and_returns_false(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture) -> None:

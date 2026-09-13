@@ -1106,7 +1106,9 @@ def get_migration_state() -> dict[str, Any]:
         from alembic.config import Config
         from alembic.script import ScriptDirectory
 
-        alembic_config = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+        alembic_config_path = _authoritative_alembic_config_path()
+        alembic_config = Config(str(alembic_config_path))
+        alembic_config.set_main_option("script_location", str(alembic_config_path.parent / "alembic"))
         script = ScriptDirectory.from_config(alembic_config)
         head = str(script.get_current_head() or "")
     except Exception:
@@ -1202,3 +1204,7 @@ def get_db_health() -> dict[str, Any]:
         "database_diagnostic": get_database_diagnostic(),
         **migration_state,
     }
+
+
+def _authoritative_alembic_config_path() -> Path:
+    return Path(__file__).resolve().parents[2] / "alembic.ini"
