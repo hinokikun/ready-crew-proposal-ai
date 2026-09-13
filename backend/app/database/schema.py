@@ -30,22 +30,6 @@ def _schema_statements() -> list[str]:
         )
         """,
         f"""
-        CREATE TABLE IF NOT EXISTS organization_memberships (
-            id {id_column},
-            user_id INTEGER NOT NULL,
-            organization_id INTEGER NOT NULL,
-            workspace_id INTEGER NOT NULL,
-            membership_role TEXT NOT NULL DEFAULT 'member',
-            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(user_id, organization_id, workspace_id),
-            FOREIGN KEY(user_id) REFERENCES users(id),
-            FOREIGN KEY(organization_id) REFERENCES organizations(id),
-            FOREIGN KEY(workspace_id) REFERENCES workspaces(id)
-        )
-        """,
-        "CREATE INDEX IF NOT EXISTS idx_memberships_user ON organization_memberships(user_id, organization_id, workspace_id)",
-        f"""
         CREATE TABLE IF NOT EXISTS users (
             id {id_column},
             display_name TEXT NOT NULL DEFAULT '',
@@ -68,6 +52,22 @@ def _schema_statements() -> list[str]:
             updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
         """,
+        f"""
+        CREATE TABLE IF NOT EXISTS organization_memberships (
+            id {id_column},
+            user_id INTEGER NOT NULL,
+            organization_id INTEGER NOT NULL,
+            workspace_id INTEGER NOT NULL,
+            membership_role TEXT NOT NULL DEFAULT 'member',
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, organization_id, workspace_id),
+            FOREIGN KEY(user_id) REFERENCES users(id),
+            FOREIGN KEY(organization_id) REFERENCES organizations(id),
+            FOREIGN KEY(workspace_id) REFERENCES workspaces(id)
+        )
+        """,
+        "CREATE INDEX IF NOT EXISTS idx_memberships_user ON organization_memberships(user_id, organization_id, workspace_id)",
         f"""
         CREATE TABLE IF NOT EXISTS customers (
             id {id_column},

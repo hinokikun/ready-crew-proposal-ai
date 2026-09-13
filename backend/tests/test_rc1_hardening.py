@@ -1,5 +1,6 @@
 import importlib
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -141,3 +142,37 @@ def test_alembic_migration_applies_to_empty_sqlite(monkeypatch, tmp_path: Path) 
         assert "projects" in tables
         assert "quality_gates" in tables
         assert "alembic_version" in tables
+
+
+def test_baseline_schema_foreign_key_creation_order_is_dependency_safe() -> None:
+    from app.database.schema import _schema_statements
+
+    statements = _schema_statements()
+    table_positions: dict[str, int] = {}
+    table_statements: dict[str, str] = {}
+    index_positions: dict[str, int] = {}
+
+    for position, statement in enumerate(statements):
+        table_match = re.search(r"CREATE TABLE IF NOT EXISTS (\w+)", statement)
+        if table_match:
+            table_name = table_match.group(1)
+            table_positions[table_name] = position
+            table_statements[table_name] = statement
+        index_match = re.search(r"CREATE INDEX IF NOT EXISTS (\w+) ON (\w+)", statement)
+        if index_match:
+            index_positions[index_match.group(1)] = position
+
+    assert table_positions["organizations"] < table_positions["organization_memberships"]
+    assert table_positions["workspaces"] < table_positions["organization_memberships"]
+    assert table_positions["users"] < table_positions["organization_memberships"]
+    membership_statement = table_statements["organization_memberships"]
+    assert "FOREIGN KEY(user_id) REFERENCES users(id)" in membership_statement
+    assert "FOREIGN KEY(organization_id) REFERENCES organizations(id)" in membership_statement
+    assert "FOREIGN KEY(workspace_id) REFERENCES workspaces(id)" in membership_statement
+    assert index_positions["idx_memberships_user"] > table_positions["organization_memberships"]
+
+    for table_name, statement in table_statements.items():
+        for referenced_table in re.findall(r"FOREIGN KEY\([^)]*\) REFERENCES (\w+)", statement):
+            assert table_positions[referenced_table] < table_positions[table_name], (
+                f"{table_name} is created before referenced table {referenced_table}"
+            )
