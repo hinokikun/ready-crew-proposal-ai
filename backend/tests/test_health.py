@@ -370,7 +370,10 @@ def test_auth_state_diagnostic_keeps_query_failure_fail_closed(monkeypatch: pyte
     assert result["admin_count"] == 0
 
 
-def test_lifespan_runs_auth_state_diagnostic_after_bootstrap_once(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_lifespan_runs_auth_state_diagnostic_after_bootstrap_once(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     from app import main as main_module
 
     events: list[str] = []
@@ -379,7 +382,13 @@ def test_lifespan_runs_auth_state_diagnostic_after_bootstrap_once(monkeypatch: p
     monkeypatch.setattr(main_module, "run_pgconn_stage_diagnostic_once", lambda: None)
     monkeypatch.setattr(main_module, "run_pgconn_level3_diagnostic_once", lambda: None)
     monkeypatch.setattr(main_module, "run_version_shape_diagnostic_once", lambda: None)
-    monkeypatch.setattr(main_module, "settings", types.SimpleNamespace(enable_db_auth_state_diagnostic=True))
+    startup_settings = types.SimpleNamespace(
+        enable_db_auth_state_diagnostic=True,
+        enable_startup_boundary_diagnostic=True,
+    )
+    monkeypatch.setattr(main_module, "settings", startup_settings)
+    monkeypatch.setattr(database_health, "settings", startup_settings)
+    caplog.set_level(logging.INFO, logger=database_health.logger.name)
     monkeypatch.setattr(main_module, "init_db", lambda: events.append("init_db"))
     monkeypatch.setattr(main_module, "get_db_health", lambda: {"db_tables_count": 1})
 
@@ -401,9 +410,51 @@ def test_lifespan_runs_auth_state_diagnostic_after_bootstrap_once(monkeypatch: p
 
     assert events == ["init_db", "bootstrap", "organization", "templates", "auth_diagnostic"]
     assert events.count("auth_diagnostic") == 1
+    markers = [
+        record.getMessage()
+        for record in caplog.records
+        if record.getMessage().startswith("startup_boundary ")
+    ]
+    assert markers == [
+        "startup_boundary before_init_db",
+        "startup_boundary after_init_db",
+        "startup_boundary before_get_db_health",
+        "startup_boundary after_get_db_health",
+        "startup_boundary before_ensure_initial_admin",
+        "startup_boundary after_ensure_initial_admin",
+        "startup_boundary before_organization_workspace_seed",
+        "startup_boundary after_organization_workspace_seed",
+        "startup_boundary before_template_seed",
+        "startup_boundary after_template_seed",
+        "startup_boundary before_lifespan_yield",
+    ]
 
 
-def test_lifespan_skips_auth_state_diagnostic_when_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_get_db_health_boundary_logging_preserves_exception(monkeypatch: pytest.MonkeyPatch) -> None:
+    error = RuntimeError("startup boundary test failure")
+    monkeypatch.setattr(
+        database_health,
+        "settings",
+        types.SimpleNamespace(enable_startup_boundary_diagnostic=True),
+    )
+    monkeypatch.setattr(database_health, "check_db", lambda: (_ for _ in ()).throw(error))
+
+    with pytest.raises(RuntimeError) as raised:
+        database_health.get_db_health()
+
+    assert raised.value is error
+
+
+def test_startup_boundary_diagnostic_defaults_to_disabled() -> None:
+    from app.config import Settings
+
+    assert Settings.__dataclass_fields__["enable_startup_boundary_diagnostic"].default is False
+
+
+def test_lifespan_skips_auth_state_diagnostic_when_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     from app import main as main_module
 
     monkeypatch.setattr(main_module, "run_schema_state_diagnostic_once", lambda: None)
@@ -423,12 +474,14 @@ def test_lifespan_skips_auth_state_diagnostic_when_disabled(monkeypatch: pytest.
     monkeypatch.setattr(main_module, "init_db", lambda: None)
     monkeypatch.setattr(main_module, "get_db_health", lambda: {"db_tables_count": 0})
     monkeypatch.setattr(main_module, "run_auth_state_diagnostic_once", lambda: pytest.fail("disabled diagnostic ran"))
+    caplog.set_level(logging.INFO, logger=database_health.logger.name)
 
     async def exercise() -> None:
         async with main_module.lifespan(main_module.app):
             pass
 
     asyncio.run(exercise())
+    assert not any(record.getMessage().startswith("startup_boundary ") for record in caplog.records)
 
 
 def test_migration_head_uses_authoritative_backend_alembic_config(monkeypatch: pytest.MonkeyPatch) -> None:

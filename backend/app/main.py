@@ -16,6 +16,7 @@ from app.analytics.repositories import build_candidate_boundary_evidence, log_ca
 from app.analytics.services import record_event
 from app.db import get_db, get_db_health, init_db, seed_default_organization, seed_default_templates
 from app.database.health import (
+    log_startup_boundary,
     run_auth_state_diagnostic_once,
     run_schema_state_diagnostic_once,
     run_conninfo_preflight_once,
@@ -121,17 +122,28 @@ async def lifespan(app: FastAPI):
     run_pgconn_stage_diagnostic_once()
     run_pgconn_level3_diagnostic_once()
     run_version_shape_diagnostic_once()
+    log_startup_boundary("before_init_db")
     init_db()
+    log_startup_boundary("after_init_db")
+    log_startup_boundary("before_get_db_health")
     db_tables_count = get_db_health().get("db_tables_count", 0)
+    log_startup_boundary("after_get_db_health")
     if db_tables_count:
         with get_db() as db:
+            log_startup_boundary("before_ensure_initial_admin")
             ensure_initial_admin(db)
+            log_startup_boundary("after_ensure_initial_admin")
+            log_startup_boundary("before_organization_workspace_seed")
             seed_default_organization(db)
+            log_startup_boundary("after_organization_workspace_seed")
+        log_startup_boundary("before_template_seed")
         seed_default_templates()
+        log_startup_boundary("after_template_seed")
     elif settings.initial_admin_email and settings.initial_admin_password:
         logger.warning("initial_admin_seed_skipped reason=no_database_tables")
     if settings.enable_db_auth_state_diagnostic:
         run_auth_state_diagnostic_once()
+    log_startup_boundary("before_lifespan_yield")
     yield
 
 

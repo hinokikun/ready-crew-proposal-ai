@@ -26,6 +26,12 @@ from app.database.migration import _existing_columns, _quality_gate_unique_state
 logger = logging.getLogger(__name__)
 
 
+def log_startup_boundary(marker: str) -> None:
+    if not bool(getattr(settings, "enable_startup_boundary_diagnostic", False)):
+        return
+    logger.info("startup_boundary %s", marker)
+
+
 _DB_FAILURE_CATEGORIES = frozenset({
     "authentication",
     "dns",
@@ -1227,12 +1233,14 @@ def get_migration_state() -> dict[str, Any]:
     except Exception:
         current = ""
 
+    log_startup_boundary("before_schema_readiness_check")
     schema = get_schema_readiness() if check_db() else {
         "schema_ready": False,
         "schema_missing": ["database"],
         "quality_gate_unique_scoped": False,
         "quality_gate_legacy_project_unique": False,
     }
+    log_startup_boundary("after_schema_readiness_check")
     revision_ready = bool(current and head and current == head)
     if not revision_ready and settings.allow_startup_schema_migration and not current and schema["schema_ready"]:
         # Local/dev databases may be patched by startup DDL before Alembic is introduced.
@@ -1265,7 +1273,9 @@ def get_tables_count() -> int:
 
 def check_db() -> bool:
     try:
+        log_startup_boundary("before_raw_db_connection_acquisition")
         with get_db() as db:
+            log_startup_boundary("after_raw_db_connection_acquisition")
             db.execute("SELECT 1")
         return True
     except Exception as exc:
@@ -1291,7 +1301,10 @@ def check_db() -> bool:
 
 
 def get_db_health() -> dict[str, Any]:
+    log_startup_boundary("before_db_health_check")
     connected = check_db()
+    log_startup_boundary("after_db_health_check")
+    log_startup_boundary("before_migration_state_check")
     migration_state = get_migration_state() if connected else {
         "migration_current": "",
         "migration_head": "",
@@ -1301,10 +1314,14 @@ def get_db_health() -> dict[str, Any]:
         "quality_gate_unique_scoped": False,
         "quality_gate_legacy_project_unique": False,
     }
+    log_startup_boundary("after_migration_state_check")
+    log_startup_boundary("before_table_count_check")
+    table_count = get_tables_count() if connected else 0
+    log_startup_boundary("after_table_count_check")
     return {
         "db_connected": connected,
         "db_type": get_db_type(),
-        "db_tables_count": get_tables_count() if connected else 0,
+        "db_tables_count": table_count,
         "startup_schema_migration_enabled": settings.allow_startup_schema_migration,
         "database_diagnostic": get_database_diagnostic(),
         **migration_state,
