@@ -513,7 +513,7 @@ def soft_delete_user(db: Connection, user_id: int) -> dict[str, Any] | None:
 
 def mark_user_login(db: Connection, user_id: int) -> None:
     db.execute(
-        "UPDATE users SET last_login_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        "UPDATE users SET last_login_at = CAST(CURRENT_TIMESTAMP AS TEXT), updated_at = CAST(CURRENT_TIMESTAMP AS TEXT) WHERE id = ?",
         (user_id,),
     )
 
@@ -554,9 +554,9 @@ def mark_pilot_login(db: Connection, user_id: int) -> None:
     db.execute(
         """
         UPDATE users
-        SET pilot_started_at = COALESCE(pilot_started_at, CURRENT_TIMESTAMP),
-            pilot_last_used_at = CURRENT_TIMESTAMP,
-            updated_at = CURRENT_TIMESTAMP
+        SET pilot_started_at = COALESCE(pilot_started_at, CAST(CURRENT_TIMESTAMP AS TEXT)),
+            pilot_last_used_at = CAST(CURRENT_TIMESTAMP AS TEXT),
+            updated_at = CAST(CURRENT_TIMESTAMP AS TEXT)
         WHERE id = ?
         """,
         (user_id,),

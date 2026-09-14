@@ -104,3 +104,26 @@ def test_initial_admin_logs_are_sanitized(
     assert password not in logs
     assert email not in logs
     assert "s***n@example.com" in logs
+
+
+class _PostgresTextTimestampDb:
+    def __init__(self) -> None:
+        self.statements: list[str] = []
+
+    def execute(self, statement: str, params: tuple[int, ...] = ()) -> None:
+        self.statements.append(statement)
+        if "CURRENT_TIMESTAMP" in statement and "CAST(CURRENT_TIMESTAMP AS TEXT)" not in statement:
+            raise AssertionError("timestamp expression must be cast for PostgreSQL TEXT columns")
+
+
+def test_login_state_timestamp_updates_are_postgresql_text_compatible(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _configure_env(monkeypatch, tmp_path, email="admin@example.com", password="test-password")
+    from app.repository_parts.users import mark_pilot_login, mark_user_login
+
+    db = _PostgresTextTimestampDb()
+
+    mark_user_login(db, 1)
+    mark_pilot_login(db, 1)
+
+    assert len(db.statements) == 2
+    assert all("CAST(CURRENT_TIMESTAMP AS TEXT)" in statement for statement in db.statements)
