@@ -65,29 +65,12 @@ class Settings:
     initial_admin_email: str = os.getenv("INITIAL_ADMIN_EMAIL", "").strip().lower()
     initial_admin_password: str = os.getenv("INITIAL_ADMIN_PASSWORD", "")
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///app.db")
-    enable_db_schema_state_diagnostic: bool = _as_bool(
-        os.getenv("ENABLE_DB_SCHEMA_STATE_DIAGNOSTIC"),
-        False,
-    )
-    enable_db_conninfo_preflight: bool = _as_bool(os.getenv("ENABLE_DB_CONNINFO_PREFLIGHT"), False)
-    enable_db_pgconn_stage_diagnostic: bool = _as_bool(
-        os.getenv("ENABLE_DB_PGCONN_STAGE_DIAGNOSTIC"),
-        False,
-    )
-    enable_db_pgconn_level3_diagnostic: bool = _as_bool(
-        os.getenv("ENABLE_DB_PGCONN_LEVEL3_DIAGNOSTIC"),
-        False,
-    )
     enable_db_high_level_stage_diagnostic: bool = _as_bool(
         os.getenv("ENABLE_DB_HIGH_LEVEL_STAGE_DIAGNOSTIC"),
         False,
     )
     enable_db_safe_exception_location_diagnostic: bool = _as_bool(
         os.getenv("ENABLE_DB_SAFE_EXCEPTION_LOCATION_DIAGNOSTIC"),
-        False,
-    )
-    enable_db_version_shape_diagnostic: bool = _as_bool(
-        os.getenv("ENABLE_DB_VERSION_SHAPE_DIAGNOSTIC"),
         False,
     )
     log_level: str = os.getenv("LOG_LEVEL", "INFO").upper()
