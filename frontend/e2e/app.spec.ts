@@ -1128,7 +1128,8 @@ test("ブラウザ確認モードはモバイル幅でも確認できる", async
 test("Sales CopilotのQuick Commandが対象画面へ移動する", async ({ page }) => {
   await login(page, adminEmail);
   await page.getByRole("button", { name: "詳細モード" }).click();
-  await page.getByTestId("nav-admin").click();
+  await page.getByRole("button", { name: "その他" }).click();
+  await page.getByTestId("nav-analytics").click();
   await page.getByTestId("copilot-command-Analytics").waitFor({ state: "visible" });
   await clickByTestId(page, "copilot-command-Analytics");
   await expect(page.locator("#admin-product-analytics-panel")).toBeVisible();
