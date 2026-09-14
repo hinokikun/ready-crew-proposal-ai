@@ -73,10 +73,6 @@ class Settings:
         os.getenv("ENABLE_DB_SCHEMA_STATE_DIAGNOSTIC"),
         False,
     )
-    enable_db_auth_state_diagnostic: bool = _as_bool(
-        os.getenv("ENABLE_DB_AUTH_STATE_DIAGNOSTIC"),
-        False,
-    )
     enable_db_conninfo_preflight: bool = _as_bool(os.getenv("ENABLE_DB_CONNINFO_PREFLIGHT"), False)
     enable_db_pgconn_stage_diagnostic: bool = _as_bool(
         os.getenv("ENABLE_DB_PGCONN_STAGE_DIAGNOSTIC"),

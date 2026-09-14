@@ -194,186 +194,28 @@ def test_database_diagnostic_exposes_schema_state_cache_without_rerunning(monkey
     assert database_health.get_database_diagnostic()["schema_state"] == cached
 
 
-class _AuthStateDb:
-    def __init__(self, user_count: int, admin_count: int, initial_admin_exists: bool = False) -> None:
-        self.user_count = user_count
-        self.admin_count = admin_count
-        self.initial_admin_exists = initial_admin_exists
-        self.queries: list[str] = []
+def test_startup_boundary_diagnostic_defaults_to_disabled() -> None:
+    from app.config import Settings
 
-    def execute(self, statement: str, parameters: tuple[str, ...] = ()):
-        self.queries.append(statement)
-        assert statement.lstrip().upper().startswith("SELECT")
-        if "user_count" in statement:
-            return types.SimpleNamespace(fetchone=lambda: {"user_count": self.user_count})
-        if "admin_count" in statement:
-            return types.SimpleNamespace(fetchone=lambda: {"admin_count": self.admin_count})
-        assert parameters
-        return types.SimpleNamespace(fetchone=lambda: {"initial_admin_exists": True} if self.initial_admin_exists else None)
+    assert Settings.__dataclass_fields__["enable_startup_boundary_diagnostic"].default is False
 
 
-class _AuthStateTupleDb(_AuthStateDb):
-    def execute(self, statement: str, parameters: tuple[str, ...] = ()):
-        self.queries.append(statement)
-        assert statement.lstrip().upper().startswith("SELECT")
-        if "user_count" in statement:
-            return types.SimpleNamespace(fetchone=lambda: (self.user_count,))
-        if "admin_count" in statement:
-            return types.SimpleNamespace(fetchone=lambda: (self.admin_count,))
-        assert parameters
-        return types.SimpleNamespace(fetchone=lambda: (1,) if self.initial_admin_exists else None)
-
-
-class _FailingAuthStateDb(_AuthStateDb):
-    def execute(self, statement: str, parameters: tuple[str, ...] = ()):
-        self.queries.append(statement)
-        raise RuntimeError("diagnostic query failed")
-
-
-class _AuthStateRawConnection:
-    def __init__(self, db: _AuthStateDb) -> None:
-        self.db = db
-        self.closed = False
-        self.commit_called = False
-
-    def cursor(self):
-        return self
-
-    def execute(self, statement: str, parameters: tuple[str, ...] = ()):
-        return self.db.execute(statement, parameters)
-
-    def close(self) -> None:
-        self.closed = True
-
-    def commit(self) -> None:
-        self.commit_called = True
-        raise AssertionError("diagnostic must not commit")
-
-
-def _run_auth_state_diagnostic(
-    monkeypatch: pytest.MonkeyPatch,
-    db: _AuthStateDb,
-    *,
-    email: str = "",
-    password: str = "",
-):
-    @contextmanager
-    def db_context():
-        yield db
-
-    monkeypatch.setattr(database_health, "_auth_state_diagnostic_cache", None)
-    monkeypatch.setattr(database_health, "ENGINE_DIALECT", "postgresql")
+def test_get_db_health_boundary_logging_preserves_exception(monkeypatch: pytest.MonkeyPatch) -> None:
+    error = RuntimeError("startup boundary test failure")
     monkeypatch.setattr(
         database_health,
         "settings",
-        types.SimpleNamespace(
-            enable_db_auth_state_diagnostic=True,
-            initial_admin_email=email,
-            initial_admin_password=password,
-        ),
+        types.SimpleNamespace(enable_startup_boundary_diagnostic=True),
     )
-    monkeypatch.setattr(database_health, "get_db", db_context)
-    raw_connection = _AuthStateRawConnection(db)
-    db.raw_connection = raw_connection
-    monkeypatch.setattr(
-        database_health,
-        "engine",
-        types.SimpleNamespace(raw_connection=lambda: raw_connection),
-    )
-    return database_health.run_auth_state_diagnostic_once()
+    monkeypatch.setattr(database_health, "check_db", lambda: (_ for _ in ()).throw(error))
+
+    with pytest.raises(RuntimeError) as raised:
+        database_health.get_db_health()
+
+    assert raised.value is error
 
 
-def test_auth_state_diagnostic_disabled_skips_db_and_logging(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture) -> None:
-    monkeypatch.setattr(database_health, "_auth_state_diagnostic_cache", None)
-    monkeypatch.setattr(database_health, "ENGINE_DIALECT", "postgresql")
-    monkeypatch.setattr(database_health, "settings", types.SimpleNamespace(enable_db_auth_state_diagnostic=False))
-    monkeypatch.setattr(database_health, "get_db", lambda: pytest.fail("diagnostic queried while disabled"))
-    caplog.set_level(logging.INFO, logger=database_health.logger.name)
-
-    result = database_health.run_auth_state_diagnostic_once()
-
-    assert result["enabled"] is False
-    assert result["executed"] is False
-    assert not any("auth_state_diagnostic" in record.getMessage() for record in caplog.records)
-
-
-@pytest.mark.parametrize(
-    ("user_count", "admin_count", "email", "password", "initial_admin_exists", "expected"),
-    [
-        (0, 0, "", "", False, "NO_USERS"),
-        (2, 0, "configured@example.test", "configured-secret", False, "USERS_BUT_NO_ADMIN"),
-        (2, 1, "configured@example.test", "configured-secret", True, "ADMIN_EXISTS_CONFIGURED_INITIAL_ADMIN_EXISTS"),
-        (2, 1, "configured@example.test", "configured-secret", False, "ADMIN_EXISTS_CONFIGURED_INITIAL_ADMIN_MISSING"),
-        (2, 1, "configured@example.test", "", False, "INITIAL_ADMIN_CONFIG_INCOMPLETE"),
-    ],
-)
-def test_auth_state_diagnostic_classifies_aggregate_state_without_sensitive_output(
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
-    user_count: int,
-    admin_count: int,
-    email: str,
-    password: str,
-    initial_admin_exists: bool,
-    expected: str,
-) -> None:
-    db = _AuthStateDb(user_count, admin_count, initial_admin_exists)
-    caplog.set_level(logging.INFO, logger=database_health.logger.name)
-
-    result = _run_auth_state_diagnostic(monkeypatch, db, email=email, password=password)
-
-    assert result["executed"] is True
-    assert result["failure_category"] == expected
-    assert result["user_count"] == user_count
-    assert result["admin_count"] == admin_count
-    if email:
-        assert email not in caplog.text
-    if password:
-        assert password not in caplog.text
-    assert "password_hash" not in caplog.text
-    assert all(query.lstrip().upper().startswith("SELECT") for query in db.queries)
-
-
-def test_auth_state_diagnostic_runs_once_and_logs_one_record(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture) -> None:
-    db = _AuthStateDb(2, 1, True)
-    caplog.set_level(logging.INFO, logger=database_health.logger.name)
-
-    first = _run_auth_state_diagnostic(monkeypatch, db, email="private@example.test", password="private-secret")
-    second = database_health.run_auth_state_diagnostic_once()
-
-    assert first == second
-    assert len(db.queries) == 3
-    assert len([record for record in caplog.records if record.getMessage().startswith("auth_state_diagnostic")]) == 1
-    assert db.raw_connection is not None
-    assert db.raw_connection.commit_called is False
-    assert db.raw_connection.closed is True
-
-
-def test_auth_state_diagnostic_extracts_postgresql_tuple_rows(monkeypatch: pytest.MonkeyPatch) -> None:
-    db = _AuthStateTupleDb(2, 1, True)
-
-    result = _run_auth_state_diagnostic(monkeypatch, db, email="configured@example.test", password="configured-secret")
-
-    assert result["user_count"] == 2
-    assert result["admin_count"] == 1
-    assert result["configured_initial_admin_exists"] is True
-    assert result["failure_category"] == "ADMIN_EXISTS_CONFIGURED_INITIAL_ADMIN_EXISTS"
-
-
-def test_auth_state_diagnostic_keeps_query_failure_fail_closed(monkeypatch: pytest.MonkeyPatch) -> None:
-    db = _FailingAuthStateDb(0, 0)
-
-    result = _run_auth_state_diagnostic(monkeypatch, db)
-
-    assert result["failure_category"] == "DIAGNOSTIC_QUERY_FAILED"
-    assert result["user_count"] == 0
-    assert result["admin_count"] == 0
-
-
-def test_lifespan_runs_auth_state_diagnostic_after_bootstrap_once(
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+def test_lifespan_logs_startup_boundaries_in_order(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture) -> None:
     from app import main as main_module
 
     events: list[str] = []
@@ -382,13 +224,15 @@ def test_lifespan_runs_auth_state_diagnostic_after_bootstrap_once(
     monkeypatch.setattr(main_module, "run_pgconn_stage_diagnostic_once", lambda: None)
     monkeypatch.setattr(main_module, "run_pgconn_level3_diagnostic_once", lambda: None)
     monkeypatch.setattr(main_module, "run_version_shape_diagnostic_once", lambda: None)
-    startup_settings = types.SimpleNamespace(
-        enable_db_auth_state_diagnostic=True,
-        enable_startup_boundary_diagnostic=True,
+    monkeypatch.setattr(
+        main_module,
+        "settings",
+        types.SimpleNamespace(
+            enable_startup_boundary_diagnostic=True,
+            initial_admin_email="",
+            initial_admin_password="",
+        ),
     )
-    monkeypatch.setattr(main_module, "settings", startup_settings)
-    monkeypatch.setattr(database_health, "settings", startup_settings)
-    caplog.set_level(logging.INFO, logger=database_health.logger.name)
     monkeypatch.setattr(main_module, "init_db", lambda: events.append("init_db"))
     monkeypatch.setattr(main_module, "get_db_health", lambda: {"db_tables_count": 1})
 
@@ -400,7 +244,8 @@ def test_lifespan_runs_auth_state_diagnostic_after_bootstrap_once(
     monkeypatch.setattr(main_module, "ensure_initial_admin", lambda _: events.append("bootstrap"))
     monkeypatch.setattr(main_module, "seed_default_organization", lambda _: events.append("organization"))
     monkeypatch.setattr(main_module, "seed_default_templates", lambda: events.append("templates"))
-    monkeypatch.setattr(main_module, "run_auth_state_diagnostic_once", lambda: events.append("auth_diagnostic"))
+    monkeypatch.setattr(database_health, "settings", main_module.settings)
+    caplog.set_level(logging.INFO, logger=database_health.logger.name)
 
     async def exercise() -> None:
         async with main_module.lifespan(main_module.app):
@@ -408,8 +253,7 @@ def test_lifespan_runs_auth_state_diagnostic_after_bootstrap_once(
 
     asyncio.run(exercise())
 
-    assert events == ["init_db", "bootstrap", "organization", "templates", "auth_diagnostic"]
-    assert events.count("auth_diagnostic") == 1
+    assert events == ["init_db", "bootstrap", "organization", "templates"]
     markers = [
         record.getMessage()
         for record in caplog.records
@@ -428,60 +272,6 @@ def test_lifespan_runs_auth_state_diagnostic_after_bootstrap_once(
         "startup_boundary after_template_seed",
         "startup_boundary before_lifespan_yield",
     ]
-
-
-def test_get_db_health_boundary_logging_preserves_exception(monkeypatch: pytest.MonkeyPatch) -> None:
-    error = RuntimeError("startup boundary test failure")
-    monkeypatch.setattr(
-        database_health,
-        "settings",
-        types.SimpleNamespace(enable_startup_boundary_diagnostic=True),
-    )
-    monkeypatch.setattr(database_health, "check_db", lambda: (_ for _ in ()).throw(error))
-
-    with pytest.raises(RuntimeError) as raised:
-        database_health.get_db_health()
-
-    assert raised.value is error
-
-
-def test_startup_boundary_diagnostic_defaults_to_disabled() -> None:
-    from app.config import Settings
-
-    assert Settings.__dataclass_fields__["enable_startup_boundary_diagnostic"].default is False
-
-
-def test_lifespan_skips_auth_state_diagnostic_when_disabled(
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    from app import main as main_module
-
-    monkeypatch.setattr(main_module, "run_schema_state_diagnostic_once", lambda: None)
-    monkeypatch.setattr(main_module, "run_conninfo_preflight_once", lambda: None)
-    monkeypatch.setattr(main_module, "run_pgconn_stage_diagnostic_once", lambda: None)
-    monkeypatch.setattr(main_module, "run_pgconn_level3_diagnostic_once", lambda: None)
-    monkeypatch.setattr(main_module, "run_version_shape_diagnostic_once", lambda: None)
-    monkeypatch.setattr(
-        main_module,
-        "settings",
-        types.SimpleNamespace(
-            enable_db_auth_state_diagnostic=False,
-            initial_admin_email="",
-            initial_admin_password="",
-        ),
-    )
-    monkeypatch.setattr(main_module, "init_db", lambda: None)
-    monkeypatch.setattr(main_module, "get_db_health", lambda: {"db_tables_count": 0})
-    monkeypatch.setattr(main_module, "run_auth_state_diagnostic_once", lambda: pytest.fail("disabled diagnostic ran"))
-    caplog.set_level(logging.INFO, logger=database_health.logger.name)
-
-    async def exercise() -> None:
-        async with main_module.lifespan(main_module.app):
-            pass
-
-    asyncio.run(exercise())
-    assert not any(record.getMessage().startswith("startup_boundary ") for record in caplog.records)
 
 
 def test_migration_head_uses_authoritative_backend_alembic_config(monkeypatch: pytest.MonkeyPatch) -> None:
