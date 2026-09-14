@@ -14,6 +14,7 @@ from app.config import settings
 from app.database.connection import (
     DB_CONNECT_STAGES,
     ENGINE_DIALECT,
+    engine,
     get_db,
     get_db_type,
     get_high_level_stage_diagnostic,
@@ -58,6 +59,8 @@ _conninfo_preflight_cache: dict[str, Any] | None = None
 _conninfo_preflight_lock = Lock()
 _schema_state_diagnostic_cache: dict[str, Any] | None = None
 _schema_state_diagnostic_lock = Lock()
+_auth_state_diagnostic_cache: dict[str, Any] | None = None
+_auth_state_diagnostic_lock = Lock()
 _pgconn_stage_diagnostic_cache: dict[str, Any] | None = None
 _pgconn_stage_diagnostic_lock = Lock()
 _PGCONN_EXCEPTION_STAGES = frozenset({"none", "connect_start", "first_connect_poll"})
@@ -231,6 +234,96 @@ def get_schema_state_diagnostic() -> dict[str, Any]:
         enabled = bool(getattr(settings, "enable_db_schema_state_diagnostic", False)) and ENGINE_DIALECT == "postgresql"
         return _schema_state_result(enabled)
     return dict(_schema_state_diagnostic_cache)
+
+
+def _auth_state_result(enabled: bool) -> dict[str, Any]:
+    return {
+        "enabled": enabled,
+        "executed": False,
+        "user_count": 0,
+        "admin_count": 0,
+        "has_users": False,
+        "has_admin": False,
+        "initial_admin_email_configured": False,
+        "initial_admin_password_configured": False,
+        "configured_initial_admin_exists": False,
+        "failure_category": "none",
+    }
+
+
+def _run_auth_state_diagnostic() -> dict[str, Any]:
+    result = _auth_state_result(True)
+    result["initial_admin_email_configured"] = bool(settings.initial_admin_email)
+    result["initial_admin_password_configured"] = bool(settings.initial_admin_password)
+    raw_connection = None
+    cursor = None
+    try:
+        raw_connection = engine.raw_connection()
+        cursor = raw_connection.cursor()
+        user_row = cursor.execute("SELECT COUNT(*) AS user_count FROM users").fetchone()
+        admin_row = cursor.execute(
+                "SELECT COUNT(*) AS admin_count FROM users WHERE role = 'admin' AND is_active = 1 AND deleted_at IS NULL"
+        ).fetchone()
+        result["user_count"] = max(0, int(user_row["user_count"] if user_row else 0))
+        result["admin_count"] = max(0, int(admin_row["admin_count"] if admin_row else 0))
+        result["has_users"] = result["user_count"] > 0
+        result["has_admin"] = result["admin_count"] > 0
+        if settings.initial_admin_email:
+            placeholder = "%s" if ENGINE_DIALECT == "postgresql" else "?"
+            initial_admin_row = cursor.execute(
+                f"SELECT 1 AS initial_admin_exists FROM users WHERE email = {placeholder} LIMIT 1",
+                (settings.initial_admin_email,),
+            ).fetchone()
+            result["configured_initial_admin_exists"] = bool(initial_admin_row)
+
+        if not result["has_users"]:
+            result["failure_category"] = "NO_USERS"
+        elif not result["has_admin"]:
+            result["failure_category"] = "USERS_BUT_NO_ADMIN"
+        elif not result["initial_admin_email_configured"] or not result["initial_admin_password_configured"]:
+            result["failure_category"] = "INITIAL_ADMIN_CONFIG_INCOMPLETE"
+        elif result["configured_initial_admin_exists"]:
+            result["failure_category"] = "ADMIN_EXISTS_CONFIGURED_INITIAL_ADMIN_EXISTS"
+        else:
+            result["failure_category"] = "ADMIN_EXISTS_CONFIGURED_INITIAL_ADMIN_MISSING"
+    except Exception:
+        result["failure_category"] = "DIAGNOSTIC_QUERY_FAILED"
+    finally:
+        try:
+            if cursor is not None:
+                cursor.close()
+        finally:
+            if raw_connection is not None:
+                raw_connection.close()
+    result["executed"] = True
+    return result
+
+
+def run_auth_state_diagnostic_once() -> dict[str, Any]:
+    """Run the temporary opt-in aggregate auth inspection once per process."""
+    global _auth_state_diagnostic_cache
+    if not bool(getattr(settings, "enable_db_auth_state_diagnostic", False)):
+        return _auth_state_result(False)
+    with _auth_state_diagnostic_lock:
+        first_execution = _auth_state_diagnostic_cache is None
+        if _auth_state_diagnostic_cache is None:
+            _auth_state_diagnostic_cache = _run_auth_state_diagnostic()
+        result = dict(_auth_state_diagnostic_cache)
+    if first_execution:
+        logger.info(
+            "auth_state_diagnostic user_count=%d admin_count=%d has_users=%s has_admin=%s "
+            "initial_admin_email_configured=%s initial_admin_password_configured=%s "
+            "configured_initial_admin_exists=%s failure_category=%s",
+            result["user_count"],
+            result["admin_count"],
+            result["has_users"],
+            result["has_admin"],
+            result["initial_admin_email_configured"],
+            result["initial_admin_password_configured"],
+            result["configured_initial_admin_exists"],
+            result["failure_category"],
+        )
+    return result
 
 
 def _disabled_version_shape_diagnostic() -> dict[str, Any]:

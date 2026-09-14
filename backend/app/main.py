@@ -16,6 +16,7 @@ from app.analytics.repositories import build_candidate_boundary_evidence, log_ca
 from app.analytics.services import record_event
 from app.db import get_db, get_db_health, init_db, seed_default_organization, seed_default_templates
 from app.database.health import (
+    run_auth_state_diagnostic_once,
     run_schema_state_diagnostic_once,
     run_conninfo_preflight_once,
     run_pgconn_level3_diagnostic_once,
@@ -129,6 +130,8 @@ async def lifespan(app: FastAPI):
         seed_default_templates()
     elif settings.initial_admin_email and settings.initial_admin_password:
         logger.warning("initial_admin_seed_skipped reason=no_database_tables")
+    if settings.enable_db_auth_state_diagnostic:
+        run_auth_state_diagnostic_once()
     yield
 
 
