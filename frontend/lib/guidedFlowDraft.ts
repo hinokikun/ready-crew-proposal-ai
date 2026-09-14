@@ -11,6 +11,7 @@ export type GuidedFlowDraft = {
   version: typeof GUIDED_FLOW_DRAFT_VERSION;
   savedAt: string;
   rawSourceText: string;
+  presentationTopic?: string;
 };
 
 function normalizedScopeValue(value: string | number | null | undefined) {
@@ -39,6 +40,7 @@ export function clearGuidedFlowDraft(scope: Partial<GuidedFlowDraftScope> | null
 export function saveGuidedFlowDraft(
   scope: Partial<GuidedFlowDraftScope> | null | undefined,
   rawSourceText: string,
+  presentationTopic = "",
   now = Date.now()
 ) {
   const key = getGuidedFlowDraftKey(scope);
@@ -46,7 +48,7 @@ export function saveGuidedFlowDraft(
   try {
     window.localStorage.setItem(
       key,
-      JSON.stringify({ version: GUIDED_FLOW_DRAFT_VERSION, savedAt: new Date(now).toISOString(), rawSourceText })
+      JSON.stringify({ version: GUIDED_FLOW_DRAFT_VERSION, savedAt: new Date(now).toISOString(), rawSourceText, presentationTopic })
     );
     return true;
   } catch {
@@ -71,6 +73,7 @@ export function readGuidedFlowDraft(
       (parsed as GuidedFlowDraft).version !== GUIDED_FLOW_DRAFT_VERSION ||
       typeof (parsed as GuidedFlowDraft).savedAt !== "string" ||
       typeof (parsed as GuidedFlowDraft).rawSourceText !== "string" ||
+      ((parsed as GuidedFlowDraft).presentationTopic !== undefined && typeof (parsed as GuidedFlowDraft).presentationTopic !== "string") ||
       !(parsed as GuidedFlowDraft).rawSourceText.trim()
     ) {
       window.localStorage.removeItem(key);
