@@ -17,6 +17,12 @@ def _failing_db(error: BaseException):
     yield
 
 
+@pytest.fixture(autouse=True)
+def _reset_health_logger(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(database_health.logger, "disabled", False)
+    monkeypatch.setattr(database_health.logger, "propagate", True)
+
+
 def test_check_db_logs_only_bounded_safe_fields_without_exception_text(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture) -> None:
     class SecretConnectionError(Exception):
         sqlstate = "28P01"

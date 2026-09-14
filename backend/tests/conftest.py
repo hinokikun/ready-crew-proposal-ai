@@ -21,6 +21,16 @@ def _refresh_app_settings() -> None:
             setattr(module, "settings", current_settings)
 
 
+def _reset_test_database_engine() -> None:
+    """Recreate the import-time engine after the fixture changes DATABASE_URL."""
+    connection = importlib.import_module("app.database.connection")
+    connection.engine.dispose()
+    importlib.reload(connection)
+    database_module = sys.modules.get("app.db")
+    if database_module is not None:
+        importlib.reload(database_module)
+
+
 @pytest.fixture()
 def client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> TestClient:
     db_path = tmp_path / "test.db"
@@ -37,6 +47,7 @@ def client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> TestClient:
     monkeypatch.setenv("BEAUTIFUL_AI_API_KEY", "")
     monkeypatch.setenv("BEAUTIFUL_AI_MOCK", "false")
     _refresh_app_settings()
+    _reset_test_database_engine()
     main_module = sys.modules.get("app.main")
     main = importlib.reload(main_module) if main_module is not None else importlib.import_module("app.main")
     with TestClient(main.app) as test_client:
