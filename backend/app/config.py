@@ -65,10 +65,6 @@ class Settings:
     initial_admin_email: str = os.getenv("INITIAL_ADMIN_EMAIL", "").strip().lower()
     initial_admin_password: str = os.getenv("INITIAL_ADMIN_PASSWORD", "")
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///app.db")
-    enable_startup_boundary_diagnostic: bool = _as_bool(
-        os.getenv("ENABLE_STARTUP_BOUNDARY_DIAGNOSTIC"),
-        False,
-    )
     enable_db_schema_state_diagnostic: bool = _as_bool(
         os.getenv("ENABLE_DB_SCHEMA_STATE_DIAGNOSTIC"),
         False,

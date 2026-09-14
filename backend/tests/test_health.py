@@ -1,5 +1,4 @@
 from fastapi.testclient import TestClient
-import asyncio
 from contextlib import contextmanager
 import logging
 import sys
@@ -192,86 +191,6 @@ def test_database_diagnostic_exposes_schema_state_cache_without_rerunning(monkey
     monkeypatch.setattr(database_health, "_run_schema_state_diagnostic", lambda: pytest.fail("health getter re-ran diagnostic"))
 
     assert database_health.get_database_diagnostic()["schema_state"] == cached
-
-
-def test_startup_boundary_diagnostic_defaults_to_disabled() -> None:
-    from app.config import Settings
-
-    assert Settings.__dataclass_fields__["enable_startup_boundary_diagnostic"].default is False
-
-
-def test_get_db_health_boundary_logging_preserves_exception(monkeypatch: pytest.MonkeyPatch) -> None:
-    error = RuntimeError("startup boundary test failure")
-    monkeypatch.setattr(
-        database_health,
-        "settings",
-        types.SimpleNamespace(enable_startup_boundary_diagnostic=True),
-    )
-    monkeypatch.setattr(database_health, "check_db", lambda: (_ for _ in ()).throw(error))
-
-    with pytest.raises(RuntimeError) as raised:
-        database_health.get_db_health()
-
-    assert raised.value is error
-
-
-def test_lifespan_logs_startup_boundaries_in_order(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture) -> None:
-    from app import main as main_module
-
-    events: list[str] = []
-    monkeypatch.setattr(main_module, "run_schema_state_diagnostic_once", lambda: None)
-    monkeypatch.setattr(main_module, "run_conninfo_preflight_once", lambda: None)
-    monkeypatch.setattr(main_module, "run_pgconn_stage_diagnostic_once", lambda: None)
-    monkeypatch.setattr(main_module, "run_pgconn_level3_diagnostic_once", lambda: None)
-    monkeypatch.setattr(main_module, "run_version_shape_diagnostic_once", lambda: None)
-    monkeypatch.setattr(
-        main_module,
-        "settings",
-        types.SimpleNamespace(
-            enable_startup_boundary_diagnostic=True,
-            initial_admin_email="",
-            initial_admin_password="",
-        ),
-    )
-    monkeypatch.setattr(main_module, "init_db", lambda: events.append("init_db"))
-    monkeypatch.setattr(main_module, "get_db_health", lambda: {"db_tables_count": 1})
-
-    @contextmanager
-    def fake_db():
-        yield object()
-
-    monkeypatch.setattr(main_module, "get_db", fake_db)
-    monkeypatch.setattr(main_module, "ensure_initial_admin", lambda _: events.append("bootstrap"))
-    monkeypatch.setattr(main_module, "seed_default_organization", lambda _: events.append("organization"))
-    monkeypatch.setattr(main_module, "seed_default_templates", lambda: events.append("templates"))
-    monkeypatch.setattr(database_health, "settings", main_module.settings)
-    caplog.set_level(logging.INFO, logger=database_health.logger.name)
-
-    async def exercise() -> None:
-        async with main_module.lifespan(main_module.app):
-            pass
-
-    asyncio.run(exercise())
-
-    assert events == ["init_db", "bootstrap", "organization", "templates"]
-    markers = [
-        record.getMessage()
-        for record in caplog.records
-        if record.getMessage().startswith("startup_boundary ")
-    ]
-    assert markers == [
-        "startup_boundary before_init_db",
-        "startup_boundary after_init_db",
-        "startup_boundary before_get_db_health",
-        "startup_boundary after_get_db_health",
-        "startup_boundary before_ensure_initial_admin",
-        "startup_boundary after_ensure_initial_admin",
-        "startup_boundary before_organization_workspace_seed",
-        "startup_boundary after_organization_workspace_seed",
-        "startup_boundary before_template_seed",
-        "startup_boundary after_template_seed",
-        "startup_boundary before_lifespan_yield",
-    ]
 
 
 def test_migration_head_uses_authoritative_backend_alembic_config(monkeypatch: pytest.MonkeyPatch) -> None:
