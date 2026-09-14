@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import selectors
+from collections.abc import Mapping
 from threading import Lock
 from pathlib import Path
 import re
@@ -251,6 +252,17 @@ def _auth_state_result(enabled: bool) -> dict[str, Any]:
     }
 
 
+def _auth_state_row_value(row: Any, index: int, key: str) -> Any:
+    if row is None:
+        return None
+    if isinstance(row, Mapping):
+        return row.get(key)
+    try:
+        return row[index]
+    except (IndexError, KeyError, TypeError):
+        return None
+
+
 def _run_auth_state_diagnostic() -> dict[str, Any]:
     result = _auth_state_result(True)
     result["initial_admin_email_configured"] = bool(settings.initial_admin_email)
@@ -264,8 +276,8 @@ def _run_auth_state_diagnostic() -> dict[str, Any]:
         admin_row = cursor.execute(
                 "SELECT COUNT(*) AS admin_count FROM users WHERE role = 'admin' AND is_active = 1 AND deleted_at IS NULL"
         ).fetchone()
-        result["user_count"] = max(0, int(user_row["user_count"] if user_row else 0))
-        result["admin_count"] = max(0, int(admin_row["admin_count"] if admin_row else 0))
+        result["user_count"] = max(0, int(_auth_state_row_value(user_row, 0, "user_count") or 0))
+        result["admin_count"] = max(0, int(_auth_state_row_value(admin_row, 0, "admin_count") or 0))
         result["has_users"] = result["user_count"] > 0
         result["has_admin"] = result["admin_count"] > 0
         if settings.initial_admin_email:

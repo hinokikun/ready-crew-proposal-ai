@@ -212,6 +212,24 @@ class _AuthStateDb:
         return types.SimpleNamespace(fetchone=lambda: {"initial_admin_exists": True} if self.initial_admin_exists else None)
 
 
+class _AuthStateTupleDb(_AuthStateDb):
+    def execute(self, statement: str, parameters: tuple[str, ...] = ()):
+        self.queries.append(statement)
+        assert statement.lstrip().upper().startswith("SELECT")
+        if "user_count" in statement:
+            return types.SimpleNamespace(fetchone=lambda: (self.user_count,))
+        if "admin_count" in statement:
+            return types.SimpleNamespace(fetchone=lambda: (self.admin_count,))
+        assert parameters
+        return types.SimpleNamespace(fetchone=lambda: (1,) if self.initial_admin_exists else None)
+
+
+class _FailingAuthStateDb(_AuthStateDb):
+    def execute(self, statement: str, parameters: tuple[str, ...] = ()):
+        self.queries.append(statement)
+        raise RuntimeError("diagnostic query failed")
+
+
 class _AuthStateRawConnection:
     def __init__(self, db: _AuthStateDb) -> None:
         self.db = db
@@ -329,6 +347,27 @@ def test_auth_state_diagnostic_runs_once_and_logs_one_record(monkeypatch: pytest
     assert db.raw_connection is not None
     assert db.raw_connection.commit_called is False
     assert db.raw_connection.closed is True
+
+
+def test_auth_state_diagnostic_extracts_postgresql_tuple_rows(monkeypatch: pytest.MonkeyPatch) -> None:
+    db = _AuthStateTupleDb(2, 1, True)
+
+    result = _run_auth_state_diagnostic(monkeypatch, db, email="configured@example.test", password="configured-secret")
+
+    assert result["user_count"] == 2
+    assert result["admin_count"] == 1
+    assert result["configured_initial_admin_exists"] is True
+    assert result["failure_category"] == "ADMIN_EXISTS_CONFIGURED_INITIAL_ADMIN_EXISTS"
+
+
+def test_auth_state_diagnostic_keeps_query_failure_fail_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    db = _FailingAuthStateDb(0, 0)
+
+    result = _run_auth_state_diagnostic(monkeypatch, db)
+
+    assert result["failure_category"] == "DIAGNOSTIC_QUERY_FAILED"
+    assert result["user_count"] == 0
+    assert result["admin_count"] == 0
 
 
 def test_lifespan_runs_auth_state_diagnostic_after_bootstrap_once(monkeypatch: pytest.MonkeyPatch) -> None:
