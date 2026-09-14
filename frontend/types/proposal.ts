@@ -1,5 +1,6 @@
 export type ProposalRequest = {
   project_brief: string;
+  presentation_topic?: string;
   client_company_info: string;
   competitor_site_url: string;
   competitor_company_name: string;
