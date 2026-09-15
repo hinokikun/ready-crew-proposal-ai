@@ -1,0 +1,837 @@
+/*
+ * TEIAN QUEST / 提案クエスト visual foundation.
+ * This file is intentionally an additive compatibility layer. Existing JSX,
+ * state hooks, identifiers and functional class names remain unchanged.
+ */
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  min-width: 320px;
+}
+
+body,
+.app-body {
+  background: var(--tq-surface-subtle);
+  color: var(--tq-text-primary);
+  font-family: var(--tq-font-body);
+}
+
+/* Global Foundation: opt-in/compatibility scoped controls only. */
+.v80-experience-shell :is(button, input, textarea, select),
+.tq-component :is(button, input, textarea, select) {
+  min-height: var(--tq-control-height);
+}
+
+.v80-experience-shell :is(button, a, summary, input, textarea, select):focus-visible,
+.tq-component :is(button, a, summary, input, textarea, select):focus-visible {
+  outline: 3px solid rgba(25, 118, 210, 0.48);
+  outline-offset: 2px;
+}
+
+.v80-experience-shell :is(button, input, textarea, select):disabled,
+.tq-component :is(button, input, textarea, select):disabled {
+  cursor: not-allowed;
+}
+
+/* Shell aliases: preserve v80 selectors while introducing TEIAN QUEST values. */
+.v80-experience-shell {
+  --v80-sidebar-width: var(--tq-sidebar-width);
+  --v80-sidebar-collapsed-width: var(--tq-sidebar-collapsed-width);
+  --v80-surface: var(--tq-surface-work);
+  --v80-surface-strong: var(--tq-surface-work);
+  --v80-ink: var(--tq-text-primary);
+  --v80-muted: var(--tq-text-muted);
+  --v80-line: var(--tq-border);
+  --v80-navy: var(--tq-shell-navy);
+  --v80-blue: var(--tq-action-primary);
+  --v80-cyan: var(--tq-sky);
+  --v80-green: var(--tq-success);
+  --v80-orange: var(--tq-warning);
+  --v80-red: var(--tq-danger);
+  --v80-radius-card: var(--tq-radius-lg);
+  --v80-radius-control: var(--tq-radius-sm);
+  --v80-space-page: var(--tq-space-5);
+  --v80-motion: var(--tq-motion-base);
+  background: var(--tq-surface-subtle);
+  color: var(--tq-text-primary);
+}
+
+.v80-sidebar {
+  background: var(--tq-shell-navy);
+  border-right-color: var(--tq-shell-navy-soft);
+  box-shadow: var(--tq-shadow-sm);
+  color: #f5f9fd;
+}
+
+.v80-sidebar-brand strong,
+.v80-sidebar-context strong,
+.v80-nav-item strong {
+  color: #f5f9fd;
+}
+
+.v80-sidebar-brand span,
+.v80-sidebar-context span,
+.v80-nav-item small {
+  color: #b7d0e5;
+}
+
+.v80-nav-item {
+  border-radius: var(--tq-radius-sm);
+}
+
+.v80-nav-item svg {
+  color: var(--tq-pixel-gold);
+}
+
+.v80-nav-item.is-active {
+  background: var(--tq-shell-navy-soft);
+  border-color: #5f91b5;
+  box-shadow: inset 3px 0 0 var(--tq-pixel-gold);
+}
+
+.v80-page-intro,
+.v80-view-panel,
+.user-home-panel,
+.guided-step-card,
+.v80-studio,
+.advanced-foldout {
+  border-color: var(--tq-border);
+  border-radius: var(--tq-radius-md);
+  box-shadow: var(--tq-shadow-xs);
+}
+
+.v80-page-intro h1,
+.user-home-panel h1,
+.guided-step-card h2,
+.v80-studio h2 {
+  color: var(--tq-text-primary);
+  font-family: var(--tq-font-display);
+}
+
+.v80-experience-shell .primary-button {
+  min-height: var(--tq-control-height);
+  border-radius: var(--tq-radius-sm);
+  background: var(--tq-action-primary);
+  box-shadow: 2px 2px 0 var(--tq-shell-navy);
+}
+
+.v80-experience-shell .primary-button:hover:not(:disabled) {
+  background: var(--tq-action-primary-hover);
+}
+
+.v80-experience-shell .secondary-button,
+.v80-experience-shell .text-button,
+.v80-experience-shell .status-pill {
+  min-height: var(--tq-control-height);
+  border-radius: var(--tq-radius-sm);
+}
+
+/* Legacy primitive aliases. */
+.primary-button,
+.secondary-button,
+.tertiary-button,
+.danger-button,
+.text-button,
+.compact-button {
+  font-family: var(--tq-font-body);
+}
+
+.primary-button {
+  background: var(--tq-action-primary);
+  border-color: var(--tq-action-primary);
+}
+
+.primary-button:hover:not(:disabled) {
+  background: var(--tq-action-primary-hover);
+}
+
+.secondary-button {
+  border-color: var(--tq-border-strong);
+  background: var(--tq-surface-work);
+  color: var(--tq-text-primary);
+}
+
+.tertiary-button,
+.text-button {
+  color: var(--tq-info);
+}
+
+.danger-button,
+.secondary-button.danger {
+  border-color: #e7b2ad;
+  background: var(--tq-danger-surface);
+  color: var(--tq-danger);
+}
+
+.v80-experience-shell :is(input, textarea, select),
+.tq-component :is(input, textarea, select) {
+  border-color: var(--tq-border-strong);
+  border-radius: var(--tq-radius-sm);
+  color: var(--tq-text-primary);
+}
+
+/* Semantic status primitives remain text/icon/border based, not color-only. */
+.status-badge,
+.status-pill,
+.status-chip {
+  border-radius: var(--tq-radius-sm);
+}
+
+.status-badge.is-success,
+.status-pill.is-success {
+  border-color: #9bd1ad;
+  background: var(--tq-success-surface);
+  color: var(--tq-success);
+}
+
+.status-badge.is-warning,
+.status-pill.is-warning {
+  border-color: #e3c17d;
+  background: var(--tq-warning-surface);
+  color: var(--tq-warning);
+}
+
+.status-badge.is-error,
+.status-pill.is-error {
+  border-color: #e7b2ad;
+  background: var(--tq-danger-surface);
+  color: var(--tq-danger);
+}
+
+.status-badge.is-info,
+.status-pill.is-info {
+  border-color: #a9c9e5;
+  background: var(--tq-info-surface);
+  color: var(--tq-info);
+}
+
+.app-error-card,
+.auth-error,
+.guided-inline-warning,
+.guided-error-message {
+  border-color: #e7b2ad;
+  background: var(--tq-danger-surface);
+  color: var(--tq-danger);
+}
+
+.empty-state,
+.app-loading-card,
+.app-error-card {
+  border-radius: var(--tq-radius-md);
+}
+
+/* Stage / pixel accents are limited to brand, guides and selected feedback. */
+.v80-brand-mark,
+.auth-icon {
+  border-radius: var(--tq-radius-pixel);
+}
+
+.ai-character,
+.wizard-ai-character,
+.wizard-avatar {
+  image-rendering: pixelated;
+}
+
+.tq-character-guide {
+  display: grid;
+  gap: var(--tq-space-2);
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+}
+
+.tq-character-guide__robot {
+  display: grid;
+  place-items: center;
+  min-width: 48px;
+  min-height: 48px;
+  border: 3px solid var(--tq-shell-navy);
+  border-radius: var(--tq-radius-pixel);
+  background: var(--tq-pixel-green);
+  color: #fff;
+  font-weight: 900;
+  image-rendering: pixelated;
+}
+
+.tq-character-guide__bubble {
+  border: 1px solid var(--tq-border-strong);
+  border-left: 3px solid var(--tq-pixel-green);
+  border-radius: var(--tq-radius-sm);
+  background: var(--tq-surface-work);
+  color: var(--tq-text-primary);
+  padding: var(--tq-space-2) var(--tq-space-3);
+}
+
+.tq-pixel-region {
+  border: 2px solid var(--tq-shell-navy);
+  border-radius: var(--tq-radius-pixel);
+  background: linear-gradient(180deg, var(--tq-sky) 0 62%, var(--tq-field) 62% 100%);
+}
+
+/* Future migration primitives. They are opt-in and do not alter existing markup. */
+.tq-app-shell {
+  min-height: 100vh;
+  background: var(--tq-surface-subtle);
+  color: var(--tq-text-primary);
+}
+
+.tq-top-header {
+  min-height: var(--tq-header-height);
+  border-bottom: 1px solid var(--tq-border);
+  background: var(--tq-shell-navy);
+  color: #f5f9fd;
+}
+
+.tq-page-container {
+  width: min(100% - (var(--tq-space-8) * 2), 1180px);
+  margin-inline: auto;
+  padding-block: var(--tq-space-6) var(--tq-space-8);
+}
+
+.tq-page-header {
+  display: grid;
+  gap: var(--tq-space-2);
+  margin-bottom: var(--tq-space-6);
+}
+
+.tq-page-header h1,
+.tq-page-header h2,
+.tq-section-title {
+  margin: 0;
+  color: var(--tq-text-primary);
+  font-family: var(--tq-font-display);
+}
+
+.tq-page-header h1 {
+  font-size: clamp(1.5rem, 2.2vw, 2.25rem);
+  line-height: 1.3;
+}
+
+.tq-panel,
+.tq-business-card {
+  border: 1px solid var(--tq-border);
+  border-radius: var(--tq-radius-md);
+  background: var(--tq-surface-work);
+  box-shadow: var(--tq-shadow-xs);
+}
+
+.tq-panel {
+  padding: var(--tq-space-5);
+}
+
+.tq-business-card {
+  padding: var(--tq-space-4);
+}
+
+.tq-tabs {
+  display: flex;
+  gap: var(--tq-space-1);
+  border-bottom: 1px solid var(--tq-border);
+}
+
+.tq-tabs > button {
+  min-height: var(--tq-touch-target);
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--tq-text-secondary);
+  padding-inline: var(--tq-space-3);
+}
+
+.tq-tabs > button[aria-selected="true"],
+.tq-tabs > button.is-active {
+  border-bottom-color: var(--tq-action-primary);
+  color: var(--tq-action-primary);
+  font-weight: 700;
+}
+
+.tq-progress {
+  height: 0.375rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--tq-border);
+}
+
+.tq-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tq-action-primary);
+}
+
+.tq-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tq-table th,
+.tq-table td {
+  border-bottom: 1px solid var(--tq-border);
+  padding: var(--tq-space-3);
+  text-align: left;
+  vertical-align: top;
+}
+
+.tq-table th {
+  background: var(--tq-surface-subtle);
+  color: var(--tq-text-secondary);
+  font-size: 0.8125rem;
+}
+
+.tq-state {
+  border: 1px solid var(--tq-border);
+  border-radius: var(--tq-radius-md);
+  background: var(--tq-surface-subtle);
+  padding: var(--tq-space-5);
+}
+
+.tq-state.is-success {
+  border-color: #9bd1ad;
+  background: var(--tq-success-surface);
+}
+
+.tq-state.is-warning {
+  border-color: #e3c17d;
+  background: var(--tq-warning-surface);
+}
+
+.tq-state.is-error {
+  border-color: #e7b2ad;
+  background: var(--tq-danger-surface);
+}
+
+.tq-mobile-bottom-nav {
+  display: none;
+}
+
+/*
+ * TEMPORARY / LEGACY HOME VISUAL COMPATIBILITY
+ *
+ * These rules preserve the earlier Phase 2 Home implementation while
+ * UserHomePanel remains frozen. They are intentionally excluded from the
+ * Global Foundation contract and must be reviewed when Home is migrated.
+ */
+.v80-experience-shell:has(> .user-home-panel) {
+  background:
+    linear-gradient(180deg, rgba(139, 209, 245, 0.32) 0 7rem, transparent 15rem),
+    var(--tq-surface-subtle);
+}
+
+.v80-experience-shell:has(> .user-home-panel) > .workspace-header {
+  position: relative;
+  z-index: 1;
+  border-bottom-color: var(--tq-shell-navy-soft);
+  background: var(--tq-shell-navy);
+  color: #f5f9fd;
+  padding: 0.85rem 1.25rem;
+  min-height: var(--tq-header-height);
+}
+
+.v80-experience-shell:has(> .user-home-panel) > .workspace-header h1,
+.v80-experience-shell:has(> .user-home-panel) > .workspace-header .eyebrow,
+.v80-experience-shell:has(> .user-home-panel) > .workspace-header .header-actions,
+.v80-experience-shell:has(> .user-home-panel) > .workspace-header .status-pill {
+  color: #f5f9fd;
+}
+
+/* Keep existing accessible text in the DOM, while making the approved product
+ * identity the visible shell brand. */
+.v80-experience-shell:has(> .user-home-panel) > .workspace-header h1,
+.v80-experience-shell:has(> .user-home-panel) > .workspace-header .eyebrow,
+.v80-experience-shell:has(> .user-home-panel) .v80-sidebar-brand strong {
+  font-size: 0;
+}
+
+.v80-experience-shell:has(> .user-home-panel) > .workspace-header h1::after {
+  content: "提案クエスト";
+  display: block;
+  font-family: var(--tq-font-display);
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.v80-experience-shell:has(> .user-home-panel) > .workspace-header .eyebrow::after {
+  content: "TEIAN QUEST";
+  display: block;
+  color: var(--tq-pixel-gold);
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+}
+
+.v80-experience-shell:has(> .user-home-panel) .v80-sidebar-brand strong::before {
+  content: "提案クエスト";
+  display: block;
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.v80-experience-shell:has(> .user-home-panel) .v80-sidebar-brand strong::after {
+  content: "TEIAN QUEST";
+  display: block;
+  color: var(--tq-pixel-gold);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  line-height: 1.3;
+}
+
+.v80-experience-shell:has(> .user-home-panel) > .workspace-context-card {
+  border-color: var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  background: var(--tq-surface-work);
+  box-shadow: var(--tq-shadow-xs);
+}
+
+.v80-experience-shell:has(> .user-home-panel) > .user-home-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--tq-border);
+  border-radius: var(--tq-radius-md);
+  background:
+    linear-gradient(180deg, transparent 0 21rem, rgba(216, 240, 194, 0.42) 21rem 100%),
+    var(--tq-surface-work);
+  box-shadow: var(--tq-shadow-sm);
+  width: min(1320px, calc(100% - var(--v80-sidebar-width) - 2.5rem));
+}
+
+.v80-experience-shell:has(> .user-home-panel) > .user-home-panel::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 8rem;
+  background:
+    linear-gradient(90deg, transparent 0 8%, var(--tq-cloud) 8% 18%, transparent 18% 55%, var(--tq-cloud) 55% 70%, transparent 70%),
+    linear-gradient(180deg, var(--tq-sky), rgba(139, 209, 245, 0.18));
+  content: "";
+  opacity: 0.82;
+  pointer-events: none;
+}
+
+.v80-experience-shell:has(> .user-home-panel) > .user-home-panel::after {
+  position: absolute;
+  z-index: -1;
+  right: 2.5rem;
+  bottom: 0;
+  width: 9rem;
+  height: 3.5rem;
+  background:
+    linear-gradient(90deg, var(--tq-pixel-green) 0 18%, transparent 18% 25%, var(--tq-pixel-green) 25% 43%, transparent 43% 51%, var(--tq-pixel-green) 51% 70%, transparent 70%),
+    linear-gradient(180deg, transparent 0 45%, var(--tq-pixel-green) 45%);
+  content: "";
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.user-home-hero {
+  position: relative;
+  border-color: var(--tq-border-strong);
+  border-left: 4px solid var(--tq-action-primary);
+  border-radius: var(--tq-radius-sm);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: var(--tq-shadow-xs);
+}
+
+.user-home-hero::before {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  max-width: 17rem;
+  border: 1px solid var(--tq-border-strong);
+  border-left: 3px solid var(--tq-pixel-green);
+  border-radius: var(--tq-radius-pixel);
+  background: var(--tq-surface-work);
+  color: var(--tq-text-secondary);
+  content: "AIと、いい提案をつくる冒険に出よう！";
+  font-size: 0.7rem;
+  line-height: 1.5;
+  padding: 0.45rem 0.65rem;
+  white-space: pre-line;
+}
+
+.user-home-hero::after {
+  display: none;
+}
+
+.user-home-hero > div:first-child::before {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--tq-action-primary);
+  content: "提案クエスト　/　TEIAN QUEST　·　PROPOSAL ADVENTURE";
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+
+.tq-home-robot-region {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  bottom: 1rem;
+  width: clamp(11rem, 24%, 18rem);
+  border-left: 1px solid rgba(159, 180, 196, 0.72);
+  background: linear-gradient(180deg, rgba(139, 209, 245, 0.16), rgba(216, 240, 194, 0.22));
+  pointer-events: none;
+}
+
+.tq-home-robot-region img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  image-rendering: pixelated;
+}
+
+.user-home-hero h2 {
+  color: var(--tq-text-primary);
+  font-family: var(--tq-font-display);
+  font-size: clamp(1.8rem, 3vw, 2.7rem);
+}
+
+.user-home-hero > div:first-child > .eyebrow {
+  display: none;
+}
+
+.user-home-main-cta,
+.user-home-priority-grid .is-primary {
+  border-radius: var(--tq-radius-pixel);
+  background: var(--tq-action-primary);
+  box-shadow: 3px 3px 0 var(--tq-shell-navy);
+}
+
+.user-home-priority-grid article,
+.user-home-recent-card {
+  border-color: var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--tq-shadow-xs);
+}
+
+.user-home-priority-grid article:hover,
+.user-home-recent-card:hover {
+  border-color: var(--tq-action-primary);
+  box-shadow: var(--tq-shadow-sm);
+}
+
+.user-home-priority-grid .user-home-action-card {
+  border-color: var(--tq-border);
+  border-radius: var(--tq-radius-sm);
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--tq-text-primary);
+}
+
+.user-home-priority-grid .user-home-action-card.is-primary {
+  border-color: var(--tq-action-primary);
+  background: var(--tq-info-surface);
+  box-shadow: var(--tq-shadow-xs);
+}
+
+.user-home-priority-grid .user-home-action-card:not(.is-primary) {
+  opacity: 0.9;
+}
+
+.user-home-priority-grid .user-home-action-card:disabled {
+  opacity: 0.55;
+}
+
+.user-home-flow {
+  border-color: var(--tq-border-strong);
+  border-radius: var(--tq-radius-sm);
+  background: rgba(243, 247, 250, 0.94);
+}
+
+.user-home-flow-list li > span {
+  border-radius: var(--tq-radius-pixel);
+  background: var(--tq-shell-navy);
+  color: #fff;
+}
+
+.user-home-recent-card > div > span,
+.user-home-recent-card p,
+.user-home-empty p {
+  color: var(--tq-text-secondary);
+}
+
+/* Reserved, non-rendering contract for the approved robot artwork. */
+.tq-character-guide-slot {
+  min-width: 48px;
+  min-height: 48px;
+  border: 2px dashed var(--tq-border-strong);
+  border-radius: var(--tq-radius-pixel);
+  background: transparent;
+}
+
+/* Keep the existing v80 mobile drawer contract; add a bottom-nav-ready surface. */
+.v80-view-switcher {
+  border-radius: var(--tq-radius-sm);
+  background: transparent;
+  color: var(--tq-text-secondary);
+  box-shadow: none;
+}
+
+.v80-view-switcher button {
+  border-color: var(--tq-border);
+  color: var(--tq-text-secondary);
+}
+
+@media (max-width: 899px) {
+  .v80-experience-shell {
+    --v80-space-page: var(--tq-space-4);
+  }
+}
+
+@media (max-width: 639px) {
+  .v80-experience-shell {
+    --v80-space-page: var(--tq-space-3);
+  }
+
+  .v80-experience-shell .v80-mobile-menu-button,
+  .v80-experience-shell .v80-view-switcher button,
+  .v80-experience-shell .primary-button,
+  .v80-experience-shell .secondary-button,
+  .v80-experience-shell .text-button {
+    min-height: var(--tq-touch-target);
+  }
+
+  .v80-view-switcher {
+    background: var(--tq-shell-navy);
+    border-color: var(--tq-shell-navy-soft);
+  }
+
+  .v80-sidebar {
+    box-shadow: var(--tq-shadow-sm);
+  }
+
+  .tq-page-container {
+    width: min(100% - (var(--tq-space-4) * 2), 1180px);
+    padding-bottom: calc(var(--tq-space-8) + var(--tq-mobile-nav-height));
+  }
+
+  .tq-mobile-bottom-nav {
+    position: fixed;
+    z-index: var(--z-header);
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    min-height: var(--tq-mobile-nav-height);
+    border-top: 1px solid var(--tq-shell-navy-soft);
+    background: var(--tq-shell-navy);
+  }
+
+  .tq-mobile-bottom-nav > button {
+    min-height: var(--tq-touch-target);
+    color: #dcebf8;
+  }
+
+  .tq-mobile-bottom-nav > button[aria-current="page"],
+  .tq-mobile-bottom-nav > button.is-active {
+    color: var(--tq-pixel-gold);
+    box-shadow: inset 0 3px 0 var(--tq-pixel-gold);
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) > .user-home-panel {
+    border-radius: var(--tq-radius-sm);
+    box-shadow: var(--tq-shadow-xs);
+    width: calc(100% - 1.5rem);
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) > .user-home-panel::before {
+    height: 5.5rem;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) > .user-home-panel::after {
+    right: 1rem;
+    width: 5rem;
+    height: 2rem;
+  }
+
+  .user-home-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .user-home-hero::before {
+    position: static;
+    margin-bottom: 0.8rem;
+    max-width: none;
+  }
+
+  .tq-home-robot-region {
+    position: static;
+    width: 100%;
+    min-height: 4rem;
+    border-top: 1px solid rgba(159, 180, 196, 0.72);
+    border-left: 0;
+    background: linear-gradient(180deg, rgba(139, 209, 245, 0.16), rgba(216, 240, 194, 0.22));
+  }
+
+  .user-home-hero::after {
+    right: 0.8rem;
+    bottom: 0.8rem;
+    min-width: 3.5rem;
+    min-height: 3.5rem;
+    display: none;
+  }
+
+  .user-home-hero > div:first-child::before {
+    max-width: calc(100% - 4.5rem);
+    line-height: 1.4;
+  }
+
+  .user-home-main-cta {
+    width: 100%;
+  }
+
+  /* Existing previous/current/next control becomes a fixed mobile navigation dock. */
+  .v80-view-switcher {
+    position: fixed;
+    z-index: var(--z-header);
+    right: 0.75rem;
+    bottom: 0.75rem;
+    left: 0.75rem;
+    grid-template-columns: var(--tq-touch-target) minmax(0, 1fr) var(--tq-touch-target);
+    align-items: center;
+    min-height: var(--tq-mobile-nav-height);
+    padding: 0.35rem;
+    border: 1px solid var(--tq-shell-navy-soft);
+    border-radius: var(--tq-radius-sm);
+    background: var(--tq-shell-navy);
+    box-shadow: var(--tq-shadow-sm);
+  }
+
+  .v80-view-switcher button {
+    min-height: var(--tq-touch-target);
+    border-color: transparent;
+    color: #f5f9fd;
+  }
+
+  .v80-view-switcher span {
+    color: #f5f9fd;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .v80-experience-shell > .user-home-panel,
+  .v80-experience-shell > .v80-page-intro,
+  .v80-experience-shell > .v80-view-panel,
+  .v80-experience-shell > .guided-flow-shell {
+    padding-bottom: calc(var(--tq-space-8) + var(--tq-mobile-nav-height));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

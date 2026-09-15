@@ -54,6 +54,85 @@
   --cafe-paper: var(--surface);
   --cafe-sage: #eef4ff;
   --cafe-terracotta: var(--primary);
+
+  /* TEIAN QUEST visual foundation — raw brand and world values */
+  --tq-shell-navy: #102a43;
+  --tq-shell-navy-strong: #0b1f33;
+  --tq-shell-navy-soft: #193e5d;
+  --tq-sky: #8bd1f5;
+  --tq-cloud: #f7fcff;
+  --tq-field: #d8f0c2;
+  --tq-pixel-gold: #f4c44e;
+  --tq-pixel-green: #3a9b63;
+  --tq-pixel-fire: #dc6b36;
+  --tq-pixel-pink: #d95d91;
+  --tq-pixel-brown: #8a5d3b;
+  --tq-action-primary: #1976d2;
+  --tq-action-primary-hover: #155fa8;
+  --tq-surface-work: #ffffff;
+  --tq-surface-subtle: #f3f7fa;
+  --tq-text-primary: #142b45;
+  --tq-text-secondary: #486277;
+  --tq-text-muted: #647b8f;
+  --tq-border: #c7d5df;
+  --tq-border-strong: #9fb4c4;
+  --tq-success: #177344;
+  --tq-success-surface: #e9f8ee;
+  --tq-warning: #aa6400;
+  --tq-warning-surface: #fff1c7;
+  --tq-danger: #b42318;
+  --tq-danger-surface: #fff0ee;
+  --tq-info: #155fa8;
+  --tq-info-surface: #eaf5ff;
+  --tq-space-1: 0.25rem;
+  --tq-space-2: 0.5rem;
+  --tq-space-3: 0.75rem;
+  --tq-space-4: 1rem;
+  --tq-space-5: 1.25rem;
+  --tq-space-6: 1.5rem;
+  --tq-space-8: 2rem;
+  --tq-radius-sm: 0.375rem;
+  --tq-radius-md: 0.625rem;
+  --tq-radius-lg: 0.875rem;
+  --tq-radius-pixel: 0.25rem;
+  --tq-shadow-xs: 0 1px 2px rgba(16, 42, 67, 0.08);
+  --tq-shadow-sm: 0 4px 12px rgba(16, 42, 67, 0.1);
+  --tq-control-height: 44px;
+  --tq-touch-target: 44px;
+  --tq-sidebar-width: 264px;
+  --tq-sidebar-collapsed-width: 88px;
+  --tq-mobile-nav-height: 64px;
+  --tq-header-height: 64px;
+  --tq-breakpoint-mobile: 640px;
+  --tq-breakpoint-desktop: 900px;
+  --tq-motion-fast: 150ms ease;
+  --tq-motion-base: 220ms ease;
+  --tq-font-display: "Yu Gothic", "Hiragino Sans", Meiryo, sans-serif;
+  --tq-font-body: Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+
+  /* TEIAN QUEST semantic layer: prefer these names in new opt-in UI. */
+  --tq-color-brand-shell: var(--tq-shell-navy);
+  --tq-color-brand-accent: var(--tq-pixel-gold);
+  --tq-color-surface-work: var(--tq-surface-work);
+  --tq-color-surface-subtle: var(--tq-surface-subtle);
+  --tq-color-text-primary: var(--tq-text-primary);
+  --tq-color-text-secondary: var(--tq-text-secondary);
+  --tq-color-border-default: var(--tq-border);
+  --tq-color-action-primary: var(--tq-action-primary);
+  --tq-color-action-primary-hover: var(--tq-action-primary-hover);
+  --tq-color-feedback-success: var(--tq-success);
+  --tq-color-feedback-warning: var(--tq-warning);
+  --tq-color-feedback-danger: var(--tq-danger);
+  --tq-color-feedback-info: var(--tq-info);
+  --tq-space-page: var(--tq-space-5);
+  --tq-space-section: var(--tq-space-6);
+  --tq-radius-control: var(--tq-radius-sm);
+  --tq-radius-surface: var(--tq-radius-md);
+  --tq-shadow-surface: var(--tq-shadow-xs);
+  --tq-shadow-elevated: var(--tq-shadow-sm);
+  --tq-type-display: var(--tq-font-display);
+  --tq-type-body: var(--tq-font-body);
+  --tq-motion-standard: var(--tq-motion-base);
 }
 
 .app-error-card,
