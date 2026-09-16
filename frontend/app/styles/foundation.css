@@ -528,11 +528,37 @@ body,
 
 .user-home-hero {
   position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 22rem);
+  grid-template-rows: auto auto;
+  align-items: start;
+  gap: var(--tq-space-5);
+  min-height: 15rem;
+  overflow: hidden;
+  padding: clamp(1.35rem, 3vw, 2.25rem);
   border-color: var(--tq-border-strong);
   border-left: 4px solid var(--tq-action-primary);
   border-radius: var(--tq-radius-sm);
-  background: rgba(255, 255, 255, 0.95);
+  background:
+    linear-gradient(180deg, rgba(139, 209, 245, 0.95) 0 36%, rgba(247, 252, 255, 0.96) 36% 68%, rgba(216, 240, 194, 0.94) 68% 100%),
+    var(--tq-surface-work);
   box-shadow: var(--tq-shadow-xs);
+}
+
+.user-home-hero > div:first-child,
+.user-home-hero > .user-home-main-cta {
+  position: relative;
+  z-index: 1;
+  grid-column: 1;
+}
+
+.user-home-hero > div:first-child {
+  max-width: 38rem;
+}
+
+.user-home-hero > .user-home-main-cta {
+  justify-self: start;
+  margin-top: 0;
 }
 
 .user-home-hero::before {
@@ -553,7 +579,60 @@ body,
 }
 
 .user-home-hero::after {
-  display: none;
+  position: absolute;
+  z-index: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 43%;
+  background:
+    linear-gradient(90deg, transparent 0 8%, rgba(16, 42, 67, 0.16) 8% 12%, transparent 12% 18%, rgba(16, 42, 67, 0.2) 18% 24%, transparent 24% 30%, rgba(16, 42, 67, 0.14) 30% 36%, transparent 36% 100%),
+    linear-gradient(180deg, transparent 0 35%, rgba(58, 155, 99, 0.84) 35% 48%, rgba(27, 112, 70, 0.92) 48% 100%);
+  content: "";
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.tq-home-world-scene {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Castle silhouette: a small landmark in the world, not a content panel. */
+.tq-home-world-scene::before {
+  position: absolute;
+  right: 30%;
+  bottom: 30%;
+  width: 8.5rem;
+  height: 5rem;
+  border: 0.55rem solid rgba(16, 42, 67, 0.42);
+  border-bottom-width: 1.4rem;
+  background: rgba(244, 196, 78, 0.72);
+  box-shadow:
+    -3.25rem 1rem 0 -0.1rem rgba(16, 42, 67, 0.32),
+    3.25rem 1rem 0 -0.1rem rgba(16, 42, 67, 0.32),
+    0 3.3rem 0 -0.3rem rgba(27, 112, 70, 0.7);
+  content: "";
+  clip-path: polygon(12% 0, 30% 0, 30% 25%, 43% 25%, 43% 0, 57% 0, 57% 25%, 70% 25%, 70% 0, 88% 0, 88% 100%, 12% 100%);
+}
+
+/* Forest and town silhouettes establish midground depth behind the business UI. */
+.tq-home-world-scene::after {
+  position: absolute;
+  right: 0;
+  bottom: 27%;
+  left: 0;
+  height: 3.5rem;
+  background: rgba(27, 112, 70, 0.6);
+  box-shadow:
+    0 -1.3rem 0 -0.2rem rgba(58, 155, 99, 0.5),
+    0 -2.4rem 0 -0.6rem rgba(58, 155, 99, 0.34),
+    0 3.5rem 0 0 rgba(27, 112, 70, 0.78);
+  content: "";
+  clip-path: polygon(0 100%, 0 55%, 4% 55%, 7% 15%, 10% 55%, 14% 35%, 18% 55%, 22% 5%, 27% 55%, 31% 28%, 36% 55%, 41% 12%, 46% 55%, 50% 34%, 55% 55%, 60% 6%, 65% 55%, 70% 30%, 75% 55%, 80% 10%, 85% 55%, 90% 25%, 95% 55%, 100% 45%, 100% 100%);
 }
 
 .user-home-hero > div:first-child::before {
@@ -568,13 +647,27 @@ body,
 
 .tq-home-robot-region {
   position: absolute;
+  z-index: 1;
   top: 1rem;
   right: 1.25rem;
   bottom: 1rem;
   width: clamp(11rem, 24%, 18rem);
+  display: grid;
+  place-items: center;
   border-left: 1px solid rgba(159, 180, 196, 0.72);
   background: linear-gradient(180deg, rgba(139, 209, 245, 0.16), rgba(216, 240, 194, 0.22));
   pointer-events: none;
+}
+
+.tq-home-robot-region::before {
+  position: absolute;
+  top: 0.55rem;
+  left: 0.75rem;
+  color: var(--tq-text-muted);
+  content: "AI CREW  /  STAGE GUIDE";
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
 }
 
 .tq-home-robot-region img {
@@ -584,6 +677,7 @@ body,
   object-fit: contain;
   object-position: center;
   image-rendering: pixelated;
+  mix-blend-mode: multiply;
 }
 
 .user-home-hero h2 {
@@ -654,6 +748,134 @@ body,
 .user-home-recent-card p,
 .user-home-empty p {
   color: var(--tq-text-secondary);
+}
+
+.tq-home-guide {
+  display: none;
+  align-items: end;
+  justify-content: flex-end;
+  gap: var(--tq-space-4);
+  min-height: 8rem;
+  margin-top: var(--tq-space-2);
+  padding: var(--tq-space-3) var(--tq-space-5) 0;
+  border-top: 3px solid var(--tq-pixel-green);
+  background:
+    linear-gradient(180deg, rgba(139, 209, 245, 0.2), transparent 46%),
+    repeating-linear-gradient(90deg, rgba(58, 155, 99, 0.14) 0 1rem, transparent 1rem 2rem);
+}
+
+.tq-home-guide-robot {
+  width: 7rem;
+  height: 6rem;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.tq-home-guide-robot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  image-rendering: pixelated;
+  mix-blend-mode: multiply;
+}
+
+.tq-home-guide-bubble {
+  position: relative;
+  max-width: 25rem;
+  margin-bottom: var(--tq-space-4);
+  padding: var(--tq-space-3) var(--tq-space-4);
+  border: 2px solid var(--tq-shell-navy);
+  border-radius: var(--tq-radius-pixel);
+  background: var(--tq-surface-work);
+  box-shadow: 3px 3px 0 rgba(16, 42, 67, 0.18);
+  color: var(--tq-text-primary);
+}
+
+.tq-home-guide-bubble::after {
+  position: absolute;
+  bottom: -0.65rem;
+  left: 1.5rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-right: 2px solid var(--tq-shell-navy);
+  border-bottom: 2px solid var(--tq-shell-navy);
+  background: var(--tq-surface-work);
+  content: "";
+  transform: rotate(45deg);
+}
+
+.tq-home-guide-bubble span {
+  display: block;
+  color: var(--tq-pixel-green);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.tq-home-guide-bubble strong {
+  display: block;
+  margin-top: 0.25rem;
+  font-family: var(--tq-font-display);
+  font-size: 1rem;
+}
+
+@media (min-width: 900px) {
+  /* Preserve the navigation controls in the DOM while removing the
+   * redundant desktop-only visual strip from the Home composition. */
+  .v80-experience-shell:has(> .user-home-panel) > .v80-view-switcher {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .tq-home-guide {
+    display: flex;
+  }
+
+  /* Keep the existing heading text in the DOM while matching the approved
+   * Desktop visual copy without changing the heading's accessible content. */
+  .v80-experience-shell:has(> .user-home-panel) .user-home-hero h2 {
+    font-size: 0;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-hero h2::before,
+  .v80-experience-shell:has(> .user-home-panel) .user-home-hero h2::after {
+    display: block;
+    font-family: var(--tq-font-display);
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-hero h2::before {
+    color: var(--tq-text-secondary);
+    content: "ようこそ！山田太郎さん";
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-hero h2::after {
+    color: var(--tq-shell-navy);
+    content: "提案クエストへ！";
+    font-size: clamp(1.8rem, 3vw, 2.7rem);
+    line-height: 1.15;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-main-cta {
+    font-size: 0;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-main-cta svg {
+    display: none;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-main-cta::after {
+    content: "＋ 提案をつくる →";
+    font-size: 1rem;
+  }
 }
 
 /* Reserved, non-rendering contract for the approved robot artwork. */
@@ -754,6 +976,16 @@ body,
 
   .user-home-hero {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 1rem;
+    min-height: auto;
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .user-home-hero > div:first-child,
+  .user-home-hero > .user-home-main-cta {
+    grid-column: 1;
   }
 
   .user-home-hero::before {
@@ -764,11 +996,20 @@ body,
 
   .tq-home-robot-region {
     position: static;
+    z-index: 0;
     width: 100%;
     min-height: 4rem;
     border-top: 1px solid rgba(159, 180, 196, 0.72);
     border-left: 0;
     background: linear-gradient(180deg, rgba(139, 209, 245, 0.16), rgba(216, 240, 194, 0.22));
+  }
+
+  .tq-home-robot-region::before {
+    display: none;
+  }
+
+  .tq-home-world-scene {
+    display: none;
   }
 
   .user-home-hero::after {
@@ -833,5 +1074,321 @@ body,
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* HOME-01 Desktop canonical composition. Mobile rules above remain the
+ * compatibility baseline; this block is intentionally desktop-only. */
+@media (min-width: 900px) {
+  .v80-experience-shell:has(> .user-home-panel) > .user-home-panel {
+    border: 0;
+    border-radius: 0;
+    background:
+      linear-gradient(180deg, rgba(139, 209, 245, 0.22), transparent 11rem),
+      var(--tq-surface-subtle);
+    box-shadow: none;
+    padding: 1.25rem 1.5rem 2rem;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-hero {
+    min-height: 24rem;
+    border: 3px solid var(--tq-shell-navy);
+    border-left-width: 5px;
+    border-radius: var(--tq-radius-pixel);
+    background:
+      linear-gradient(180deg, rgba(139, 209, 245, 0.98) 0 47%, rgba(247, 252, 255, 0.94) 47% 65%, rgba(216, 240, 194, 0.98) 65% 100%),
+      var(--tq-surface-work);
+    box-shadow: 0 5px 0 rgba(16, 42, 67, 0.22);
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-hero::before {
+    z-index: 0;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 47%;
+    background:
+      linear-gradient(90deg, transparent 0 7%, var(--tq-cloud) 7% 17%, transparent 17% 41%, var(--tq-cloud) 41% 54%, transparent 54% 77%, var(--tq-cloud) 77% 90%, transparent 90%),
+      linear-gradient(180deg, var(--tq-sky), rgba(139, 209, 245, 0.28));
+    opacity: 0.92;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-hero::after {
+    z-index: 0;
+    height: 43%;
+    background:
+      linear-gradient(90deg, transparent 0 7%, rgba(16, 42, 67, 0.28) 7% 10%, transparent 10% 14%, rgba(16, 42, 67, 0.3) 14% 19%, transparent 19% 25%, rgba(16, 42, 67, 0.22) 25% 31%, transparent 31% 100%),
+      linear-gradient(180deg, transparent 0 34%, rgba(58, 155, 99, 0.92) 34% 51%, rgba(27, 112, 70, 0.98) 51% 100%);
+    opacity: 0.72;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .tq-home-world-scene::before {
+    right: 25%;
+    bottom: 35%;
+    width: 10rem;
+    height: 6rem;
+    border-color: rgba(16, 42, 67, 0.68);
+    background: rgba(244, 196, 78, 0.88);
+    box-shadow:
+      -3.75rem 1.2rem 0 -0.1rem rgba(16, 42, 67, 0.5),
+      3.75rem 1.2rem 0 -0.1rem rgba(16, 42, 67, 0.5),
+      0 4.15rem 0 -0.3rem rgba(27, 112, 70, 0.88);
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .tq-home-robot-region {
+    top: 8.6rem;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    width: clamp(20rem, 38%, 31rem);
+    border: 0;
+    background: transparent;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .tq-home-robot-region::before {
+    top: -1.7rem;
+    right: 0.75rem;
+    left: auto;
+    color: var(--tq-shell-navy);
+    content: "AI CREW  /  STAGE GUIDE";
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .tq-home-robot-region img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center bottom;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-priority-grid {
+    position: relative;
+    z-index: 2;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin-top: -1.1rem;
+    padding: 0.55rem;
+    border: 3px solid var(--tq-shell-navy);
+    border-radius: var(--tq-radius-pixel);
+    background: var(--tq-pixel-green);
+    box-shadow: 0 4px 0 rgba(16, 42, 67, 0.2);
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-priority-grid .user-home-action-card {
+    min-height: 7rem;
+    border: 2px solid var(--tq-shell-navy);
+    border-radius: var(--tq-radius-pixel);
+    background:
+      linear-gradient(180deg, rgba(139, 209, 245, 0.22) 0 30%, var(--tq-surface-work) 30% 100%);
+    box-shadow: 2px 2px 0 rgba(16, 42, 67, 0.18);
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-priority-grid .user-home-action-card:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: var(--tq-pixel-gold);
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-flow {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+    border: 3px solid var(--tq-shell-navy);
+    border-radius: var(--tq-radius-pixel);
+    background:
+      linear-gradient(90deg, rgba(139, 209, 245, 0.35), transparent 42%),
+      var(--tq-surface-work);
+    box-shadow: 0 3px 0 rgba(16, 42, 67, 0.16);
+    padding: 0.8rem 1rem;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-flow .user-home-section-heading {
+    display: block;
+    padding: 0.75rem;
+    border: 2px solid var(--tq-shell-navy);
+    border-radius: var(--tq-radius-pixel);
+    background: var(--tq-pixel-gold);
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-flow-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-flow-list li {
+    min-height: 4.8rem;
+    border: 2px solid var(--tq-border-strong);
+    border-radius: var(--tq-radius-pixel);
+    background: var(--tq-info-surface);
+    box-shadow: 2px 2px 0 rgba(16, 42, 67, 0.12);
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-recent-card {
+    border: 2px solid var(--tq-shell-navy);
+    border-radius: var(--tq-radius-pixel);
+    background: var(--tq-surface-work);
+    box-shadow: 0 3px 0 rgba(16, 42, 67, 0.14);
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .tq-home-guide {
+    min-height: 9rem;
+    justify-content: flex-start;
+    border-top: 4px solid var(--tq-shell-navy);
+    border-bottom: 4px solid var(--tq-shell-navy);
+    background:
+      linear-gradient(180deg, rgba(139, 209, 245, 0.32), rgba(216, 240, 194, 0.5)),
+      var(--tq-pixel-green);
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .tq-home-guide-robot {
+    width: 10rem;
+    height: 8rem;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .tq-home-guide-roles {
+    display: flex;
+    align-self: end;
+    gap: 0.35rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .tq-home-guide-roles span {
+    padding: 0.35rem 0.45rem;
+    border: 2px solid var(--tq-shell-navy);
+    border-radius: var(--tq-radius-pixel);
+    background: var(--tq-pixel-gold);
+    color: var(--tq-shell-navy);
+    font-size: 0.68rem;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+}
+
+/* HOME-01 Desktop canonical runtime visual layer.
+   Existing Home DOM remains mounted as the functional/accessibility layer. */
+@media (min-width: 900px) {
+  .tq-home-canonical-visual {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    display: block;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    object-fit: initial;
+    object-position: top left;
+    pointer-events: none;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    min-height: calc(100vw * 2 / 3);
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    background: transparent;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) > .user-home-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    min-height: calc(100vw * 2 / 3);
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .workspace-header,
+  .v80-experience-shell:has(> .user-home-panel) .workspace-context-card,
+  .v80-experience-shell:has(> .user-home-panel) .v80-sidebar {
+    opacity: 0;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-hero,
+  .v80-experience-shell:has(> .user-home-panel) .user-home-priority-grid,
+  .v80-experience-shell:has(> .user-home-panel) .user-home-flow,
+  .v80-experience-shell:has(> .user-home-panel) .user-home-section-heading,
+  .v80-experience-shell:has(> .user-home-panel) .user-home-recent-list,
+  .v80-experience-shell:has(> .user-home-panel) .user-home-empty,
+  .v80-experience-shell:has(> .user-home-panel) .tq-home-guide {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .tq-home-robot-region,
+  .v80-experience-shell:has(> .user-home-panel) .tq-home-world-scene {
+    display: none;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-main-cta {
+    position: absolute;
+    top: 34.5vh;
+    left: 27.5vw;
+    z-index: 2;
+    width: 24vw;
+    min-height: 5.5vh;
+    opacity: 0;
+    pointer-events: auto;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-priority-grid {
+    position: absolute;
+    top: 42.5vh;
+    left: 16.5vw;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.8vw;
+    width: 82vw;
+    height: 13vh;
+    pointer-events: auto;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-action-card {
+    opacity: 0;
+    pointer-events: auto;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-section-heading {
+    position: absolute;
+    top: 74vh;
+    left: 17vw;
+    z-index: 2;
+    width: 42vw;
+    height: 6vh;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-recent-list {
+    position: absolute;
+    top: 79vh;
+    left: 17vw;
+    z-index: 2;
+    width: 42vw;
+    height: 17vh;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) .user-home-recent-card,
+  .v80-experience-shell:has(> .user-home-panel) .user-home-section-heading > * {
+    opacity: 0;
+    pointer-events: auto;
+  }
+
+  .v80-experience-shell:has(> .user-home-panel) button:focus-visible {
+    opacity: 1;
+    outline: 3px solid var(--tq-pixel-gold);
+    outline-offset: 3px;
   }
 }

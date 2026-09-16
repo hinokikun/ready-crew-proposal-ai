@@ -52,6 +52,12 @@ export function UserHomePanel({
 
   return (
     <section className="user-home-panel" aria-label="利用者ホーム" data-testid="user-home-panel">
+      <img
+        className="tq-home-canonical-visual"
+        src="/assets/teian-quest/home/home-01-desktop-canonical.png"
+        alt=""
+        aria-hidden="true"
+      />
       <div className="user-home-hero">
         <div>
           <p className="eyebrow">AI営業秘書</p>
@@ -62,6 +68,10 @@ export function UserHomePanel({
           <Sparkles size={20} aria-hidden="true" />
           新しく提案書を作る
         </button>
+        <div className="tq-home-robot-region" aria-hidden="true">
+          <img src="/assets/teian-quest/approved-robots.png" alt="" />
+        </div>
+        <div className="tq-home-world-scene" aria-hidden="true" />
       </div>
 
       <div className="user-home-priority-grid" aria-label="よく使う操作">
@@ -140,6 +150,23 @@ export function UserHomePanel({
           </button>
         </div>
       )}
+
+      <div className="tq-home-guide" aria-hidden="true">
+        <div className="tq-home-guide-robot">
+          <img src="/assets/teian-quest/approved-robots.png" alt="" />
+        </div>
+        <div className="tq-home-guide-bubble">
+          <span>AI TEAM GUIDE</span>
+          <strong>5つの仲間と一緒に最高の提案をつくろう！</strong>
+        </div>
+        <div className="tq-home-guide-roles">
+          <span>分析担当</span>
+          <span>戦略担当</span>
+          <span>調査担当</span>
+          <span>アイデア担当</span>
+          <span>仕上げ担当</span>
+        </div>
+      </div>
 
     </section>
   );
