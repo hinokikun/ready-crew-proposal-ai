@@ -1,0 +1,11 @@
+{
+  "role": "ROADMAP",
+  "slide_title": "導入ステップとスケジュール",
+  "resolver": "app.services.pptx_parts.native_trace_registry.resolve_approved_native_role",
+  "resolver_title_match": "ROADMAP",
+  "resolver_layout_match": "ROADMAP",
+  "surface": "conditional",
+  "slide_id": "ROADMAP",
+  "production_dispatch_connected": false,
+  "production_approval_registry_changed": false
+}

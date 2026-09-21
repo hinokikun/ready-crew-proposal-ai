@@ -1,0 +1,125 @@
+{
+  "role": "ROADMAP",
+  "contract_path": "backend\\app\\presentation_assets\\native_trace\\schemas\\role_contracts.json",
+  "contract_status": "PRESENT",
+  "required_groups": [
+    "phases",
+    "milestones",
+    "success_factors",
+    "objective_message"
+  ],
+  "required_fields": [
+    "phase.title",
+    "phase.duration",
+    "phase.description",
+    "phase.actions",
+    "milestone.title",
+    "milestone.timing",
+    "success_factor.title",
+    "success_factor.body",
+    "objective.message"
+  ],
+  "optional_fields": [
+    "header.date",
+    "subtitle.primary",
+    "unused phase/milestone columns"
+  ],
+  "limits": {
+    "subtitle.primary": {
+      "max_characters": 60,
+      "max_lines": 2,
+      "preferred_font_size": 14,
+      "minimum_font_size": 10,
+      "allow_font_shrink": true
+    },
+    "phase.title": {
+      "max_characters": 16,
+      "max_lines": 2,
+      "preferred_font_size": 12,
+      "minimum_font_size": 9,
+      "allow_font_shrink": false
+    },
+    "phase.duration": {
+      "max_characters": 12,
+      "max_lines": 1,
+      "preferred_font_size": 9,
+      "minimum_font_size": 8,
+      "allow_font_shrink": false
+    },
+    "phase.description": {
+      "max_characters": 42,
+      "max_lines": 3,
+      "preferred_font_size": 9,
+      "minimum_font_size": 8,
+      "allow_font_shrink": true
+    },
+    "phase.action": {
+      "max_characters": 24,
+      "max_lines": 2,
+      "preferred_font_size": 8,
+      "minimum_font_size": 7,
+      "allow_font_shrink": true
+    },
+    "milestone.title": {
+      "max_characters": 16,
+      "max_lines": 1,
+      "preferred_font_size": 9,
+      "minimum_font_size": 8,
+      "allow_font_shrink": false
+    },
+    "milestone.timing": {
+      "max_characters": 12,
+      "max_lines": 1,
+      "preferred_font_size": 8,
+      "minimum_font_size": 7,
+      "allow_font_shrink": false
+    },
+    "success.title": {
+      "max_characters": 24,
+      "max_lines": 2,
+      "preferred_font_size": 10,
+      "minimum_font_size": 8,
+      "allow_font_shrink": true
+    },
+    "success.body": {
+      "max_characters": 42,
+      "max_lines": 3,
+      "preferred_font_size": 8,
+      "minimum_font_size": 7,
+      "allow_font_shrink": true
+    },
+    "objective.message": {
+      "max_characters": 58,
+      "max_lines": 2,
+      "preferred_font_size": 13,
+      "minimum_font_size": 10,
+      "allow_font_shrink": true
+    }
+  },
+  "minimum_font_sizes": {
+    "title.primary": 10,
+    "phase.title": 9,
+    "phase.duration": 8,
+    "phase.description": 8,
+    "phase.action": 7,
+    "milestone.title": 8,
+    "milestone.timing": 7,
+    "success.title": 8,
+    "success.body": 7,
+    "objective.message": 10
+  },
+  "clearing_policy": {
+    "trace:ROADMAP:header.date": true,
+    "trace:ROADMAP:phase.*": true,
+    "trace:ROADMAP:milestone.*": true,
+    "trace:ROADMAP:success.*": true,
+    "trace:ROADMAP:objective.message": true
+  },
+  "continuation_policy": {
+    "three_phases": "clear_unused_phase_and_milestone_columns",
+    "four_phases": "clear_unused_phase_and_milestone_columns",
+    "five_phases": "canonical_single_slide_layout",
+    "six_or_more_phases": "Detail-only continuation; never squeeze into five columns"
+  },
+  "contract_activation_status": "ADAPTER_ONLY_NOT_ACTIVATED"
+}

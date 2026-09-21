@@ -1,0 +1,10 @@
+{
+  "SAMPLE_LEAK_COUNT": 0,
+  "LEGACY_BRAND_LEAK_COUNT": 0,
+  "ROLES_CHECKED": ["COMPETITIVE_COMPARISON", "WIN_PROBABILITY", "SCHEDULE_GOVERNANCE", "IMPLEMENTATION_SCHEDULE"],
+  "DYNAMIC_SAMPLE_POLICY": "Canonical/sample business text is replaced or cleared before validation.",
+  "RANK_TO_PERCENTAGE_INFERENCE": 0,
+  "INVENTED_SCHEDULE_FACTS": 0,
+  "PRODUCTION_CURRENT_DATA": "All four roles remain blocked when verified structured evidence is absent.",
+  "VERIFIED_FIXTURE_RESULT": "All four role packages validated with prohibited_sample_strings_found=[]"
+}

@@ -1,0 +1,68 @@
+{
+  "roles": [
+    {
+      "ROLE": "COMPETITION",
+      "SAMPLE_LEAK_COUNT": 0,
+      "UNSUPPORTED_INFERENCE_COUNT": 0,
+      "RASTERIZATION_RATIO": "0%",
+      "CLIPPING_COUNT": 0,
+      "OVERFLOW_COUNT": 0,
+      "OFF_CANVAS_COUNT": 0,
+      "COLLISION_COUNT": 0,
+      "EDITABLE_TEXT": true,
+      "EDITABLE_SHAPES": true,
+      "NATIVE_STRUCTURE": true,
+      "TEXT_FIT_STATUS": "PASS"
+    },
+    {
+      "ROLE": "WIN_PROBABILITY",
+      "SAMPLE_LEAK_COUNT": 0,
+      "UNSUPPORTED_INFERENCE_COUNT": 0,
+      "RASTERIZATION_RATIO": "0%",
+      "CLIPPING_COUNT": 0,
+      "OVERFLOW_COUNT": 0,
+      "OFF_CANVAS_COUNT": 0,
+      "COLLISION_COUNT": 0,
+      "EDITABLE_TEXT": true,
+      "EDITABLE_SHAPES": true,
+      "NATIVE_STRUCTURE": true,
+      "TEXT_FIT_STATUS": "PASS"
+    },
+    {
+      "ROLE": "SCHEDULE",
+      "SAMPLE_LEAK_COUNT": 0,
+      "UNSUPPORTED_INFERENCE_COUNT": 0,
+      "RASTERIZATION_RATIO": "0%",
+      "CLIPPING_COUNT": 0,
+      "OVERFLOW_COUNT": 0,
+      "OFF_CANVAS_COUNT": 0,
+      "COLLISION_COUNT": 0,
+      "EDITABLE_TEXT": true,
+      "EDITABLE_SHAPES": true,
+      "NATIVE_STRUCTURE": true,
+      "TEXT_FIT_STATUS": "PASS"
+    },
+    {
+      "ROLE": "ROADMAP",
+      "SAMPLE_LEAK_COUNT": 0,
+      "UNSUPPORTED_INFERENCE_COUNT": 0,
+      "RASTERIZATION_RATIO": "0%",
+      "CLIPPING_COUNT": 0,
+      "OVERFLOW_COUNT": 0,
+      "OFF_CANVAS_COUNT": 0,
+      "COLLISION_COUNT": 0,
+      "EDITABLE_TEXT": true,
+      "EDITABLE_SHAPES": true,
+      "NATIVE_STRUCTURE": true,
+      "TEXT_FIT_STATUS": "PASS"
+    }
+  ],
+  "SAMPLE_LEAK_COUNT": 0,
+  "UNSUPPORTED_INFERENCE_COUNT": 0,
+  "RASTERIZATION_RATIO": "0%",
+  "CLIPPING_COUNT": 0,
+  "OVERFLOW_COUNT": 0,
+  "OFF_CANVAS_COUNT": 0,
+  "COLLISION_COUNT": 0,
+  "status": "PASS"
+}

@@ -1,0 +1,17 @@
+{
+  "source_hashes_after": {
+    "COMPETITION": "a87ced5377e0d5b9baaa2f4d146b4e2798b57b727442c91fff3e9ab25e805609",
+    "WIN_PROBABILITY": "9c392a058faed57797acbc03d6811ff11e65d94b72b629666865e3203869fb09",
+    "SCHEDULE": "e13ddb73e4b386629bd134587d60fd5088aae1d91c3cd6c24bb0d150a3e7193d",
+    "ROADMAP": "5cfd7f596df0d14bca1355b24b282f71cbfd948ede59f02c28a4910133483246"
+  },
+  "runtime_source_hashes_after": {
+    "COMPETITION": "e3ef92fe7ae10baa540749bb9e9b7b4b0cfdc92bdfdec763e383da02bed2bdc5",
+    "WIN_PROBABILITY": "ba6e0102e0b4178517bcc5a59b974d9e8e8b5e7b20dbad12db98b3a476b6f7c1",
+    "SCHEDULE": "b1dd570d33105287ca84b7d7ab7adb36d553310304a0edbc913069d1be9a115f",
+    "ROADMAP": "5d08591ad461ec9184e5ddf4fa4860ec2c0562186b1a9a23fdf4721824f079cb"
+  },
+  "source_changed": false,
+  "runtime_sources_changed": false,
+  "ROADMAP_RUNTIME_CHANGED": false
+}

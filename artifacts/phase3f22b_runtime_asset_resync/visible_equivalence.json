@@ -1,0 +1,95 @@
+{
+  "phase": "Phase3F-22B-A",
+  "assets": [
+    {
+      "ROLE": "COMPETITION",
+      "VISIBLE_CONTENT_EQUIVALENT": "YES",
+      "GEOMETRY_EQUIVALENT": "YES",
+      "TEXT_FORMAT_EQUIVALENT": "YES",
+      "PAGE_SIZE_EQUIVALENT": "YES",
+      "EDITABLE_STRUCTURE_EQUIVALENT": "YES",
+      "RASTERIZATION_RATIO": "0%",
+      "VISUAL_RENDER_STATUS": "RENDERED_COMPARISON_AVAILABLE",
+      "COMPARISON_PNG": "comparisons/COMPETITION_source_vs_runtime.png",
+      "RENDERED_PNG_PIXEL_EQUAL": true,
+      "HUMAN_VISUAL_STATUS": "PASS_APPLIES_TO_APPROVED_SOURCE; RUNTIME_COPY_REVIEW_PENDING",
+      "STRUCTURAL_COMPARISON": {
+        "slide_xml_normalized_equal": true,
+        "visible_text_equal": true,
+        "geometry_equivalent": true,
+        "text_format_equivalent": true,
+        "relationships_equivalent": true,
+        "media_equivalent": true,
+        "notes_equivalent": true,
+        "metadata_equivalent": true,
+        "theme_master_layout_refs_equivalent": true,
+        "package_member_names_equal": true,
+        "non_slide_package_parts_equal": true,
+        "differing_parts_after_resync": [
+          "ppt/slides/slide1.xml"
+        ]
+      }
+    },
+    {
+      "ROLE": "WIN_PROBABILITY",
+      "VISIBLE_CONTENT_EQUIVALENT": "YES",
+      "GEOMETRY_EQUIVALENT": "YES",
+      "TEXT_FORMAT_EQUIVALENT": "YES",
+      "PAGE_SIZE_EQUIVALENT": "YES",
+      "EDITABLE_STRUCTURE_EQUIVALENT": "YES",
+      "RASTERIZATION_RATIO": "0%",
+      "VISUAL_RENDER_STATUS": "RENDERED_COMPARISON_AVAILABLE",
+      "COMPARISON_PNG": "comparisons/WIN_PROBABILITY_source_vs_runtime.png",
+      "RENDERED_PNG_PIXEL_EQUAL": true,
+      "HUMAN_VISUAL_STATUS": "PASS_APPLIES_TO_APPROVED_SOURCE; RUNTIME_COPY_REVIEW_PENDING",
+      "STRUCTURAL_COMPARISON": {
+        "slide_xml_normalized_equal": true,
+        "visible_text_equal": true,
+        "geometry_equivalent": true,
+        "text_format_equivalent": true,
+        "relationships_equivalent": true,
+        "media_equivalent": true,
+        "notes_equivalent": true,
+        "metadata_equivalent": true,
+        "theme_master_layout_refs_equivalent": true,
+        "package_member_names_equal": true,
+        "non_slide_package_parts_equal": true,
+        "differing_parts_after_resync": [
+          "ppt/slides/slide1.xml"
+        ]
+      }
+    },
+    {
+      "ROLE": "SCHEDULE",
+      "VISIBLE_CONTENT_EQUIVALENT": "YES",
+      "GEOMETRY_EQUIVALENT": "YES",
+      "TEXT_FORMAT_EQUIVALENT": "YES",
+      "PAGE_SIZE_EQUIVALENT": "YES",
+      "EDITABLE_STRUCTURE_EQUIVALENT": "YES",
+      "RASTERIZATION_RATIO": "0%",
+      "VISUAL_RENDER_STATUS": "RENDERED_COMPARISON_AVAILABLE",
+      "COMPARISON_PNG": "comparisons/SCHEDULE_source_vs_runtime.png",
+      "RENDERED_PNG_PIXEL_EQUAL": true,
+      "HUMAN_VISUAL_STATUS": "PASS_APPLIES_TO_APPROVED_SOURCE; RUNTIME_COPY_REVIEW_PENDING",
+      "STRUCTURAL_COMPARISON": {
+        "slide_xml_normalized_equal": true,
+        "visible_text_equal": true,
+        "geometry_equivalent": true,
+        "text_format_equivalent": true,
+        "relationships_equivalent": true,
+        "media_equivalent": true,
+        "notes_equivalent": true,
+        "metadata_equivalent": true,
+        "theme_master_layout_refs_equivalent": true,
+        "package_member_names_equal": true,
+        "non_slide_package_parts_equal": true,
+        "differing_parts_after_resync": [
+          "ppt/slides/slide1.xml"
+        ]
+      }
+    }
+  ],
+  "all_visible_equivalence": true,
+  "all_geometry_equivalence": true,
+  "all_text_format_equivalence": true
+}

@@ -1,0 +1,91 @@
+{
+  "role": "ROADMAP",
+  "adapter": "app.services.pptx_parts.native_trace_content_adapter._roadmap_adapter",
+  "adapter_registry_key": "conditional:ROADMAP",
+  "adapter_registry_summary": {
+    "registered_runtime_roles": 29,
+    "adapter_count": 29,
+    "keys": [
+      "conditional:COMPETITION",
+      "conditional:ROADMAP",
+      "conditional:WIN_PROBABILITY",
+      "detail:CASE_STUDY",
+      "detail:CLOSING",
+      "detail:COVER",
+      "detail:CURRENT_STATE",
+      "detail:MARKET_ANALYSIS",
+      "detail:NEXT_ACTION",
+      "detail:OPERATING_MODEL",
+      "detail:PROBLEM_ANALYSIS",
+      "detail:RISK",
+      "detail:ROI_OR_EFFECT",
+      "detail:SOLUTION_APPROACH",
+      "detail:SOLUTION_CONCEPT",
+      "detail:SUPPORT",
+      "detail:SYSTEM_ARCHITECTURE",
+      "detail:TARGET_ANALYSIS",
+      "summary:COVER",
+      "summary:CURRENT_STATE",
+      "summary:ESTIMATE",
+      "summary:KPI",
+      "summary:NEXT_ACTION",
+      "summary:PROBLEM_ANALYSIS",
+      "summary:PROPOSAL_SUMMARY",
+      "summary:SCHEDULE",
+      "summary:SOLUTION_APPROACH",
+      "summary:SOLUTION_CONCEPT",
+      "summary:SYSTEM_ARCHITECTURE"
+    ],
+    "production_dispatch_connected": false
+  },
+  "groups": {
+    "PHASES": {
+      "input_paths": [
+        "context.verified_roadmap.phases",
+        "data.verified_roadmap.phases"
+      ],
+      "slots": "trace:ROADMAP:phase.{1..5}.*"
+    },
+    "DURATIONS": {
+      "input_paths": [
+        "phase.duration",
+        "phase.period",
+        "phase.timing"
+      ],
+      "slots": "trace:ROADMAP:phase.{1..5}.duration"
+    },
+    "ACTIONS": {
+      "input_paths": [
+        "phase.actions",
+        "phase.deliverables",
+        "phase.checks"
+      ],
+      "slots": "trace:ROADMAP:phase.{1..5}.action.{1..4}"
+    },
+    "MILESTONES": {
+      "input_paths": [
+        "roadmap.milestones",
+        "roadmap.milestone_points"
+      ],
+      "slots": "trace:ROADMAP:milestone.{1..5}.*"
+    },
+    "SUCCESS_FACTORS": {
+      "input_paths": [
+        "roadmap.success_factors"
+      ],
+      "slots": "trace:ROADMAP:success.{1..4}.*"
+    },
+    "OBJECTIVE_MESSAGE": {
+      "input_paths": [
+        "roadmap.objective",
+        "roadmap.objective_message",
+        "roadmap.goal",
+        "roadmap.message"
+      ],
+      "slot": "trace:ROADMAP:objective.message"
+    }
+  },
+  "static_visual_preserved": true,
+  "unknown_dynamic_behavior": "clear optional slot or return fallback-blocked payload",
+  "sample_content_survival": "prohibited by validation"
+}

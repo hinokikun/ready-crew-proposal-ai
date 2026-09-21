@@ -1,0 +1,2066 @@
+{
+  "role": "WIN_PROBABILITY",
+  "requested_role": "WIN_PROBABILITY",
+  "template_id": "WIN_PROBABILITY",
+  "source_template_path": "backend\\app\\presentation_assets\\native_trace\\conditional\\WIN_PROBABILITY.pptx",
+  "runtime_output": "artifacts\\phase3f22c_runtime_human_review\\runtime_outputs_v2\\runtime_WIN_PROBABILITY.pptx",
+  "template_sha256_before": "ba6e0102e0b4178517bcc5a59b974d9e8e8b5e7b20dbad12db98b3a476b6f7c1",
+  "template_sha256_after": "ba6e0102e0b4178517bcc5a59b974d9e8e8b5e7b20dbad12db98b3a476b6f7c1",
+  "source_unchanged": true,
+  "adapter": {
+    "role": "WIN_PROBABILITY",
+    "slide_id": "WIN_PROBABILITY",
+    "surface": "conditional",
+    "slots": {
+      "trace:WIN_PROBABILITY:title.primary": "受注確度と次の判断",
+      "trace:WIN_PROBABILITY:content.auto.7": "68%",
+      "trace:WIN_PROBABILITY:content.auto.19": "68%",
+      "trace:WIN_PROBABILITY:title.primary.4": "検証済みの中程度の確度で判断します。",
+      "trace:WIN_PROBABILITY:title.primary.5": "検証済みの課題適合性と決裁者接点を確認しています。",
+      "trace:WIN_PROBABILITY:title.primary.6": "課題と解決方向の合意",
+      "trace:WIN_PROBABILITY:title.primary.7": "決裁者接点の確認",
+      "trace:WIN_PROBABILITY:title.primary.8": "予算レンジの確認",
+      "trace:WIN_PROBABILITY:title.primary.9": "導入時期候補の確認",
+      "trace:WIN_PROBABILITY:content.auto.54": "正式予算承認",
+      "trace:WIN_PROBABILITY:lead": "競合条件の最終確認",
+      "trace:WIN_PROBABILITY:content.auto.57": "実施体制の確認",
+      "trace:WIN_PROBABILITY:content.auto.59": "開始時期の確定",
+      "trace:WIN_PROBABILITY:content.auto.70": "決裁条件の確認",
+      "trace:WIN_PROBABILITY:content.auto.77": "検証済みの決裁条件を確認します。",
+      "trace:WIN_PROBABILITY:content.auto.73": "予算条件の合意",
+      "trace:WIN_PROBABILITY:content.auto.78": "検証済みの費用・契約条件を合意します。",
+      "trace:WIN_PROBABILITY:content.auto.76": "導入時期の確定",
+      "trace:WIN_PROBABILITY:content.auto.79": "検証済みの導入時期と体制を確定します。",
+      "trace:WIN_PROBABILITY:content.auto.84": "次回確認で導入条件を確定します。"
+    },
+    "source_fields": {
+      "trace:WIN_PROBABILITY:title.primary": "slide.title",
+      "win_probability.value": "fixture.phase3f22c_v2.win probability evidence"
+    },
+    "evidence_status": {
+      "trace:WIN_PROBABILITY:title.primary": "USER_PROVIDED",
+      "win_probability.value": "VERIFIED"
+    },
+    "unresolved_required_slots": [],
+    "cleared_optional_slots": [
+      "trace:WIN_PROBABILITY:footer.date"
+    ],
+    "text_fit_constraints": {
+      "title.primary": {
+        "max_characters": 32,
+        "max_lines": 2,
+        "preferred_font_size": 32,
+        "minimum_font_size": 10,
+        "allow_font_shrink": false
+      },
+      "lead": {
+        "max_characters": 110,
+        "max_lines": 3,
+        "preferred_font_size": 14,
+        "minimum_font_size": 10,
+        "allow_font_shrink": true
+      },
+      "content.body": {
+        "max_characters": 120,
+        "max_lines": 4,
+        "preferred_font_size": 10,
+        "minimum_font_size": 8,
+        "allow_font_shrink": true
+      },
+      "content.row": {
+        "max_characters": 48,
+        "max_lines": 3,
+        "preferred_font_size": 10,
+        "minimum_font_size": 8,
+        "allow_font_shrink": true
+      }
+    },
+    "text_replacements": {
+      "72%": "68%",
+      "2025年下期": "2026年下期",
+      "高い確度で受注": "中"
+    },
+    "table_cell_bindings": {
+      "trace:WIN_PROBABILITY:content.auto.30": [
+        {
+          "row": 1,
+          "col": 0,
+          "value": "課題の明確性"
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": "業務効率化の課題を検証済み"
+        },
+        {
+          "row": 1,
+          "col": 2,
+          "value": "高"
+        },
+        {
+          "row": 1,
+          "col": 3,
+          "value": "強い"
+        },
+        {
+          "row": 2,
+          "col": 0,
+          "value": "決裁者接点"
+        },
+        {
+          "row": 2,
+          "col": 1,
+          "value": "決裁者との接点を検証済み"
+        },
+        {
+          "row": 2,
+          "col": 2,
+          "value": "高"
+        },
+        {
+          "row": 2,
+          "col": 3,
+          "value": "強い"
+        },
+        {
+          "row": 3,
+          "col": 0,
+          "value": "予算感"
+        },
+        {
+          "row": 3,
+          "col": 1,
+          "value": "検証済み予算レンジを確認"
+        },
+        {
+          "row": 3,
+          "col": 2,
+          "value": "中"
+        },
+        {
+          "row": 3,
+          "col": 3,
+          "value": "普通"
+        },
+        {
+          "row": 4,
+          "col": 0,
+          "value": "導入時期"
+        },
+        {
+          "row": 4,
+          "col": 1,
+          "value": "検証済み時期候補を確認"
+        },
+        {
+          "row": 4,
+          "col": 2,
+          "value": "中"
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": "普通"
+        },
+        {
+          "row": 5,
+          "col": 0,
+          "value": "競合優位性"
+        },
+        {
+          "row": 5,
+          "col": 1,
+          "value": "検証済み比較根拠を確認中"
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "value": "中"
+        },
+        {
+          "row": 5,
+          "col": 3,
+          "value": "確認中"
+        }
+      ]
+    },
+    "clear_matching_text": [
+      "72%",
+      "2025年下期",
+      "高い確度で受注"
+    ],
+    "clear_slots": [
+      "trace:WIN_PROBABILITY:footer.date"
+    ],
+    "font_size_adjustments": {},
+    "prohibited_sample_strings": [
+      "72%",
+      "2025年下期",
+      "高い確度で受注"
+    ],
+    "diagnostics": [
+      {
+        "field": "win_probability",
+        "provenance": [
+          "VERIFIED",
+          "VERIFIED",
+          "VERIFIED"
+        ],
+        "source_fields": [
+          "fixture.phase3f22c_v2.win probability evidence",
+          "fixture.phase3f22c_v2.probability evidence",
+          "fixture.phase3f22c_v2.confidence evidence"
+        ]
+      }
+    ],
+    "renderable": true,
+    "reason": null,
+    "failure_reason": null
+  },
+  "dry_run": {
+    "success": true,
+    "role": "WIN_PROBABILITY",
+    "slide_id": "WIN_PROBABILITY",
+    "surface": "conditional",
+    "template": "backend/app/presentation_assets/native_trace/conditional/WIN_PROBABILITY.pptx",
+    "package_path": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f22c_runtime_human_review\\_dry_run\\WIN_PROBABILITY_win_probability.pptx",
+    "injected_slots": [
+      "trace:WIN_PROBABILITY:content.auto.19",
+      "trace:WIN_PROBABILITY:content.auto.30[r1c0]",
+      "trace:WIN_PROBABILITY:content.auto.30[r1c1]",
+      "trace:WIN_PROBABILITY:content.auto.30[r1c2]",
+      "trace:WIN_PROBABILITY:content.auto.30[r1c3]",
+      "trace:WIN_PROBABILITY:content.auto.30[r2c0]",
+      "trace:WIN_PROBABILITY:content.auto.30[r2c1]",
+      "trace:WIN_PROBABILITY:content.auto.30[r2c2]",
+      "trace:WIN_PROBABILITY:content.auto.30[r2c3]",
+      "trace:WIN_PROBABILITY:content.auto.30[r3c0]",
+      "trace:WIN_PROBABILITY:content.auto.30[r3c1]",
+      "trace:WIN_PROBABILITY:content.auto.30[r3c2]",
+      "trace:WIN_PROBABILITY:content.auto.30[r3c3]",
+      "trace:WIN_PROBABILITY:content.auto.30[r4c0]",
+      "trace:WIN_PROBABILITY:content.auto.30[r4c1]",
+      "trace:WIN_PROBABILITY:content.auto.30[r4c2]",
+      "trace:WIN_PROBABILITY:content.auto.30[r4c3]",
+      "trace:WIN_PROBABILITY:content.auto.30[r5c0]",
+      "trace:WIN_PROBABILITY:content.auto.30[r5c1]",
+      "trace:WIN_PROBABILITY:content.auto.30[r5c2]",
+      "trace:WIN_PROBABILITY:content.auto.30[r5c3]",
+      "trace:WIN_PROBABILITY:content.auto.54",
+      "trace:WIN_PROBABILITY:content.auto.57",
+      "trace:WIN_PROBABILITY:content.auto.59",
+      "trace:WIN_PROBABILITY:content.auto.7",
+      "trace:WIN_PROBABILITY:content.auto.70",
+      "trace:WIN_PROBABILITY:content.auto.73",
+      "trace:WIN_PROBABILITY:content.auto.76",
+      "trace:WIN_PROBABILITY:content.auto.77",
+      "trace:WIN_PROBABILITY:content.auto.78",
+      "trace:WIN_PROBABILITY:content.auto.79",
+      "trace:WIN_PROBABILITY:content.auto.84",
+      "trace:WIN_PROBABILITY:lead",
+      "trace:WIN_PROBABILITY:title.primary",
+      "trace:WIN_PROBABILITY:title.primary.4",
+      "trace:WIN_PROBABILITY:title.primary.5",
+      "trace:WIN_PROBABILITY:title.primary.6",
+      "trace:WIN_PROBABILITY:title.primary.7",
+      "trace:WIN_PROBABILITY:title.primary.8",
+      "trace:WIN_PROBABILITY:title.primary.9"
+    ],
+    "cleared_optional_slots": [
+      "trace:WIN_PROBABILITY:footer.date"
+    ],
+    "unresolved_slots": [],
+    "evidence_diagnostics": [
+      {
+        "field": "win_probability",
+        "provenance": [
+          "VERIFIED",
+          "VERIFIED",
+          "VERIFIED"
+        ],
+        "source_fields": [
+          "fixture.phase3f22c_v2.win probability evidence",
+          "fixture.phase3f22c_v2.probability evidence",
+          "fixture.phase3f22c_v2.confidence evidence"
+        ]
+      }
+    ],
+    "text_fit": {
+      "valid": true,
+      "fields": {
+        "trace:WIN_PROBABILITY:title.primary": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 9,
+          "estimated_lines": 1,
+          "characters_per_line": 28,
+          "max_lines": 2,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 10.0,
+          "font_size": 13.5,
+          "box_width_emu": 4476750,
+          "box_height_emu": 304800,
+          "existing_font_size": 13.5
+        },
+        "trace:WIN_PROBABILITY:content.auto.7": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 3,
+          "estimated_lines": 2,
+          "characters_per_line": 2,
+          "max_lines": 4,
+          "preferred_font_size": 93.0,
+          "minimum_font_size": 8.0,
+          "font_size": 93.0,
+          "box_width_emu": 2628900,
+          "box_height_emu": 1162050,
+          "existing_font_size": 93.0
+        },
+        "trace:WIN_PROBABILITY:content.auto.19": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 3,
+          "estimated_lines": 2,
+          "characters_per_line": 2,
+          "max_lines": 4,
+          "preferred_font_size": 14.25,
+          "minimum_font_size": 8.0,
+          "font_size": 14.25,
+          "box_width_emu": 495300,
+          "box_height_emu": 266700,
+          "existing_font_size": 14.25
+        },
+        "trace:WIN_PROBABILITY:title.primary.4": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 18,
+          "estimated_lines": 1,
+          "characters_per_line": 21,
+          "max_lines": 4,
+          "preferred_font_size": 18.75,
+          "minimum_font_size": 8.0,
+          "font_size": 18.75,
+          "box_width_emu": 4810125,
+          "box_height_emu": 333375,
+          "existing_font_size": 18.75
+        },
+        "trace:WIN_PROBABILITY:title.primary.5": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 25,
+          "estimated_lines": 1,
+          "characters_per_line": 33,
+          "max_lines": 4,
+          "preferred_font_size": 12.75,
+          "minimum_font_size": 8.0,
+          "font_size": 12.75,
+          "box_width_emu": 5000625,
+          "box_height_emu": 723900,
+          "existing_font_size": 12.75
+        },
+        "trace:WIN_PROBABILITY:title.primary.6": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 10,
+          "estimated_lines": 1,
+          "characters_per_line": 30,
+          "max_lines": 4,
+          "preferred_font_size": 15.0,
+          "minimum_font_size": 8.0,
+          "font_size": 15.0,
+          "box_width_emu": 5295900,
+          "box_height_emu": 257175,
+          "existing_font_size": 15.0
+        },
+        "trace:WIN_PROBABILITY:title.primary.7": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 8,
+          "estimated_lines": 1,
+          "characters_per_line": 30,
+          "max_lines": 4,
+          "preferred_font_size": 15.0,
+          "minimum_font_size": 8.0,
+          "font_size": 15.0,
+          "box_width_emu": 5295900,
+          "box_height_emu": 257175,
+          "existing_font_size": 15.0
+        },
+        "trace:WIN_PROBABILITY:title.primary.8": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 8,
+          "estimated_lines": 1,
+          "characters_per_line": 30,
+          "max_lines": 4,
+          "preferred_font_size": 15.0,
+          "minimum_font_size": 8.0,
+          "font_size": 15.0,
+          "box_width_emu": 5295900,
+          "box_height_emu": 257175,
+          "existing_font_size": 15.0
+        },
+        "trace:WIN_PROBABILITY:title.primary.9": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 9,
+          "estimated_lines": 1,
+          "characters_per_line": 30,
+          "max_lines": 4,
+          "preferred_font_size": 15.0,
+          "minimum_font_size": 8.0,
+          "font_size": 15.0,
+          "box_width_emu": 5295900,
+          "box_height_emu": 257175,
+          "existing_font_size": 15.0
+        },
+        "trace:WIN_PROBABILITY:content.auto.54": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 6,
+          "estimated_lines": 1,
+          "characters_per_line": 30,
+          "max_lines": 4,
+          "preferred_font_size": 15.0,
+          "minimum_font_size": 8.0,
+          "font_size": 15.0,
+          "box_width_emu": 5295900,
+          "box_height_emu": 266700,
+          "existing_font_size": 15.0
+        },
+        "trace:WIN_PROBABILITY:lead": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 9,
+          "estimated_lines": 1,
+          "characters_per_line": 30,
+          "max_lines": 3,
+          "preferred_font_size": 15.0,
+          "minimum_font_size": 10.0,
+          "font_size": 15.0,
+          "box_width_emu": 5295900,
+          "box_height_emu": 266700,
+          "existing_font_size": 15.0
+        },
+        "trace:WIN_PROBABILITY:content.auto.57": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 7,
+          "estimated_lines": 1,
+          "characters_per_line": 30,
+          "max_lines": 4,
+          "preferred_font_size": 15.0,
+          "minimum_font_size": 8.0,
+          "font_size": 15.0,
+          "box_width_emu": 5295900,
+          "box_height_emu": 266700,
+          "existing_font_size": 15.0
+        },
+        "trace:WIN_PROBABILITY:content.auto.59": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 7,
+          "estimated_lines": 1,
+          "characters_per_line": 30,
+          "max_lines": 4,
+          "preferred_font_size": 15.0,
+          "minimum_font_size": 8.0,
+          "font_size": 15.0,
+          "box_width_emu": 5295900,
+          "box_height_emu": 266700,
+          "existing_font_size": 15.0
+        },
+        "trace:WIN_PROBABILITY:content.auto.70": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 7,
+          "estimated_lines": 1,
+          "characters_per_line": 9,
+          "max_lines": 4,
+          "preferred_font_size": 15.0,
+          "minimum_font_size": 8.0,
+          "font_size": 15.0,
+          "box_width_emu": 1619250,
+          "box_height_emu": 257175,
+          "existing_font_size": 15.0
+        },
+        "trace:WIN_PROBABILITY:content.auto.77": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 16,
+          "estimated_lines": 2,
+          "characters_per_line": 11,
+          "max_lines": 4,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 8.0,
+          "font_size": 13.5,
+          "box_width_emu": 1762125,
+          "box_height_emu": 457200,
+          "existing_font_size": 13.5
+        },
+        "trace:WIN_PROBABILITY:content.auto.73": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 7,
+          "estimated_lines": 1,
+          "characters_per_line": 9,
+          "max_lines": 4,
+          "preferred_font_size": 15.0,
+          "minimum_font_size": 8.0,
+          "font_size": 15.0,
+          "box_width_emu": 1619250,
+          "box_height_emu": 257175,
+          "existing_font_size": 15.0
+        },
+        "trace:WIN_PROBABILITY:content.auto.78": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 19,
+          "estimated_lines": 2,
+          "characters_per_line": 11,
+          "max_lines": 4,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 8.0,
+          "font_size": 13.5,
+          "box_width_emu": 1762125,
+          "box_height_emu": 457200,
+          "existing_font_size": 13.5
+        },
+        "trace:WIN_PROBABILITY:content.auto.76": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 7,
+          "estimated_lines": 1,
+          "characters_per_line": 9,
+          "max_lines": 4,
+          "preferred_font_size": 15.0,
+          "minimum_font_size": 8.0,
+          "font_size": 15.0,
+          "box_width_emu": 1619250,
+          "box_height_emu": 257175,
+          "existing_font_size": 15.0
+        },
+        "trace:WIN_PROBABILITY:content.auto.79": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 19,
+          "estimated_lines": 2,
+          "characters_per_line": 11,
+          "max_lines": 4,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 8.0,
+          "font_size": 13.5,
+          "box_width_emu": 1762125,
+          "box_height_emu": 457200,
+          "existing_font_size": 13.5
+        },
+        "trace:WIN_PROBABILITY:content.auto.84": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 16,
+          "estimated_lines": 1,
+          "characters_per_line": 51,
+          "max_lines": 4,
+          "preferred_font_size": 18.75,
+          "minimum_font_size": 8.0,
+          "font_size": 18.75,
+          "box_width_emu": 11382375,
+          "box_height_emu": 361950,
+          "existing_font_size": 18.75
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r1c0]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 6,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 1,
+          "col": 0
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r1c1]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 13,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 1,
+          "col": 1
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r1c2]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 1,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 1,
+          "col": 2
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r1c3]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 2,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 1,
+          "col": 3
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r2c0]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 5,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 2,
+          "col": 0
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r2c1]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 12,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 2,
+          "col": 1
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r2c2]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 1,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 2,
+          "col": 2
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r2c3]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 2,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 2,
+          "col": 3
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r3c0]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 3,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 3,
+          "col": 0
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r3c1]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 12,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 3,
+          "col": 1
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r3c2]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 1,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 3,
+          "col": 2
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r3c3]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 2,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 3,
+          "col": 3
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r4c0]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 4,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 4,
+          "col": 0
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r4c1]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 11,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 4,
+          "col": 1
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r4c2]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 1,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 4,
+          "col": 2
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r4c3]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 2,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 4,
+          "col": 3
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r5c0]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 5,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 5,
+          "col": 0
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r5c1]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 12,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 5,
+          "col": 1
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r5c2]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 1,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 5,
+          "col": 2
+        },
+        "trace:WIN_PROBABILITY:content.auto.30[r5c3]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 3,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+          "row": 5,
+          "col": 3
+        }
+      }
+    },
+    "validation": {
+      "clone": {
+        "path": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f22c_runtime_human_review\\_dry_run\\WIN_PROBABILITY_win_probability.pptx",
+        "exists": true,
+        "package_valid": true,
+        "slide_count": 1,
+        "slide_size_emu": [
+          15925800,
+          8963025
+        ],
+        "text_count": 71,
+        "editable_shape_count": 100,
+        "editable_text_shape_count": 43,
+        "image_count": 0,
+        "media_count": 0,
+        "media_files": [],
+        "crop_rect_count": 0,
+        "crop_values": [],
+        "full_slide_raster_count": 0,
+        "unexpected_media": [],
+        "relationship_types": [
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide",
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout"
+        ],
+        "unsupported_relationships": [],
+        "missing_relationship_targets": [],
+        "semantic_slots": [
+          "trace:WIN_PROBABILITY:content.auto",
+          "trace:WIN_PROBABILITY:content.auto.2",
+          "trace:WIN_PROBABILITY:title.primary",
+          "trace:WIN_PROBABILITY:footer.date",
+          "trace:WIN_PROBABILITY:content.auto.3",
+          "trace:WIN_PROBABILITY:content.auto.4",
+          "trace:WIN_PROBABILITY:title.primary.2",
+          "trace:WIN_PROBABILITY:title.primary.3",
+          "trace:WIN_PROBABILITY:content.auto.5",
+          "trace:WIN_PROBABILITY:content.auto.6",
+          "trace:WIN_PROBABILITY:content.auto.7",
+          "trace:WIN_PROBABILITY:content.auto.8",
+          "trace:WIN_PROBABILITY:title.primary.4",
+          "trace:WIN_PROBABILITY:title.primary.5",
+          "trace:WIN_PROBABILITY:content.auto.9",
+          "trace:WIN_PROBABILITY:content.auto.10",
+          "trace:WIN_PROBABILITY:content.auto.11",
+          "trace:WIN_PROBABILITY:content.auto.12",
+          "trace:WIN_PROBABILITY:content.auto.13",
+          "trace:WIN_PROBABILITY:content.auto.14",
+          "trace:WIN_PROBABILITY:content.auto.15",
+          "trace:WIN_PROBABILITY:content.auto.16",
+          "trace:WIN_PROBABILITY:content.auto.17",
+          "trace:WIN_PROBABILITY:content.auto.18",
+          "trace:WIN_PROBABILITY:content.auto.19",
+          "trace:WIN_PROBABILITY:content.auto.20",
+          "trace:WIN_PROBABILITY:content.auto.21",
+          "trace:WIN_PROBABILITY:content.auto.22",
+          "trace:WIN_PROBABILITY:content.auto.23",
+          "trace:WIN_PROBABILITY:content.auto.24",
+          "trace:WIN_PROBABILITY:content.auto.25",
+          "trace:WIN_PROBABILITY:content.auto.26",
+          "trace:WIN_PROBABILITY:content.auto.27",
+          "trace:WIN_PROBABILITY:content.auto.28",
+          "trace:WIN_PROBABILITY:content.auto.29",
+          "trace:WIN_PROBABILITY:content.auto.30",
+          "trace:WIN_PROBABILITY:content.auto.31",
+          "trace:WIN_PROBABILITY:content.auto.32",
+          "trace:WIN_PROBABILITY:content.auto.33",
+          "trace:WIN_PROBABILITY:content.auto.34",
+          "trace:WIN_PROBABILITY:content.auto.35",
+          "trace:WIN_PROBABILITY:content.auto.36",
+          "trace:WIN_PROBABILITY:content.auto.37",
+          "trace:WIN_PROBABILITY:content.auto.38",
+          "trace:WIN_PROBABILITY:content.auto.39",
+          "trace:WIN_PROBABILITY:content.auto.40",
+          "trace:WIN_PROBABILITY:content.auto.41",
+          "trace:WIN_PROBABILITY:content.auto.42",
+          "trace:WIN_PROBABILITY:content.auto.43",
+          "trace:WIN_PROBABILITY:content.auto.44",
+          "trace:WIN_PROBABILITY:title.primary.6",
+          "trace:WIN_PROBABILITY:content.auto.45",
+          "trace:WIN_PROBABILITY:title.primary.7",
+          "trace:WIN_PROBABILITY:content.auto.46",
+          "trace:WIN_PROBABILITY:title.primary.8",
+          "trace:WIN_PROBABILITY:content.auto.47",
+          "trace:WIN_PROBABILITY:title.primary.9",
+          "trace:WIN_PROBABILITY:content.auto.48",
+          "trace:WIN_PROBABILITY:content.auto.49",
+          "trace:WIN_PROBABILITY:content.auto.50",
+          "trace:WIN_PROBABILITY:content.auto.51",
+          "trace:WIN_PROBABILITY:content.auto.52",
+          "trace:WIN_PROBABILITY:content.auto.53",
+          "trace:WIN_PROBABILITY:content.auto.54",
+          "trace:WIN_PROBABILITY:content.auto.55",
+          "trace:WIN_PROBABILITY:lead",
+          "trace:WIN_PROBABILITY:content.auto.56",
+          "trace:WIN_PROBABILITY:content.auto.57",
+          "trace:WIN_PROBABILITY:content.auto.58",
+          "trace:WIN_PROBABILITY:content.auto.59",
+          "trace:WIN_PROBABILITY:content.auto.60",
+          "trace:WIN_PROBABILITY:content.auto.61",
+          "trace:WIN_PROBABILITY:content.auto.62",
+          "trace:WIN_PROBABILITY:content.auto.63",
+          "trace:WIN_PROBABILITY:content.auto.64",
+          "trace:WIN_PROBABILITY:content.auto.65",
+          "trace:WIN_PROBABILITY:content.auto.66",
+          "trace:WIN_PROBABILITY:content.auto.67",
+          "trace:WIN_PROBABILITY:content.auto.68",
+          "trace:WIN_PROBABILITY:content.auto.69",
+          "trace:WIN_PROBABILITY:content.auto.70",
+          "trace:WIN_PROBABILITY:content.auto.71",
+          "trace:WIN_PROBABILITY:content.auto.72",
+          "trace:WIN_PROBABILITY:content.auto.73",
+          "trace:WIN_PROBABILITY:content.auto.74",
+          "trace:WIN_PROBABILITY:content.auto.75",
+          "trace:WIN_PROBABILITY:content.auto.76",
+          "trace:WIN_PROBABILITY:content.auto.77",
+          "trace:WIN_PROBABILITY:content.auto.78",
+          "trace:WIN_PROBABILITY:content.auto.79",
+          "trace:WIN_PROBABILITY:content.auto.80",
+          "trace:WIN_PROBABILITY:content.auto.81",
+          "trace:WIN_PROBABILITY:content.auto.82",
+          "trace:WIN_PROBABILITY:content.auto.83",
+          "trace:WIN_PROBABILITY:content.auto.84",
+          "trace:WIN_PROBABILITY:content.auto.85",
+          "trace:WIN_PROBABILITY:content.auto.86",
+          "trace:WIN_PROBABILITY:content.auto.87",
+          "trace:WIN_PROBABILITY:footer.brand",
+          "trace:WIN_PROBABILITY:footer.brand.2"
+        ],
+        "duplicate_semantic_slots": [],
+        "font_families": [
+          "Yu Gothic"
+        ],
+        "errors": [],
+        "approved_slide_id": "WIN_PROBABILITY",
+        "required_slots": [
+          "trace:WIN_PROBABILITY:footer.brand",
+          "trace:WIN_PROBABILITY:title.primary"
+        ],
+        "missing_required_slots": [],
+        "source_frozen_unchanged": true,
+        "source_sha256": "ba6e0102e0b4178517bcc5a59b974d9e8e8b5e7b20dbad12db98b3a476b6f7c1",
+        "runtime_sha256": "2dff0416f7750d71a44cd28a23202b5cd96445ab981e54cf8d2e3b60af5705a3",
+        "valid": true,
+        "runtime_sha256_before_normalization": "ba6e0102e0b4178517bcc5a59b974d9e8e8b5e7b20dbad12db98b3a476b6f7c1",
+        "runtime_sha256_after_normalization": "2dff0416f7750d71a44cd28a23202b5cd96445ab981e54cf8d2e3b60af5705a3",
+        "media_relationships_preserved": true
+      },
+      "injected": {
+        "path": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f22c_runtime_human_review\\_dry_run\\WIN_PROBABILITY_win_probability.pptx",
+        "exists": true,
+        "package_valid": true,
+        "slide_count": 1,
+        "slide_size_emu": [
+          15925800,
+          8963025
+        ],
+        "text_count": 70,
+        "editable_shape_count": 100,
+        "editable_text_shape_count": 42,
+        "image_count": 0,
+        "media_count": 0,
+        "media_files": [],
+        "crop_rect_count": 0,
+        "crop_values": [],
+        "full_slide_raster_count": 0,
+        "unexpected_media": [],
+        "relationship_types": [
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide",
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout"
+        ],
+        "unsupported_relationships": [],
+        "missing_relationship_targets": [],
+        "semantic_slots": [
+          "trace:WIN_PROBABILITY:content.auto",
+          "trace:WIN_PROBABILITY:content.auto.2",
+          "trace:WIN_PROBABILITY:title.primary",
+          "trace:WIN_PROBABILITY:footer.date",
+          "trace:WIN_PROBABILITY:content.auto.3",
+          "trace:WIN_PROBABILITY:content.auto.4",
+          "trace:WIN_PROBABILITY:title.primary.2",
+          "trace:WIN_PROBABILITY:title.primary.3",
+          "trace:WIN_PROBABILITY:content.auto.5",
+          "trace:WIN_PROBABILITY:content.auto.6",
+          "trace:WIN_PROBABILITY:content.auto.7",
+          "trace:WIN_PROBABILITY:content.auto.8",
+          "trace:WIN_PROBABILITY:title.primary.4",
+          "trace:WIN_PROBABILITY:title.primary.5",
+          "trace:WIN_PROBABILITY:content.auto.9",
+          "trace:WIN_PROBABILITY:content.auto.10",
+          "trace:WIN_PROBABILITY:content.auto.11",
+          "trace:WIN_PROBABILITY:content.auto.12",
+          "trace:WIN_PROBABILITY:content.auto.13",
+          "trace:WIN_PROBABILITY:content.auto.14",
+          "trace:WIN_PROBABILITY:content.auto.15",
+          "trace:WIN_PROBABILITY:content.auto.16",
+          "trace:WIN_PROBABILITY:content.auto.17",
+          "trace:WIN_PROBABILITY:content.auto.18",
+          "trace:WIN_PROBABILITY:content.auto.19",
+          "trace:WIN_PROBABILITY:content.auto.20",
+          "trace:WIN_PROBABILITY:content.auto.21",
+          "trace:WIN_PROBABILITY:content.auto.22",
+          "trace:WIN_PROBABILITY:content.auto.23",
+          "trace:WIN_PROBABILITY:content.auto.24",
+          "trace:WIN_PROBABILITY:content.auto.25",
+          "trace:WIN_PROBABILITY:content.auto.26",
+          "trace:WIN_PROBABILITY:content.auto.27",
+          "trace:WIN_PROBABILITY:content.auto.28",
+          "trace:WIN_PROBABILITY:content.auto.29",
+          "trace:WIN_PROBABILITY:content.auto.30",
+          "trace:WIN_PROBABILITY:content.auto.31",
+          "trace:WIN_PROBABILITY:content.auto.32",
+          "trace:WIN_PROBABILITY:content.auto.33",
+          "trace:WIN_PROBABILITY:content.auto.34",
+          "trace:WIN_PROBABILITY:content.auto.35",
+          "trace:WIN_PROBABILITY:content.auto.36",
+          "trace:WIN_PROBABILITY:content.auto.37",
+          "trace:WIN_PROBABILITY:content.auto.38",
+          "trace:WIN_PROBABILITY:content.auto.39",
+          "trace:WIN_PROBABILITY:content.auto.40",
+          "trace:WIN_PROBABILITY:content.auto.41",
+          "trace:WIN_PROBABILITY:content.auto.42",
+          "trace:WIN_PROBABILITY:content.auto.43",
+          "trace:WIN_PROBABILITY:content.auto.44",
+          "trace:WIN_PROBABILITY:title.primary.6",
+          "trace:WIN_PROBABILITY:content.auto.45",
+          "trace:WIN_PROBABILITY:title.primary.7",
+          "trace:WIN_PROBABILITY:content.auto.46",
+          "trace:WIN_PROBABILITY:title.primary.8",
+          "trace:WIN_PROBABILITY:content.auto.47",
+          "trace:WIN_PROBABILITY:title.primary.9",
+          "trace:WIN_PROBABILITY:content.auto.48",
+          "trace:WIN_PROBABILITY:content.auto.49",
+          "trace:WIN_PROBABILITY:content.auto.50",
+          "trace:WIN_PROBABILITY:content.auto.51",
+          "trace:WIN_PROBABILITY:content.auto.52",
+          "trace:WIN_PROBABILITY:content.auto.53",
+          "trace:WIN_PROBABILITY:content.auto.54",
+          "trace:WIN_PROBABILITY:content.auto.55",
+          "trace:WIN_PROBABILITY:lead",
+          "trace:WIN_PROBABILITY:content.auto.56",
+          "trace:WIN_PROBABILITY:content.auto.57",
+          "trace:WIN_PROBABILITY:content.auto.58",
+          "trace:WIN_PROBABILITY:content.auto.59",
+          "trace:WIN_PROBABILITY:content.auto.60",
+          "trace:WIN_PROBABILITY:content.auto.61",
+          "trace:WIN_PROBABILITY:content.auto.62",
+          "trace:WIN_PROBABILITY:content.auto.63",
+          "trace:WIN_PROBABILITY:content.auto.64",
+          "trace:WIN_PROBABILITY:content.auto.65",
+          "trace:WIN_PROBABILITY:content.auto.66",
+          "trace:WIN_PROBABILITY:content.auto.67",
+          "trace:WIN_PROBABILITY:content.auto.68",
+          "trace:WIN_PROBABILITY:content.auto.69",
+          "trace:WIN_PROBABILITY:content.auto.70",
+          "trace:WIN_PROBABILITY:content.auto.71",
+          "trace:WIN_PROBABILITY:content.auto.72",
+          "trace:WIN_PROBABILITY:content.auto.73",
+          "trace:WIN_PROBABILITY:content.auto.74",
+          "trace:WIN_PROBABILITY:content.auto.75",
+          "trace:WIN_PROBABILITY:content.auto.76",
+          "trace:WIN_PROBABILITY:content.auto.77",
+          "trace:WIN_PROBABILITY:content.auto.78",
+          "trace:WIN_PROBABILITY:content.auto.79",
+          "trace:WIN_PROBABILITY:content.auto.80",
+          "trace:WIN_PROBABILITY:content.auto.81",
+          "trace:WIN_PROBABILITY:content.auto.82",
+          "trace:WIN_PROBABILITY:content.auto.83",
+          "trace:WIN_PROBABILITY:content.auto.84",
+          "trace:WIN_PROBABILITY:content.auto.85",
+          "trace:WIN_PROBABILITY:content.auto.86",
+          "trace:WIN_PROBABILITY:content.auto.87",
+          "trace:WIN_PROBABILITY:footer.brand",
+          "trace:WIN_PROBABILITY:footer.brand.2"
+        ],
+        "duplicate_semantic_slots": [],
+        "font_families": [
+          "Yu Gothic"
+        ],
+        "errors": [],
+        "approved_slide_id": "WIN_PROBABILITY",
+        "required_slots": [
+          "trace:WIN_PROBABILITY:footer.brand",
+          "trace:WIN_PROBABILITY:title.primary"
+        ],
+        "missing_required_slots": [],
+        "source_frozen_unchanged": true,
+        "source_sha256": "ba6e0102e0b4178517bcc5a59b974d9e8e8b5e7b20dbad12db98b3a476b6f7c1",
+        "runtime_sha256": "c9129fb540dda2e6d626b7eee1e6078a81688314cdfe9db9bef3715cd87e816f",
+        "valid": true,
+        "unresolved_required_slots": [],
+        "prohibited_sample_strings": [
+          "2025年下期",
+          "72%",
+          "高い確度で受注"
+        ],
+        "prohibited_sample_strings_found": [],
+        "sample_content_leak_free": true,
+        "text_fit": {
+          "valid": true,
+          "fields": {
+            "trace:WIN_PROBABILITY:title.primary": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 9,
+              "estimated_lines": 1,
+              "characters_per_line": 28,
+              "max_lines": 2,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 10.0,
+              "font_size": 13.5,
+              "box_width_emu": 4476750,
+              "box_height_emu": 304800,
+              "existing_font_size": 13.5
+            },
+            "trace:WIN_PROBABILITY:content.auto.7": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 3,
+              "estimated_lines": 2,
+              "characters_per_line": 2,
+              "max_lines": 4,
+              "preferred_font_size": 93.0,
+              "minimum_font_size": 8.0,
+              "font_size": 93.0,
+              "box_width_emu": 2628900,
+              "box_height_emu": 1162050,
+              "existing_font_size": 93.0
+            },
+            "trace:WIN_PROBABILITY:content.auto.19": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 3,
+              "estimated_lines": 2,
+              "characters_per_line": 2,
+              "max_lines": 4,
+              "preferred_font_size": 14.25,
+              "minimum_font_size": 8.0,
+              "font_size": 14.25,
+              "box_width_emu": 495300,
+              "box_height_emu": 266700,
+              "existing_font_size": 14.25
+            },
+            "trace:WIN_PROBABILITY:title.primary.4": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 18,
+              "estimated_lines": 1,
+              "characters_per_line": 21,
+              "max_lines": 4,
+              "preferred_font_size": 18.75,
+              "minimum_font_size": 8.0,
+              "font_size": 18.75,
+              "box_width_emu": 4810125,
+              "box_height_emu": 333375,
+              "existing_font_size": 18.75
+            },
+            "trace:WIN_PROBABILITY:title.primary.5": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 25,
+              "estimated_lines": 1,
+              "characters_per_line": 33,
+              "max_lines": 4,
+              "preferred_font_size": 12.75,
+              "minimum_font_size": 8.0,
+              "font_size": 12.75,
+              "box_width_emu": 5000625,
+              "box_height_emu": 723900,
+              "existing_font_size": 12.75
+            },
+            "trace:WIN_PROBABILITY:title.primary.6": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 10,
+              "estimated_lines": 1,
+              "characters_per_line": 30,
+              "max_lines": 4,
+              "preferred_font_size": 15.0,
+              "minimum_font_size": 8.0,
+              "font_size": 15.0,
+              "box_width_emu": 5295900,
+              "box_height_emu": 257175,
+              "existing_font_size": 15.0
+            },
+            "trace:WIN_PROBABILITY:title.primary.7": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 8,
+              "estimated_lines": 1,
+              "characters_per_line": 30,
+              "max_lines": 4,
+              "preferred_font_size": 15.0,
+              "minimum_font_size": 8.0,
+              "font_size": 15.0,
+              "box_width_emu": 5295900,
+              "box_height_emu": 257175,
+              "existing_font_size": 15.0
+            },
+            "trace:WIN_PROBABILITY:title.primary.8": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 8,
+              "estimated_lines": 1,
+              "characters_per_line": 30,
+              "max_lines": 4,
+              "preferred_font_size": 15.0,
+              "minimum_font_size": 8.0,
+              "font_size": 15.0,
+              "box_width_emu": 5295900,
+              "box_height_emu": 257175,
+              "existing_font_size": 15.0
+            },
+            "trace:WIN_PROBABILITY:title.primary.9": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 9,
+              "estimated_lines": 1,
+              "characters_per_line": 30,
+              "max_lines": 4,
+              "preferred_font_size": 15.0,
+              "minimum_font_size": 8.0,
+              "font_size": 15.0,
+              "box_width_emu": 5295900,
+              "box_height_emu": 257175,
+              "existing_font_size": 15.0
+            },
+            "trace:WIN_PROBABILITY:content.auto.54": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 6,
+              "estimated_lines": 1,
+              "characters_per_line": 30,
+              "max_lines": 4,
+              "preferred_font_size": 15.0,
+              "minimum_font_size": 8.0,
+              "font_size": 15.0,
+              "box_width_emu": 5295900,
+              "box_height_emu": 266700,
+              "existing_font_size": 15.0
+            },
+            "trace:WIN_PROBABILITY:lead": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 9,
+              "estimated_lines": 1,
+              "characters_per_line": 30,
+              "max_lines": 3,
+              "preferred_font_size": 15.0,
+              "minimum_font_size": 10.0,
+              "font_size": 15.0,
+              "box_width_emu": 5295900,
+              "box_height_emu": 266700,
+              "existing_font_size": 15.0
+            },
+            "trace:WIN_PROBABILITY:content.auto.57": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 7,
+              "estimated_lines": 1,
+              "characters_per_line": 30,
+              "max_lines": 4,
+              "preferred_font_size": 15.0,
+              "minimum_font_size": 8.0,
+              "font_size": 15.0,
+              "box_width_emu": 5295900,
+              "box_height_emu": 266700,
+              "existing_font_size": 15.0
+            },
+            "trace:WIN_PROBABILITY:content.auto.59": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 7,
+              "estimated_lines": 1,
+              "characters_per_line": 30,
+              "max_lines": 4,
+              "preferred_font_size": 15.0,
+              "minimum_font_size": 8.0,
+              "font_size": 15.0,
+              "box_width_emu": 5295900,
+              "box_height_emu": 266700,
+              "existing_font_size": 15.0
+            },
+            "trace:WIN_PROBABILITY:content.auto.70": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 7,
+              "estimated_lines": 1,
+              "characters_per_line": 9,
+              "max_lines": 4,
+              "preferred_font_size": 15.0,
+              "minimum_font_size": 8.0,
+              "font_size": 15.0,
+              "box_width_emu": 1619250,
+              "box_height_emu": 257175,
+              "existing_font_size": 15.0
+            },
+            "trace:WIN_PROBABILITY:content.auto.77": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 16,
+              "estimated_lines": 2,
+              "characters_per_line": 11,
+              "max_lines": 4,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 8.0,
+              "font_size": 13.5,
+              "box_width_emu": 1762125,
+              "box_height_emu": 457200,
+              "existing_font_size": 13.5
+            },
+            "trace:WIN_PROBABILITY:content.auto.73": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 7,
+              "estimated_lines": 1,
+              "characters_per_line": 9,
+              "max_lines": 4,
+              "preferred_font_size": 15.0,
+              "minimum_font_size": 8.0,
+              "font_size": 15.0,
+              "box_width_emu": 1619250,
+              "box_height_emu": 257175,
+              "existing_font_size": 15.0
+            },
+            "trace:WIN_PROBABILITY:content.auto.78": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 19,
+              "estimated_lines": 2,
+              "characters_per_line": 11,
+              "max_lines": 4,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 8.0,
+              "font_size": 13.5,
+              "box_width_emu": 1762125,
+              "box_height_emu": 457200,
+              "existing_font_size": 13.5
+            },
+            "trace:WIN_PROBABILITY:content.auto.76": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 7,
+              "estimated_lines": 1,
+              "characters_per_line": 9,
+              "max_lines": 4,
+              "preferred_font_size": 15.0,
+              "minimum_font_size": 8.0,
+              "font_size": 15.0,
+              "box_width_emu": 1619250,
+              "box_height_emu": 257175,
+              "existing_font_size": 15.0
+            },
+            "trace:WIN_PROBABILITY:content.auto.79": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 19,
+              "estimated_lines": 2,
+              "characters_per_line": 11,
+              "max_lines": 4,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 8.0,
+              "font_size": 13.5,
+              "box_width_emu": 1762125,
+              "box_height_emu": 457200,
+              "existing_font_size": 13.5
+            },
+            "trace:WIN_PROBABILITY:content.auto.84": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 16,
+              "estimated_lines": 1,
+              "characters_per_line": 51,
+              "max_lines": 4,
+              "preferred_font_size": 18.75,
+              "minimum_font_size": 8.0,
+              "font_size": 18.75,
+              "box_width_emu": 11382375,
+              "box_height_emu": 361950,
+              "existing_font_size": 18.75
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r1c0]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 6,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 1,
+              "col": 0
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r1c1]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 13,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 1,
+              "col": 1
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r1c2]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 1,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 1,
+              "col": 2
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r1c3]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 2,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 1,
+              "col": 3
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r2c0]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 5,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 2,
+              "col": 0
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r2c1]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 12,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 2,
+              "col": 1
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r2c2]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 1,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 2,
+              "col": 2
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r2c3]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 2,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 2,
+              "col": 3
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r3c0]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 3,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 3,
+              "col": 0
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r3c1]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 12,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 3,
+              "col": 1
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r3c2]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 1,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 3,
+              "col": 2
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r3c3]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 2,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 3,
+              "col": 3
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r4c0]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 4,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 4,
+              "col": 0
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r4c1]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 11,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 4,
+              "col": 1
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r4c2]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 1,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 4,
+              "col": 2
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r4c3]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 2,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 4,
+              "col": 3
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r5c0]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 5,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 5,
+              "col": 0
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r5c1]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 12,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 5,
+              "col": 1
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r5c2]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 1,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 5,
+              "col": 2
+            },
+            "trace:WIN_PROBABILITY:content.auto.30[r5c3]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 3,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:WIN_PROBABILITY:content.auto.30",
+              "row": 5,
+              "col": 3
+            }
+          }
+        },
+        "text_fit_valid": true,
+        "evidence_diagnostics": [
+          {
+            "field": "win_probability",
+            "provenance": [
+              "VERIFIED",
+              "VERIFIED",
+              "VERIFIED"
+            ],
+            "source_fields": [
+              "fixture.phase3f22c_v2.win probability evidence",
+              "fixture.phase3f22c_v2.probability evidence",
+              "fixture.phase3f22c_v2.confidence evidence"
+            ]
+          }
+        ],
+        "font_size_minimum_valid": true,
+        "shape_bounds_unchanged": true,
+        "image_relationships_preserved": true
+      }
+    },
+    "reason": null,
+    "failure_reason": null,
+    "payload": {
+      "role": "WIN_PROBABILITY",
+      "slide_id": "WIN_PROBABILITY",
+      "surface": "conditional",
+      "slots": {
+        "trace:WIN_PROBABILITY:title.primary": "受注確度と次の判断",
+        "trace:WIN_PROBABILITY:content.auto.7": "68%",
+        "trace:WIN_PROBABILITY:content.auto.19": "68%",
+        "trace:WIN_PROBABILITY:title.primary.4": "検証済みの中程度の確度で判断します。",
+        "trace:WIN_PROBABILITY:title.primary.5": "検証済みの課題適合性と決裁者接点を確認しています。",
+        "trace:WIN_PROBABILITY:title.primary.6": "課題と解決方向の合意",
+        "trace:WIN_PROBABILITY:title.primary.7": "決裁者接点の確認",
+        "trace:WIN_PROBABILITY:title.primary.8": "予算レンジの確認",
+        "trace:WIN_PROBABILITY:title.primary.9": "導入時期候補の確認",
+        "trace:WIN_PROBABILITY:content.auto.54": "正式予算承認",
+        "trace:WIN_PROBABILITY:lead": "競合条件の最終確認",
+        "trace:WIN_PROBABILITY:content.auto.57": "実施体制の確認",
+        "trace:WIN_PROBABILITY:content.auto.59": "開始時期の確定",
+        "trace:WIN_PROBABILITY:content.auto.70": "決裁条件の確認",
+        "trace:WIN_PROBABILITY:content.auto.77": "検証済みの決裁条件を確認します。",
+        "trace:WIN_PROBABILITY:content.auto.73": "予算条件の合意",
+        "trace:WIN_PROBABILITY:content.auto.78": "検証済みの費用・契約条件を合意します。",
+        "trace:WIN_PROBABILITY:content.auto.76": "導入時期の確定",
+        "trace:WIN_PROBABILITY:content.auto.79": "検証済みの導入時期と体制を確定します。",
+        "trace:WIN_PROBABILITY:content.auto.84": "次回確認で導入条件を確定します。"
+      },
+      "source_fields": {
+        "trace:WIN_PROBABILITY:title.primary": "slide.title",
+        "win_probability.value": "fixture.phase3f22c_v2.win probability evidence"
+      },
+      "evidence_status": {
+        "trace:WIN_PROBABILITY:title.primary": "USER_PROVIDED",
+        "win_probability.value": "VERIFIED"
+      },
+      "unresolved_required_slots": [],
+      "cleared_optional_slots": [
+        "trace:WIN_PROBABILITY:footer.date"
+      ],
+      "text_fit_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "text_replacements": {
+        "72%": "68%",
+        "2025年下期": "2026年下期",
+        "高い確度で受注": "中"
+      },
+      "table_cell_bindings": {
+        "trace:WIN_PROBABILITY:content.auto.30": [
+          {
+            "row": 1,
+            "col": 0,
+            "value": "課題の明確性"
+          },
+          {
+            "row": 1,
+            "col": 1,
+            "value": "業務効率化の課題を検証済み"
+          },
+          {
+            "row": 1,
+            "col": 2,
+            "value": "高"
+          },
+          {
+            "row": 1,
+            "col": 3,
+            "value": "強い"
+          },
+          {
+            "row": 2,
+            "col": 0,
+            "value": "決裁者接点"
+          },
+          {
+            "row": 2,
+            "col": 1,
+            "value": "決裁者との接点を検証済み"
+          },
+          {
+            "row": 2,
+            "col": 2,
+            "value": "高"
+          },
+          {
+            "row": 2,
+            "col": 3,
+            "value": "強い"
+          },
+          {
+            "row": 3,
+            "col": 0,
+            "value": "予算感"
+          },
+          {
+            "row": 3,
+            "col": 1,
+            "value": "検証済み予算レンジを確認"
+          },
+          {
+            "row": 3,
+            "col": 2,
+            "value": "中"
+          },
+          {
+            "row": 3,
+            "col": 3,
+            "value": "普通"
+          },
+          {
+            "row": 4,
+            "col": 0,
+            "value": "導入時期"
+          },
+          {
+            "row": 4,
+            "col": 1,
+            "value": "検証済み時期候補を確認"
+          },
+          {
+            "row": 4,
+            "col": 2,
+            "value": "中"
+          },
+          {
+            "row": 4,
+            "col": 3,
+            "value": "普通"
+          },
+          {
+            "row": 5,
+            "col": 0,
+            "value": "競合優位性"
+          },
+          {
+            "row": 5,
+            "col": 1,
+            "value": "検証済み比較根拠を確認中"
+          },
+          {
+            "row": 5,
+            "col": 2,
+            "value": "中"
+          },
+          {
+            "row": 5,
+            "col": 3,
+            "value": "確認中"
+          }
+        ]
+      },
+      "clear_matching_text": [
+        "72%",
+        "2025年下期",
+        "高い確度で受注"
+      ],
+      "clear_slots": [
+        "trace:WIN_PROBABILITY:footer.date"
+      ],
+      "font_size_adjustments": {},
+      "prohibited_sample_strings": [
+        "72%",
+        "2025年下期",
+        "高い確度で受注"
+      ],
+      "diagnostics": [
+        {
+          "field": "win_probability",
+          "provenance": [
+            "VERIFIED",
+            "VERIFIED",
+            "VERIFIED"
+          ],
+          "source_fields": [
+            "fixture.phase3f22c_v2.win probability evidence",
+            "fixture.phase3f22c_v2.probability evidence",
+            "fixture.phase3f22c_v2.confidence evidence"
+          ]
+        }
+      ],
+      "renderable": true,
+      "reason": null,
+      "failure_reason": null
+    }
+  },
+  "dispatcher_trace": {
+    "ROLE": "WIN_PROBABILITY",
+    "REQUESTED_ROLE": "WIN_PROBABILITY",
+    "RUNTIME_ROLE": "WIN_PROBABILITY",
+    "TEMPLATE_ID": "WIN_PROBABILITY",
+    "NATIVE_REQUESTED": true,
+    "NATIVE_ELIGIBLE": true,
+    "NATIVE_RENDERED": true,
+    "FALLBACK_USED": false,
+    "FAILURE_REASON": null,
+    "HUMAN_APPROVAL_STATUS": "PASS",
+    "PROVENANCE_STATUS": "PASS",
+    "TEXT_FIT_STATUS": "PASS",
+    "SAMPLE_LEAK_STATUS": "PASS"
+  },
+  "slot_diff": {
+    "trace:WIN_PROBABILITY:content.auto.19": {
+      "template_value": "72%",
+      "runtime_value": "68%",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:content.auto.54": {
+      "template_value": "最終的な予算承認の取得が必要",
+      "runtime_value": "正式予算承認",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:content.auto.57": {
+      "template_value": "競合他社の提案状況と価格動向の継続確認が必要",
+      "runtime_value": "実施体制の確認",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:content.auto.59": {
+      "template_value": "導入スケジュールの正式確定と社内リソースの調整",
+      "runtime_value": "開始時期の確定",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:content.auto.7": {
+      "template_value": "72%",
+      "runtime_value": "68%",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:content.auto.70": {
+      "template_value": "決裁者確認",
+      "runtime_value": "決裁条件の確認",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:content.auto.73": {
+      "template_value": "条件調整",
+      "runtime_value": "予算条件の合意",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:content.auto.76": {
+      "template_value": "提案提出",
+      "runtime_value": "導入時期の確定",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:content.auto.77": {
+      "template_value": "決裁者との追加面談で最終ニーズと条件を確認",
+      "runtime_value": "検証済みの決裁条件を確認します。",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:content.auto.78": {
+      "template_value": "予算・スケジュール・契約条件のすり合わせ",
+      "runtime_value": "検証済みの費用・契約条件を合意します。",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:content.auto.79": {
+      "template_value": "正式提案書を提出し、社内稟議を支援",
+      "runtime_value": "検証済みの導入時期と体制を確定します。",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:content.auto.84": {
+      "template_value": "現時点では前向きと判断しますが、未確認事項の解消により、正式な受注判断へ進みます。",
+      "runtime_value": "次回確認で導入条件を確定します。",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:lead": {
+      "template_value": "社内稟議プロセスの期間・承認条件が未確定",
+      "runtime_value": "競合条件の最終確認",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:title.primary": {
+      "template_value": "組織を変える、AI活用の進め方",
+      "runtime_value": "受注確度と次の判断",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:title.primary.4": {
+      "template_value": "現時点での受注可能性は高いと判断します。",
+      "runtime_value": "検証済みの中程度の確度で判断します。",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:title.primary.5": {
+      "template_value": "顧客の課題と当社の提案内容の適合性が高く、決裁者からも前向きな評価を得ています。一部の未確認事項はあるものの、総合的に72%と判断します。",
+      "runtime_value": "検証済みの課題適合性と決裁者接点を確認しています。",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:title.primary.6": {
+      "template_value": "顧客の課題と当社の提案内容の適合性が高い",
+      "runtime_value": "課題と解決方向の合意",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:title.primary.7": {
+      "template_value": "決裁者から前向きな評価と導入意向の発言がある",
+      "runtime_value": "決裁者接点の確認",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:title.primary.8": {
+      "template_value": "概算予算の範囲内での導入可能性が見込める",
+      "runtime_value": "予算レンジの確認",
+      "changed": true
+    },
+    "trace:WIN_PROBABILITY:title.primary.9": {
+      "template_value": "同業他社での導入実績があり、信頼性が評価されている",
+      "runtime_value": "導入時期候補の確認",
+      "changed": true
+    }
+  }
+}

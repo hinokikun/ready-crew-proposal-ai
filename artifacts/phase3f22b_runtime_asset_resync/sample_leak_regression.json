@@ -1,0 +1,59 @@
+{
+  "phase": "Phase3F-22B-A",
+  "assets": [
+    {
+      "ROLE": "COMPETITION",
+      "SAMPLE_STRINGS_CHECKED": [
+        "競合A",
+        "競合B",
+        "競合より優位",
+        "他社より",
+        "圧倒的",
+        "業務理解から提案・制作・改善まで一気通貫で支援",
+        "AI活用を前提にした運用設計まで提示",
+        "概要見積・体制・スケジュールの透明性が高い",
+        "公開後の改善伴走まで含めた提案",
+        "当社提案を第一候補として比較継続し、条件調整後に最終判断へ進むことを推奨します。"
+      ],
+      "TEMPLATE_SOURCE_CONTAINS_TRACE_SAMPLE_VALUES": true,
+      "RUNTIME_TEMPLATE_IS_STATIC_ONLY": true,
+      "INJECTED_MISSING_DATA_OUTPUT_SAMPLE_LEAK_COUNT": 0,
+      "SAMPLE_LEAK_COUNT": 0,
+      "STATUS": "PASS; adapter clears dynamic sample content before native import"
+    },
+    {
+      "ROLE": "WIN_PROBABILITY",
+      "SAMPLE_STRINGS_CHECKED": [
+        "72%",
+        "2025年下期",
+        "高い確度で受注"
+      ],
+      "TEMPLATE_SOURCE_CONTAINS_TRACE_SAMPLE_VALUES": true,
+      "RUNTIME_TEMPLATE_IS_STATIC_ONLY": true,
+      "INJECTED_MISSING_DATA_OUTPUT_SAMPLE_LEAK_COUNT": 0,
+      "SAMPLE_LEAK_COUNT": 0,
+      "STATUS": "PASS; adapter clears dynamic sample content before native import"
+    },
+    {
+      "ROLE": "SCHEDULE",
+      "SAMPLE_STRINGS_CHECKED": [
+        "2026.06.22",
+        "Week 1",
+        "Week 6",
+        "Week 12",
+        "Week 20",
+        "1 ～ 2 週",
+        "2 ～ 3 週",
+        "4 ～ 6 週",
+        "2 週"
+      ],
+      "TEMPLATE_SOURCE_CONTAINS_TRACE_SAMPLE_VALUES": true,
+      "RUNTIME_TEMPLATE_IS_STATIC_ONLY": true,
+      "INJECTED_MISSING_DATA_OUTPUT_SAMPLE_LEAK_COUNT": 0,
+      "SAMPLE_LEAK_COUNT": 0,
+      "STATUS": "PASS; adapter clears dynamic sample content before native import"
+    }
+  ],
+  "SAMPLE_LEAK_COUNT": 0,
+  "status": "PASS"
+}

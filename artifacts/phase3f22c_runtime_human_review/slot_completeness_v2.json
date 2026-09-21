@@ -1,0 +1,18 @@
+{
+  "COMPETITION": {
+    "success": true,
+    "unresolved_slots": [],
+    "injected_slot_count": 38,
+    "table_bindings": {
+      "trace:COMPETITION:title.primary.4": 22
+    }
+  },
+  "WIN_PROBABILITY": {
+    "success": true,
+    "unresolved_slots": [],
+    "injected_slot_count": 40,
+    "table_bindings": {
+      "trace:WIN_PROBABILITY:content.auto.30": 20
+    }
+  }
+}

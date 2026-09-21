@@ -17,6 +17,7 @@ from pptx import Presentation
 from pptx.oxml.ns import qn
 
 from app.services.pptx_parts.native_trace_registry import (
+    canonical_runtime_role,
     get_native_role_spec,
     get_runtime_native_role_spec,
     native_role_gate,
@@ -322,7 +323,8 @@ def render_approved_native_slide(
 
 
 def _effective_surface(role: str | None, surface: str | None) -> str:
-    if role in {"COMPETITION", "COMPETITIVE_COMPARISON", "WIN_PROBABILITY"}:
+    runtime_role = canonical_runtime_role(role)
+    if runtime_role in {"COMPETITION", "WIN_PROBABILITY", "ROADMAP"}:
         return "conditional"
     return surface or "summary"
 
@@ -337,9 +339,14 @@ def _trace(
     provenance_status: str,
     text_fit_status: str,
     sample_leak_status: str,
+    requested_role: str | None = None,
+    template_id: str | None = None,
 ) -> dict[str, object]:
     return {
         "ROLE": role,
+        "REQUESTED_ROLE": requested_role or role,
+        "RUNTIME_ROLE": role,
+        "TEMPLATE_ID": template_id,
         "NATIVE_REQUESTED": True,
         "NATIVE_ELIGIBLE": bool(native_rendered if native_eligible is None else native_eligible),
         "NATIVE_RENDERED": bool(native_rendered),
@@ -368,11 +375,14 @@ def dispatch_approved_native_slide(
     failure.  The caller owns the existing-renderer fallback.
     """
 
+    requested_role = role
     resolved_role = role
     if resolved_role is None:
         from app.services.pptx_parts.native_trace_registry import resolve_approved_native_role
 
         resolved_role = resolve_approved_native_role(slide_data, index)
+        requested_role = resolved_role
+    resolved_role = canonical_runtime_role(resolved_role)
     effective_surface = _effective_surface(resolved_role, surface)
     spec = get_runtime_native_role_spec(resolved_role, surface=effective_surface)
     if spec is None:
@@ -384,6 +394,7 @@ def dispatch_approved_native_slide(
             provenance_status="UNKNOWN",
             text_fit_status="NOT_RUN",
             sample_leak_status="NOT_RUN",
+            requested_role=requested_role,
         )
 
     source_path = Path(__file__).resolve().parents[4] / str(spec.get("runtime_asset", ""))
@@ -406,6 +417,8 @@ def dispatch_approved_native_slide(
             provenance_status="NOT_RUN",
             text_fit_status="NOT_RUN",
             sample_leak_status="NOT_RUN",
+            requested_role=requested_role,
+            template_id=str(spec.get("slide_id")),
         )
 
     try:
@@ -430,6 +443,8 @@ def dispatch_approved_native_slide(
                 provenance_status=provenance_status,
                 text_fit_status=text_fit_status,
                 sample_leak_status=sample_leak_status,
+                requested_role=requested_role,
+                template_id=str(spec.get("slide_id")),
             )
 
         # Import only the already validated, runtime-cloned package.  Image
@@ -444,6 +459,8 @@ def dispatch_approved_native_slide(
             provenance_status=provenance_status,
             text_fit_status=text_fit_status,
             sample_leak_status=sample_leak_status,
+            requested_role=requested_role,
+            template_id=str(spec.get("slide_id")),
         )
     except ValueError as exc:
         return _trace(
@@ -459,6 +476,8 @@ def dispatch_approved_native_slide(
             provenance_status="PASS",
             text_fit_status="PASS",
             sample_leak_status="PASS",
+            requested_role=requested_role,
+            template_id=str(spec.get("slide_id")),
         )
     except Exception:
         logger.exception("approved_native_dispatch_failed", extra={"role": resolved_role})
@@ -471,6 +490,8 @@ def dispatch_approved_native_slide(
             provenance_status="PASS",
             text_fit_status="PASS",
             sample_leak_status="PASS",
+            requested_role=requested_role,
+            template_id=str(spec.get("slide_id")),
         )
 
 

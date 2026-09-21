@@ -1,0 +1,12 @@
+{
+  "FLAG_OFF_PATH": "PASS",
+  "SUMMARY_SLIDE_COUNT": 11,
+  "DETAIL_GENERATION": "PASS",
+  "DETAIL_SLIDE_COUNT_IN_FOCUSED_FIXTURE": 13,
+  "DUPLICATE_ROLES": 0,
+  "OMITTED_REQUIRED_ROLES": 0,
+  "S02_REGRESSION": "PASS",
+  "CONTINUATION_POLICY_BYPASS": false,
+  "API_CONTRACT_CHANGED": false,
+  "SOURCE": "Focused local build_pptx_result regression plus Phase3F-19E API smoke baseline"
+}

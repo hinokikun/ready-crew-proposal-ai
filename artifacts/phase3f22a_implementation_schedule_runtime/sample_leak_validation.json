@@ -1,0 +1,41 @@
+{
+  "role": "ROADMAP",
+  "guard_source": "SAMPLE_STRINGS[ROADMAP] + validate_injected_template_package",
+  "guarded_strings": [
+    "2026.06.22",
+    "1ヶ月",
+    "1〜2ヶ月",
+    "2〜3ヶ月",
+    "3〜6ヶ月",
+    "Week 1",
+    "Week 6",
+    "Week 12",
+    "Week 20",
+    "キックオフ",
+    "環境構築完了",
+    "トライアル完了",
+    "本格展開開始",
+    "運用定着"
+  ],
+  "valid_runtime": {
+    "success": true,
+    "found": [],
+    "sample_leak": false
+  },
+  "generated_only": {
+    "success": false,
+    "failure_reason": "EVIDENCE_REQUIRED",
+    "native_blocked": true
+  },
+  "long_text": {
+    "success": false,
+    "failure_reason": "TEXT_OVERFLOW_RISK",
+    "text_fit_blocked": true
+  },
+  "static_labels_not_guarded_as_business_values": [
+    "主な実施内容",
+    "マイルストーン",
+    "成功のポイント",
+    "目指す姿"
+  ]
+}

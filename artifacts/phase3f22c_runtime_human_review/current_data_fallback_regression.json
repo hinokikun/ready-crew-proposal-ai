@@ -1,0 +1,38 @@
+{
+  "roles": [
+    {
+      "ROLE": "COMPETITION",
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "DECK_CONTINUED": true,
+      "ERROR": null
+    },
+    {
+      "ROLE": "WIN_PROBABILITY",
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "DECK_CONTINUED": true,
+      "ERROR": null
+    },
+    {
+      "ROLE": "SCHEDULE",
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "DECK_CONTINUED": true,
+      "ERROR": null
+    },
+    {
+      "ROLE": "ROADMAP",
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "DECK_CONTINUED": true,
+      "ERROR": null
+    }
+  ],
+  "CURRENT_DATA_FALLBACK_COUNT": 4,
+  "status": "PASS"
+}

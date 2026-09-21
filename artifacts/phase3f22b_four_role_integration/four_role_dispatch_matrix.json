@@ -1,0 +1,52 @@
+{
+  "FEATURE_FLAG": "PPTX_APPROVED_NATIVE_RENDERER_ENABLED",
+  "FEATURE_FLAG_DEFAULT": "OFF",
+  "ROLES": [
+    {
+      "ROLE": "COMPETITIVE_COMPARISON",
+      "RUNTIME_ROLE": "COMPETITION",
+      "TEMPLATE_ID": "COMPETITION",
+      "TEMPLATE_PATH": "backend/app/presentation_assets/native_trace/conditional/COMPETITION.pptx",
+      "HUMAN_STATUS": "PASS",
+      "HUMAN_APPROVAL_SOURCE": "Phase3F-20A Competitive Comparison Human Visual PASS",
+      "PROVENANCE_GATE": "verified or user-provided comparison evidence",
+      "CURRENT_DATA_RESULT": "FALLBACK",
+      "VERIFIED_FIXTURE_RESULT": "NATIVE"
+    },
+    {
+      "ROLE": "WIN_PROBABILITY",
+      "RUNTIME_ROLE": "WIN_PROBABILITY",
+      "TEMPLATE_ID": "WIN_PROBABILITY",
+      "TEMPLATE_PATH": "backend/app/presentation_assets/native_trace/conditional/WIN_PROBABILITY.pptx",
+      "HUMAN_STATUS": "PASS",
+      "HUMAN_APPROVAL_SOURCE": "Phase3F-20B Win Probability Human Visual PASS",
+      "PROVENANCE_GATE": "explicit percentage or qualitative confidence only; no rank inference",
+      "CURRENT_DATA_RESULT": "FALLBACK",
+      "VERIFIED_FIXTURE_RESULT": "NATIVE"
+    },
+    {
+      "ROLE": "SCHEDULE_GOVERNANCE",
+      "RUNTIME_ROLE": "SCHEDULE",
+      "TEMPLATE_ID": "SCHEDULE",
+      "TEMPLATE_PATH": "backend/app/presentation_assets/native_trace/summary/SCHEDULE.pptx",
+      "HUMAN_STATUS": "PASS",
+      "HUMAN_APPROVAL_SOURCE": "Phase3F-20C Schedule Governance Human Visual PASS",
+      "PROVENANCE_GATE": "verified/user-provided start date, duration, owner, and milestone data",
+      "CURRENT_DATA_RESULT": "FALLBACK",
+      "VERIFIED_FIXTURE_RESULT": "NATIVE"
+    },
+    {
+      "ROLE": "IMPLEMENTATION_SCHEDULE",
+      "RUNTIME_ROLE": "ROADMAP",
+      "TEMPLATE_ID": "ROADMAP",
+      "TEMPLATE_PATH": "backend/app/presentation_assets/native_trace/conditional/ROADMAP.pptx",
+      "HUMAN_STATUS": "PASS",
+      "HUMAN_APPROVAL_SOURCE": "Phase3F-20D Implementation Schedule Human Visual PASS",
+      "PROVENANCE_GATE": "verified/user-provided 3-5 phase plan with milestones and success factors",
+      "CURRENT_DATA_RESULT": "FALLBACK",
+      "VERIFIED_FIXTURE_RESULT": "NATIVE"
+    }
+  ],
+  "UNAPPROVED_ROLES_ADDED": 0,
+  "FALLBACK_RENDERER": "existing_pptx_renderer"
+}

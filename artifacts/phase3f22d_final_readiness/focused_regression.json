@@ -1,0 +1,40 @@
+{
+  "phase": "Phase3F-22D",
+  "runner": "pytest",
+  "command_scope": [
+    "backend/tests/test_native_trace_renderer_integration.py",
+    "backend/tests/test_phase3f22a_roadmap_runtime_foundation.py",
+    "backend/tests/test_phase3f22b_four_role_integration.py"
+  ],
+  "pytest_collected": 32,
+  "pytest_passed": 32,
+  "pytest_failed": 0,
+  "pytest_result": "PASS",
+  "checks": {
+    "S02_PROPOSAL_SUMMARY_NATIVE_PATH": "PASS",
+    "COMPETITION_VERIFIED_FIXTURE_NATIVE_PATH": "PASS",
+    "WIN_PROBABILITY_VERIFIED_FIXTURE_NATIVE_PATH": "PASS",
+    "SCHEDULE_VERIFIED_FIXTURE_NATIVE_PATH": "PASS",
+    "ROADMAP_VERIFIED_FIXTURE_NATIVE_PATH": "PASS",
+    "FEATURE_FLAG_OFF": "PASS",
+    "CURRENT_DATA_FAIL_CLOSED_FALLBACK": "PASS",
+    "VERIFIED_FIXTURE_NATIVE_RENDER": "PASS",
+    "RENDERER_EXCEPTION_FALLBACK": "PASS",
+    "SAMPLE_LEAK_GUARD": "PASS",
+    "COMPLETENESS_GATE": "PASS",
+    "TEXT_FIT_GATE": "PASS",
+    "UNSUPPORTED_INFERENCE": "PASS",
+    "SOURCE_TEMPLATE_IMMUTABILITY": "PASS"
+  },
+  "sample_leak_count": 0,
+  "unsupported_inference_count": 0,
+  "current_data_native_rendered_roles": [],
+  "verified_fixture_native_rendered_roles": [
+    "COMPETITION",
+    "WIN_PROBABILITY",
+    "SCHEDULE",
+    "ROADMAP"
+  ],
+  "renderer_exception_fallback": "PASS",
+  "feature_flag_default": "OFF"
+}

@@ -393,6 +393,7 @@ def clone_template_package(
     *,
     approved_slide_id: str,
     required_slots: Iterable[str] = (),
+    preserve_existing_slots: bool = False,
 ) -> dict[str, Any]:
     """Copy a full PPTX package, preserving image/media relationships."""
 
@@ -404,7 +405,8 @@ def clone_template_package(
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, destination)
     runtime_sha_before_normalization = sha256_file(destination)
-    annotate_semantic_slots(destination, approved_slide_id)
+    if not preserve_existing_slots:
+        annotate_semantic_slots(destination, approved_slide_id)
     report = validate_template_package(
         destination,
         approved_slide_id=approved_slide_id,
