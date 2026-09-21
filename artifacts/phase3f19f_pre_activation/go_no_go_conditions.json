@@ -1,0 +1,20 @@
+{
+  "decision_now": "NO_GO",
+  "go_conditions": [
+    {"condition":"explicit_runtime_proposal_summary_human_visual_pass","required":true,"current":false},
+    {"condition":"phase3f19e_pass","required":true,"current":true},
+    {"condition":"api_smoke_pass","required":true,"current":true},
+    {"condition":"sample_leak_count_zero","required":true,"current":true},
+    {"condition":"frozen_sources_unchanged","required":true,"current":true},
+    {"condition":"feature_flag_source_default_off","required":true,"current":true},
+    {"condition":"rollback_path_documented","required":true,"current":true}
+  ],
+  "no_go_reasons_now": ["Runtime PROPOSAL_SUMMARY Human Visual Review is pending."],
+  "go_action_after_all_conditions": "Proceed with controlled server-side flag activation and minimal post-activation validation.",
+  "no_go_action": "Keep flag OFF; do not deploy or modify approval state until explicit Human PASS.",
+  "production_source_changed": false,
+  "approval_registry_changed": false,
+  "feature_flag_changed": false,
+  "deployed": false,
+  "stage_commit_push": "NOT EXECUTED"
+}

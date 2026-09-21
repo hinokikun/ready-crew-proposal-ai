@@ -1,0 +1,46 @@
+{
+  "phase": "Phase3F-19F",
+  "activation_context": "isolated_local_process_only",
+  "feature_flag_process_value": "true",
+  "source_default_remains_off": true,
+  "target_scope": [
+    "PROPOSAL_SUMMARY"
+  ],
+  "approved_template": "S02",
+  "s02_trace": {
+    "ROLE": "PROPOSAL_SUMMARY",
+    "NATIVE_REQUESTED": true,
+    "NATIVE_ELIGIBLE": true,
+    "NATIVE_RENDERED": true,
+    "FALLBACK_USED": false,
+    "FAILURE_REASON": null,
+    "HUMAN_APPROVAL_STATUS": "PASS",
+    "PROVENANCE_STATUS": "PASS",
+    "TEXT_FIT_STATUS": "PASS",
+    "SAMPLE_LEAK_STATUS": "PASS"
+  },
+  "s02_package": {
+    "valid": true,
+    "slides": 1,
+    "editable_text_shapes": 47,
+    "editable_shapes": 169,
+    "full_slide_raster_count": 0,
+    "media_count": 0
+  },
+  "s02_sample_leak_count": 0,
+  "blocked_kpi_trace": {
+    "ROLE": "KPI",
+    "NATIVE_REQUESTED": true,
+    "NATIVE_ELIGIBLE": false,
+    "NATIVE_RENDERED": false,
+    "FALLBACK_USED": true,
+    "FAILURE_REASON": "EVIDENCE_REQUIRED",
+    "HUMAN_APPROVAL_STATUS": "PASS",
+    "PROVENANCE_STATUS": "FAIL",
+    "TEXT_FIT_STATUS": "NOT_RUN",
+    "SAMPLE_LEAK_STATUS": "NOT_RUN"
+  },
+  "api_reused_prior_pass": true,
+  "production_deployed": false,
+  "rollback": "Set PPTX_APPROVED_NATIVE_RENDERER_ENABLED=false and restart; no migration or code rollback required."
+}

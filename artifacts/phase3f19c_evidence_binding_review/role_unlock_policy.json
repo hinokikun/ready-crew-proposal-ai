@@ -1,0 +1,193 @@
+{
+  "roles": {
+    "KPI": {
+      "minimum_required_fields": [
+        "name",
+        "current_value or explicit unknown",
+        "target marked target/estimate",
+        "measurement_method",
+        "evidence"
+      ],
+      "allowed_provenance": [
+        "VERIFIED",
+        "USER_PROVIDED for input-only fields"
+      ],
+      "disallowed_provenance": [
+        "GENERATED actual",
+        "DERIVED actual",
+        "UNKNOWN"
+      ],
+      "partial_render_allowed": false,
+      "fallback_behavior": {
+        "current_value": "未取得",
+        "target": "要確認",
+        "method": "次回確認"
+      },
+      "block_reason": "no item-level actual/evidence in current Production context"
+    },
+    "ESTIMATE": {
+      "minimum_required_fields": [
+        "line item",
+        "description",
+        "quantity",
+        "unit",
+        "unit price",
+        "amount",
+        "total basis",
+        "assumptions/scope/exclusions/payment timing"
+      ],
+      "allowed_provenance": [
+        "VERIFIED",
+        "USER_PROVIDED explicit estimate inputs"
+      ],
+      "disallowed_provenance": [
+        "budget range as detail",
+        "GENERATED totals"
+      ],
+      "partial_render_allowed": false,
+      "fallback_behavior": {
+        "budget": "予算未入力",
+        "details": "要確認"
+      },
+      "block_reason": "EstimateSummary has heuristic lines without quantity/unit price provenance"
+    },
+    "MARKET_ANALYSIS": {
+      "minimum_required_fields": [
+        "market claim",
+        "source",
+        "date",
+        "scope"
+      ],
+      "allowed_provenance": [
+        "VERIFIED",
+        "USER_PROVIDED with source"
+      ],
+      "disallowed_provenance": [
+        "GENERATED",
+        "generic sample",
+        "UNKNOWN"
+      ],
+      "partial_render_allowed": false,
+      "fallback_behavior": "要確認",
+      "block_reason": "no market evidence field"
+    },
+    "TARGET_ANALYSIS": {
+      "minimum_required_fields": [
+        "customer-specific segment",
+        "basis/source"
+      ],
+      "allowed_provenance": [
+        "VERIFIED",
+        "USER_PROVIDED"
+      ],
+      "disallowed_provenance": [
+        "GENERATED persona",
+        "DERIVED hypothesis as fact"
+      ],
+      "partial_render_allowed": false,
+      "fallback_behavior": "要確認",
+      "block_reason": "target_user_rows are profile heuristics"
+    },
+    "ROI_OR_EFFECT": {
+      "minimum_required_fields": [
+        "investment",
+        "effect inputs",
+        "calculation basis",
+        "source"
+      ],
+      "allowed_provenance": [
+        "VERIFIED",
+        "DERIVED only from verified inputs"
+      ],
+      "disallowed_provenance": [
+        "GENERATED narrative",
+        "UNKNOWN"
+      ],
+      "partial_render_allowed": false,
+      "fallback_behavior": "検証予定",
+      "block_reason": "no verified ROI inputs"
+    },
+    "RISK": {
+      "minimum_required_fields": [
+        "risk",
+        "likelihood",
+        "impact",
+        "owner",
+        "mitigation",
+        "status",
+        "source"
+      ],
+      "allowed_provenance": [
+        "VERIFIED",
+        "USER_PROVIDED"
+      ],
+      "disallowed_provenance": [
+        "generic generated risk",
+        "UNKNOWN"
+      ],
+      "partial_render_allowed": false,
+      "fallback_behavior": "要確認",
+      "block_reason": "no structured owner/likelihood/impact/status"
+    },
+    "CASE_STUDY": {
+      "minimum_required_fields": [
+        "verified case",
+        "outcomes",
+        "image source",
+        "permission"
+      ],
+      "allowed_provenance": [
+        "VERIFIED",
+        "USER_PROVIDED with permission record"
+      ],
+      "disallowed_provenance": [
+        "Canonical/reference image as evidence",
+        "GENERATED result"
+      ],
+      "partial_render_allowed": false,
+      "fallback_behavior": "EVIDENCE_IMAGE_REQUIRED",
+      "block_reason": "no verified image/provenance/permission"
+    },
+    "COMPETITION": {
+      "minimum_required_fields": [
+        "competitor",
+        "source/date",
+        "criterion values",
+        "differentiation evidence"
+      ],
+      "allowed_provenance": [
+        "VERIFIED",
+        "USER_PROVIDED source-backed"
+      ],
+      "disallowed_provenance": [
+        "generated scores",
+        "unsupported superiority"
+      ],
+      "partial_render_allowed": false,
+      "fallback_behavior": "要確認",
+      "block_reason": "competitor_rows are heuristic and source-less"
+    },
+    "WIN_PROBABILITY": {
+      "minimum_required_fields": [
+        "explicit probability or qualitative confidence",
+        "provenance",
+        "reason/risk/next action if shown"
+      ],
+      "allowed_provenance": [
+        "VERIFIED",
+        "USER_PROVIDED explicit"
+      ],
+      "disallowed_provenance": [
+        "rank-derived percentage",
+        "GENERATED model output without review"
+      ],
+      "partial_render_allowed": false,
+      "fallback_behavior": {
+        "percentage": "要確認",
+        "qualitative": "要確認"
+      },
+      "block_reason": "current WinProbability has no field-level provenance"
+    }
+  },
+  "fail_closed": true
+}

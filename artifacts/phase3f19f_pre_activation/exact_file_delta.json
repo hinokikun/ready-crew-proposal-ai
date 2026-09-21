@@ -1,0 +1,41 @@
+{
+  "phase": "Phase3F-19F",
+  "implementation_status": "NOT_IMPLEMENTED",
+  "planned_changes": [
+    {
+      "file": "backend/app/presentation_assets/native_trace/registry.json",
+      "function_or_section": "roles[role=PROPOSAL_SUMMARY,surface=summary] approval metadata",
+      "change": "Only if the explicit runtime Human PASS is not already represented: record the PASS through the existing human_visual_status/human_approval_source fields.",
+      "why": "Keep one authoritative Human approval source and prevent a second runtime approval registry.",
+      "risk_level": "LOW",
+      "rollback": "Restore the prior S02 approval metadata and keep the feature flag OFF."
+    },
+    {
+      "file": "Server-side deployment environment setting, not a repository file",
+      "function_or_section": "PPTX_APPROVED_NATIVE_RENDERER_ENABLED",
+      "change": "Set the process environment value to true only after GO conditions pass; source default remains false.",
+      "why": "Controlled activation without changing API or application source.",
+      "risk_level": "MEDIUM",
+      "rollback": "Set the same environment value to false and restart the backend."
+    },
+    {
+      "file": "artifacts/phase3f19f_activation/*",
+      "function_or_section": "post-activation evidence package",
+      "change": "Create validation evidence only; no runtime behavior is contained in these artifacts.",
+      "why": "Preserve an auditable activation and rollback record.",
+      "risk_level": "LOW",
+      "rollback": "Remove or archive only the evidence package; no application rollback is required."
+    }
+  ],
+  "production_source_files_expected_to_change": [],
+  "protected_files": [
+    "backend/app/config.py",
+    "backend/app/services/pptx_parts/slides.py",
+    "backend/app/services/pptx_service.py",
+    "backend/app/services/pptx_parts/native_trace_renderers.py",
+    "backend/app/services/pptx_parts/native_trace_content_adapter.py",
+    "backend/app/services/pptx_parts/native_trace_validation.py",
+    "backend/app/main.py",
+    "all frozen Native Trace PPTX and Canonical sources"
+  ]
+}

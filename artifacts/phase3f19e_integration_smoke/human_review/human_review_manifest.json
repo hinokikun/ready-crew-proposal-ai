@@ -1,0 +1,21 @@
+{
+  "status": "READY_FOR_HUMAN_REVIEW",
+  "items": [
+    {
+      "role": "PROPOSAL_SUMMARY",
+      "template_id": "S02",
+      "fallback_used": false,
+      "native_rendered": true,
+      "rendered_png": "artifacts\\phase3f19e_integration_smoke\\flag_on_native\\eligible_rendered\\slide-1.png",
+      "canonical_reference": "artifacts\\phase3f16_replacement_native_trace\\S02_proposal_summary\\canonical_source.png",
+      "comparison": "artifacts\\phase3f19e_integration_smoke\\human_review\\comparisons\\S02_proposal_summary_comparison.png",
+      "validation": {
+        "editable_native_structure": true,
+        "sample_leak": "PASS",
+        "text_fit": "PASS",
+        "rasterization_ratio": "0%",
+        "machine_visual": "PASS"
+      }
+    }
+  ]
+}

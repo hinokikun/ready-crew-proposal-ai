@@ -1,0 +1,26 @@
+{
+  "role": "PROPOSAL_SUMMARY",
+  "template_id": "S02",
+  "source": "Exact semantic-slot diff and runtime package text scan",
+  "status": "PASS",
+  "classified_dynamic_or_sample_strings": [
+    {
+      "SLOT_ID": "trace:S02:title.primary",
+      "STRING": "ご提案サマリー",
+      "CLASSIFICATION": "TEMPLATE_SAMPLE_REPLACED_DYNAMIC",
+      "FOUND_IN_RUNTIME_OUTPUT": "NO",
+      "RUNTIME_REPLACEMENT": "提案サマリー"
+    }
+  ],
+  "runtime_current_values": [
+    {
+      "SLOT_ID": "trace:S02:title.primary",
+      "STRING": "提案サマリー",
+      "CLASSIFICATION": "USER_PROVIDED",
+      "FOUND_IN_RUNTIME_OUTPUT": "YES"
+    }
+  ],
+  "additional_prohibited_sample_strings": [],
+  "sample_leak_count": 0,
+  "note": "Other S02 visual copy is approved static template content under the STATIC_SLOT_POLICY and is not classified as dynamic/sample content by the current adapter."
+}

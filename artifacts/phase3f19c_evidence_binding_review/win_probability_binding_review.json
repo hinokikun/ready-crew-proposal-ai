@@ -1,0 +1,15 @@
+{
+  "status": "WIN_PROBABILITY_EVIDENCE_REQUIRED",
+  "actual_source": "ProposalAnalysis._mock_win_probability or OpenAI analysis -> PptxDownloadRequest.win_probability",
+  "fields": {
+    "rank": "GENERATED",
+    "explicit_probability": "GENERATED_OR_UNPROVEN",
+    "qualitative_confidence": "GENERATED_OR_UNPROVEN",
+    "reason": "GENERATED",
+    "risk": "GENERATED",
+    "next_action": "GENERATED"
+  },
+  "percentage_policy": "accept only explicit USER_PROVIDED/VERIFIED provenance; never derive percentage from rank",
+  "qualitative_policy": "qualitative value may be displayed only with explicit provenance; otherwise 要確認",
+  "rank_only_behavior": "block"
+}

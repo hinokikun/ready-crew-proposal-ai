@@ -1,0 +1,46 @@
+{
+  "status": "PASS",
+  "runner": "direct test runner with pytest-compatible raises/monkeypatch shim",
+  "suites": [
+    {
+      "suite": "Phase3F-19A foundation",
+      "file": "backend/tests/test_phase3f19a_native_foundation.py",
+      "passed": 10,
+      "failed": 0
+    },
+    {
+      "suite": "Phase3F-19B adapter",
+      "file": "backend/tests/test_phase3f19b_native_content_adapter.py",
+      "passed": 23,
+      "failed": 0
+    },
+    {
+      "suite": "Phase3F-19C evidence binding",
+      "file": "backend/tests/test_phase3f19c_evidence_binding.py",
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "suite": "Phase3F-19D dispatcher",
+      "file": "backend/tests/test_phase3f19d_dispatch_integration.py + test_native_trace_renderer_integration.py",
+      "passed": 22,
+      "failed": 0
+    }
+  ],
+  "total_passed": 67,
+  "total_failed": 0,
+  "scenarios": [
+    "flag OFF",
+    "flag ON eligible role",
+    "Human-unapproved role",
+    "evidence-sensitive fallback",
+    "sample leak",
+    "text fit",
+    "missing template",
+    "renderer exception",
+    "fallback continuation",
+    "Summary compatibility",
+    "Detail compatibility",
+    "source immutability"
+  ]
+}

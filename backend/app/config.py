@@ -137,6 +137,12 @@ class Settings:
         os.getenv("PRESENTATION_MASTER_V3_RENDERER_MVP_SHADOW_MAX_PENDING"),
         4,
     )
+    # Phase3F approved-native integration is opt-in.  The default preserves
+    # the current production renderer byte-for-byte at the dispatch layer.
+    pptx_approved_native_renderer_enabled: bool = _as_bool(
+        os.getenv("PPTX_APPROVED_NATIVE_RENDERER_ENABLED"),
+        False,
+    )
     sales_assistant_enabled: bool = _as_bool(os.getenv("SALES_ASSISTANT_ENABLED"), False)
     sales_assistant_proposal_enabled: bool = _as_bool(os.getenv("SALES_ASSISTANT_PROPOSAL_ENABLED"), False)
     proposal_export_enabled: bool = _as_bool(os.getenv("PROPOSAL_EXPORT_ENABLED"), False)

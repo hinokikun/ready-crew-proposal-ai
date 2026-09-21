@@ -1,0 +1,130 @@
+{
+  "status": "PASS",
+  "blocked_role_traces": {
+    "KPI": {
+      "ROLE": "KPI",
+      "NATIVE_REQUESTED": true,
+      "NATIVE_ELIGIBLE": false,
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "HUMAN_APPROVAL_STATUS": "PASS",
+      "PROVENANCE_STATUS": "FAIL",
+      "TEXT_FIT_STATUS": "NOT_RUN",
+      "SAMPLE_LEAK_STATUS": "NOT_RUN"
+    },
+    "ESTIMATE": {
+      "ROLE": "ESTIMATE",
+      "NATIVE_REQUESTED": true,
+      "NATIVE_ELIGIBLE": false,
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "HUMAN_APPROVAL_STATUS": "PASS",
+      "PROVENANCE_STATUS": "FAIL",
+      "TEXT_FIT_STATUS": "NOT_RUN",
+      "SAMPLE_LEAK_STATUS": "NOT_RUN"
+    },
+    "MARKET_ANALYSIS": {
+      "ROLE": "MARKET_ANALYSIS",
+      "NATIVE_REQUESTED": true,
+      "NATIVE_ELIGIBLE": false,
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "HUMAN_APPROVAL_STATUS": "PASS",
+      "PROVENANCE_STATUS": "FAIL",
+      "TEXT_FIT_STATUS": "NOT_RUN",
+      "SAMPLE_LEAK_STATUS": "NOT_RUN"
+    },
+    "TARGET_ANALYSIS": {
+      "ROLE": "TARGET_ANALYSIS",
+      "NATIVE_REQUESTED": true,
+      "NATIVE_ELIGIBLE": false,
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "HUMAN_APPROVAL_STATUS": "PASS",
+      "PROVENANCE_STATUS": "FAIL",
+      "TEXT_FIT_STATUS": "NOT_RUN",
+      "SAMPLE_LEAK_STATUS": "NOT_RUN"
+    },
+    "ROI_OR_EFFECT": {
+      "ROLE": "ROI_OR_EFFECT",
+      "NATIVE_REQUESTED": true,
+      "NATIVE_ELIGIBLE": false,
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "HUMAN_APPROVAL_STATUS": "PASS",
+      "PROVENANCE_STATUS": "FAIL",
+      "TEXT_FIT_STATUS": "NOT_RUN",
+      "SAMPLE_LEAK_STATUS": "NOT_RUN"
+    },
+    "RISK": {
+      "ROLE": "RISK",
+      "NATIVE_REQUESTED": true,
+      "NATIVE_ELIGIBLE": false,
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "HUMAN_APPROVAL_STATUS": "PASS",
+      "PROVENANCE_STATUS": "FAIL",
+      "TEXT_FIT_STATUS": "NOT_RUN",
+      "SAMPLE_LEAK_STATUS": "NOT_RUN"
+    },
+    "CASE_STUDY": {
+      "ROLE": "CASE_STUDY",
+      "NATIVE_REQUESTED": true,
+      "NATIVE_ELIGIBLE": false,
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_IMAGE_REQUIRED",
+      "HUMAN_APPROVAL_STATUS": "PASS",
+      "PROVENANCE_STATUS": "FAIL",
+      "TEXT_FIT_STATUS": "NOT_RUN",
+      "SAMPLE_LEAK_STATUS": "NOT_RUN"
+    },
+    "COMPETITION": {
+      "ROLE": "COMPETITION",
+      "NATIVE_REQUESTED": true,
+      "NATIVE_ELIGIBLE": false,
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "HUMAN_APPROVAL_STATUS": "PASS",
+      "PROVENANCE_STATUS": "FAIL",
+      "TEXT_FIT_STATUS": "NOT_RUN",
+      "SAMPLE_LEAK_STATUS": "NOT_RUN"
+    },
+    "WIN_PROBABILITY": {
+      "ROLE": "WIN_PROBABILITY",
+      "NATIVE_REQUESTED": true,
+      "NATIVE_ELIGIBLE": false,
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "HUMAN_APPROVAL_STATUS": "PASS",
+      "PROVENANCE_STATUS": "FAIL",
+      "TEXT_FIT_STATUS": "NOT_RUN",
+      "SAMPLE_LEAK_STATUS": "NOT_RUN"
+    },
+    "SCHEDULE": {
+      "ROLE": "SCHEDULE",
+      "NATIVE_REQUESTED": true,
+      "NATIVE_ELIGIBLE": false,
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "HUMAN_APPROVAL_STATUS": "PASS",
+      "PROVENANCE_STATUS": "FAIL",
+      "TEXT_FIT_STATUS": "NOT_RUN",
+      "SAMPLE_LEAK_STATUS": "NOT_RUN"
+    }
+  },
+  "fallback_renderer": "existing_pptx_renderer",
+  "slide_not_omitted": true,
+  "deck_continues": true,
+  "sample_leak_in_native_attempts": 0,
+  "unsupported_inference": 0
+}

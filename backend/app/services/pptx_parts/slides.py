@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+import logging
 from typing import Callable
 
 from pptx import Presentation
@@ -67,6 +68,12 @@ from app.services.pptx_design_system.typography import normalize_customer_facing
 from app.services.pptx_layout_integration import layout_id_from_layout_key
 from app.services.pptx_quality import extract_numbers
 from app.services.pptx_theme import COLORS, MARGIN_X, SECTION_COLORS, SLIDE_HEIGHT, SLIDE_WIDTH, resolve_template_colors
+from app.config import settings
+from app.services.pptx_parts.native_trace_registry import resolve_approved_native_role
+from app.services.pptx_parts.native_trace_renderers import dispatch_approved_native_slide
+
+
+logger = logging.getLogger(__name__)
 
 
 def _split_metric_text(value: str) -> tuple[str, str]:
@@ -1970,13 +1977,60 @@ _register_layout_range(107, 112, render_v4_before_after)
 _register_layout_range(113, 122, render_v4_swimlane_roadmap)
 
 
+def _remove_last_slide(prs: Presentation) -> None:
+    """Remove a slide created by a failed role renderer."""
+
+    slide_ids = prs.slides._sldIdLst
+    if len(slide_ids) == 0:
+        return
+    slide_id = slide_ids[-1]
+    rel_id = slide_id.rId
+    prs.part.drop_rel(rel_id)
+    slide_ids.remove(slide_id)
+
+
 def add_designed_slide(
     prs: Presentation,
     slide_data: PowerPointSlide,
     data: PowerPointData,
     index: int,
     context: PptxContext,
+    *,
+    surface: str = "summary",
 ) -> None:
+    if settings.pptx_approved_native_renderer_enabled:
+        native_role = resolve_approved_native_role(slide_data, index)
+        if native_role is not None:
+            slide_count_before = len(prs.slides)
+            try:
+                trace = dispatch_approved_native_slide(
+                    prs,
+                    slide_data,
+                    data,
+                    context,
+                    index,
+                    role=native_role,
+                    surface=surface,
+                )
+                if isinstance(trace, bool):
+                    native_rendered = trace
+                    trace = {"NATIVE_RENDERED": trace, "FALLBACK_USED": not trace}
+                else:
+                    native_rendered = bool(trace.get("NATIVE_RENDERED"))
+                logger.info("approved_native_dispatch", extra={"native_trace": trace})
+                if native_rendered:
+                    return
+                if len(prs.slides) > slide_count_before:
+                    _remove_last_slide(prs)
+            except Exception:
+                # A native failure is isolated to the current role.  Remove
+                # the partially-created slide, then use the established path.
+                if len(prs.slides) > slide_count_before:
+                    _remove_last_slide(prs)
+                logger.exception(
+                    "approved_native_slide_fallback",
+                    extra={"role": native_role, "slide_index": index},
+                )
     render_v5_masterpiece_slide(prs, slide_data, data, context, index)
     return
 

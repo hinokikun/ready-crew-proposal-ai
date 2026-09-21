@@ -1,0 +1,20 @@
+{
+  "status": "ROI_EVIDENCE_REQUIRED",
+  "fields": {
+    "investment_amount": "UNKNOWN",
+    "cost_reduction": "UNKNOWN",
+    "revenue_impact": "UNKNOWN",
+    "productivity_effect": "GENERATED_NARRATIVE_ONLY",
+    "payback": "UNKNOWN",
+    "roi_percent": "UNKNOWN",
+    "calculation_basis": "MISSING",
+    "evidence_source": "MISSING"
+  },
+  "safe_policy": "do not calculate ROI from narrative or heuristic estimate",
+  "unlock_requires": [
+    "verified investment",
+    "verified effect inputs",
+    "explicit calculation basis",
+    "source/provenance"
+  ]
+}

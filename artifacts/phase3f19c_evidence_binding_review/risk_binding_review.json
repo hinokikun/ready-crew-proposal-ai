@@ -1,0 +1,15 @@
+{
+  "status": "RISK_EVIDENCE_REQUIRED",
+  "current_source": "proposal_quality_upgrade._risk_and_operation static generated bullets",
+  "fields": {
+    "risk_item": "GENERATED",
+    "likelihood": "MISSING",
+    "impact": "MISSING",
+    "owner": "MISSING",
+    "mitigation": "GENERATED",
+    "status": "MISSING",
+    "evidence_source": "MISSING"
+  },
+  "minimum_safe_subset": "none for canonical R1-R5 native binding; every displayed factual row needs item, likelihood/impact, owner, mitigation and provenance",
+  "missing_owner_likelihood_impact_behavior": "block; do not infer or fill from generic role names"
+}

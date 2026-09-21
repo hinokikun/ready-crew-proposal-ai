@@ -211,7 +211,14 @@ def _build_pptx_result(
         display_slide_no = 1
         for index, slide_data in enumerate(slides):
             numbered_slide = slide_data.copy(update={"slide_no": display_slide_no})
-            add_designed_slide(prs, numbered_slide, data, index, context)
+            add_designed_slide(
+                prs,
+                numbered_slide,
+                data,
+                index,
+                context,
+                surface="summary" if summary_mode else "detail",
+            )
             display_slide_no += 1
 
         quality_report = validate_rendered_pptx(prs, quality_report)
