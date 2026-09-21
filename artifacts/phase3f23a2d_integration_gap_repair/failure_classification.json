@@ -1,0 +1,40 @@
+{
+  "phase": "Phase3F-23A-2D",
+  "failure_count_before": 25,
+  "classifications": [
+    {"test": "test_native_trace_renderer_integration.py::test_flag_on_summary_generates_exactly_eleven_slides", "failure": "generated 10 slides", "expected": 11, "actual": 10, "classification": "REAL_REGRESSION"},
+    {"test": "test_native_trace_renderer_integration.py::test_flag_off_summary_keeps_existing_renderer_and_eleven_slide_cap", "failure": "generated 10 slides", "expected": 11, "actual": 10, "classification": "REAL_REGRESSION"},
+    {"test": "test_phase3f19a_native_foundation.py::test_all_approved_runtime_assets_exist", "failure": "registry count assertion", "expected": 28, "actual": 29, "classification": "STALE_TEST"},
+    {"test": "test_phase3f19a_native_foundation.py::test_runtime_role_gate_is_fail_closed_and_unapproved_roles_are_absent", "failure": "template unavailable for registry roles", "expected": true, "actual": false, "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19a_native_foundation.py::test_frozen_source_checksums_match_registry", "failure": "registry source PPTX absent", "expected": "source file exists", "actual": "FileNotFoundError", "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19a_native_foundation.py::test_runtime_templates_open_as_single_slide_with_unique_required_slots", "failure": "registry source/runtime PPTX absent", "expected": "valid template package", "actual": "invalid/missing package", "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19a_native_foundation.py::test_photo_template_clone_preserves_image_relationships_and_crop_values", "failure": "D20 source PPTX absent", "expected": "clone succeeds", "actual": "FileNotFoundError", "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19a_native_foundation.py::test_unsupported_relationship_fails_cleanly", "failure": "S01 source PPTX absent", "expected": "package mutation test runs", "actual": "FileNotFoundError", "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19b_native_content_adapter.py::test_adapter_registry_covers_every_runtime_role", "failure": "registry count assertion", "expected": 28, "actual": 29, "classification": "STALE_TEST"},
+    {"test": "test_phase3f19b_native_content_adapter.py::test_contracts_are_role_specific_and_have_fit_controls", "failure": "contract count assertion", "expected": 28, "actual": 29, "classification": "STALE_TEST"},
+    {"test": "test_phase3f19b_native_content_adapter.py::test_static_template_is_not_mutated_by_dry_run", "failure": "S01 runtime PPTX absent", "expected": "checksum available", "actual": "FileNotFoundError", "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19b_native_content_adapter.py::test_dynamic_title_is_injected_into_runtime_copy", "failure": "COVER template unavailable", "expected": true, "actual": false, "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19b_native_content_adapter.py::test_optional_text_can_be_cleared_without_geometry_change", "failure": "S01 runtime PPTX absent", "expected": "clone succeeds", "actual": "FileNotFoundError", "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19b_native_content_adapter.py::test_sample_leak_detector_blocks_prohibited_text", "failure": "S01 runtime PPTX absent", "expected": "sample leak check runs", "actual": "FileNotFoundError", "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19b_native_content_adapter.py::test_rich_text_payload_preserves_editability_and_applies_accent", "failure": "S05 runtime PPTX absent", "expected": "editable injection succeeds", "actual": "FileNotFoundError", "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19b_native_content_adapter.py::test_photo_and_crop_relationships_survive_runtime_clone", "failure": "D20 runtime PPTX absent", "expected": "clone succeeds", "actual": "FileNotFoundError", "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19b_native_content_adapter.py::test_injected_packages_remain_editable_and_raster_free", "failure": "source package absent/empty inspection", "expected": ">0 editable text shapes", "actual": 0, "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19b_native_content_adapter.py::test_runtime_source_checksums_remain_unchanged_after_adapter_calls", "failure": "S01 runtime PPTX absent", "expected": "checksum available", "actual": "FileNotFoundError", "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19b_native_content_adapter.py::test_production_dispatcher_is_not_connected", "failure": "asserts dispatcher remains disconnected", "expected": false, "actual": true, "classification": "STALE_TEST"},
+    {"test": "test_phase3f19c_evidence_binding.py::test_verified_competition_evidence_is_accepted", "failure": "fixture has one row", "expected": 5, "actual": 1, "classification": "FIXTURE_DRIFT"},
+    {"test": "test_phase3f19c_evidence_binding.py::test_explicit_win_probability_with_provenance_is_accepted", "failure": "fixture has no evidence_rows", "expected": 5, "actual": 0, "classification": "FIXTURE_DRIFT"},
+    {"test": "test_phase3f19d_dispatch_integration.py::test_evidence_sensitive_role_is_blocked_with_current_data", "failure": "missing KPI template masks evidence gate", "expected": "EVIDENCE_REQUIRED", "actual": "TEMPLATE_AVAILABLE", "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f19d_dispatch_integration.py::test_summary_and_detail_paths_keep_existing_slide_counts", "failure": "summary cap removes one role", "expected": 11, "actual": 10, "classification": "REAL_REGRESSION"},
+    {"test": "test_phase3f22a_roadmap_runtime_foundation.py::test_role_resolution_and_runtime_registration", "failure": "ROADMAP source PPTX absent", "expected": true, "actual": false, "classification": "MISSING_RUNTIME_DEPENDENCY"},
+    {"test": "test_phase3f22a_roadmap_runtime_foundation.py::test_template_is_native_and_source_is_unchanged", "failure": "ROADMAP source PPTX absent", "expected": "checksum available", "actual": "FileNotFoundError", "classification": "MISSING_RUNTIME_DEPENDENCY"}
+  ],
+  "counts": {
+    "missing_runtime_dependency": 16,
+    "stale_test": 4,
+    "fixture_drift": 2,
+    "real_regression": 3,
+    "registry_duplication": 0,
+    "alias_normalization_issue": 0,
+    "unknown": 0
+  }
+}

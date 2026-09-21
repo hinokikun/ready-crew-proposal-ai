@@ -1,0 +1,9 @@
+{
+  "expected_summary_sequence": ["COVER", "PROPOSAL_SUMMARY", "CURRENT_STATE", "PROBLEM_ANALYSIS", "SOLUTION_CONCEPT", "SOLUTION_APPROACH", "SYSTEM_ARCHITECTURE", "KPI", "SCHEDULE", "ESTIMATE", "NEXT_ACTION"],
+  "missing_summary_role": "NEXT_ACTION",
+  "root_cause": "backend/app/services/proposal_quality_upgrade.py defines MAX_SUMMARY_SLIDES = 10 and upgrade_slides_for_v11 applies _limit_customer_deck(..., max_slides) after build_summary_slides constructs 11 roles.",
+  "missing_template_or_logic": "No missing Summary builder role; the 11-role builder is present. The final customer-ready cap removes the eleventh role.",
+  "fallback_expected": "Existing renderer path remains used when the native flag is OFF; only the hard cap changes from 10 to 11.",
+  "why_slide_count_became_10": "The Summary list contains 11 roles, but the post-processing cap truncates the list to 10.",
+  "minimal_repair": "Change MAX_SUMMARY_SLIDES from 10 to 11 only. Do not alter Detail selection logic."
+}

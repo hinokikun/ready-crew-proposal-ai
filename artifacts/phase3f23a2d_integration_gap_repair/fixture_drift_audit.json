@@ -1,0 +1,21 @@
+{
+  "classification": "FIXTURE_DRIFT",
+  "provenance_guards_weakened": false,
+  "competition": {
+    "clean_test_input": "one positional row with four string cells",
+    "approved_v2_contract": "five complete structured rows; each row has criterion, own_value, competitor_a_value, competitor_b_value, evaluation",
+    "approved_v2_row_count": 5,
+    "production_adapter_requirement": "five complete rows",
+    "failure_is_test_fixture_drift": true,
+    "repair": "update only the test fixture to the approved Phase3F-22C v2 context"
+  },
+  "win_probability": {
+    "clean_test_input": "probability=68 with no evidence_rows",
+    "approved_v2_contract": "five complete structured evidence rows plus explicit verified probability",
+    "approved_v2_row_count": 5,
+    "production_adapter_requirement": "five complete evidence rows",
+    "failure_is_test_fixture_drift": true,
+    "repair": "update only the test fixture to the approved Phase3F-22C v2 context"
+  },
+  "inference_policy": "Do not derive probability from rank and do not relax evidence or completeness gates."
+}

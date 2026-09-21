@@ -98,11 +98,26 @@ def test_budget_range_only_is_rejected_as_detailed_estimate() -> None:
 
 
 def test_verified_competition_evidence_is_accepted() -> None:
+    rows = [
+        {"criterion": "導入スピード", "own_value": "確認済み3か月", "competitor_a_value": "確認済み4か月", "competitor_b_value": "確認済み5か月", "evaluation": "条件確認済み"},
+        {"criterion": "提案の具体性", "own_value": "確認済み詳細", "competitor_a_value": "確認済み概略", "competitor_b_value": "確認済み一部", "evaluation": "条件確認済み"},
+        {"criterion": "AI活用実績", "own_value": "確認済み実績", "competitor_a_value": "確認済み限定", "competitor_b_value": "確認済みPoC", "evaluation": "条件確認済み"},
+        {"criterion": "運用伴走", "own_value": "確認済み定例", "competitor_a_value": "確認済み限定", "competitor_b_value": "確認済み別契約", "evaluation": "条件確認済み"},
+        {"criterion": "コスト透明性", "own_value": "確認済み明示", "competitor_a_value": "確認済み粗い", "competitor_b_value": "確認済み条件", "evaluation": "条件確認済み"},
+    ]
     payload = adapt_role(
         "COMPETITION",
         surface="conditional",
         data=_data(_candidate("competitor_evidence", value="公開情報に基づく比較")),
-        context=SimpleNamespace(competitor_rows=[["機能", "確認済み", "確認済み", "確認済み"]]),
+        context=SimpleNamespace(
+            competitor_a_name="比較対象A",
+            competitor_b_name="比較対象B",
+            competitor_rows=rows,
+            differentiation_bullets=["確認済み支援範囲", "確認済み運用設計", "確認済み費用条件", "確認済み改善支援"],
+            caution_items=["確認済み比較条件", "未確認事項は次回確認"],
+            next_confirmation_items=["決裁条件を確認", "契約条件を確認", "実施時期を確認"],
+            recommendation="確認済み比較根拠に基づき判断します。",
+        ),
         slide=_slide(),
     )
     assert payload.renderable is True
@@ -130,11 +145,35 @@ def test_unsupported_competitor_claim_is_rejected() -> None:
 
 
 def test_explicit_win_probability_with_provenance_is_accepted() -> None:
+    evidence_rows = [
+        {"item": "課題の明確性", "content": "確認済み課題", "weight": "高", "evaluation": "強い"},
+        {"item": "決裁者接点", "content": "確認済み接点", "weight": "高", "evaluation": "強い"},
+        {"item": "予算感", "content": "確認済み予算", "weight": "中", "evaluation": "普通"},
+        {"item": "導入時期", "content": "確認済み時期", "weight": "中", "evaluation": "普通"},
+        {"item": "競合比較", "content": "確認済み根拠", "weight": "中", "evaluation": "確認中"},
+    ]
     payload = adapt_role(
         "WIN_PROBABILITY",
         surface="conditional",
         data=_data(_candidate("win_probability", value="68%")),
-        context=SimpleNamespace(win_probability=SimpleNamespace(probability=68)),
+        context=SimpleNamespace(
+            win_probability=SimpleNamespace(
+                probability=68,
+                period="2026年下期",
+                confidence="中",
+                confidence_summary="確認済みの中程度の確度です。",
+                reason="確認済みの課題適合性を確認しています。",
+                positive_factors=["確認済み課題", "確認済み接点", "確認済み予算", "確認済み時期"],
+                risk_factors=["予算承認", "競合比較", "体制確認", "開始時期"],
+                next_action_cards=[
+                    {"title": "決裁条件の確認", "body": "決裁条件を確認します。"},
+                    {"title": "予算の合意", "body": "予算条件を合意します。"},
+                    {"title": "導入時期の確定", "body": "導入時期を確定します。"},
+                ],
+                decision_direction="次回確認で導入条件を確定します。",
+                evidence_rows=evidence_rows,
+            )
+        ),
         slide=_slide(),
     )
     assert payload.renderable is True

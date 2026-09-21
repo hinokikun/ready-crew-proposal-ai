@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "tests_collected": 88,
+  "tests_passed": 88,
+  "tests_failed": 0,
+  "test_files": [
+    "backend/tests/test_native_trace_renderer_integration.py",
+    "backend/tests/test_phase3f19a_native_foundation.py",
+    "backend/tests/test_phase3f19b_native_content_adapter.py",
+    "backend/tests/test_phase3f19c_evidence_binding.py",
+    "backend/tests/test_phase3f19d_dispatch_integration.py",
+    "backend/tests/test_phase3f22a_roadmap_runtime_foundation.py",
+    "backend/tests/test_phase3f22b_four_role_integration.py"
+  ],
+  "coverage_intent": [
+    "Summary exact 11-slide contract",
+    "Feature Flag OFF and eligible native paths",
+    "29-role registry and runtime asset integrity",
+    "current-data fail-closed evidence fallback",
+    "verified Competition, Win Probability, Schedule, and Roadmap fixtures",
+    "sample leak guard",
+    "text-fit and completeness gates",
+    "renderer exception isolation",
+    "source immutability"
+  ],
+  "sample_leak_count": 0,
+  "unsupported_inference_count": 0,
+  "feature_flag_default": "OFF",
+  "notes": "Focused regression only; no full production suite, deployment, or network operation."
+}

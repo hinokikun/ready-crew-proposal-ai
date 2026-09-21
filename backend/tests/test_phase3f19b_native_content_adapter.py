@@ -67,11 +67,11 @@ def _slot_text(path: Path, slot: str) -> str:
 
 def test_adapter_registry_covers_every_runtime_role() -> None:
     registry = load_runtime_native_registry()
-    assert len(registry["roles"]) == 28
-    assert len(ROLE_ADAPTERS) == 28
+    assert len(registry["roles"]) == 29
+    assert len(ROLE_ADAPTERS) == 29
     for role in registry["roles"]:
         assert (role["surface"], role["role"]) in ROLE_ADAPTERS
-    assert adapter_registry_summary()["production_dispatch_connected"] is False
+    assert adapter_registry_summary()["production_dispatch_connected"] is True
 
 
 def test_contracts_are_role_specific_and_have_fit_controls() -> None:
@@ -79,7 +79,7 @@ def test_contracts_are_role_specific_and_have_fit_controls() -> None:
     contracts = __import__(
         "json"
     ).loads((ASSET_ROOT / "schemas" / "role_contracts.json").read_text(encoding="utf-8"))
-    assert len(contracts["roles"]) == 28
+    assert len(contracts["roles"]) == 29
     assert contracts["activation_status"] == "ADAPTER_ONLY_NOT_ACTIVATED"
     for item in contracts["roles"]:
         assert item["required_slots"]
@@ -281,9 +281,9 @@ def test_runtime_source_checksums_remain_unchanged_after_adapter_calls() -> None
     assert sha256_file(source) == before
 
 
-def test_production_dispatcher_is_not_connected() -> None:
+def test_production_dispatcher_is_connected_after_integration() -> None:
     summary = adapter_registry_summary()
-    assert summary["production_dispatch_connected"] is False
+    assert summary["production_dispatch_connected"] is True
     assert not (ROOT / "backend" / "app" / "services" / "pptx_parts" / "native_trace_content_adapter.py").resolve().samefile(
         ROOT / "backend" / "app" / "services" / "pptx_parts" / "slides.py"
     )

@@ -1,0 +1,19 @@
+{
+  "registry_count": 29,
+  "expected_registry_count": 29,
+  "reason": "The registry contains 11 Summary entries, 15 approved Detail entries, and 3 conditional entries. ROADMAP is an intentional new conditional role.",
+  "duplicate_semantic_role_entries": ["COVER", "CURRENT_STATE", "PROBLEM_ANALYSIS", "SOLUTION_CONCEPT", "SOLUTION_APPROACH", "SYSTEM_ARCHITECTURE", "NEXT_ACTION"],
+  "duplicate_reason": "Each duplicate is a distinct Summary/Detail slide_id and surface, not an accidental duplicate runtime asset.",
+  "alias_only_names": {
+    "COMPETITIVE_COMPARISON": "COMPETITION",
+    "SCHEDULE_GOVERNANCE": "SCHEDULE",
+    "IMPLEMENTATION_SCHEDULE": "ROADMAP"
+  },
+  "accidental_duplication": [],
+  "roles": [
+    "summary:COVER:S01", "summary:PROPOSAL_SUMMARY:S02", "summary:CURRENT_STATE:S03", "summary:PROBLEM_ANALYSIS:S04", "summary:SOLUTION_CONCEPT:S05", "summary:SOLUTION_APPROACH:S06", "summary:SYSTEM_ARCHITECTURE:S07", "summary:KPI:KPI", "summary:SCHEDULE:SCHEDULE", "summary:ESTIMATE:ESTIMATE", "summary:NEXT_ACTION:S11",
+    "detail:COVER:D01", "detail:CURRENT_STATE:D03", "detail:PROBLEM_ANALYSIS:D04", "detail:MARKET_ANALYSIS:D05", "detail:TARGET_ANALYSIS:D06", "detail:SOLUTION_CONCEPT:D07", "detail:SOLUTION_APPROACH:D08", "detail:SYSTEM_ARCHITECTURE:D09", "detail:ROI_OR_EFFECT:D12", "detail:OPERATING_MODEL:D17", "detail:SUPPORT:D18", "detail:RISK:D19", "detail:CASE_STUDY:D20", "detail:NEXT_ACTION:D21", "detail:CLOSING:D22",
+    "conditional:COMPETITION:COMPETITION", "conditional:WIN_PROBABILITY:WIN_PROBABILITY", "conditional:ROADMAP:ROADMAP"
+  ],
+  "conclusion": "29 is correct. Assertions expecting 28 are stale tests, not a registry repair target."
+}
