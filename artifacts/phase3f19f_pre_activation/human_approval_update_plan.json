@@ -1,0 +1,15 @@
+{
+  "role": "PROPOSAL_SUMMARY",
+  "surface": "summary",
+  "slide_id": "S02",
+  "current_runtime_review": "PENDING",
+  "future_runtime_review_after_explicit_chatgpt_pass": "PASS",
+  "authoritative_file": "backend/app/presentation_assets/native_trace/registry.json",
+  "authoritative_selector": "roles[role=PROPOSAL_SUMMARY,surface=summary,slide_id=S02]",
+  "fields_to_reconcile_if_needed": ["human_visual_status", "human_approval_source"],
+  "current_registry_note": "The current registry already records template approval as human_approved=true and human_visual_status=PASS from Phase3F-17. This is the template/global approval state; the separate 19E runtime-output review remains pending.",
+  "update_count": 1,
+  "duplicate_approval_state": false,
+  "update_now": false,
+  "gate_effect": "Only an explicit PASS may satisfy the runtime Human approval gate; pending, blocked, unknown, or missing status must fall back."
+}

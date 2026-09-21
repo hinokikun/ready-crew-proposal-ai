@@ -1,0 +1,7 @@
+{
+  "rollback_path_confirmed": true,
+  "action": "Set server-side PPTX_APPROVED_NATIVE_RENDERER_ENABLED=false and restart backend",
+  "data_impact": "none",
+  "api_impact": "none",
+  "frontend_pdf_db_impact": "none"
+}

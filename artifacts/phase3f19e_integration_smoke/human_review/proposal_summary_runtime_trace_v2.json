@@ -1,0 +1,16 @@
+{
+  "ROLE": "PROPOSAL_SUMMARY",
+  "SLIDE_INDEX": 1,
+  "TEMPLATE_ID": "S02",
+  "DECK_PATH": "artifacts/phase3f19e_integration_smoke/human_review/proposal_summary_runtime_output_v2.pptx",
+  "SOURCE_TEMPLATE_PATH": "backend/app/presentation_assets/native_trace/summary/S02_proposal_summary.pptx",
+  "HUMAN_APPROVAL_SOURCE": "Phase3F-17 Global Human Visual Review",
+  "FALLBACK_USED": false,
+  "ADAPTER_STATUS": "PASS",
+  "NATIVE_REQUESTED": true,
+  "NATIVE_ELIGIBLE": true,
+  "NATIVE_RENDERED": true,
+  "PROVENANCE_STATUS": "PASS",
+  "TEXT_FIT_STATUS": "PASS",
+  "SAMPLE_LEAK_STATUS": "PASS"
+}

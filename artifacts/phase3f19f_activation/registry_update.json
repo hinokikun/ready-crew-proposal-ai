@@ -1,0 +1,9 @@
+{
+  "authoritative_registry": "backend/app/presentation_assets/native_trace/registry.json",
+  "updated_entries": 1,
+  "role": "PROPOSAL_SUMMARY",
+  "template": "S02",
+  "human_visual_status": "PASS",
+  "human_approval_source": "Phase3F-19E-C PROPOSAL_SUMMARY Runtime Human Visual Review PASS",
+  "other_entries_changed": false
+}

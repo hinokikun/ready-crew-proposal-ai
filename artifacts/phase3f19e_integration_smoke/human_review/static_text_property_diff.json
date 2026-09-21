@@ -1,0 +1,237 @@
+{
+  "role": "PROPOSAL_SUMMARY",
+  "template_id": "S02",
+  "source_template": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\backend\\app\\presentation_assets\\native_trace\\summary\\S02_proposal_summary.pptx",
+  "runtime_output": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f19e_integration_smoke\\human_review\\proposal_summary_runtime_output_v2.pptx",
+  "source_slide_size_emu": [
+    15925800,
+    8963025
+  ],
+  "runtime_slide_size_emu": [
+    12191695,
+    6858000
+  ],
+  "emu_scale": {
+    "x": 0.7655310879202301,
+    "y": 0.7651434643995749
+  },
+  "root_cause": {
+    "affected_function": "backend/app/services/pptx_parts/native_trace_renderers.py::_scale_shape_transforms",
+    "cause": "shape transforms were scaled during import, but text font sizes, text margins, and point-based paragraph spacing were left at source-canvas values; the smaller destination text boxes therefore wrapped static text.",
+    "machine_validation_gap": "geometry-only validation confirmed boxes stayed in bounds and the package stayed editable, but did not compare or scale text-layout metrics and had no rendered wrap check."
+  },
+  "representative_shapes": [
+    {
+      "shape": "trace:S02:footer.date",
+      "source_text": "2026.08.26",
+      "runtime_text": "2026.08.26",
+      "dynamic_text_change": false,
+      "source_geometry": {
+        "off": {
+          "x": "14544675",
+          "y": "219075"
+        },
+        "ext": {
+          "cx": "1028700",
+          "cy": "266700"
+        }
+      },
+      "runtime_geometry": {
+        "off": {
+          "x": "11134401",
+          "y": "167624"
+        },
+        "ext": {
+          "cx": "787502",
+          "cy": "204064"
+        }
+      },
+      "font_and_paragraph_properties_preserved_at_scale": true,
+      "unintended_deltas": []
+    },
+    {
+      "shape": "trace:S02:title.primary.5",
+      "source_text": "3つの施策で解決",
+      "runtime_text": "3つの施策で解決",
+      "dynamic_text_change": false,
+      "source_geometry": {
+        "off": {
+          "x": "4581525",
+          "y": "2266950"
+        },
+        "ext": {
+          "cx": "2667000",
+          "cy": "438150"
+        }
+      },
+      "runtime_geometry": {
+        "off": {
+          "x": "3507300",
+          "y": "1734542"
+        },
+        "ext": {
+          "cx": "2041671",
+          "cy": "335248"
+        }
+      },
+      "font_and_paragraph_properties_preserved_at_scale": true,
+      "unintended_deltas": []
+    },
+    {
+      "shape": "trace:S02:content.auto.51",
+      "source_text": "AIで提案資料の叩き台を自動生成し、作成時間を大幅に短縮。",
+      "runtime_text": "AIで提案資料の叩き台を自動生成し、作成時間を大幅に短縮。",
+      "dynamic_text_change": false,
+      "source_geometry": {
+        "off": {
+          "x": "3990975",
+          "y": "5048250"
+        },
+        "ext": {
+          "cx": "2447925",
+          "cy": "781050"
+        }
+      },
+      "runtime_geometry": {
+        "off": {
+          "x": "3055215",
+          "y": "3862635"
+        },
+        "ext": {
+          "cx": "1873963",
+          "cy": "597615"
+        }
+      },
+      "font_and_paragraph_properties_preserved_at_scale": true,
+      "unintended_deltas": []
+    },
+    {
+      "shape": "trace:S02:title.primary.8",
+      "source_text": "期待される成果",
+      "runtime_text": "期待される成果",
+      "dynamic_text_change": false,
+      "source_geometry": {
+        "off": {
+          "x": "13296900",
+          "y": "2276475"
+        },
+        "ext": {
+          "cx": "2095500",
+          "cy": "381000"
+        }
+      },
+      "runtime_geometry": {
+        "off": {
+          "x": "10179190",
+          "y": "1741830"
+        },
+        "ext": {
+          "cx": "1604170",
+          "cy": "291520"
+        }
+      },
+      "font_and_paragraph_properties_preserved_at_scale": true,
+      "unintended_deltas": []
+    },
+    {
+      "shape": "trace:S02:content.auto.103",
+      "source_text": "約70%削減",
+      "runtime_text": "約70%削減",
+      "dynamic_text_change": false,
+      "source_geometry": {
+        "off": {
+          "x": "13506450",
+          "y": "3829050"
+        },
+        "ext": {
+          "cx": "1714500",
+          "cy": "409575"
+        }
+      },
+      "runtime_geometry": {
+        "off": {
+          "x": "10339607",
+          "y": "2929773"
+        },
+        "ext": {
+          "cx": "1312503",
+          "cy": "313384"
+        }
+      },
+      "font_and_paragraph_properties_preserved_at_scale": true,
+      "unintended_deltas": []
+    },
+    {
+      "shape": "trace:S02:content.auto.130",
+      "source_text": "提案業務を効率化し、",
+      "runtime_text": "提案業務を効率化し、",
+      "dynamic_text_change": false,
+      "source_geometry": {
+        "off": {
+          "x": "4238625",
+          "y": "7686675"
+        },
+        "ext": {
+          "cx": "2667000",
+          "cy": "333375"
+        }
+      },
+      "runtime_geometry": {
+        "off": {
+          "x": "3244799",
+          "y": "5881409"
+        },
+        "ext": {
+          "cx": "2041671",
+          "cy": "255080"
+        }
+      },
+      "font_and_paragraph_properties_preserved_at_scale": true,
+      "unintended_deltas": []
+    }
+  ],
+  "all_trace_text_shapes_compared": 47,
+  "static_text_shapes_compared": 46,
+  "dynamic_slots": {
+    "trace:S02:title.primary": {
+      "source": "ご提案サマリー",
+      "runtime": "提案サマリー"
+    }
+  },
+  "unintended_static_property_delta_count": 0,
+  "unintended_static_property_deltas": [],
+  "expected_result": "0 unintended deltas; destination-scale geometry and text metrics are the only permitted changes; dynamic title text replacement is the only content change.",
+  "runtime_package": {
+    "package_valid": true,
+    "slide_xml_count": 1,
+    "media_count": 0,
+    "full_slide_rasterization_ratio": 0,
+    "editable_text_preserved": true,
+    "editable_shapes_preserved": true
+  },
+  "machine_checks": {
+    "top_level_object_count": 169,
+    "off_canvas_count": 0,
+    "overflow_count": 0,
+    "clipping_count": 0,
+    "collision_count": 0
+  },
+  "font_family_preservation": {
+    "source_families": [
+      "Arial",
+      "Yu Gothic"
+    ],
+    "runtime_families": [
+      "Arial",
+      "Yu Gothic"
+    ],
+    "equal": true,
+    "east_asian_and_rich_text_policy": "copied XML children unchanged; only numeric text metrics are destination-scaled"
+  },
+  "autofit_word_wrap_preservation": {
+    "source": "all representative bodyPr attributes/children including wrap and noAutofit",
+    "runtime": "same",
+    "unintended_delta_count": 0
+  },
+  "dynamic_slot_geometry_preserved": true
+}

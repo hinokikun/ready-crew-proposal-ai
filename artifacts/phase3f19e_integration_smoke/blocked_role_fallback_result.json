@@ -1,0 +1,44 @@
+{
+  "status": "PASS",
+  "direct_trace": {
+    "ROLE": "KPI",
+    "NATIVE_REQUESTED": true,
+    "NATIVE_ELIGIBLE": false,
+    "NATIVE_RENDERED": false,
+    "FALLBACK_USED": true,
+    "FAILURE_REASON": "EVIDENCE_REQUIRED",
+    "HUMAN_APPROVAL_STATUS": "PASS",
+    "PROVENANCE_STATUS": "FAIL",
+    "TEXT_FIT_STATUS": "NOT_RUN",
+    "SAMPLE_LEAK_STATUS": "NOT_RUN"
+  },
+  "fallback_package": {
+    "path": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f19e_integration_smoke\\blocked_role_fallback\\kpi_fallback.pptx",
+    "valid_zip": true,
+    "slide_count": 1,
+    "media_count": 0,
+    "editable_text_objects": 9,
+    "editable_shape_objects": 19,
+    "editable_table_objects": 0,
+    "full_slide_raster_detected": false,
+    "off_canvas_objects": 2,
+    "blank_slides": 0,
+    "text_sample": [
+      "CONTROL",
+      "KPI設計と効果測定",
+      "08",
+      "ProposalPilot / AI営業秘書",
+      "TEST FIXTURE…",
+      "Price",
+      "Schedule",
+      "ROI",
+      "Risk"
+    ],
+    "slide_xml_count": 1,
+    "page_size": {
+      "width_emu": 9144000,
+      "height_emu": 6858000,
+      "aspect": 1.3333
+    }
+  }
+}

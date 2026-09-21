@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "failure_reason": "TEMPLATE_CLONE_FAILED",
+  "fallback_used": true,
+  "deck_continues": true,
+  "deck": {
+    "path": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f19e_integration_smoke\\renderer_exception\\exception_fallback.pptx",
+    "valid_zip": true,
+    "slide_count": 1,
+    "media_count": 0,
+    "editable_text_objects": 15,
+    "editable_shape_objects": 28,
+    "editable_table_objects": 0,
+    "full_slide_raster_detected": false,
+    "off_canvas_objects": 8,
+    "blank_slides": 0,
+    "text_sample": [
+      "EXECUTIVE",
+      "提案サマリー",
+      "02",
+      "ProposalPilot / AI営業秘書",
+      "TEST FIXTURE / …",
+      "実績訴求とCTA改善で勝つ",
+      "1",
+      "Background",
+      "2",
+      "課題",
+      "3",
+      "Answer"
+    ],
+    "slide_xml_count": 1,
+    "page_size": {
+      "width_emu": 9144000,
+      "height_emu": 6858000,
+      "aspect": 1.3333
+    }
+  }
+}

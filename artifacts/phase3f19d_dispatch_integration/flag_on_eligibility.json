@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "flag": true,
+  "eligible_case": {
+    "role": "PROPOSAL_SUMMARY",
+    "surface": "summary",
+    "native_rendered": true,
+    "adapter": "PASS",
+    "validation": "PASS",
+    "sample_leak": "PASS",
+    "editable_structure": "PRESERVED"
+  },
+  "blocked_case": {
+    "role": "KPI",
+    "surface": "summary",
+    "native_rendered": false,
+    "fallback_used": true,
+    "failure_reason": "EVIDENCE_REQUIRED"
+  },
+  "unapproved_case": {
+    "role": "MARKET_ANALYSIS",
+    "surface": "detail",
+    "native_requested": false,
+    "fallback_used": true,
+    "failure_reason": "ROLE_NOT_REGISTERED"
+  }
+}

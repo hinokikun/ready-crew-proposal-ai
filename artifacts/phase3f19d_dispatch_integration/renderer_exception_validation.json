@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "forced_exception": "synthetic native error",
+  "NATIVE_RENDERED": false,
+  "FALLBACK_USED": true,
+  "deck_generation_continues": true,
+  "failure_reason": "TEMPLATE_CLONE_FAILED",
+  "diagnostic_logged": true
+}
