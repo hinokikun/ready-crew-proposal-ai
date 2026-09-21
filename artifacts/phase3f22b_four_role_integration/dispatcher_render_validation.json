@@ -1,0 +1,23 @@
+{
+  "DISPATCHER": "backend/app/services/pptx_parts/slides.py:add_designed_slide -> app.services.pptx_parts.native_trace_renderers.dispatch_approved_native_slide",
+  "NATIVE_RENDERED_ROLE_COUNT": 4,
+  "ACTUAL_DISPATCHER_VERIFIED_FIXTURE": "PASS",
+  "CURRENT_DATA_FALLBACK": "PASS",
+  "RUNTIME_SOURCE_DRIFT": {
+    "COMPETITION": {"normalized_visible_slide_equivalent": false, "geometry_equivalent": true, "text_format_equivalent": true, "action": "BLOCK_RUNTIME_HUMAN_REVIEW_UNTIL_RECONCILED"},
+    "WIN_PROBABILITY": {"normalized_visible_slide_equivalent": false, "geometry_equivalent": true, "text_format_equivalent": false, "action": "BLOCK_RUNTIME_HUMAN_REVIEW_UNTIL_RECONCILED"},
+    "SCHEDULE": {"normalized_visible_slide_equivalent": false, "geometry_equivalent": true, "text_format_equivalent": true, "action": "BLOCK_RUNTIME_HUMAN_REVIEW_UNTIL_RECONCILED"},
+    "ROADMAP": {"normalized_visible_slide_equivalent": true, "geometry_equivalent": true, "text_format_equivalent": true, "action": "PASS"}
+  },
+  "RUNTIME_TEMPLATE_STRUCTURAL_STATUS": {
+    "COMPETITION": {"package_valid": true, "editable_text": true, "editable_shapes": true, "full_slide_raster_count": 0, "slide_count": 1},
+    "WIN_PROBABILITY": {"package_valid": true, "editable_text": true, "editable_shapes": true, "full_slide_raster_count": 0, "slide_count": 1},
+    "SCHEDULE": {"package_valid": true, "editable_text": true, "editable_shapes": true, "full_slide_raster_count": 0, "slide_count": 1},
+    "ROADMAP": {"package_valid": true, "editable_text": true, "editable_shapes": true, "full_slide_raster_count": 0, "slide_count": 1}
+  },
+  "PNG_RUNTIME_RENDER": "NOT_RUN_IN_THIS_PHASE",
+  "HUMAN_RUNTIME_VISUAL_STATUS": "PENDING",
+  "RUNTIME_HUMAN_REVIEW_PACKAGE_READY": false,
+  "RUNTIME_RECONCILIATION_REQUIRED": ["COMPETITION", "WIN_PROBABILITY", "SCHEDULE"],
+  "FAILURE_ISOLATION": "PASS"
+}

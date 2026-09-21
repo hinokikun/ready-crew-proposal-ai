@@ -22,6 +22,7 @@ import xml.etree.ElementTree as ET
 
 from app.services.pptx_parts.native_trace_registry import (
     REPO_ROOT,
+    canonical_runtime_role,
     get_runtime_native_role_spec,
     load_runtime_native_registry,
 )
@@ -67,6 +68,7 @@ class NativeSlotPayload:
     cleared_optional_slots: list[str] = field(default_factory=list)
     text_fit_constraints: dict[str, Any] = field(default_factory=dict)
     text_replacements: dict[str, str] = field(default_factory=dict)
+    table_cell_bindings: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
     clear_matching_text: list[str] = field(default_factory=list)
     clear_slots: list[str] = field(default_factory=list)
     font_size_adjustments: dict[str, float] = field(default_factory=dict)
@@ -276,16 +278,47 @@ EVIDENCE_SENSITIVE_ROLES = frozenset(
         "WIN_PROBABILITY",
         "RISK",
         "SCHEDULE",
+        "ROADMAP",
     }
 )
 
 SAMPLE_STRINGS: dict[str, tuple[str, ...]] = {
     "ESTIMATE": ("￥1,500,000", "￥1,200,000", "￥2,000,000", "￥10,500,000", "2026年6月", "1,500,000"),
     "KPI": ("20時間/件", "70%削減", "6時間/件", "月10件", "1.5倍", "5回/件", "30%削減", "20%", "20%向上"),
-    "COMPETITIVE_COMPARISON": ("競合A", "競合B", "競合より優位", "他社より", "圧倒的"),
-    "COMPETITION": ("競合A", "競合B", "競合より優位", "他社より", "圧倒的"),
+    "COMPETITIVE_COMPARISON": (
+        "競合A", "競合B", "競合より優位", "他社より", "圧倒的",
+        "業務理解から提案・制作・改善まで一気通貫で支援",
+        "AI活用を前提にした運用設計まで提示",
+        "概要見積・体制・スケジュールの透明性が高い",
+        "公開後の改善伴走まで含めた提案",
+        "当社提案を第一候補として比較継続し、条件調整後に最終判断へ進むことを推奨します。",
+    ),
+    "COMPETITION": (
+        "競合A", "競合B", "競合より優位", "他社より", "圧倒的",
+        "業務理解から提案・制作・改善まで一気通貫で支援",
+        "AI活用を前提にした運用設計まで提示",
+        "概要見積・体制・スケジュールの透明性が高い",
+        "公開後の改善伴走まで含めた提案",
+        "当社提案を第一候補として比較継続し、条件調整後に最終判断へ進むことを推奨します。",
+    ),
     "WIN_PROBABILITY": ("72%", "2025年下期", "高い確度で受注"),
-    "SCHEDULE": ("2026.06.22", "Week 1", "Week 6", "Week 12", "Week 20", "1 ～ 2 週"),
+    "SCHEDULE": ("2026.06.22", "Week 1", "Week 6", "Week 12", "Week 20", "1 ～ 2 週", "2 ～ 3 週", "4 ～ 6 週", "2 週"),
+    "ROADMAP": (
+        "2026.06.22",
+        "1ヶ月",
+        "1〜2ヶ月",
+        "2〜3ヶ月",
+        "3〜6ヶ月",
+        "Week 1",
+        "Week 6",
+        "Week 12",
+        "Week 20",
+        "キックオフ",
+        "環境構築完了",
+        "トライアル完了",
+        "本格展開開始",
+        "運用定着",
+    ),
     "ROI_OR_EFFECT": ("約70%", "約40%", "約2倍", "約300万円", "約8ヶ月", "約1,140万円"),
     "CASE_STUDY": ("FAJ", "導入企業", "お客様の声", "成功事例"),
     "MARKET_ANALYSIS": ("市場規模", "成長率", "TAM", "SAM", "SOM"),
@@ -428,6 +461,51 @@ def _kpi_adapter(role: str, surface: str, data: Any, context: Any, slide: Any, s
     return payload
 
 
+def _normalized_string(value: Any) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _required_strings(value: Any, count: int, field_name: str) -> tuple[list[str] | None, str | None]:
+    if not isinstance(value, (list, tuple)) or len(value) < count:
+        return None, f"{field_name} requires at least {count} structured values"
+    values = [_normalized_string(item) for item in value[:count]]
+    if any(item is None for item in values):
+        return None, f"{field_name} contains an empty required value"
+    return [str(item) for item in values], None
+
+
+def _competition_row(item: Any) -> dict[str, str | None]:
+    if isinstance(item, Mapping):
+        return {
+            "criterion": _first_nonempty(item.get("criterion"), item.get("comparison_criterion"), item.get("label"), item.get("name")),
+            "own_value": _first_nonempty(item.get("own_value"), item.get("proposal_value"), item.get("our_value"), item.get("verified_value"), item.get("value")),
+            "competitor_a_value": _first_nonempty(item.get("competitor_a_value"), item.get("competitor_a"), item.get("comparison_a"), item.get("a_value")),
+            "competitor_b_value": _first_nonempty(item.get("competitor_b_value"), item.get("competitor_b"), item.get("comparison_b"), item.get("b_value")),
+            "evaluation": _first_nonempty(item.get("evaluation"), item.get("assessment"), item.get("result")),
+            "competitor_a_name": _first_nonempty(item.get("competitor_a_name"), item.get("competitor_a_label")),
+            "competitor_b_name": _first_nonempty(item.get("competitor_b_name"), item.get("competitor_b_label")),
+        }
+    if isinstance(item, (list, tuple)):
+        values = list(item)
+        return {
+            "criterion": values[0] if len(values) > 0 else None,
+            "own_value": values[1] if len(values) > 1 else None,
+            "competitor_a_value": values[2] if len(values) > 2 else None,
+            "competitor_b_value": values[3] if len(values) > 3 else None,
+            "evaluation": values[4] if len(values) > 4 else None,
+            "competitor_a_name": None,
+            "competitor_b_name": None,
+        }
+    return {"criterion": None, "own_value": None, "competitor_a_value": None, "competitor_b_value": None, "evaluation": None, "competitor_a_name": None, "competitor_b_name": None}
+
+
+def _bind_table_rows(payload: NativeSlotPayload, table_slot: str, rows: list[dict[str, Any]]) -> None:
+    payload.table_cell_bindings[table_slot] = rows
+
+
 def _competition_adapter(role: str, surface: str, data: Any, context: Any, slide: Any, slide_id: str | None = None) -> NativeSlotPayload:
     payload = _base_payload(role, surface, data, context, slide, slide_id)
     rows = _first_nonempty(_get(context, "competitor_rows"), _get(data, "competitor_rows"))
@@ -437,6 +515,86 @@ def _competition_adapter(role: str, surface: str, data: Any, context: Any, slide
     _record_diagnostics(payload, "competition.rows", records)
     if not rows or not records:
         return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, "competitor claims require provenance that the current model does not expose")
+    row_items = list(rows) if isinstance(rows, (list, tuple)) else []
+    normalized_rows = [_competition_row(item) for item in row_items]
+    if len(normalized_rows) < 5:
+        return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "competition requires five complete comparison rows", unresolved=["competition.rows[0..4]"])
+    required_row_fields = ("criterion", "own_value", "competitor_a_value", "competitor_b_value", "evaluation")
+    missing_rows = [
+        index + 1
+        for index, row in enumerate(normalized_rows[:5])
+        if any(_normalized_string(row.get(field)) is None for field in required_row_fields)
+    ]
+    if missing_rows:
+        return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "competition rows contain unbound required cells", unresolved=[f"competition.row.{index}" for index in missing_rows])
+    competitor_a_name = _first_nonempty(
+        _get(context, "competitor_a_name"), _get(data, "competitor_a_name"),
+        normalized_rows[0].get("competitor_a_name"),
+    )
+    competitor_b_name = _first_nonempty(
+        _get(context, "competitor_b_name"), _get(data, "competitor_b_name"),
+        normalized_rows[0].get("competitor_b_name"),
+    )
+    if not competitor_a_name or not competitor_b_name:
+        return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "competition requires explicit competitor labels", unresolved=["competition.competitor_a_name", "competition.competitor_b_name"])
+    criteria = [str(row["criterion"]) for row in normalized_rows[:5]]
+    payload.slots.update({
+        f"trace:{payload.slide_id}:content.auto.{35 + index}": value
+        for index, value in enumerate(criteria, start=1)
+    })
+    payload.table_cell_bindings[f"trace:{payload.slide_id}:title.primary.4"] = [
+        {"row": 0, "col": 2, "value": str(competitor_a_name)},
+        {"row": 0, "col": 3, "value": str(competitor_b_name)},
+        *[
+            {"row": index, "col": col, "value": str(normalized_rows[index - 1][field])}
+            for index in range(1, 6)
+            for col, field in ((1, "own_value"), (2, "competitor_a_value"), (3, "competitor_b_value"), (4, "evaluation"))
+        ],
+    ]
+    differentiation, differentiation_error = _required_strings(
+        _first_nonempty(_get(context, "differentiation_bullets"), _get(data, "differentiation_bullets")),
+        4,
+        "competition.differentiation_bullets",
+    )
+    caution, caution_error = _required_strings(
+        _first_nonempty(_get(context, "caution_items"), _get(data, "caution_items")),
+        2,
+        "competition.caution_items",
+    )
+    confirmation, confirmation_error = _required_strings(
+        _first_nonempty(_get(context, "next_confirmation_items"), _get(data, "next_confirmation_items")),
+        3,
+        "competition.next_confirmation_items",
+    )
+    recommendation = _normalized_string(_first_nonempty(_get(context, "recommendation"), _get(data, "recommendation")))
+    missing_content = [
+        error for error in (differentiation_error, caution_error, confirmation_error)
+        if error
+    ]
+    if recommendation is None:
+        missing_content.append("competition.recommendation is required")
+    if missing_content:
+        return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "competition contains unbound required dynamic regions", unresolved=missing_content)
+    payload.slots.update({
+        f"trace:{payload.slide_id}:title.primary.{5 + index}": value
+        for index, value in enumerate(differentiation, start=1)
+    })
+    payload.slots[f"trace:{payload.slide_id}:lead"] = caution[0]
+    payload.slots[f"trace:{payload.slide_id}:lead.2"] = caution[1]
+    for index, value in enumerate(confirmation):
+        payload.slots[f"trace:{payload.slide_id}:content.auto.{70 + (index * 2)}"] = value
+    payload.slots[f"trace:{payload.slide_id}:content.auto.79"] = recommendation
+    for slot in list(payload.slots) + list(payload.table_cell_bindings):
+        if slot.startswith(f"trace:{payload.slide_id}:"):
+            payload.source_fields[slot] = "context.competition_verified_binding"
+            payload.evidence_status[slot] = records[0]["classification"]
+    payload.text_replacements.update({"競合A": str(competitor_a_name), "競合B": str(competitor_b_name)})
+    payload.text_replacements["2026.06.22"] = "2026.08.26"
+    payload.clear_slots.append(f"trace:{payload.slide_id}:footer.date")
+    payload.cleared_optional_slots.append(f"trace:{payload.slide_id}:footer.date")
+    payload.clear_matching_text.extend(SAMPLE_STRINGS["COMPETITION"])
+    payload.source_fields["competition.rows"] = "context.competitor_rows"
+    payload.evidence_status["competition.rows"] = records[0]["classification"]
     return payload
 
 
@@ -450,20 +608,88 @@ def _win_probability_adapter(role: str, surface: str, data: Any, context: Any, s
     if not records:
         return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, "win probability has no explicit verified/user-provided provenance")
     probability = _first_nonempty(_get(win, "probability"), _get(win, "percentage"), _get(win, "value"))
+    probability_text = None
     if probability not in (None, "", 0, "0"):
         payload.source_fields["win_probability.value"] = records[0].get("source_field") or "semantic_candidates"
         payload.evidence_status["win_probability.value"] = records[0]["classification"]
-        payload.text_replacements["72%"] = f"{probability}%" if isinstance(probability, int) else str(probability)
-        payload.prohibited_sample_strings = [value for value in payload.prohibited_sample_strings if value != "72%"]
+        probability_text = f"{probability}%" if isinstance(probability, int) else str(probability)
     else:
         label = _first_nonempty(_get(win, "label"), _get(win, "confidence"))
         if label:
             payload.source_fields["win_probability.label"] = records[0].get("source_field") or "semantic_candidates"
             payload.evidence_status["win_probability.label"] = records[0]["classification"]
-            payload.clear_matching_text.append("72%")
+            probability_text = str(label)
             payload.diagnostics.append({"field": "win_probability.value", "fallback": "高 / 中 / 低 or 要確認"})
         else:
             return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, "win probability has neither a current percentage nor a qualitative confidence")
+    period = _first_nonempty(_get(win, "period"), _get(win, "evaluation_period"), _get(win, "evidence_period"))
+    confidence = _first_nonempty(_get(win, "confidence"), _get(win, "label"), "要確認")
+    evidence_rows = _first_nonempty(_get(win, "evidence_rows"), _get(context, "win_evidence_rows"), _get(data, "win_evidence_rows"))
+    if not isinstance(evidence_rows, (list, tuple)) or len(evidence_rows) < 5:
+        return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "win probability requires five structured evidence rows", unresolved=["win_probability.evidence_rows[0..4]"])
+    normalized_evidence: list[dict[str, str]] = []
+    for index, item in enumerate(evidence_rows[:5], start=1):
+        row = {
+            "item": _first_nonempty(_get(item, "item"), _get(item, "label"), _get(item, "name")),
+            "content": _first_nonempty(_get(item, "content"), _get(item, "evidence"), _get(item, "value"), _get(item, "text")),
+            "weight": _first_nonempty(_get(item, "weight"), _get(item, "importance")),
+            "evaluation": _first_nonempty(_get(item, "evaluation"), _get(item, "assessment"), _get(item, "result")),
+        }
+        if any(_normalized_string(row[key]) is None for key in row):
+            return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, f"win probability evidence row {index} is incomplete", unresolved=[f"win_probability.evidence_row.{index}"])
+        normalized_evidence.append({key: str(value) for key, value in row.items()})
+    positive, positive_error = _required_strings(_get(win, "positive_factors"), 4, "win_probability.positive_factors")
+    risks, risks_error = _required_strings(_get(win, "risk_factors"), 4, "win_probability.risk_factors")
+    next_action_cards = _first_nonempty(_get(win, "next_action_cards"), _get(context, "win_next_action_cards"), _get(data, "win_next_action_cards"))
+    next_actions: list[str] | None = None
+    next_actions_error: str | None = None
+    next_action_bodies: list[str] | None = None
+    if not isinstance(next_action_cards, (list, tuple)) or len(next_action_cards) < 3:
+        next_actions_error = "win_probability.next_action_cards requires at least 3 structured cards"
+    else:
+        next_actions = []
+        next_action_bodies = []
+        for index, card in enumerate(next_action_cards[:3], start=1):
+            title = _normalized_string(_first_nonempty(_get(card, "title"), _get(card, "label"), _get(card, "name")))
+            body = _normalized_string(_first_nonempty(_get(card, "body"), _get(card, "description"), _get(card, "text")))
+            if title is None or body is None:
+                next_actions_error = f"win_probability.next_action_cards[{index}] requires title and body"
+                break
+            next_actions.append(title)
+            next_action_bodies.append(body)
+    decision_direction = _normalized_string(_first_nonempty(_get(win, "decision_direction"), _get(win, "decision_text")))
+    reason = _normalized_string(_first_nonempty(_get(win, "reason"), _get(win, "rationale")))
+    missing_content = [error for error in (positive_error, risks_error, next_actions_error) if error]
+    if decision_direction is None:
+        missing_content.append("win_probability.decision_direction is required")
+    if reason is None:
+        missing_content.append("win_probability.reason is required")
+    if missing_content:
+        return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "win probability contains unbound required dynamic regions", unresolved=missing_content)
+    payload.slots[f"trace:{payload.slide_id}:content.auto.7"] = probability_text or "要確認"
+    payload.slots[f"trace:{payload.slide_id}:content.auto.19"] = probability_text or "要確認"
+    payload.slots[f"trace:{payload.slide_id}:title.primary.4"] = str(_first_nonempty(_get(win, "confidence_summary"), confidence))
+    payload.slots[f"trace:{payload.slide_id}:title.primary.5"] = reason
+    for index, value in enumerate(positive, start=6):
+        payload.slots[f"trace:{payload.slide_id}:title.primary.{index}"] = value
+    risk_slots = ("content.auto.54", "lead", "content.auto.57", "content.auto.59")
+    for slot, value in zip(risk_slots, risks):
+        payload.slots[f"trace:{payload.slide_id}:{slot}"] = value
+    for index, value in enumerate(next_actions, start=1):
+        payload.slots[f"trace:{payload.slide_id}:content.auto.{70 + ((index - 1) * 3)}"] = value
+        payload.slots[f"trace:{payload.slide_id}:content.auto.{76 + index}"] = next_action_bodies[index - 1]
+    payload.slots[f"trace:{payload.slide_id}:content.auto.84"] = decision_direction
+    payload.table_cell_bindings[f"trace:{payload.slide_id}:content.auto.30"] = [
+        {"row": index, "col": col, "value": value}
+        for index, row in enumerate(normalized_evidence, start=1)
+        for col, value in enumerate((row["item"], row["content"], row["weight"], row["evaluation"]))
+    ]
+    payload.text_replacements["72%"] = probability_text or "要確認"
+    payload.text_replacements["2025年下期"] = str(period) if period else "要確認"
+    payload.text_replacements["高い確度で受注"] = str(confidence)
+    payload.clear_slots.append(f"trace:{payload.slide_id}:footer.date")
+    payload.cleared_optional_slots.append(f"trace:{payload.slide_id}:footer.date")
+    payload.clear_matching_text.extend(SAMPLE_STRINGS["WIN_PROBABILITY"])
     if payload.unresolved_required_slots:
         return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "required title is unbound", unresolved=payload.unresolved_required_slots)
     return payload
@@ -474,12 +700,216 @@ def _schedule_adapter(role: str, surface: str, data: Any, context: Any, slide: A
     phases = _first_nonempty(_get(context, "verified_schedule_phases"), _get(data, "verified_schedule_phases"))
     records = _allowed_evidence_records(data, context, "schedule", "phase", "milestone", "owner", "date")
     _record_diagnostics(payload, "schedule.phases", records)
-    if not phases or not records:
+    if not isinstance(phases, (list, tuple)) or not (3 <= len(phases) <= 5) or not records:
         return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, "schedule dates, owners, and milestones are not verified")
+    durations: list[str] = []
+    for phase in phases:
+        if not isinstance(phase, Mapping):
+            return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, "schedule phase is not structured")
+        duration = _first_nonempty(phase.get("duration"), phase.get("period"), phase.get("timing"))
+        owner = _first_nonempty(phase.get("owner"), phase.get("responsible"))
+        milestone = _first_nonempty(phase.get("milestone"), phase.get("deliverable"), phase.get("review_point"))
+        if not duration or not owner or not milestone:
+            return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, "schedule phase lacks explicit duration, owner, or milestone")
+        durations.append(str(duration))
+    start_date = _first_nonempty(
+        _get(context, "verified_schedule_start_date"), _get(data, "verified_schedule_start_date"),
+        _get(context, "schedule_start_date"), _get(data, "schedule_start_date"),
+    )
+    if not start_date:
+        return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, "schedule start date is not verified")
+    sample_duration_strings = ("1 ～ 2 週", "2 ～ 3 週", "4 ～ 6 週", "2 週")
+    payload.text_replacements["2026.06.22"] = str(start_date)
+    for old, new in zip(sample_duration_strings, durations):
+        payload.text_replacements[old] = new if str(new).startswith(("(", "約")) else str(new)
+    payload.clear_slots.append(f"trace:{payload.slide_id}:footer.date")
+    payload.cleared_optional_slots.append(f"trace:{payload.slide_id}:footer.date")
+    payload.clear_matching_text.extend(SAMPLE_STRINGS["SCHEDULE"])
     if payload.unresolved_required_slots:
         return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "required title is unbound", unresolved=payload.unresolved_required_slots)
     payload.source_fields["schedule.phases"] = "context.verified_schedule_phases"
     payload.evidence_status["schedule.phases"] = "VERIFIED"
+    return payload
+
+
+def _roadmap_provenance_allowed(record: Mapping[str, Any]) -> bool:
+    """Accept only evidence that is explicit or derived from explicit evidence."""
+
+    classification = str(record.get("classification") or "")
+    if classification in {"VERIFIED", "USER_PROVIDED"}:
+        return True
+    if classification != "DERIVED":
+        return False
+    return bool(
+        record.get("derived_from_verified")
+        or record.get("derived_from") in {"VERIFIED", "USER_PROVIDED", "explicit_input"}
+        or record.get("basis") in {"VERIFIED", "USER_PROVIDED"}
+    )
+
+
+def _roadmap_value(item: Any, *keys: str) -> Any:
+    if isinstance(item, str) and any(key in {"text", "label", "value", "title", "name"} for key in keys):
+        return item
+    if isinstance(item, Mapping):
+        return _first_nonempty(*(item.get(key) for key in keys))
+    return _first_nonempty(*(getattr(item, key, None) for key in keys))
+
+
+def _roadmap_text(item: Any, *keys: str) -> str | None:
+    value = _roadmap_value(item, *keys)
+    if isinstance(value, Mapping):
+        value = _first_nonempty(value.get("text"), value.get("label"), value.get("value"))
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _roadmap_adapter(role: str, surface: str, data: Any, context: Any, slide: Any, slide_id: str | None = None) -> NativeSlotPayload:
+    """Bind verified/user-provided roadmap groups to the five-column template.
+
+    The template is intentionally fixed at five columns. Three and four phase
+    plans clear unused columns; six or more phases require a Detail-only
+    continuation and therefore fail closed for this single-slide renderer.
+    """
+
+    payload = _base_payload(role, surface, data, context, slide, slide_id)
+    if payload.failure_reason:
+        return payload
+
+    roadmap = _first_nonempty(
+        _get(context, "verified_roadmap"),
+        _get(data, "verified_roadmap"),
+        _get(context, "roadmap"),
+        _get(data, "roadmap"),
+    )
+    phases = _first_nonempty(_get(roadmap, "phases"), _get(roadmap, "steps"))
+    milestones = _first_nonempty(_get(roadmap, "milestones"), _get(roadmap, "milestone_points"))
+    success_factors = _first_nonempty(_get(roadmap, "success_factors"), _get(roadmap, "successFactors"))
+    objective = _roadmap_text(roadmap, "objective", "objective_message", "goal", "message")
+    records = _evidence_records(data, context, "roadmap", "implementation", "schedule", "phase", "milestone", "success")
+    allowed_records = [record for record in records if _roadmap_provenance_allowed(record)]
+    _record_diagnostics(payload, "roadmap", allowed_records)
+
+    if not isinstance(phases, (list, tuple)) or not phases:
+        return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, "roadmap phases require explicit current data")
+    phase_count = len(phases)
+    if phase_count < 3:
+        return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, "roadmap requires at least three explicit phases")
+    if phase_count > 5:
+        payload.diagnostics.append(
+            {
+                "status": "CONTINUATION_REQUIRED",
+                "phase_count": phase_count,
+                "continuation_policy": "Detail-only continuation; do not squeeze six or more phases into five columns",
+            }
+        )
+        return _blocked(payload, FailureReason.TEXT_OVERFLOW_RISK, "six or more phases require a Detail continuation slide")
+    if not allowed_records:
+        return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, "roadmap values are generated, unknown, or lack explicit provenance")
+
+    classification = allowed_records[0]["classification"]
+    source_field = allowed_records[0].get("source_field") or "semantic_candidates"
+
+    for index in range(1, 6):
+        title_slot = f"trace:{payload.slide_id}:phase.{index}.title"
+        duration_slot = f"trace:{payload.slide_id}:phase.{index}.duration"
+        description_slot = f"trace:{payload.slide_id}:phase.{index}.description"
+        action_slots = [f"trace:{payload.slide_id}:phase.{index}.action.{action_index}" for action_index in range(1, 5)]
+        if index > phase_count:
+            payload.clear_slots.extend([title_slot, duration_slot, description_slot, *action_slots])
+            payload.cleared_optional_slots.extend([title_slot, duration_slot, description_slot, *action_slots])
+            continue
+        phase = phases[index - 1]
+        phase_name = _roadmap_text(phase, "title", "name", "phase", "label")
+        duration = _roadmap_text(phase, "duration", "period", "timing")
+        description = _roadmap_text(phase, "description", "summary", "body")
+        actions = _roadmap_value(phase, "actions", "deliverables", "checks")
+        if not phase_name or not duration or not description or not isinstance(actions, (list, tuple)):
+            return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, f"phase {index} is missing explicit title, duration, description, or actions")
+        number = _roadmap_value(phase, "number", "no", "index")
+        number_text = str(number).strip() if number not in (None, "") else str(index)
+        title = phase_name if phase_name.startswith(f"{number_text}.") else f"{number_text}. {phase_name}"
+        payload.slots[title_slot] = title
+        payload.slots[duration_slot] = duration if duration.startswith("(") else f"({duration})"
+        payload.slots[description_slot] = description
+        for action_index in range(1, 5):
+            action = actions[action_index - 1] if action_index <= len(actions) else None
+            action_text = _roadmap_text(action, "text", "label", "title", "name") if action is not None else None
+            if action_text:
+                payload.slots[action_slots[action_index - 1]] = action_text
+            else:
+                payload.clear_slots.append(action_slots[action_index - 1])
+                payload.cleared_optional_slots.append(action_slots[action_index - 1])
+        for slot, field_name in (
+            (title_slot, "title"),
+            (duration_slot, "duration"),
+            (description_slot, "description"),
+        ):
+            payload.source_fields[slot] = f"{source_field}.phases[{index - 1}].{field_name}"
+            payload.evidence_status[slot] = classification
+        for action_index, slot in enumerate(action_slots, start=1):
+            if slot in payload.slots:
+                payload.source_fields[slot] = f"{source_field}.phases[{index - 1}].actions[{action_index - 1}]"
+                payload.evidence_status[slot] = classification
+
+    if not isinstance(milestones, (list, tuple)) or len(milestones) < phase_count:
+        return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, "each roadmap phase requires an explicit milestone")
+    for index in range(1, 6):
+        title_slot = f"trace:{payload.slide_id}:milestone.{index}.title"
+        timing_slot = f"trace:{payload.slide_id}:milestone.{index}.timing"
+        if index > len(milestones):
+            payload.clear_slots.extend([title_slot, timing_slot])
+            payload.cleared_optional_slots.extend([title_slot, timing_slot])
+            continue
+        milestone = milestones[index - 1]
+        milestone_title = _roadmap_text(milestone, "title", "name", "label")
+        milestone_timing = _roadmap_text(milestone, "timing", "week", "date", "period")
+        if not milestone_title or not milestone_timing:
+            return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, f"milestone {index} is missing explicit title or timing")
+        payload.slots[title_slot] = milestone_title
+        payload.slots[timing_slot] = milestone_timing if milestone_timing.startswith("(") else f"({milestone_timing})"
+        payload.source_fields[title_slot] = f"{source_field}.milestones[{index - 1}].title"
+        payload.source_fields[timing_slot] = f"{source_field}.milestones[{index - 1}].timing"
+        payload.evidence_status[title_slot] = classification
+        payload.evidence_status[timing_slot] = classification
+
+    for index in range(1, 5):
+        title_slot = f"trace:{payload.slide_id}:success.{index}.title"
+        body_slot = f"trace:{payload.slide_id}:success.{index}.body"
+        item = success_factors[index - 1] if isinstance(success_factors, (list, tuple)) and index <= len(success_factors) else None
+        title = _roadmap_text(item, "title", "name", "label") if item is not None else None
+        body = _roadmap_text(item, "body", "description", "text", "summary") if item is not None else None
+        if title and body:
+            payload.slots[title_slot] = title
+            payload.slots[body_slot] = body
+            payload.source_fields[title_slot] = f"{source_field}.success_factors[{index - 1}].title"
+            payload.source_fields[body_slot] = f"{source_field}.success_factors[{index - 1}].body"
+            payload.evidence_status[title_slot] = classification
+            payload.evidence_status[body_slot] = classification
+        else:
+            payload.clear_slots.extend([title_slot, body_slot])
+            payload.cleared_optional_slots.extend([title_slot, body_slot])
+
+    objective_slot = f"trace:{payload.slide_id}:objective.message"
+    if objective:
+        payload.slots[objective_slot] = objective
+        payload.source_fields[objective_slot] = f"{source_field}.objective"
+        payload.evidence_status[objective_slot] = classification
+    else:
+        payload.clear_slots.append(objective_slot)
+        payload.cleared_optional_slots.append(objective_slot)
+
+    # The source date is a trace-only sample unless current data explicitly binds it.
+    payload.clear_slots.append(f"trace:{payload.slide_id}:header.date")
+    payload.cleared_optional_slots.append(f"trace:{payload.slide_id}:header.date")
+    if payload.unresolved_required_slots:
+        return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "required title is unbound", unresolved=payload.unresolved_required_slots)
+    payload.source_fields["roadmap.phases"] = source_field
+    payload.evidence_status["roadmap.phases"] = classification
+    # Any canonical timing/label that is not bound by the explicit phase or
+    # milestone slots is cleared fail-closed rather than carried into runtime.
+    payload.clear_matching_text.extend(SAMPLE_STRINGS["ROADMAP"])
     return payload
 
 
@@ -510,11 +940,9 @@ def _role_adapter_key(role: str, surface: str) -> tuple[str, str]:
 
 
 def _canonical_runtime_role(role: str, surface: str) -> str:
-    # The runtime registry uses COMPETITION; the longer name is accepted as a
-    # read-only semantic alias for callers using the production role vocabulary.
-    if surface == "conditional" and role == "COMPETITIVE_COMPARISON":
-        return "COMPETITION"
-    return role
+    # Keep the surface argument in the signature for callers that already use
+    # it; role identity normalization itself is centralized in the registry.
+    return canonical_runtime_role(role) or role
 
 
 def _build_role_adapters() -> dict[tuple[str, str], Callable[..., NativeSlotPayload]]:
@@ -534,6 +962,8 @@ def _build_role_adapters() -> dict[tuple[str, str], Callable[..., NativeSlotPayl
             adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _win_probability_adapter(role, surface, data, context, slide, slide_id)
         elif role == "SCHEDULE":
             adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _schedule_adapter(role, surface, data, context, slide, slide_id)
+        elif role == "ROADMAP":
+            adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _roadmap_adapter(role, surface, data, context, slide, slide_id)
         elif role == "CASE_STUDY":
             adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _case_study_adapter(role, surface, data, context, slide, slide_id)
         elif role in EVIDENCE_SENSITIVE_ROLES:
@@ -626,16 +1056,6 @@ def _replace_or_clear_text(root: ET.Element, replacements: Mapping[str, str], cl
     changed: list[str] = []
     needles = [value for value in clear_matching if value]
     for shape in _iter_shapes(root):
-        text = _shape_text(shape)
-        if not text:
-            continue
-        if any(needle in text for needle in needles):
-            nodes = _text_nodes(shape)
-            nodes[0].text = ""
-            for node in nodes[1:]:
-                node.text = ""
-            changed.append(_shape_name(shape))
-            continue
         for node in _text_nodes(shape):
             old = node.text or ""
             new = old
@@ -643,6 +1063,9 @@ def _replace_or_clear_text(root: ET.Element, replacements: Mapping[str, str], cl
                 new = new.replace(source, target)
             if new != old:
                 node.text = new
+                changed.append(_shape_name(shape))
+            if any(needle in new for needle in needles):
+                node.text = ""
                 changed.append(_shape_name(shape))
     return sorted(set(changed))
 
@@ -721,9 +1144,16 @@ def _text_fit_for_payload(payload: NativeSlotPayload, contract: dict[str, Any], 
     fields: dict[str, Any] = {}
     valid = True
     constraints = contract.get("slot_constraints", {})
+    prefix_constraints = contract.get("slot_prefix_constraints", {})
     for slot, value in payload.slots.items():
         logical = slot.rsplit(":", 1)[-1]
-        setting = constraints.get(logical, constraints.get("content.body", {}))
+        setting = constraints.get(logical)
+        if setting is None:
+            for prefix, candidate in prefix_constraints.items():
+                if logical == prefix or logical.startswith(f"{prefix}."):
+                    setting = candidate
+                    break
+        setting = setting or constraints.get("content.body", {})
         text = _rich_text_value(value)
         metrics = _slot_metrics(template_path, slot)
         existing_font_size = metrics.get("font_size")
@@ -754,7 +1184,44 @@ def _text_fit_for_payload(payload: NativeSlotPayload, contract: dict[str, Any], 
         if result.get("status") == "FIT_WITH_FONT_SHRINK":
             payload.font_size_adjustments[slot] = float(result["font_size"])
         valid = valid and bool(result.get("valid"))
+    row_setting = constraints.get("content.row", {})
+    for table_slot, bindings in payload.table_cell_bindings.items():
+        for binding in bindings:
+            value = _normalized_string(binding.get("value")) or ""
+            field_slot = f"{table_slot}[r{binding.get('row')}c{binding.get('col')}]"
+            result = preflight_text_fit(
+                value,
+                max_characters=int(row_setting.get("max_characters", contract.get("max_character_guidance", {}).get("content.row", 48))),
+                max_lines=int(row_setting.get("max_lines", 3)),
+                preferred_font_size=float(row_setting.get("preferred_font_size", 10)),
+                minimum_font_size=float(row_setting.get("minimum_font_size", 8)),
+                allow_font_shrink=bool(row_setting.get("allow_font_shrink", True)),
+            )
+            result.update({"table_slot": table_slot, "row": binding.get("row"), "col": binding.get("col")})
+            fields[field_slot] = result
+            valid = valid and bool(result.get("valid"))
     return {"valid": valid, "fields": fields}
+
+
+def _table_rows(shape: ET.Element) -> list[list[ET.Element]]:
+    rows: list[list[ET.Element]] = []
+    for row in shape.iter():
+        if _local_name(row.tag) != "tr":
+            continue
+        cells = [cell for cell in list(row) if _local_name(cell.tag) == "tc"]
+        if cells:
+            rows.append(cells)
+    return rows
+
+
+def _write_table_cell_value(cell: ET.Element, value: Any) -> bool:
+    nodes = _text_nodes(cell)
+    if not nodes:
+        return False
+    nodes[0].text = str(value)
+    for node in nodes[1:]:
+        node.text = ""
+    return True
 
 
 def write_slot_payload(
@@ -799,6 +1266,34 @@ def write_slot_payload(
                     if slot in payload.font_size_adjustments:
                         _apply_font_size(shape, payload.font_size_adjustments[slot])
                     injected.append(slot)
+            for table_slot, bindings in payload.table_cell_bindings.items():
+                table_shape = shapes.get(table_slot)
+                if table_shape is None:
+                    unresolved.append(table_slot)
+                    continue
+                rows = _table_rows(table_shape)
+                for binding in bindings:
+                    try:
+                        row_index = int(binding["row"])
+                        col_index = int(binding["col"])
+                        cell = rows[row_index][col_index]
+                    except (KeyError, IndexError, TypeError, ValueError):
+                        unresolved.append(f"{table_slot}[r{binding.get('row')}c{binding.get('col')}]")
+                        continue
+                    if _write_table_cell_value(cell, binding.get("value", "")):
+                        injected.append(f"{table_slot}[r{row_index}c{col_index}]")
+            # Runtime copies may still contain legacy footer identity text in
+            # the frozen visual template.  Normalize only the application
+            # identity; customer/source-material text is never blanket-
+            # rewritten here.
+            static_brand_replacements = {
+                "READY CREW Proposal": "提案クエスト",
+                "READY CREW Inc.": "提案クエスト",
+                "READY CREW": "提案クエスト",
+                "ProposalPilot": "提案クエスト",
+                "AI営業秘書": "提案クエスト",
+            }
+            cleared.extend(_replace_or_clear_text(root, static_brand_replacements, ()))
             cleared.extend(_replace_or_clear_text(root, payload.text_replacements, payload.clear_matching_text))
             for clear_slot in payload.clear_slots:
                 prefix = clear_slot[:-1] if clear_slot.endswith(".*") else clear_slot
@@ -868,7 +1363,13 @@ def render_native_role_dry_run(
     target = target_dir / f"{resolved_slide_id}_{role.lower()}.pptx"
     required_slots = contract.get("required_slots", [])
     try:
-        clone_report = clone_template_package(source, target, approved_slide_id=resolved_slide_id, required_slots=required_slots)
+        clone_report = clone_template_package(
+            source,
+            target,
+            approved_slide_id=resolved_slide_id,
+            required_slots=required_slots,
+            preserve_existing_slots=resolved_slide_id == "ROADMAP",
+        )
         write_report = write_slot_payload(target, payload, required_slots=required_slots)
         validation = validate_injected_template_package(
             target,
@@ -907,5 +1408,5 @@ def adapter_registry_summary() -> dict[str, Any]:
         "registered_runtime_roles": len(RUNTIME_ROLES),
         "adapter_count": len(ROLE_ADAPTERS),
         "keys": [f"{surface}:{role}" for surface, role in sorted(ROLE_ADAPTERS)],
-        "production_dispatch_connected": False,
+        "production_dispatch_connected": True,
     }

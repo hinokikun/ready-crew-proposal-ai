@@ -1,0 +1,72 @@
+{
+  "roles": [
+    {
+      "ROLE": "COMPETITION",
+      "PATH": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f22c_runtime_human_review\\runtime_outputs\\runtime_COMPETITION.pptx",
+      "SHA256": "b78c0a7fee13f0021625912ef2fe127f1a6d62f2e08367aef59c1691bdbef14d",
+      "PACKAGE_VALID": true,
+      "SLIDE_COUNT": 1,
+      "SLIDE_SIZE_EMU": [
+        15925800,
+        8963025
+      ],
+      "EDITABLE_TEXT_COUNT": 22,
+      "EDITABLE_SHAPE_COUNT": 96,
+      "IMAGE_COUNT": 0,
+      "FULL_SLIDE_RASTER_COUNT": 0,
+      "DUPLICATE_SEMANTIC_SLOTS": [],
+      "MISSING_RELATIONSHIP_TARGETS": []
+    },
+    {
+      "ROLE": "WIN_PROBABILITY",
+      "PATH": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f22c_runtime_human_review\\runtime_outputs\\runtime_WIN_PROBABILITY.pptx",
+      "SHA256": "05a64a6feebbb7aa2b4d4c180913c9187810d833f71b48694655fa4b70c28641",
+      "PACKAGE_VALID": true,
+      "SLIDE_COUNT": 1,
+      "SLIDE_SIZE_EMU": [
+        15925800,
+        8963025
+      ],
+      "EDITABLE_TEXT_COUNT": 38,
+      "EDITABLE_SHAPE_COUNT": 100,
+      "IMAGE_COUNT": 0,
+      "FULL_SLIDE_RASTER_COUNT": 0,
+      "DUPLICATE_SEMANTIC_SLOTS": [],
+      "MISSING_RELATIONSHIP_TARGETS": []
+    },
+    {
+      "ROLE": "SCHEDULE",
+      "PATH": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f22c_runtime_human_review\\runtime_outputs\\runtime_SCHEDULE.pptx",
+      "SHA256": "daefae6460204c2a221d2eb8d639c88575f7c58d500b29d376904ad0fac8be60",
+      "PACKAGE_VALID": true,
+      "SLIDE_COUNT": 1,
+      "SLIDE_SIZE_EMU": [
+        15925800,
+        8963025
+      ],
+      "EDITABLE_TEXT_COUNT": 69,
+      "EDITABLE_SHAPE_COUNT": 197,
+      "IMAGE_COUNT": 0,
+      "FULL_SLIDE_RASTER_COUNT": 0,
+      "DUPLICATE_SEMANTIC_SLOTS": [],
+      "MISSING_RELATIONSHIP_TARGETS": []
+    },
+    {
+      "ROLE": "ROADMAP",
+      "PATH": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f22c_runtime_human_review\\runtime_outputs\\runtime_ROADMAP.pptx",
+      "SHA256": "cf50dbaf10d168dcc93f2545a500639a3ece5b8a485dd1c0f404c22deba354ef",
+      "PACKAGE_VALID": true,
+      "SLIDE_COUNT": 1,
+      "SLIDE_SIZE_EMU": [
+        15925800,
+        8963025
+      ],
+      "EDITABLE_TEXT_COUNT": 68,
+      "EDITABLE_SHAPE_COUNT": 255,
+      "IMAGE_COUNT": 0,
+      "FULL_SLIDE_RASTER_COUNT": 0,
+      "DUPLICATE_SEMANTIC_SLOTS": [],
+      "MISSING_RELATIONSHIP_TARGETS": []
+    }
+  ]
+}

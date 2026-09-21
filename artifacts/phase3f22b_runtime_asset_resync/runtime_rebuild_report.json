@@ -1,0 +1,56 @@
+{
+  "phase": "Phase3F-22B-A",
+  "rebuilt_roles": [
+    "COMPETITION",
+    "WIN_PROBABILITY",
+    "SCHEDULE"
+  ],
+  "assets": [
+    {
+      "ROLE": "COMPETITION",
+      "SOURCE_PATH": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f08_native_trace_gap\\03_competitive_comparison\\native_trace.pptx",
+      "RUNTIME_PATH": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\backend\\app\\presentation_assets\\native_trace\\conditional\\COMPETITION.pptx",
+      "SOURCE_FROZEN_UNCHANGED": true,
+      "RUNTIME_REBUILT_FROM_SOURCE": true,
+      "RUNTIME_SHA256_BEFORE_NORMALIZATION": "a87ced5377e0d5b9baaa2f4d146b4e2798b57b727442c91fff3e9ab25e805609",
+      "RUNTIME_SHA256_AFTER_NORMALIZATION": "e3ef92fe7ae10baa540749bb9e9b7b4b0cfdc92bdfdec763e383da02bed2bdc5",
+      "PACKAGE_VALID": true,
+      "VISIBLE_TEXT_NOT_MODIFIED": true,
+      "GEOMETRY_NOT_MODIFIED": true,
+      "TEXT_FORMAT_NOT_MODIFIED": true,
+      "MEDIA_RELATIONSHIPS_PRESERVED": true,
+      "SOURCE_TEMPLATE_EDITED": false
+    },
+    {
+      "ROLE": "WIN_PROBABILITY",
+      "SOURCE_PATH": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f08_native_trace_gap\\04_win_probability\\native_trace.pptx",
+      "RUNTIME_PATH": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\backend\\app\\presentation_assets\\native_trace\\conditional\\WIN_PROBABILITY.pptx",
+      "SOURCE_FROZEN_UNCHANGED": true,
+      "RUNTIME_REBUILT_FROM_SOURCE": true,
+      "RUNTIME_SHA256_BEFORE_NORMALIZATION": "9c392a058faed57797acbc03d6811ff11e65d94b72b629666865e3203869fb09",
+      "RUNTIME_SHA256_AFTER_NORMALIZATION": "ba6e0102e0b4178517bcc5a59b974d9e8e8b5e7b20dbad12db98b3a476b6f7c1",
+      "PACKAGE_VALID": true,
+      "VISIBLE_TEXT_NOT_MODIFIED": true,
+      "GEOMETRY_NOT_MODIFIED": true,
+      "TEXT_FORMAT_NOT_MODIFIED": true,
+      "MEDIA_RELATIONSHIPS_PRESERVED": true,
+      "SOURCE_TEMPLATE_EDITED": false
+    },
+    {
+      "ROLE": "SCHEDULE",
+      "SOURCE_PATH": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f08_native_trace_gap\\05_schedule_governance\\native_trace.pptx",
+      "RUNTIME_PATH": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\backend\\app\\presentation_assets\\native_trace\\summary\\SCHEDULE.pptx",
+      "SOURCE_FROZEN_UNCHANGED": true,
+      "RUNTIME_REBUILT_FROM_SOURCE": true,
+      "RUNTIME_SHA256_BEFORE_NORMALIZATION": "e13ddb73e4b386629bd134587d60fd5088aae1d91c3cd6c24bb0d150a3e7193d",
+      "RUNTIME_SHA256_AFTER_NORMALIZATION": "b1dd570d33105287ca84b7d7ab7adb36d553310304a0edbc913069d1be9a115f",
+      "PACKAGE_VALID": true,
+      "VISIBLE_TEXT_NOT_MODIFIED": true,
+      "GEOMETRY_NOT_MODIFIED": true,
+      "TEXT_FORMAT_NOT_MODIFIED": true,
+      "MEDIA_RELATIONSHIPS_PRESERVED": true,
+      "SOURCE_TEMPLATE_EDITED": false
+    }
+  ],
+  "source_templates_modified": false
+}

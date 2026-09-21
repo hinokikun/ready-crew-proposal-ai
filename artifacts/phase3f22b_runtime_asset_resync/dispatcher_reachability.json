@@ -1,0 +1,32 @@
+{
+  "phase": "Phase3F-22B-A",
+  "source_of_result": "Phase3F-22B focused dispatcher tests after runtime resynchronization",
+  "verified_fixture_cases": [
+    {
+      "ROLE": "COMPETITION",
+      "NATIVE_RENDERED": true,
+      "FALLBACK_USED": false,
+      "SAMPLE_LEAK_STATUS": "PASS",
+      "PROVENANCE_STATUS": "PASS",
+      "TEMPLATE_ID": "COMPETITION"
+    },
+    {
+      "ROLE": "WIN_PROBABILITY",
+      "NATIVE_RENDERED": true,
+      "FALLBACK_USED": false,
+      "SAMPLE_LEAK_STATUS": "PASS",
+      "PROVENANCE_STATUS": "PASS",
+      "TEMPLATE_ID": "WIN_PROBABILITY"
+    },
+    {
+      "ROLE": "SCHEDULE",
+      "NATIVE_RENDERED": true,
+      "FALLBACK_USED": false,
+      "SAMPLE_LEAK_STATUS": "PASS",
+      "PROVENANCE_STATUS": "PASS",
+      "TEMPLATE_ID": "SCHEDULE"
+    }
+  ],
+  "verified_fixture_native_render_count": 3,
+  "status": "PASS"
+}

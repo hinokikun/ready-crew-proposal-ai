@@ -1,0 +1,40 @@
+{
+  "phase": "Phase3F-22B-A",
+  "assets": [
+    {
+      "ROLE": "COMPETITION",
+      "SLOT_COUNT_SOURCE": 0,
+      "SLOT_COUNT_RUNTIME": 96,
+      "REQUIRED_SLOT_COUNT": 2,
+      "MISSING_SLOTS": [],
+      "DUPLICATE_SLOTS": [],
+      "UNKNOWN_SLOTS": [],
+      "REQUIRED_SLOTS_FOUND": true,
+      "RUNTIME_SLOT_METADATA_ONLY": true
+    },
+    {
+      "ROLE": "WIN_PROBABILITY",
+      "SLOT_COUNT_SOURCE": 0,
+      "SLOT_COUNT_RUNTIME": 100,
+      "REQUIRED_SLOT_COUNT": 2,
+      "MISSING_SLOTS": [],
+      "DUPLICATE_SLOTS": [],
+      "UNKNOWN_SLOTS": [],
+      "REQUIRED_SLOTS_FOUND": true,
+      "RUNTIME_SLOT_METADATA_ONLY": true
+    },
+    {
+      "ROLE": "SCHEDULE",
+      "SLOT_COUNT_SOURCE": 0,
+      "SLOT_COUNT_RUNTIME": 197,
+      "REQUIRED_SLOT_COUNT": 2,
+      "MISSING_SLOTS": [],
+      "DUPLICATE_SLOTS": [],
+      "UNKNOWN_SLOTS": [],
+      "REQUIRED_SLOTS_FOUND": true,
+      "RUNTIME_SLOT_METADATA_ONLY": true
+    }
+  ],
+  "missing_semantic_slot_count": 0,
+  "duplicate_semantic_slot_count": 0
+}

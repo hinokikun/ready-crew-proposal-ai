@@ -1,0 +1,27 @@
+{
+  "role": "ROADMAP",
+  "allowed": [
+    "VERIFIED",
+    "USER_PROVIDED",
+    "DERIVED_FROM_VERIFIED"
+  ],
+  "implementation_mapping": {
+    "VERIFIED": "classify_provenance=VERIFIED",
+    "USER_PROVIDED": "classify_provenance=USER_PROVIDED",
+    "DERIVED_FROM_VERIFIED": "DERIVED with explicit derived_from_verified/basis"
+  },
+  "disallowed": [
+    "GENERATED",
+    "CANONICAL_SAMPLE",
+    "UNKNOWN"
+  ],
+  "forbidden_inference": [
+    "duration",
+    "start/end date",
+    "milestone",
+    "owner",
+    "phase count compression"
+  ],
+  "missing_behavior": "native render blocked; existing renderer remains fallback; unused optional slots are cleared in eligible 3/4 phase plans",
+  "generated_only_test": "BLOCKED"
+}

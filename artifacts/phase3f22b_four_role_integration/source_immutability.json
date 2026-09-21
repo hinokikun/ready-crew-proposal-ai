@@ -1,0 +1,16 @@
+{
+  "FROZEN_SOURCE_CHANGED": false,
+  "FROZEN_SOURCE_CHANGED_IN_THIS_TURN": false,
+  "BASELINE_DRIFT_DETECTED": true,
+  "BASELINE_DRIFT_NOTE": "The current 03/04/05 source hashes differ from the older Phase3F-19A registry checksums; no source file was edited in this turn. ROADMAP matches its recorded source checksum.",
+  "CHECKED_SOURCES": [
+    {"ROLE": "COMPETITIVE_COMPARISON", "SOURCE": "artifacts/phase3f08_native_trace_gap/03_competitive_comparison/native_trace.pptx", "SHA256": "a87ced5377e0d5b9baaa2f4d146b4e2798b57b727442c91fff3e9ab25e805609", "RECORDED_RUNTIME_BASELINE_SHA256": "65654e0314835f786b9e83b70493edf92822f60df5628616a358f5e014608008", "RUNTIME_BASELINE_RECONCILIATION_REQUIRED": true},
+    {"ROLE": "WIN_PROBABILITY", "SOURCE": "artifacts/phase3f08_native_trace_gap/04_win_probability/native_trace.pptx", "SHA256": "9c392a058faed57797acbc03d6811ff11e65d94b72b629666865e3203869fb09", "RECORDED_RUNTIME_BASELINE_SHA256": "6c9c67ba0d049a17a678cf4b6a3d48358ea4e90f221d3ffb07a76502c9f42544", "RUNTIME_BASELINE_RECONCILIATION_REQUIRED": true},
+    {"ROLE": "SCHEDULE_GOVERNANCE", "SOURCE": "artifacts/phase3f08_native_trace_gap/05_schedule_governance/native_trace.pptx", "SHA256": "e13ddb73e4b386629bd134587d60fd5088aae1d91c3cd6c24bb0d150a3e7193d", "RECORDED_RUNTIME_BASELINE_SHA256": "d4b4d72995091eec3738cd0aad4f6202dab8a7bfb669397774b50c4982cbdac0", "RUNTIME_BASELINE_RECONCILIATION_REQUIRED": true},
+    {"ROLE": "IMPLEMENTATION_SCHEDULE", "SOURCE": "artifacts/phase3f08_native_trace_gap/06_implementation_schedule/native_trace.pptx", "SHA256": "5cfd7f596df0d14bca1355b24b282f71cbfd948ede59f02c28a4910133483246"}
+  ],
+  "CANONICAL_IMAGES_CHANGED": false,
+  "RUNTIME_BASELINE_RECONCILIATION_REQUIRED": ["COMPETITION", "WIN_PROBABILITY", "SCHEDULE"],
+  "RUNTIME_TEMPLATES_OVERWRITTEN": false,
+  "DB_MUTATION": false
+}

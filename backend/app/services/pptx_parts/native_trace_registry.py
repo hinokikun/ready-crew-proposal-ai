@@ -77,6 +77,20 @@ ROLE_PRODUCTION_USE = {
     "ROADMAP": "Detail conditional",
 }
 
+# Production-facing role vocabulary has a few names that are intentionally
+# more descriptive than the compact runtime registry identities.  Keep this
+# normalization in one place so approval, contract, adapter, and renderer
+# lookups cannot drift apart.
+RUNTIME_ROLE_ALIASES = {
+    "COMPETITIVE_COMPARISON": "COMPETITION",
+    "SCHEDULE_GOVERNANCE": "SCHEDULE",
+    "IMPLEMENTATION_SCHEDULE": "ROADMAP",
+}
+
+
+def canonical_runtime_role(role: str | None) -> str | None:
+    return RUNTIME_ROLE_ALIASES.get(role or "", role)
+
 
 def _spec(
     role: str,
@@ -368,10 +382,11 @@ def get_runtime_native_role_specs(
     surface: str | None = None,
     slide_id: str | None = None,
 ) -> list[dict[str, Any]]:
+    runtime_role = canonical_runtime_role(role)
     return [
         spec
         for spec in load_runtime_native_registry().get("roles", [])
-        if spec.get("role") == role
+        if spec.get("role") == runtime_role
         and (surface is None or spec.get("surface") == surface)
         and (slide_id is None or spec.get("slide_id") == slide_id)
     ]
@@ -399,7 +414,8 @@ def runtime_native_role_gate(
 ) -> tuple[bool, dict[str, bool]]:
     """Evaluate the isolated runtime registry safety gate only."""
 
-    spec = get_runtime_native_role_spec(role, surface=surface, slide_id=slide_id)
+    runtime_role = canonical_runtime_role(role)
+    spec = get_runtime_native_role_spec(runtime_role, surface=surface, slide_id=slide_id)
     if template_available is None:
         template_available = bool(spec and (REPO_ROOT / str(spec.get("runtime_asset", ""))).is_file())
     checks = {

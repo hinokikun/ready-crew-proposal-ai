@@ -1,0 +1,2092 @@
+{
+  "role": "COMPETITION",
+  "requested_role": "COMPETITIVE_COMPARISON",
+  "template_id": "COMPETITION",
+  "source_template_path": "backend\\app\\presentation_assets\\native_trace\\conditional\\COMPETITION.pptx",
+  "runtime_output": "artifacts\\phase3f22c_runtime_human_review\\runtime_outputs_v2\\runtime_COMPETITION.pptx",
+  "template_sha256_before": "e3ef92fe7ae10baa540749bb9e9b7b4b0cfdc92bdfdec763e383da02bed2bdc5",
+  "template_sha256_after": "e3ef92fe7ae10baa540749bb9e9b7b4b0cfdc92bdfdec763e383da02bed2bdc5",
+  "source_unchanged": true,
+  "adapter": {
+    "role": "COMPETITIVE_COMPARISON",
+    "slide_id": "COMPETITION",
+    "surface": "conditional",
+    "slots": {
+      "trace:COMPETITION:title.primary": "競合比較と差別化ポイント",
+      "trace:COMPETITION:content.auto.36": "導入スピード",
+      "trace:COMPETITION:content.auto.37": "提案の具体性",
+      "trace:COMPETITION:content.auto.38": "AI活用実績",
+      "trace:COMPETITION:content.auto.39": "運用伴走",
+      "trace:COMPETITION:content.auto.40": "コスト透明性",
+      "trace:COMPETITION:title.primary.6": "検証済みの業務理解と導入設計",
+      "trace:COMPETITION:title.primary.7": "検証済みのAI活用・運用設計",
+      "trace:COMPETITION:title.primary.8": "検証済みの見積・体制・工程条件",
+      "trace:COMPETITION:title.primary.9": "検証済みの公開後改善支援",
+      "trace:COMPETITION:lead": "比較条件と根拠の最終確認",
+      "trace:COMPETITION:lead.2": "未確認事項は次回の確認項目として整理",
+      "trace:COMPETITION:content.auto.70": "決裁条件を確認",
+      "trace:COMPETITION:content.auto.72": "契約条件を確認",
+      "trace:COMPETITION:content.auto.74": "実施時期を確認",
+      "trace:COMPETITION:content.auto.79": "検証済み比較根拠に基づき、条件を確認して最終判断へ進みます。"
+    },
+    "source_fields": {
+      "trace:COMPETITION:title.primary": "context.competition_verified_binding",
+      "competition.rows": "context.competitor_rows",
+      "trace:COMPETITION:content.auto.36": "context.competition_verified_binding",
+      "trace:COMPETITION:content.auto.37": "context.competition_verified_binding",
+      "trace:COMPETITION:content.auto.38": "context.competition_verified_binding",
+      "trace:COMPETITION:content.auto.39": "context.competition_verified_binding",
+      "trace:COMPETITION:content.auto.40": "context.competition_verified_binding",
+      "trace:COMPETITION:title.primary.6": "context.competition_verified_binding",
+      "trace:COMPETITION:title.primary.7": "context.competition_verified_binding",
+      "trace:COMPETITION:title.primary.8": "context.competition_verified_binding",
+      "trace:COMPETITION:title.primary.9": "context.competition_verified_binding",
+      "trace:COMPETITION:lead": "context.competition_verified_binding",
+      "trace:COMPETITION:lead.2": "context.competition_verified_binding",
+      "trace:COMPETITION:content.auto.70": "context.competition_verified_binding",
+      "trace:COMPETITION:content.auto.72": "context.competition_verified_binding",
+      "trace:COMPETITION:content.auto.74": "context.competition_verified_binding",
+      "trace:COMPETITION:content.auto.79": "context.competition_verified_binding",
+      "trace:COMPETITION:title.primary.4": "context.competition_verified_binding"
+    },
+    "evidence_status": {
+      "trace:COMPETITION:title.primary": "VERIFIED",
+      "competition.rows": "VERIFIED",
+      "trace:COMPETITION:content.auto.36": "VERIFIED",
+      "trace:COMPETITION:content.auto.37": "VERIFIED",
+      "trace:COMPETITION:content.auto.38": "VERIFIED",
+      "trace:COMPETITION:content.auto.39": "VERIFIED",
+      "trace:COMPETITION:content.auto.40": "VERIFIED",
+      "trace:COMPETITION:title.primary.6": "VERIFIED",
+      "trace:COMPETITION:title.primary.7": "VERIFIED",
+      "trace:COMPETITION:title.primary.8": "VERIFIED",
+      "trace:COMPETITION:title.primary.9": "VERIFIED",
+      "trace:COMPETITION:lead": "VERIFIED",
+      "trace:COMPETITION:lead.2": "VERIFIED",
+      "trace:COMPETITION:content.auto.70": "VERIFIED",
+      "trace:COMPETITION:content.auto.72": "VERIFIED",
+      "trace:COMPETITION:content.auto.74": "VERIFIED",
+      "trace:COMPETITION:content.auto.79": "VERIFIED",
+      "trace:COMPETITION:title.primary.4": "VERIFIED"
+    },
+    "unresolved_required_slots": [],
+    "cleared_optional_slots": [
+      "trace:COMPETITION:footer.date"
+    ],
+    "text_fit_constraints": {
+      "title.primary": {
+        "max_characters": 32,
+        "max_lines": 2,
+        "preferred_font_size": 32,
+        "minimum_font_size": 10,
+        "allow_font_shrink": false
+      },
+      "lead": {
+        "max_characters": 110,
+        "max_lines": 3,
+        "preferred_font_size": 14,
+        "minimum_font_size": 10,
+        "allow_font_shrink": true
+      },
+      "content.body": {
+        "max_characters": 120,
+        "max_lines": 4,
+        "preferred_font_size": 10,
+        "minimum_font_size": 8,
+        "allow_font_shrink": true
+      },
+      "content.row": {
+        "max_characters": 48,
+        "max_lines": 3,
+        "preferred_font_size": 10,
+        "minimum_font_size": 8,
+        "allow_font_shrink": true
+      }
+    },
+    "text_replacements": {
+      "競合A": "比較対象A（検証済み）",
+      "競合B": "比較対象B（検証済み）",
+      "2026.06.22": "2026.08.26"
+    },
+    "table_cell_bindings": {
+      "trace:COMPETITION:title.primary.4": [
+        {
+          "row": 0,
+          "col": 2,
+          "value": "比較対象A（検証済み）"
+        },
+        {
+          "row": 0,
+          "col": 3,
+          "value": "比較対象B（検証済み）"
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": "検証済み3か月"
+        },
+        {
+          "row": 1,
+          "col": 2,
+          "value": "検証済み4〜5か月"
+        },
+        {
+          "row": 1,
+          "col": 3,
+          "value": "検証済み3〜4か月"
+        },
+        {
+          "row": 1,
+          "col": 4,
+          "value": "条件確認済み"
+        },
+        {
+          "row": 2,
+          "col": 1,
+          "value": "検証済みKPI・運用設計"
+        },
+        {
+          "row": 2,
+          "col": 2,
+          "value": "検証済み概略中心"
+        },
+        {
+          "row": 2,
+          "col": 3,
+          "value": "検証済み一部詳細"
+        },
+        {
+          "row": 2,
+          "col": 4,
+          "value": "条件確認済み"
+        },
+        {
+          "row": 3,
+          "col": 1,
+          "value": "検証済み実績あり"
+        },
+        {
+          "row": 3,
+          "col": 2,
+          "value": "検証済み実績限定"
+        },
+        {
+          "row": 3,
+          "col": 3,
+          "value": "検証済みPoC中心"
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": "条件確認済み"
+        },
+        {
+          "row": 4,
+          "col": 1,
+          "value": "検証済み定例支援"
+        },
+        {
+          "row": 4,
+          "col": 2,
+          "value": "検証済み限定対応"
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": "検証済み別契約"
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": "条件確認済み"
+        },
+        {
+          "row": 5,
+          "col": 1,
+          "value": "検証済み前提明示"
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "value": "検証済み粒度粗い"
+        },
+        {
+          "row": 5,
+          "col": 3,
+          "value": "検証済み追加条件"
+        },
+        {
+          "row": 5,
+          "col": 4,
+          "value": "条件確認済み"
+        }
+      ]
+    },
+    "clear_matching_text": [
+      "競合A",
+      "競合B",
+      "競合より優位",
+      "他社より",
+      "圧倒的",
+      "業務理解から提案・制作・改善まで一気通貫で支援",
+      "AI活用を前提にした運用設計まで提示",
+      "概要見積・体制・スケジュールの透明性が高い",
+      "公開後の改善伴走まで含めた提案",
+      "当社提案を第一候補として比較継続し、条件調整後に最終判断へ進むことを推奨します。"
+    ],
+    "clear_slots": [
+      "trace:COMPETITION:footer.date"
+    ],
+    "font_size_adjustments": {},
+    "prohibited_sample_strings": [
+      "競合A",
+      "競合B",
+      "競合より優位",
+      "他社より",
+      "圧倒的",
+      "業務理解から提案・制作・改善まで一気通貫で支援",
+      "AI活用を前提にした運用設計まで提示",
+      "概要見積・体制・スケジュールの透明性が高い",
+      "公開後の改善伴走まで含めた提案",
+      "当社提案を第一候補として比較継続し、条件調整後に最終判断へ進むことを推奨します。"
+    ],
+    "diagnostics": [
+      {
+        "field": "competition.rows",
+        "provenance": [
+          "VERIFIED",
+          "VERIFIED",
+          "VERIFIED"
+        ],
+        "source_fields": [
+          "fixture.phase3f22c_v2.competition evidence",
+          "fixture.phase3f22c_v2.comparison evidence",
+          "fixture.phase3f22c_v2.differentiation evidence"
+        ]
+      }
+    ],
+    "renderable": true,
+    "reason": null,
+    "failure_reason": null
+  },
+  "dry_run": {
+    "success": true,
+    "role": "COMPETITIVE_COMPARISON",
+    "slide_id": "COMPETITION",
+    "surface": "conditional",
+    "template": "backend/app/presentation_assets/native_trace/conditional/COMPETITION.pptx",
+    "package_path": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f22c_runtime_human_review\\_dry_run\\COMPETITION_competitive_comparison.pptx",
+    "injected_slots": [
+      "trace:COMPETITION:content.auto.36",
+      "trace:COMPETITION:content.auto.37",
+      "trace:COMPETITION:content.auto.38",
+      "trace:COMPETITION:content.auto.39",
+      "trace:COMPETITION:content.auto.40",
+      "trace:COMPETITION:content.auto.70",
+      "trace:COMPETITION:content.auto.72",
+      "trace:COMPETITION:content.auto.74",
+      "trace:COMPETITION:content.auto.79",
+      "trace:COMPETITION:lead",
+      "trace:COMPETITION:lead.2",
+      "trace:COMPETITION:title.primary",
+      "trace:COMPETITION:title.primary.4[r0c2]",
+      "trace:COMPETITION:title.primary.4[r0c3]",
+      "trace:COMPETITION:title.primary.4[r1c1]",
+      "trace:COMPETITION:title.primary.4[r1c2]",
+      "trace:COMPETITION:title.primary.4[r1c3]",
+      "trace:COMPETITION:title.primary.4[r1c4]",
+      "trace:COMPETITION:title.primary.4[r2c1]",
+      "trace:COMPETITION:title.primary.4[r2c2]",
+      "trace:COMPETITION:title.primary.4[r2c3]",
+      "trace:COMPETITION:title.primary.4[r2c4]",
+      "trace:COMPETITION:title.primary.4[r3c1]",
+      "trace:COMPETITION:title.primary.4[r3c2]",
+      "trace:COMPETITION:title.primary.4[r3c3]",
+      "trace:COMPETITION:title.primary.4[r3c4]",
+      "trace:COMPETITION:title.primary.4[r4c1]",
+      "trace:COMPETITION:title.primary.4[r4c2]",
+      "trace:COMPETITION:title.primary.4[r4c3]",
+      "trace:COMPETITION:title.primary.4[r4c4]",
+      "trace:COMPETITION:title.primary.4[r5c1]",
+      "trace:COMPETITION:title.primary.4[r5c2]",
+      "trace:COMPETITION:title.primary.4[r5c3]",
+      "trace:COMPETITION:title.primary.4[r5c4]",
+      "trace:COMPETITION:title.primary.6",
+      "trace:COMPETITION:title.primary.7",
+      "trace:COMPETITION:title.primary.8",
+      "trace:COMPETITION:title.primary.9"
+    ],
+    "cleared_optional_slots": [
+      "trace:COMPETITION:content.auto.83",
+      "trace:COMPETITION:footer.date"
+    ],
+    "unresolved_slots": [],
+    "evidence_diagnostics": [
+      {
+        "field": "competition.rows",
+        "provenance": [
+          "VERIFIED",
+          "VERIFIED",
+          "VERIFIED"
+        ],
+        "source_fields": [
+          "fixture.phase3f22c_v2.competition evidence",
+          "fixture.phase3f22c_v2.comparison evidence",
+          "fixture.phase3f22c_v2.differentiation evidence"
+        ]
+      }
+    ],
+    "text_fit": {
+      "valid": true,
+      "fields": {
+        "trace:COMPETITION:title.primary": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 12,
+          "estimated_lines": 1,
+          "characters_per_line": 28,
+          "max_lines": 2,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 10.0,
+          "font_size": 13.5,
+          "box_width_emu": 4476750,
+          "box_height_emu": 304800,
+          "existing_font_size": 13.5
+        },
+        "trace:COMPETITION:content.auto.36": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 6,
+          "estimated_lines": 1,
+          "characters_per_line": 6,
+          "max_lines": 4,
+          "preferred_font_size": 15.75,
+          "minimum_font_size": 8.0,
+          "font_size": 15.75,
+          "box_width_emu": 1200150,
+          "box_height_emu": 438150,
+          "existing_font_size": 15.75
+        },
+        "trace:COMPETITION:content.auto.37": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 6,
+          "estimated_lines": 1,
+          "characters_per_line": 6,
+          "max_lines": 4,
+          "preferred_font_size": 15.75,
+          "minimum_font_size": 8.0,
+          "font_size": 15.75,
+          "box_width_emu": 1200150,
+          "box_height_emu": 438150,
+          "existing_font_size": 15.75
+        },
+        "trace:COMPETITION:content.auto.38": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 6,
+          "estimated_lines": 1,
+          "characters_per_line": 6,
+          "max_lines": 4,
+          "preferred_font_size": 15.75,
+          "minimum_font_size": 8.0,
+          "font_size": 15.75,
+          "box_width_emu": 1200150,
+          "box_height_emu": 438150,
+          "existing_font_size": 15.75
+        },
+        "trace:COMPETITION:content.auto.39": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 4,
+          "estimated_lines": 1,
+          "characters_per_line": 6,
+          "max_lines": 4,
+          "preferred_font_size": 15.75,
+          "minimum_font_size": 8.0,
+          "font_size": 15.75,
+          "box_width_emu": 1200150,
+          "box_height_emu": 438150,
+          "existing_font_size": 15.75
+        },
+        "trace:COMPETITION:content.auto.40": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 6,
+          "estimated_lines": 1,
+          "characters_per_line": 6,
+          "max_lines": 4,
+          "preferred_font_size": 15.75,
+          "minimum_font_size": 8.0,
+          "font_size": 15.75,
+          "box_width_emu": 1200150,
+          "box_height_emu": 438150,
+          "existing_font_size": 15.75
+        },
+        "trace:COMPETITION:title.primary.6": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 14,
+          "estimated_lines": 1,
+          "characters_per_line": 26,
+          "max_lines": 4,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 8.0,
+          "font_size": 13.5,
+          "box_width_emu": 4191000,
+          "box_height_emu": 285750,
+          "existing_font_size": 13.5
+        },
+        "trace:COMPETITION:title.primary.7": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 14,
+          "estimated_lines": 1,
+          "characters_per_line": 26,
+          "max_lines": 4,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 8.0,
+          "font_size": 13.5,
+          "box_width_emu": 4191000,
+          "box_height_emu": 285750,
+          "existing_font_size": 13.5
+        },
+        "trace:COMPETITION:title.primary.8": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 15,
+          "estimated_lines": 1,
+          "characters_per_line": 26,
+          "max_lines": 4,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 8.0,
+          "font_size": 13.5,
+          "box_width_emu": 4191000,
+          "box_height_emu": 285750,
+          "existing_font_size": 13.5
+        },
+        "trace:COMPETITION:title.primary.9": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 12,
+          "estimated_lines": 1,
+          "characters_per_line": 26,
+          "max_lines": 4,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 8.0,
+          "font_size": 13.5,
+          "box_width_emu": 4191000,
+          "box_height_emu": 285750,
+          "existing_font_size": 13.5
+        },
+        "trace:COMPETITION:lead": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 12,
+          "estimated_lines": 1,
+          "characters_per_line": 26,
+          "max_lines": 3,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 10.0,
+          "font_size": 13.5,
+          "box_width_emu": 4191000,
+          "box_height_emu": 457200,
+          "existing_font_size": 13.5
+        },
+        "trace:COMPETITION:lead.2": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 18,
+          "estimated_lines": 1,
+          "characters_per_line": 26,
+          "max_lines": 4,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 8.0,
+          "font_size": 13.5,
+          "box_width_emu": 4191000,
+          "box_height_emu": 457200,
+          "existing_font_size": 13.5
+        },
+        "trace:COMPETITION:content.auto.70": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 7,
+          "estimated_lines": 1,
+          "characters_per_line": 26,
+          "max_lines": 4,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 8.0,
+          "font_size": 13.5,
+          "box_width_emu": 4191000,
+          "box_height_emu": 285750,
+          "existing_font_size": 13.5
+        },
+        "trace:COMPETITION:content.auto.72": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 7,
+          "estimated_lines": 1,
+          "characters_per_line": 26,
+          "max_lines": 4,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 8.0,
+          "font_size": 13.5,
+          "box_width_emu": 4191000,
+          "box_height_emu": 285750,
+          "existing_font_size": 13.5
+        },
+        "trace:COMPETITION:content.auto.74": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 7,
+          "estimated_lines": 1,
+          "characters_per_line": 26,
+          "max_lines": 4,
+          "preferred_font_size": 13.5,
+          "minimum_font_size": 8.0,
+          "font_size": 13.5,
+          "box_width_emu": 4191000,
+          "box_height_emu": 285750,
+          "existing_font_size": 13.5
+        },
+        "trace:COMPETITION:content.auto.79": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 30,
+          "estimated_lines": 1,
+          "characters_per_line": 53,
+          "max_lines": 4,
+          "preferred_font_size": 18.75,
+          "minimum_font_size": 8.0,
+          "font_size": 18.75,
+          "box_width_emu": 11668125,
+          "box_height_emu": 419100,
+          "existing_font_size": 18.75
+        },
+        "trace:COMPETITION:title.primary.4[r0c2]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 11,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 0,
+          "col": 2
+        },
+        "trace:COMPETITION:title.primary.4[r0c3]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 11,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 0,
+          "col": 3
+        },
+        "trace:COMPETITION:title.primary.4[r1c1]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 7,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 1,
+          "col": 1
+        },
+        "trace:COMPETITION:title.primary.4[r1c2]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 9,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 1,
+          "col": 2
+        },
+        "trace:COMPETITION:title.primary.4[r1c3]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 9,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 1,
+          "col": 3
+        },
+        "trace:COMPETITION:title.primary.4[r1c4]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 6,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 1,
+          "col": 4
+        },
+        "trace:COMPETITION:title.primary.4[r2c1]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 12,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 2,
+          "col": 1
+        },
+        "trace:COMPETITION:title.primary.4[r2c2]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 8,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 2,
+          "col": 2
+        },
+        "trace:COMPETITION:title.primary.4[r2c3]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 8,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 2,
+          "col": 3
+        },
+        "trace:COMPETITION:title.primary.4[r2c4]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 6,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 2,
+          "col": 4
+        },
+        "trace:COMPETITION:title.primary.4[r3c1]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 8,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 3,
+          "col": 1
+        },
+        "trace:COMPETITION:title.primary.4[r3c2]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 8,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 3,
+          "col": 2
+        },
+        "trace:COMPETITION:title.primary.4[r3c3]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 9,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 3,
+          "col": 3
+        },
+        "trace:COMPETITION:title.primary.4[r3c4]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 6,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 3,
+          "col": 4
+        },
+        "trace:COMPETITION:title.primary.4[r4c1]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 8,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 4,
+          "col": 1
+        },
+        "trace:COMPETITION:title.primary.4[r4c2]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 8,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 4,
+          "col": 2
+        },
+        "trace:COMPETITION:title.primary.4[r4c3]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 7,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 4,
+          "col": 3
+        },
+        "trace:COMPETITION:title.primary.4[r4c4]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 6,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 4,
+          "col": 4
+        },
+        "trace:COMPETITION:title.primary.4[r5c1]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 8,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 5,
+          "col": 1
+        },
+        "trace:COMPETITION:title.primary.4[r5c2]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 8,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 5,
+          "col": 2
+        },
+        "trace:COMPETITION:title.primary.4[r5c3]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 8,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 5,
+          "col": 3
+        },
+        "trace:COMPETITION:title.primary.4[r5c4]": {
+          "status": "FIT",
+          "valid": true,
+          "text_length": 6,
+          "estimated_lines": 1,
+          "characters_per_line": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10.0,
+          "minimum_font_size": 8.0,
+          "font_size": 10.0,
+          "table_slot": "trace:COMPETITION:title.primary.4",
+          "row": 5,
+          "col": 4
+        }
+      }
+    },
+    "validation": {
+      "clone": {
+        "path": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f22c_runtime_human_review\\_dry_run\\COMPETITION_competitive_comparison.pptx",
+        "exists": true,
+        "package_valid": true,
+        "slide_count": 1,
+        "slide_size_emu": [
+          15925800,
+          8963025
+        ],
+        "text_count": 67,
+        "editable_shape_count": 96,
+        "editable_text_shape_count": 29,
+        "image_count": 0,
+        "media_count": 0,
+        "media_files": [],
+        "crop_rect_count": 0,
+        "crop_values": [],
+        "full_slide_raster_count": 0,
+        "unexpected_media": [],
+        "relationship_types": [
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide",
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout"
+        ],
+        "unsupported_relationships": [],
+        "missing_relationship_targets": [],
+        "semantic_slots": [
+          "trace:COMPETITION:content.auto",
+          "trace:COMPETITION:content.auto.2",
+          "trace:COMPETITION:title.primary",
+          "trace:COMPETITION:footer.date",
+          "trace:COMPETITION:content.auto.3",
+          "trace:COMPETITION:content.auto.4",
+          "trace:COMPETITION:title.primary.2",
+          "trace:COMPETITION:title.primary.3",
+          "trace:COMPETITION:title.primary.4",
+          "trace:COMPETITION:content.auto.5",
+          "trace:COMPETITION:content.auto.6",
+          "trace:COMPETITION:content.auto.7",
+          "trace:COMPETITION:content.auto.8",
+          "trace:COMPETITION:content.auto.9",
+          "trace:COMPETITION:content.auto.10",
+          "trace:COMPETITION:content.auto.11",
+          "trace:COMPETITION:content.auto.12",
+          "trace:COMPETITION:content.auto.13",
+          "trace:COMPETITION:content.auto.14",
+          "trace:COMPETITION:content.auto.15",
+          "trace:COMPETITION:content.auto.16",
+          "trace:COMPETITION:content.auto.17",
+          "trace:COMPETITION:content.auto.18",
+          "trace:COMPETITION:content.auto.19",
+          "trace:COMPETITION:content.auto.20",
+          "trace:COMPETITION:content.auto.21",
+          "trace:COMPETITION:content.auto.22",
+          "trace:COMPETITION:content.auto.23",
+          "trace:COMPETITION:content.auto.24",
+          "trace:COMPETITION:content.auto.25",
+          "trace:COMPETITION:content.auto.26",
+          "trace:COMPETITION:content.auto.27",
+          "trace:COMPETITION:content.auto.28",
+          "trace:COMPETITION:content.auto.29",
+          "trace:COMPETITION:content.auto.30",
+          "trace:COMPETITION:content.auto.31",
+          "trace:COMPETITION:content.auto.32",
+          "trace:COMPETITION:content.auto.33",
+          "trace:COMPETITION:content.auto.34",
+          "trace:COMPETITION:content.auto.35",
+          "trace:COMPETITION:content.auto.36",
+          "trace:COMPETITION:content.auto.37",
+          "trace:COMPETITION:content.auto.38",
+          "trace:COMPETITION:content.auto.39",
+          "trace:COMPETITION:content.auto.40",
+          "trace:COMPETITION:content.auto.41",
+          "trace:COMPETITION:content.auto.42",
+          "trace:COMPETITION:content.auto.43",
+          "trace:COMPETITION:content.auto.44",
+          "trace:COMPETITION:content.auto.45",
+          "trace:COMPETITION:content.auto.46",
+          "trace:COMPETITION:content.auto.47",
+          "trace:COMPETITION:title.primary.5",
+          "trace:COMPETITION:content.auto.48",
+          "trace:COMPETITION:title.primary.6",
+          "trace:COMPETITION:content.auto.49",
+          "trace:COMPETITION:title.primary.7",
+          "trace:COMPETITION:content.auto.50",
+          "trace:COMPETITION:title.primary.8",
+          "trace:COMPETITION:content.auto.51",
+          "trace:COMPETITION:title.primary.9",
+          "trace:COMPETITION:content.auto.52",
+          "trace:COMPETITION:content.auto.53",
+          "trace:COMPETITION:content.auto.54",
+          "trace:COMPETITION:content.auto.55",
+          "trace:COMPETITION:content.auto.56",
+          "trace:COMPETITION:content.auto.57",
+          "trace:COMPETITION:lead",
+          "trace:COMPETITION:content.auto.58",
+          "trace:COMPETITION:lead.2",
+          "trace:COMPETITION:content.auto.59",
+          "trace:COMPETITION:content.auto.60",
+          "trace:COMPETITION:content.auto.61",
+          "trace:COMPETITION:content.auto.62",
+          "trace:COMPETITION:content.auto.63",
+          "trace:COMPETITION:content.auto.64",
+          "trace:COMPETITION:content.auto.65",
+          "trace:COMPETITION:content.auto.66",
+          "trace:COMPETITION:content.auto.67",
+          "trace:COMPETITION:content.auto.68",
+          "trace:COMPETITION:content.auto.69",
+          "trace:COMPETITION:content.auto.70",
+          "trace:COMPETITION:content.auto.71",
+          "trace:COMPETITION:content.auto.72",
+          "trace:COMPETITION:content.auto.73",
+          "trace:COMPETITION:content.auto.74",
+          "trace:COMPETITION:content.auto.75",
+          "trace:COMPETITION:content.auto.76",
+          "trace:COMPETITION:content.auto.77",
+          "trace:COMPETITION:content.auto.78",
+          "trace:COMPETITION:content.auto.79",
+          "trace:COMPETITION:content.auto.80",
+          "trace:COMPETITION:content.auto.81",
+          "trace:COMPETITION:content.auto.82",
+          "trace:COMPETITION:footer.brand",
+          "trace:COMPETITION:content.auto.83"
+        ],
+        "duplicate_semantic_slots": [],
+        "font_families": [
+          "Yu Gothic"
+        ],
+        "errors": [],
+        "approved_slide_id": "COMPETITION",
+        "required_slots": [
+          "trace:COMPETITION:footer.brand",
+          "trace:COMPETITION:title.primary"
+        ],
+        "missing_required_slots": [],
+        "source_frozen_unchanged": true,
+        "source_sha256": "e3ef92fe7ae10baa540749bb9e9b7b4b0cfdc92bdfdec763e383da02bed2bdc5",
+        "runtime_sha256": "9a815d582792422bc1df78794f381d3e234b6b1c22670a4588f766aa538cc080",
+        "valid": true,
+        "runtime_sha256_before_normalization": "e3ef92fe7ae10baa540749bb9e9b7b4b0cfdc92bdfdec763e383da02bed2bdc5",
+        "runtime_sha256_after_normalization": "9a815d582792422bc1df78794f381d3e234b6b1c22670a4588f766aa538cc080",
+        "media_relationships_preserved": true
+      },
+      "injected": {
+        "path": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f22c_runtime_human_review\\_dry_run\\COMPETITION_competitive_comparison.pptx",
+        "exists": true,
+        "package_valid": true,
+        "slide_count": 1,
+        "slide_size_emu": [
+          15925800,
+          8963025
+        ],
+        "text_count": 66,
+        "editable_shape_count": 96,
+        "editable_text_shape_count": 28,
+        "image_count": 0,
+        "media_count": 0,
+        "media_files": [],
+        "crop_rect_count": 0,
+        "crop_values": [],
+        "full_slide_raster_count": 0,
+        "unexpected_media": [],
+        "relationship_types": [
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide",
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout"
+        ],
+        "unsupported_relationships": [],
+        "missing_relationship_targets": [],
+        "semantic_slots": [
+          "trace:COMPETITION:content.auto",
+          "trace:COMPETITION:content.auto.2",
+          "trace:COMPETITION:title.primary",
+          "trace:COMPETITION:footer.date",
+          "trace:COMPETITION:content.auto.3",
+          "trace:COMPETITION:content.auto.4",
+          "trace:COMPETITION:title.primary.2",
+          "trace:COMPETITION:title.primary.3",
+          "trace:COMPETITION:title.primary.4",
+          "trace:COMPETITION:content.auto.5",
+          "trace:COMPETITION:content.auto.6",
+          "trace:COMPETITION:content.auto.7",
+          "trace:COMPETITION:content.auto.8",
+          "trace:COMPETITION:content.auto.9",
+          "trace:COMPETITION:content.auto.10",
+          "trace:COMPETITION:content.auto.11",
+          "trace:COMPETITION:content.auto.12",
+          "trace:COMPETITION:content.auto.13",
+          "trace:COMPETITION:content.auto.14",
+          "trace:COMPETITION:content.auto.15",
+          "trace:COMPETITION:content.auto.16",
+          "trace:COMPETITION:content.auto.17",
+          "trace:COMPETITION:content.auto.18",
+          "trace:COMPETITION:content.auto.19",
+          "trace:COMPETITION:content.auto.20",
+          "trace:COMPETITION:content.auto.21",
+          "trace:COMPETITION:content.auto.22",
+          "trace:COMPETITION:content.auto.23",
+          "trace:COMPETITION:content.auto.24",
+          "trace:COMPETITION:content.auto.25",
+          "trace:COMPETITION:content.auto.26",
+          "trace:COMPETITION:content.auto.27",
+          "trace:COMPETITION:content.auto.28",
+          "trace:COMPETITION:content.auto.29",
+          "trace:COMPETITION:content.auto.30",
+          "trace:COMPETITION:content.auto.31",
+          "trace:COMPETITION:content.auto.32",
+          "trace:COMPETITION:content.auto.33",
+          "trace:COMPETITION:content.auto.34",
+          "trace:COMPETITION:content.auto.35",
+          "trace:COMPETITION:content.auto.36",
+          "trace:COMPETITION:content.auto.37",
+          "trace:COMPETITION:content.auto.38",
+          "trace:COMPETITION:content.auto.39",
+          "trace:COMPETITION:content.auto.40",
+          "trace:COMPETITION:content.auto.41",
+          "trace:COMPETITION:content.auto.42",
+          "trace:COMPETITION:content.auto.43",
+          "trace:COMPETITION:content.auto.44",
+          "trace:COMPETITION:content.auto.45",
+          "trace:COMPETITION:content.auto.46",
+          "trace:COMPETITION:content.auto.47",
+          "trace:COMPETITION:title.primary.5",
+          "trace:COMPETITION:content.auto.48",
+          "trace:COMPETITION:title.primary.6",
+          "trace:COMPETITION:content.auto.49",
+          "trace:COMPETITION:title.primary.7",
+          "trace:COMPETITION:content.auto.50",
+          "trace:COMPETITION:title.primary.8",
+          "trace:COMPETITION:content.auto.51",
+          "trace:COMPETITION:title.primary.9",
+          "trace:COMPETITION:content.auto.52",
+          "trace:COMPETITION:content.auto.53",
+          "trace:COMPETITION:content.auto.54",
+          "trace:COMPETITION:content.auto.55",
+          "trace:COMPETITION:content.auto.56",
+          "trace:COMPETITION:content.auto.57",
+          "trace:COMPETITION:lead",
+          "trace:COMPETITION:content.auto.58",
+          "trace:COMPETITION:lead.2",
+          "trace:COMPETITION:content.auto.59",
+          "trace:COMPETITION:content.auto.60",
+          "trace:COMPETITION:content.auto.61",
+          "trace:COMPETITION:content.auto.62",
+          "trace:COMPETITION:content.auto.63",
+          "trace:COMPETITION:content.auto.64",
+          "trace:COMPETITION:content.auto.65",
+          "trace:COMPETITION:content.auto.66",
+          "trace:COMPETITION:content.auto.67",
+          "trace:COMPETITION:content.auto.68",
+          "trace:COMPETITION:content.auto.69",
+          "trace:COMPETITION:content.auto.70",
+          "trace:COMPETITION:content.auto.71",
+          "trace:COMPETITION:content.auto.72",
+          "trace:COMPETITION:content.auto.73",
+          "trace:COMPETITION:content.auto.74",
+          "trace:COMPETITION:content.auto.75",
+          "trace:COMPETITION:content.auto.76",
+          "trace:COMPETITION:content.auto.77",
+          "trace:COMPETITION:content.auto.78",
+          "trace:COMPETITION:content.auto.79",
+          "trace:COMPETITION:content.auto.80",
+          "trace:COMPETITION:content.auto.81",
+          "trace:COMPETITION:content.auto.82",
+          "trace:COMPETITION:footer.brand",
+          "trace:COMPETITION:content.auto.83"
+        ],
+        "duplicate_semantic_slots": [],
+        "font_families": [
+          "Yu Gothic"
+        ],
+        "errors": [],
+        "approved_slide_id": "COMPETITION",
+        "required_slots": [
+          "trace:COMPETITION:footer.brand",
+          "trace:COMPETITION:title.primary"
+        ],
+        "missing_required_slots": [],
+        "source_frozen_unchanged": true,
+        "source_sha256": "e3ef92fe7ae10baa540749bb9e9b7b4b0cfdc92bdfdec763e383da02bed2bdc5",
+        "runtime_sha256": "6a6f42b135ed4eb7fc931482ac3deabc835193b51f606789d994a12ac8960e41",
+        "valid": true,
+        "unresolved_required_slots": [],
+        "prohibited_sample_strings": [
+          "AI活用を前提にした運用設計まで提示",
+          "他社より",
+          "公開後の改善伴走まで含めた提案",
+          "圧倒的",
+          "当社提案を第一候補として比較継続し、条件調整後に最終判断へ進むことを推奨します。",
+          "業務理解から提案・制作・改善まで一気通貫で支援",
+          "概要見積・体制・スケジュールの透明性が高い",
+          "競合A",
+          "競合B",
+          "競合より優位"
+        ],
+        "prohibited_sample_strings_found": [],
+        "sample_content_leak_free": true,
+        "text_fit": {
+          "valid": true,
+          "fields": {
+            "trace:COMPETITION:title.primary": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 12,
+              "estimated_lines": 1,
+              "characters_per_line": 28,
+              "max_lines": 2,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 10.0,
+              "font_size": 13.5,
+              "box_width_emu": 4476750,
+              "box_height_emu": 304800,
+              "existing_font_size": 13.5
+            },
+            "trace:COMPETITION:content.auto.36": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 6,
+              "estimated_lines": 1,
+              "characters_per_line": 6,
+              "max_lines": 4,
+              "preferred_font_size": 15.75,
+              "minimum_font_size": 8.0,
+              "font_size": 15.75,
+              "box_width_emu": 1200150,
+              "box_height_emu": 438150,
+              "existing_font_size": 15.75
+            },
+            "trace:COMPETITION:content.auto.37": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 6,
+              "estimated_lines": 1,
+              "characters_per_line": 6,
+              "max_lines": 4,
+              "preferred_font_size": 15.75,
+              "minimum_font_size": 8.0,
+              "font_size": 15.75,
+              "box_width_emu": 1200150,
+              "box_height_emu": 438150,
+              "existing_font_size": 15.75
+            },
+            "trace:COMPETITION:content.auto.38": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 6,
+              "estimated_lines": 1,
+              "characters_per_line": 6,
+              "max_lines": 4,
+              "preferred_font_size": 15.75,
+              "minimum_font_size": 8.0,
+              "font_size": 15.75,
+              "box_width_emu": 1200150,
+              "box_height_emu": 438150,
+              "existing_font_size": 15.75
+            },
+            "trace:COMPETITION:content.auto.39": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 4,
+              "estimated_lines": 1,
+              "characters_per_line": 6,
+              "max_lines": 4,
+              "preferred_font_size": 15.75,
+              "minimum_font_size": 8.0,
+              "font_size": 15.75,
+              "box_width_emu": 1200150,
+              "box_height_emu": 438150,
+              "existing_font_size": 15.75
+            },
+            "trace:COMPETITION:content.auto.40": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 6,
+              "estimated_lines": 1,
+              "characters_per_line": 6,
+              "max_lines": 4,
+              "preferred_font_size": 15.75,
+              "minimum_font_size": 8.0,
+              "font_size": 15.75,
+              "box_width_emu": 1200150,
+              "box_height_emu": 438150,
+              "existing_font_size": 15.75
+            },
+            "trace:COMPETITION:title.primary.6": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 14,
+              "estimated_lines": 1,
+              "characters_per_line": 26,
+              "max_lines": 4,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 8.0,
+              "font_size": 13.5,
+              "box_width_emu": 4191000,
+              "box_height_emu": 285750,
+              "existing_font_size": 13.5
+            },
+            "trace:COMPETITION:title.primary.7": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 14,
+              "estimated_lines": 1,
+              "characters_per_line": 26,
+              "max_lines": 4,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 8.0,
+              "font_size": 13.5,
+              "box_width_emu": 4191000,
+              "box_height_emu": 285750,
+              "existing_font_size": 13.5
+            },
+            "trace:COMPETITION:title.primary.8": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 15,
+              "estimated_lines": 1,
+              "characters_per_line": 26,
+              "max_lines": 4,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 8.0,
+              "font_size": 13.5,
+              "box_width_emu": 4191000,
+              "box_height_emu": 285750,
+              "existing_font_size": 13.5
+            },
+            "trace:COMPETITION:title.primary.9": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 12,
+              "estimated_lines": 1,
+              "characters_per_line": 26,
+              "max_lines": 4,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 8.0,
+              "font_size": 13.5,
+              "box_width_emu": 4191000,
+              "box_height_emu": 285750,
+              "existing_font_size": 13.5
+            },
+            "trace:COMPETITION:lead": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 12,
+              "estimated_lines": 1,
+              "characters_per_line": 26,
+              "max_lines": 3,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 10.0,
+              "font_size": 13.5,
+              "box_width_emu": 4191000,
+              "box_height_emu": 457200,
+              "existing_font_size": 13.5
+            },
+            "trace:COMPETITION:lead.2": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 18,
+              "estimated_lines": 1,
+              "characters_per_line": 26,
+              "max_lines": 4,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 8.0,
+              "font_size": 13.5,
+              "box_width_emu": 4191000,
+              "box_height_emu": 457200,
+              "existing_font_size": 13.5
+            },
+            "trace:COMPETITION:content.auto.70": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 7,
+              "estimated_lines": 1,
+              "characters_per_line": 26,
+              "max_lines": 4,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 8.0,
+              "font_size": 13.5,
+              "box_width_emu": 4191000,
+              "box_height_emu": 285750,
+              "existing_font_size": 13.5
+            },
+            "trace:COMPETITION:content.auto.72": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 7,
+              "estimated_lines": 1,
+              "characters_per_line": 26,
+              "max_lines": 4,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 8.0,
+              "font_size": 13.5,
+              "box_width_emu": 4191000,
+              "box_height_emu": 285750,
+              "existing_font_size": 13.5
+            },
+            "trace:COMPETITION:content.auto.74": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 7,
+              "estimated_lines": 1,
+              "characters_per_line": 26,
+              "max_lines": 4,
+              "preferred_font_size": 13.5,
+              "minimum_font_size": 8.0,
+              "font_size": 13.5,
+              "box_width_emu": 4191000,
+              "box_height_emu": 285750,
+              "existing_font_size": 13.5
+            },
+            "trace:COMPETITION:content.auto.79": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 30,
+              "estimated_lines": 1,
+              "characters_per_line": 53,
+              "max_lines": 4,
+              "preferred_font_size": 18.75,
+              "minimum_font_size": 8.0,
+              "font_size": 18.75,
+              "box_width_emu": 11668125,
+              "box_height_emu": 419100,
+              "existing_font_size": 18.75
+            },
+            "trace:COMPETITION:title.primary.4[r0c2]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 11,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 0,
+              "col": 2
+            },
+            "trace:COMPETITION:title.primary.4[r0c3]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 11,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 0,
+              "col": 3
+            },
+            "trace:COMPETITION:title.primary.4[r1c1]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 7,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 1,
+              "col": 1
+            },
+            "trace:COMPETITION:title.primary.4[r1c2]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 9,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 1,
+              "col": 2
+            },
+            "trace:COMPETITION:title.primary.4[r1c3]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 9,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 1,
+              "col": 3
+            },
+            "trace:COMPETITION:title.primary.4[r1c4]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 6,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 1,
+              "col": 4
+            },
+            "trace:COMPETITION:title.primary.4[r2c1]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 12,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 2,
+              "col": 1
+            },
+            "trace:COMPETITION:title.primary.4[r2c2]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 8,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 2,
+              "col": 2
+            },
+            "trace:COMPETITION:title.primary.4[r2c3]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 8,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 2,
+              "col": 3
+            },
+            "trace:COMPETITION:title.primary.4[r2c4]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 6,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 2,
+              "col": 4
+            },
+            "trace:COMPETITION:title.primary.4[r3c1]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 8,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 3,
+              "col": 1
+            },
+            "trace:COMPETITION:title.primary.4[r3c2]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 8,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 3,
+              "col": 2
+            },
+            "trace:COMPETITION:title.primary.4[r3c3]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 9,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 3,
+              "col": 3
+            },
+            "trace:COMPETITION:title.primary.4[r3c4]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 6,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 3,
+              "col": 4
+            },
+            "trace:COMPETITION:title.primary.4[r4c1]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 8,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 4,
+              "col": 1
+            },
+            "trace:COMPETITION:title.primary.4[r4c2]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 8,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 4,
+              "col": 2
+            },
+            "trace:COMPETITION:title.primary.4[r4c3]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 7,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 4,
+              "col": 3
+            },
+            "trace:COMPETITION:title.primary.4[r4c4]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 6,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 4,
+              "col": 4
+            },
+            "trace:COMPETITION:title.primary.4[r5c1]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 8,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 5,
+              "col": 1
+            },
+            "trace:COMPETITION:title.primary.4[r5c2]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 8,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 5,
+              "col": 2
+            },
+            "trace:COMPETITION:title.primary.4[r5c3]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 8,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 5,
+              "col": 3
+            },
+            "trace:COMPETITION:title.primary.4[r5c4]": {
+              "status": "FIT",
+              "valid": true,
+              "text_length": 6,
+              "estimated_lines": 1,
+              "characters_per_line": 48,
+              "max_lines": 3,
+              "preferred_font_size": 10.0,
+              "minimum_font_size": 8.0,
+              "font_size": 10.0,
+              "table_slot": "trace:COMPETITION:title.primary.4",
+              "row": 5,
+              "col": 4
+            }
+          }
+        },
+        "text_fit_valid": true,
+        "evidence_diagnostics": [
+          {
+            "field": "competition.rows",
+            "provenance": [
+              "VERIFIED",
+              "VERIFIED",
+              "VERIFIED"
+            ],
+            "source_fields": [
+              "fixture.phase3f22c_v2.competition evidence",
+              "fixture.phase3f22c_v2.comparison evidence",
+              "fixture.phase3f22c_v2.differentiation evidence"
+            ]
+          }
+        ],
+        "font_size_minimum_valid": true,
+        "shape_bounds_unchanged": true,
+        "image_relationships_preserved": true
+      }
+    },
+    "reason": null,
+    "failure_reason": null,
+    "payload": {
+      "role": "COMPETITIVE_COMPARISON",
+      "slide_id": "COMPETITION",
+      "surface": "conditional",
+      "slots": {
+        "trace:COMPETITION:title.primary": "競合比較と差別化ポイント",
+        "trace:COMPETITION:content.auto.36": "導入スピード",
+        "trace:COMPETITION:content.auto.37": "提案の具体性",
+        "trace:COMPETITION:content.auto.38": "AI活用実績",
+        "trace:COMPETITION:content.auto.39": "運用伴走",
+        "trace:COMPETITION:content.auto.40": "コスト透明性",
+        "trace:COMPETITION:title.primary.6": "検証済みの業務理解と導入設計",
+        "trace:COMPETITION:title.primary.7": "検証済みのAI活用・運用設計",
+        "trace:COMPETITION:title.primary.8": "検証済みの見積・体制・工程条件",
+        "trace:COMPETITION:title.primary.9": "検証済みの公開後改善支援",
+        "trace:COMPETITION:lead": "比較条件と根拠の最終確認",
+        "trace:COMPETITION:lead.2": "未確認事項は次回の確認項目として整理",
+        "trace:COMPETITION:content.auto.70": "決裁条件を確認",
+        "trace:COMPETITION:content.auto.72": "契約条件を確認",
+        "trace:COMPETITION:content.auto.74": "実施時期を確認",
+        "trace:COMPETITION:content.auto.79": "検証済み比較根拠に基づき、条件を確認して最終判断へ進みます。"
+      },
+      "source_fields": {
+        "trace:COMPETITION:title.primary": "context.competition_verified_binding",
+        "competition.rows": "context.competitor_rows",
+        "trace:COMPETITION:content.auto.36": "context.competition_verified_binding",
+        "trace:COMPETITION:content.auto.37": "context.competition_verified_binding",
+        "trace:COMPETITION:content.auto.38": "context.competition_verified_binding",
+        "trace:COMPETITION:content.auto.39": "context.competition_verified_binding",
+        "trace:COMPETITION:content.auto.40": "context.competition_verified_binding",
+        "trace:COMPETITION:title.primary.6": "context.competition_verified_binding",
+        "trace:COMPETITION:title.primary.7": "context.competition_verified_binding",
+        "trace:COMPETITION:title.primary.8": "context.competition_verified_binding",
+        "trace:COMPETITION:title.primary.9": "context.competition_verified_binding",
+        "trace:COMPETITION:lead": "context.competition_verified_binding",
+        "trace:COMPETITION:lead.2": "context.competition_verified_binding",
+        "trace:COMPETITION:content.auto.70": "context.competition_verified_binding",
+        "trace:COMPETITION:content.auto.72": "context.competition_verified_binding",
+        "trace:COMPETITION:content.auto.74": "context.competition_verified_binding",
+        "trace:COMPETITION:content.auto.79": "context.competition_verified_binding",
+        "trace:COMPETITION:title.primary.4": "context.competition_verified_binding"
+      },
+      "evidence_status": {
+        "trace:COMPETITION:title.primary": "VERIFIED",
+        "competition.rows": "VERIFIED",
+        "trace:COMPETITION:content.auto.36": "VERIFIED",
+        "trace:COMPETITION:content.auto.37": "VERIFIED",
+        "trace:COMPETITION:content.auto.38": "VERIFIED",
+        "trace:COMPETITION:content.auto.39": "VERIFIED",
+        "trace:COMPETITION:content.auto.40": "VERIFIED",
+        "trace:COMPETITION:title.primary.6": "VERIFIED",
+        "trace:COMPETITION:title.primary.7": "VERIFIED",
+        "trace:COMPETITION:title.primary.8": "VERIFIED",
+        "trace:COMPETITION:title.primary.9": "VERIFIED",
+        "trace:COMPETITION:lead": "VERIFIED",
+        "trace:COMPETITION:lead.2": "VERIFIED",
+        "trace:COMPETITION:content.auto.70": "VERIFIED",
+        "trace:COMPETITION:content.auto.72": "VERIFIED",
+        "trace:COMPETITION:content.auto.74": "VERIFIED",
+        "trace:COMPETITION:content.auto.79": "VERIFIED",
+        "trace:COMPETITION:title.primary.4": "VERIFIED"
+      },
+      "unresolved_required_slots": [],
+      "cleared_optional_slots": [
+        "trace:COMPETITION:footer.date"
+      ],
+      "text_fit_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "text_replacements": {
+        "競合A": "比較対象A（検証済み）",
+        "競合B": "比較対象B（検証済み）",
+        "2026.06.22": "2026.08.26"
+      },
+      "table_cell_bindings": {
+        "trace:COMPETITION:title.primary.4": [
+          {
+            "row": 0,
+            "col": 2,
+            "value": "比較対象A（検証済み）"
+          },
+          {
+            "row": 0,
+            "col": 3,
+            "value": "比較対象B（検証済み）"
+          },
+          {
+            "row": 1,
+            "col": 1,
+            "value": "検証済み3か月"
+          },
+          {
+            "row": 1,
+            "col": 2,
+            "value": "検証済み4〜5か月"
+          },
+          {
+            "row": 1,
+            "col": 3,
+            "value": "検証済み3〜4か月"
+          },
+          {
+            "row": 1,
+            "col": 4,
+            "value": "条件確認済み"
+          },
+          {
+            "row": 2,
+            "col": 1,
+            "value": "検証済みKPI・運用設計"
+          },
+          {
+            "row": 2,
+            "col": 2,
+            "value": "検証済み概略中心"
+          },
+          {
+            "row": 2,
+            "col": 3,
+            "value": "検証済み一部詳細"
+          },
+          {
+            "row": 2,
+            "col": 4,
+            "value": "条件確認済み"
+          },
+          {
+            "row": 3,
+            "col": 1,
+            "value": "検証済み実績あり"
+          },
+          {
+            "row": 3,
+            "col": 2,
+            "value": "検証済み実績限定"
+          },
+          {
+            "row": 3,
+            "col": 3,
+            "value": "検証済みPoC中心"
+          },
+          {
+            "row": 3,
+            "col": 4,
+            "value": "条件確認済み"
+          },
+          {
+            "row": 4,
+            "col": 1,
+            "value": "検証済み定例支援"
+          },
+          {
+            "row": 4,
+            "col": 2,
+            "value": "検証済み限定対応"
+          },
+          {
+            "row": 4,
+            "col": 3,
+            "value": "検証済み別契約"
+          },
+          {
+            "row": 4,
+            "col": 4,
+            "value": "条件確認済み"
+          },
+          {
+            "row": 5,
+            "col": 1,
+            "value": "検証済み前提明示"
+          },
+          {
+            "row": 5,
+            "col": 2,
+            "value": "検証済み粒度粗い"
+          },
+          {
+            "row": 5,
+            "col": 3,
+            "value": "検証済み追加条件"
+          },
+          {
+            "row": 5,
+            "col": 4,
+            "value": "条件確認済み"
+          }
+        ]
+      },
+      "clear_matching_text": [
+        "競合A",
+        "競合B",
+        "競合より優位",
+        "他社より",
+        "圧倒的",
+        "業務理解から提案・制作・改善まで一気通貫で支援",
+        "AI活用を前提にした運用設計まで提示",
+        "概要見積・体制・スケジュールの透明性が高い",
+        "公開後の改善伴走まで含めた提案",
+        "当社提案を第一候補として比較継続し、条件調整後に最終判断へ進むことを推奨します。"
+      ],
+      "clear_slots": [
+        "trace:COMPETITION:footer.date"
+      ],
+      "font_size_adjustments": {},
+      "prohibited_sample_strings": [
+        "競合A",
+        "競合B",
+        "競合より優位",
+        "他社より",
+        "圧倒的",
+        "業務理解から提案・制作・改善まで一気通貫で支援",
+        "AI活用を前提にした運用設計まで提示",
+        "概要見積・体制・スケジュールの透明性が高い",
+        "公開後の改善伴走まで含めた提案",
+        "当社提案を第一候補として比較継続し、条件調整後に最終判断へ進むことを推奨します。"
+      ],
+      "diagnostics": [
+        {
+          "field": "competition.rows",
+          "provenance": [
+            "VERIFIED",
+            "VERIFIED",
+            "VERIFIED"
+          ],
+          "source_fields": [
+            "fixture.phase3f22c_v2.competition evidence",
+            "fixture.phase3f22c_v2.comparison evidence",
+            "fixture.phase3f22c_v2.differentiation evidence"
+          ]
+        }
+      ],
+      "renderable": true,
+      "reason": null,
+      "failure_reason": null
+    }
+  },
+  "dispatcher_trace": {
+    "ROLE": "COMPETITION",
+    "REQUESTED_ROLE": "COMPETITIVE_COMPARISON",
+    "RUNTIME_ROLE": "COMPETITION",
+    "TEMPLATE_ID": "COMPETITION",
+    "NATIVE_REQUESTED": true,
+    "NATIVE_ELIGIBLE": true,
+    "NATIVE_RENDERED": true,
+    "FALLBACK_USED": false,
+    "FAILURE_REASON": null,
+    "HUMAN_APPROVAL_STATUS": "PASS",
+    "PROVENANCE_STATUS": "PASS",
+    "TEXT_FIT_STATUS": "PASS",
+    "SAMPLE_LEAK_STATUS": "PASS"
+  },
+  "slot_diff": {
+    "trace:COMPETITION:content.auto.36": {
+      "template_value": "導入スピード",
+      "runtime_value": "導入スピード",
+      "changed": false
+    },
+    "trace:COMPETITION:content.auto.37": {
+      "template_value": "提案の具体性",
+      "runtime_value": "提案の具体性",
+      "changed": false
+    },
+    "trace:COMPETITION:content.auto.38": {
+      "template_value": "AI活用実績",
+      "runtime_value": "AI活用実績",
+      "changed": false
+    },
+    "trace:COMPETITION:content.auto.39": {
+      "template_value": "運用伴走",
+      "runtime_value": "運用伴走",
+      "changed": false
+    },
+    "trace:COMPETITION:content.auto.40": {
+      "template_value": "コスト透明性",
+      "runtime_value": "コスト透明性",
+      "changed": false
+    },
+    "trace:COMPETITION:content.auto.70": {
+      "template_value": "決裁者の評価観点の再確認",
+      "runtime_value": "決裁条件を確認",
+      "changed": true
+    },
+    "trace:COMPETITION:content.auto.72": {
+      "template_value": "優先機能と初期公開範囲の合意",
+      "runtime_value": "契約条件を確認",
+      "changed": true
+    },
+    "trace:COMPETITION:content.auto.74": {
+      "template_value": "提案比較後の条件調整ポイント整理",
+      "runtime_value": "実施時期を確認",
+      "changed": true
+    },
+    "trace:COMPETITION:content.auto.79": {
+      "template_value": "当社提案を第一候補として比較継続し、条件調整後に最終判断へ進むことを推奨します。",
+      "runtime_value": "検証済み比較根拠に基づき、条件を確認して最終判断へ進みます。",
+      "changed": true
+    },
+    "trace:COMPETITION:lead": {
+      "template_value": "最終的な要件確定により費用と期間は変動する可能性あり",
+      "runtime_value": "比較条件と根拠の最終確認",
+      "changed": true
+    },
+    "trace:COMPETITION:lead.2": {
+      "template_value": "競合比較では導入後支援範囲の差を確認する必要あり",
+      "runtime_value": "未確認事項は次回の確認項目として整理",
+      "changed": true
+    },
+    "trace:COMPETITION:title.primary": {
+      "template_value": "組織を変える、AI活用の進め方",
+      "runtime_value": "競合比較と差別化ポイント",
+      "changed": true
+    },
+    "trace:COMPETITION:title.primary.6": {
+      "template_value": "業務理解から提案・制作・改善まで一気通貫で支援",
+      "runtime_value": "検証済みの業務理解と導入設計",
+      "changed": true
+    },
+    "trace:COMPETITION:title.primary.7": {
+      "template_value": "AI活用を前提にした運用設計まで提示",
+      "runtime_value": "検証済みのAI活用・運用設計",
+      "changed": true
+    },
+    "trace:COMPETITION:title.primary.8": {
+      "template_value": "概要見積・体制・スケジュールの透明性が高い",
+      "runtime_value": "検証済みの見積・体制・工程条件",
+      "changed": true
+    },
+    "trace:COMPETITION:title.primary.9": {
+      "template_value": "公開後の改善伴走まで含めた提案",
+      "runtime_value": "検証済みの公開後改善支援",
+      "changed": true
+    }
+  }
+}

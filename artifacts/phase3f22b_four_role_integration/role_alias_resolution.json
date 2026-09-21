@@ -1,0 +1,13 @@
+{
+  "AUTHORITATIVE_RUNTIME_REGISTRY": "backend/app/presentation_assets/native_trace/registry.json",
+  "SINGLE_DISPATCH_INSERTION_POINT": "backend/app/services/pptx_parts/slides.py:add_designed_slide",
+  "ALIASES": [
+    {"CANONICAL_ROLE": "COMPETITIVE_COMPARISON", "RUNTIME_ROLE": "COMPETITION", "SURFACE": "conditional"},
+    {"CANONICAL_ROLE": "WIN_PROBABILITY", "RUNTIME_ROLE": "WIN_PROBABILITY", "SURFACE": "conditional"},
+    {"CANONICAL_ROLE": "SCHEDULE_GOVERNANCE", "RUNTIME_ROLE": "SCHEDULE", "SURFACE": "summary"},
+    {"CANONICAL_ROLE": "IMPLEMENTATION_SCHEDULE", "RUNTIME_ROLE": "ROADMAP", "SURFACE": "conditional"}
+  ],
+  "ALIAS_NORMALIZATION_IMPLEMENTED_IN": "backend/app/services/pptx_parts/native_trace_registry.py:canonical_runtime_role",
+  "DUPLICATE_DISPATCHER": false,
+  "ROLE_ALIAS_TEST": "PASS"
+}

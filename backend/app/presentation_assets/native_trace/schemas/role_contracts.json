@@ -1,0 +1,3565 @@
+{
+  "version": "phase3f19b-role-contracts-v1",
+  "activation_status": "ADAPTER_ONLY_NOT_ACTIVATED",
+  "roles": [
+    {
+      "role": "COVER",
+      "slide_id": "S01",
+      "surface": "summary",
+      "template": "summary/S01_cover.pptx",
+      "required_slots": [
+        "trace:S01:title.primary",
+        "trace:S01:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:S01:header.brand",
+        "trace:S01:header.tagline",
+        "trace:S01:header.message",
+        "trace:S01:footer.tagline.jp",
+        "trace:S01:footer.tagline.en",
+        "trace:S01:footer.date",
+        "trace:S01:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "data.deck_title",
+        "data.client_name"
+      ],
+      "static_slots": [
+        "trace:S01:content.*",
+        "trace:S01:shape.*"
+      ],
+      "image_slots": [
+        "trace:S01:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:S01:content.rows",
+        "trace:S01:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:S01:content.auto.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:S01:content.auto.*": true,
+        "trace:S01:image.*": false
+      },
+      "required": {
+        "trace:S01:title.primary": true,
+        "trace:S01:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "PROPOSAL_SUMMARY",
+      "slide_id": "S02",
+      "surface": "summary",
+      "template": "summary/S02_proposal_summary.pptx",
+      "required_slots": [
+        "trace:S02:title.primary",
+        "trace:S02:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:S02:header.brand",
+        "trace:S02:header.tagline",
+        "trace:S02:header.message",
+        "trace:S02:footer.tagline.jp",
+        "trace:S02:footer.tagline.en",
+        "trace:S02:footer.date",
+        "trace:S02:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:S02:content.*",
+        "trace:S02:shape.*"
+      ],
+      "image_slots": [
+        "trace:S02:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:S02:content.rows",
+        "trace:S02:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:S02:content.auto.*",
+        "trace:S02:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:S02:content.auto.*": true,
+        "trace:S02:image.*": false
+      },
+      "required": {
+        "trace:S02:title.primary": true,
+        "trace:S02:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "CURRENT_STATE",
+      "slide_id": "S03",
+      "surface": "summary",
+      "template": "summary/S03_current_state.pptx",
+      "required_slots": [
+        "trace:S03:title.primary",
+        "trace:S03:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:S03:header.brand",
+        "trace:S03:header.tagline",
+        "trace:S03:header.message",
+        "trace:S03:footer.tagline.jp",
+        "trace:S03:footer.tagline.en",
+        "trace:S03:footer.date",
+        "trace:S03:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:S03:content.*",
+        "trace:S03:shape.*"
+      ],
+      "image_slots": [
+        "trace:S03:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:S03:content.rows",
+        "trace:S03:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:S03:content.auto.*",
+        "trace:S03:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:S03:content.auto.*": true,
+        "trace:S03:image.*": false
+      },
+      "required": {
+        "trace:S03:title.primary": true,
+        "trace:S03:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "PROBLEM_ANALYSIS",
+      "slide_id": "S04",
+      "surface": "summary",
+      "template": "summary/S04_problem_analysis.pptx",
+      "required_slots": [
+        "trace:S04:title.primary",
+        "trace:S04:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:S04:header.brand",
+        "trace:S04:header.tagline",
+        "trace:S04:header.message",
+        "trace:S04:footer.tagline.jp",
+        "trace:S04:footer.tagline.en",
+        "trace:S04:footer.date",
+        "trace:S04:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:S04:content.*",
+        "trace:S04:shape.*"
+      ],
+      "image_slots": [
+        "trace:S04:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:S04:content.rows",
+        "trace:S04:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:S04:content.auto.*",
+        "trace:S04:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:S04:content.auto.*": true,
+        "trace:S04:image.*": false
+      },
+      "required": {
+        "trace:S04:title.primary": true,
+        "trace:S04:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "SOLUTION_CONCEPT",
+      "slide_id": "S05",
+      "surface": "summary",
+      "template": "summary/S05_solution_concept.pptx",
+      "required_slots": [
+        "trace:S05:title.primary",
+        "trace:S05:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:S05:header.brand",
+        "trace:S05:header.tagline",
+        "trace:S05:header.message",
+        "trace:S05:footer.tagline.jp",
+        "trace:S05:footer.tagline.en",
+        "trace:S05:footer.date",
+        "trace:S05:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:S05:content.*",
+        "trace:S05:shape.*"
+      ],
+      "image_slots": [
+        "trace:S05:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:S05:content.rows",
+        "trace:S05:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:S05:content.auto.*",
+        "trace:S05:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:S05:content.auto.*": true,
+        "trace:S05:image.*": false
+      },
+      "required": {
+        "trace:S05:title.primary": true,
+        "trace:S05:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "SOLUTION_APPROACH",
+      "slide_id": "S06",
+      "surface": "summary",
+      "template": "summary/S06_solution_approach.pptx",
+      "required_slots": [
+        "trace:S06:title.primary",
+        "trace:S06:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:S06:header.brand",
+        "trace:S06:header.tagline",
+        "trace:S06:header.message",
+        "trace:S06:footer.tagline.jp",
+        "trace:S06:footer.tagline.en",
+        "trace:S06:footer.date",
+        "trace:S06:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:S06:content.*",
+        "trace:S06:shape.*"
+      ],
+      "image_slots": [
+        "trace:S06:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:S06:content.rows",
+        "trace:S06:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:S06:content.auto.*",
+        "trace:S06:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:S06:content.auto.*": true,
+        "trace:S06:image.*": false
+      },
+      "required": {
+        "trace:S06:title.primary": true,
+        "trace:S06:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "SYSTEM_ARCHITECTURE",
+      "slide_id": "S07",
+      "surface": "summary",
+      "template": "summary/S07_system_architecture.pptx",
+      "required_slots": [
+        "trace:S07:title.primary",
+        "trace:S07:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:S07:header.brand",
+        "trace:S07:header.tagline",
+        "trace:S07:header.message",
+        "trace:S07:footer.tagline.jp",
+        "trace:S07:footer.tagline.en",
+        "trace:S07:footer.date",
+        "trace:S07:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:S07:content.*",
+        "trace:S07:shape.*"
+      ],
+      "image_slots": [
+        "trace:S07:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:S07:content.rows",
+        "trace:S07:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:S07:content.auto.*",
+        "trace:S07:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:S07:content.auto.*": true,
+        "trace:S07:image.*": false
+      },
+      "required": {
+        "trace:S07:title.primary": true,
+        "trace:S07:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "KPI",
+      "slide_id": "KPI",
+      "surface": "summary",
+      "template": "summary/KPI.pptx",
+      "required_slots": [
+        "trace:KPI:title.primary",
+        "trace:KPI:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:KPI:header.brand",
+        "trace:KPI:header.tagline",
+        "trace:KPI:header.message",
+        "trace:KPI:footer.tagline.jp",
+        "trace:KPI:footer.tagline.en",
+        "trace:KPI:footer.date",
+        "trace:KPI:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.kpi_rows",
+        "context.kpi_targets"
+      ],
+      "static_slots": [
+        "trace:KPI:content.*",
+        "trace:KPI:shape.*"
+      ],
+      "image_slots": [
+        "trace:KPI:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:KPI:content.rows",
+        "trace:KPI:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:KPI:content.auto.*",
+        "trace:KPI:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:KPI:content.auto.*": true,
+        "trace:KPI:image.*": false
+      },
+      "required": {
+        "trace:KPI:title.primary": true,
+        "trace:KPI:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "SCHEDULE",
+      "slide_id": "SCHEDULE",
+      "surface": "summary",
+      "template": "summary/SCHEDULE.pptx",
+      "required_slots": [
+        "trace:SCHEDULE:title.primary",
+        "trace:SCHEDULE:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:SCHEDULE:header.brand",
+        "trace:SCHEDULE:header.tagline",
+        "trace:SCHEDULE:header.message",
+        "trace:SCHEDULE:footer.tagline.jp",
+        "trace:SCHEDULE:footer.tagline.en",
+        "trace:SCHEDULE:footer.date",
+        "trace:SCHEDULE:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.schedule_points",
+        "payload.desired_launch_timing"
+      ],
+      "static_slots": [
+        "trace:SCHEDULE:content.*",
+        "trace:SCHEDULE:shape.*"
+      ],
+      "image_slots": [
+        "trace:SCHEDULE:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:SCHEDULE:content.rows",
+        "trace:SCHEDULE:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:SCHEDULE:content.auto.*",
+        "trace:SCHEDULE:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:SCHEDULE:content.auto.*": true,
+        "trace:SCHEDULE:image.*": false
+      },
+      "required": {
+        "trace:SCHEDULE:title.primary": true,
+        "trace:SCHEDULE:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "ESTIMATE",
+      "slide_id": "ESTIMATE",
+      "surface": "summary",
+      "template": "summary/ESTIMATE.pptx",
+      "required_slots": [
+        "trace:ESTIMATE:title.primary",
+        "trace:ESTIMATE:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:ESTIMATE:header.brand",
+        "trace:ESTIMATE:header.tagline",
+        "trace:ESTIMATE:header.message",
+        "trace:ESTIMATE:footer.tagline.jp",
+        "trace:ESTIMATE:footer.tagline.en",
+        "trace:ESTIMATE:footer.date",
+        "trace:ESTIMATE:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.estimate"
+      ],
+      "static_slots": [
+        "trace:ESTIMATE:content.*",
+        "trace:ESTIMATE:shape.*"
+      ],
+      "image_slots": [
+        "trace:ESTIMATE:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:ESTIMATE:content.rows",
+        "trace:ESTIMATE:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:ESTIMATE:content.auto.*",
+        "trace:ESTIMATE:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:ESTIMATE:content.auto.*": true,
+        "trace:ESTIMATE:image.*": false
+      },
+      "required": {
+        "trace:ESTIMATE:title.primary": true,
+        "trace:ESTIMATE:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "NEXT_ACTION",
+      "slide_id": "S11",
+      "surface": "summary",
+      "template": "summary/S11_next_action.pptx",
+      "required_slots": [
+        "trace:S11:title.primary",
+        "trace:S11:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:S11:header.brand",
+        "trace:S11:header.tagline",
+        "trace:S11:header.message",
+        "trace:S11:footer.tagline.jp",
+        "trace:S11:footer.tagline.en",
+        "trace:S11:footer.date",
+        "trace:S11:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:S11:content.*",
+        "trace:S11:shape.*"
+      ],
+      "image_slots": [
+        "trace:S11:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:S11:content.rows",
+        "trace:S11:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:S11:content.auto.*",
+        "trace:S11:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:S11:content.auto.*": true,
+        "trace:S11:image.*": false
+      },
+      "required": {
+        "trace:S11:title.primary": true,
+        "trace:S11:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "COVER",
+      "slide_id": "D01",
+      "surface": "detail",
+      "template": "detail/D01_cover.pptx",
+      "required_slots": [
+        "trace:D01:title.primary",
+        "trace:D01:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D01:header.brand",
+        "trace:D01:header.tagline",
+        "trace:D01:header.message",
+        "trace:D01:footer.tagline.jp",
+        "trace:D01:footer.tagline.en",
+        "trace:D01:footer.date",
+        "trace:D01:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "data.deck_title",
+        "data.client_name"
+      ],
+      "static_slots": [
+        "trace:D01:content.*",
+        "trace:D01:shape.*"
+      ],
+      "image_slots": [
+        "trace:D01:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D01:content.rows",
+        "trace:D01:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D01:content.auto.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D01:content.auto.*": true,
+        "trace:D01:image.*": false
+      },
+      "required": {
+        "trace:D01:title.primary": true,
+        "trace:D01:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "CURRENT_STATE",
+      "slide_id": "D03",
+      "surface": "detail",
+      "template": "detail/D03_current_state.pptx",
+      "required_slots": [
+        "trace:D03:title.primary",
+        "trace:D03:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D03:header.brand",
+        "trace:D03:header.tagline",
+        "trace:D03:header.message",
+        "trace:D03:footer.tagline.jp",
+        "trace:D03:footer.tagline.en",
+        "trace:D03:footer.date",
+        "trace:D03:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:D03:content.*",
+        "trace:D03:shape.*"
+      ],
+      "image_slots": [
+        "trace:D03:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D03:content.rows",
+        "trace:D03:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D03:content.auto.*",
+        "trace:D03:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D03:content.auto.*": true,
+        "trace:D03:image.*": false
+      },
+      "required": {
+        "trace:D03:title.primary": true,
+        "trace:D03:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "PROBLEM_ANALYSIS",
+      "slide_id": "D04",
+      "surface": "detail",
+      "template": "detail/D04_problem_analysis.pptx",
+      "required_slots": [
+        "trace:D04:title.primary",
+        "trace:D04:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D04:header.brand",
+        "trace:D04:header.tagline",
+        "trace:D04:header.message",
+        "trace:D04:footer.tagline.jp",
+        "trace:D04:footer.tagline.en",
+        "trace:D04:footer.date",
+        "trace:D04:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:D04:content.*",
+        "trace:D04:shape.*"
+      ],
+      "image_slots": [
+        "trace:D04:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D04:content.rows",
+        "trace:D04:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D04:content.auto.*",
+        "trace:D04:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D04:content.auto.*": true,
+        "trace:D04:image.*": false
+      },
+      "required": {
+        "trace:D04:title.primary": true,
+        "trace:D04:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "MARKET_ANALYSIS",
+      "slide_id": "D05",
+      "surface": "detail",
+      "template": "detail/D05_market_analysis.pptx",
+      "required_slots": [
+        "trace:D05:title.primary",
+        "trace:D05:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D05:header.brand",
+        "trace:D05:header.tagline",
+        "trace:D05:header.message",
+        "trace:D05:footer.tagline.jp",
+        "trace:D05:footer.tagline.en",
+        "trace:D05:footer.date",
+        "trace:D05:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.target_user_rows",
+        "context.content_items"
+      ],
+      "static_slots": [
+        "trace:D05:content.*",
+        "trace:D05:shape.*"
+      ],
+      "image_slots": [
+        "trace:D05:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D05:content.rows",
+        "trace:D05:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D05:content.auto.*",
+        "trace:D05:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D05:content.auto.*": true,
+        "trace:D05:image.*": false
+      },
+      "required": {
+        "trace:D05:title.primary": true,
+        "trace:D05:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "TARGET_ANALYSIS",
+      "slide_id": "D06",
+      "surface": "detail",
+      "template": "detail/D06_target_analysis.pptx",
+      "required_slots": [
+        "trace:D06:title.primary",
+        "trace:D06:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D06:header.brand",
+        "trace:D06:header.tagline",
+        "trace:D06:header.message",
+        "trace:D06:footer.tagline.jp",
+        "trace:D06:footer.tagline.en",
+        "trace:D06:footer.date",
+        "trace:D06:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.target_user_rows",
+        "context.content_items"
+      ],
+      "static_slots": [
+        "trace:D06:content.*",
+        "trace:D06:shape.*"
+      ],
+      "image_slots": [
+        "trace:D06:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D06:content.rows",
+        "trace:D06:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D06:content.auto.*",
+        "trace:D06:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D06:content.auto.*": true,
+        "trace:D06:image.*": false
+      },
+      "required": {
+        "trace:D06:title.primary": true,
+        "trace:D06:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "SOLUTION_CONCEPT",
+      "slide_id": "D07",
+      "surface": "detail",
+      "template": "detail/D07_solution_concept.pptx",
+      "required_slots": [
+        "trace:D07:title.primary",
+        "trace:D07:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D07:header.brand",
+        "trace:D07:header.tagline",
+        "trace:D07:header.message",
+        "trace:D07:footer.tagline.jp",
+        "trace:D07:footer.tagline.en",
+        "trace:D07:footer.date",
+        "trace:D07:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:D07:content.*",
+        "trace:D07:shape.*"
+      ],
+      "image_slots": [
+        "trace:D07:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D07:content.rows",
+        "trace:D07:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D07:content.auto.*",
+        "trace:D07:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D07:content.auto.*": true,
+        "trace:D07:image.*": false
+      },
+      "required": {
+        "trace:D07:title.primary": true,
+        "trace:D07:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "SOLUTION_APPROACH",
+      "slide_id": "D08",
+      "surface": "detail",
+      "template": "detail/D08_solution_approach.pptx",
+      "required_slots": [
+        "trace:D08:title.primary",
+        "trace:D08:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D08:header.brand",
+        "trace:D08:header.tagline",
+        "trace:D08:header.message",
+        "trace:D08:footer.tagline.jp",
+        "trace:D08:footer.tagline.en",
+        "trace:D08:footer.date",
+        "trace:D08:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:D08:content.*",
+        "trace:D08:shape.*"
+      ],
+      "image_slots": [
+        "trace:D08:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D08:content.rows",
+        "trace:D08:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D08:content.auto.*",
+        "trace:D08:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D08:content.auto.*": true,
+        "trace:D08:image.*": false
+      },
+      "required": {
+        "trace:D08:title.primary": true,
+        "trace:D08:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "SYSTEM_ARCHITECTURE",
+      "slide_id": "D09",
+      "surface": "detail",
+      "template": "detail/D09_system_architecture.pptx",
+      "required_slots": [
+        "trace:D09:title.primary",
+        "trace:D09:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D09:header.brand",
+        "trace:D09:header.tagline",
+        "trace:D09:header.message",
+        "trace:D09:footer.tagline.jp",
+        "trace:D09:footer.tagline.en",
+        "trace:D09:footer.date",
+        "trace:D09:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:D09:content.*",
+        "trace:D09:shape.*"
+      ],
+      "image_slots": [
+        "trace:D09:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D09:content.rows",
+        "trace:D09:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D09:content.auto.*",
+        "trace:D09:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D09:content.auto.*": true,
+        "trace:D09:image.*": false
+      },
+      "required": {
+        "trace:D09:title.primary": true,
+        "trace:D09:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "ROI_OR_EFFECT",
+      "slide_id": "D12",
+      "surface": "detail",
+      "template": "detail/D12_roi_effect.pptx",
+      "required_slots": [
+        "trace:D12:title.primary",
+        "trace:D12:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D12:header.brand",
+        "trace:D12:header.tagline",
+        "trace:D12:header.message",
+        "trace:D12:footer.tagline.jp",
+        "trace:D12:footer.tagline.en",
+        "trace:D12:footer.date",
+        "trace:D12:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.kpi_rows",
+        "context.estimate"
+      ],
+      "static_slots": [
+        "trace:D12:content.*",
+        "trace:D12:shape.*"
+      ],
+      "image_slots": [
+        "trace:D12:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D12:content.rows",
+        "trace:D12:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D12:content.auto.*",
+        "trace:D12:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D12:content.auto.*": true,
+        "trace:D12:image.*": false
+      },
+      "required": {
+        "trace:D12:title.primary": true,
+        "trace:D12:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "OPERATING_MODEL",
+      "slide_id": "D17",
+      "surface": "detail",
+      "template": "detail/D17_operating_model.pptx",
+      "required_slots": [
+        "trace:D17:title.primary",
+        "trace:D17:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D17:header.brand",
+        "trace:D17:header.tagline",
+        "trace:D17:header.message",
+        "trace:D17:footer.tagline.jp",
+        "trace:D17:footer.tagline.en",
+        "trace:D17:footer.date",
+        "trace:D17:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.team_points",
+        "context.service_points"
+      ],
+      "static_slots": [
+        "trace:D17:content.*",
+        "trace:D17:shape.*"
+      ],
+      "image_slots": [
+        "trace:D17:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D17:content.rows",
+        "trace:D17:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D17:content.auto.*",
+        "trace:D17:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D17:content.auto.*": true,
+        "trace:D17:image.*": false
+      },
+      "required": {
+        "trace:D17:title.primary": true,
+        "trace:D17:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "SUPPORT",
+      "slide_id": "D18",
+      "surface": "detail",
+      "template": "detail/D18_support.pptx",
+      "required_slots": [
+        "trace:D18:title.primary",
+        "trace:D18:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D18:header.brand",
+        "trace:D18:header.tagline",
+        "trace:D18:header.message",
+        "trace:D18:footer.tagline.jp",
+        "trace:D18:footer.tagline.en",
+        "trace:D18:footer.date",
+        "trace:D18:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.service_points",
+        "context.team_points"
+      ],
+      "static_slots": [
+        "trace:D18:content.*",
+        "trace:D18:shape.*"
+      ],
+      "image_slots": [
+        "trace:D18:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D18:content.rows",
+        "trace:D18:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D18:content.auto.*",
+        "trace:D18:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D18:content.auto.*": true,
+        "trace:D18:image.*": false
+      },
+      "required": {
+        "trace:D18:title.primary": true,
+        "trace:D18:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "RISK",
+      "slide_id": "D19",
+      "surface": "detail",
+      "template": "detail/D19_risk.pptx",
+      "required_slots": [
+        "trace:D19:title.primary",
+        "trace:D19:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D19:header.brand",
+        "trace:D19:header.tagline",
+        "trace:D19:header.message",
+        "trace:D19:footer.tagline.jp",
+        "trace:D19:footer.tagline.en",
+        "trace:D19:footer.date",
+        "trace:D19:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.project_points",
+        "context.confirmation_items"
+      ],
+      "static_slots": [
+        "trace:D19:content.*",
+        "trace:D19:shape.*"
+      ],
+      "image_slots": [
+        "trace:D19:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D19:content.rows",
+        "trace:D19:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D19:content.auto.*",
+        "trace:D19:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D19:content.auto.*": true,
+        "trace:D19:image.*": false
+      },
+      "required": {
+        "trace:D19:title.primary": true,
+        "trace:D19:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "CASE_STUDY",
+      "slide_id": "D20",
+      "surface": "detail",
+      "template": "detail/D20_case_study.pptx",
+      "required_slots": [
+        "trace:D20:title.primary",
+        "trace:D20:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D20:header.brand",
+        "trace:D20:header.tagline",
+        "trace:D20:header.message",
+        "trace:D20:footer.tagline.jp",
+        "trace:D20:footer.tagline.en",
+        "trace:D20:footer.date",
+        "trace:D20:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.case_studies",
+        "context.case_triplets"
+      ],
+      "static_slots": [
+        "trace:D20:content.*",
+        "trace:D20:shape.*"
+      ],
+      "image_slots": [
+        "trace:D20:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D20:content.rows",
+        "trace:D20:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D20:content.auto.*",
+        "trace:D20:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D20:content.auto.*": true,
+        "trace:D20:image.*": false
+      },
+      "required": {
+        "trace:D20:title.primary": true,
+        "trace:D20:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "NEXT_ACTION",
+      "slide_id": "D21",
+      "surface": "detail",
+      "template": "detail/D21_next_action.pptx",
+      "required_slots": [
+        "trace:D21:title.primary",
+        "trace:D21:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D21:header.brand",
+        "trace:D21:header.tagline",
+        "trace:D21:header.message",
+        "trace:D21:footer.tagline.jp",
+        "trace:D21:footer.tagline.en",
+        "trace:D21:footer.date",
+        "trace:D21:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:D21:content.*",
+        "trace:D21:shape.*"
+      ],
+      "image_slots": [
+        "trace:D21:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D21:content.rows",
+        "trace:D21:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D21:content.auto.*",
+        "trace:D21:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D21:content.auto.*": true,
+        "trace:D21:image.*": false
+      },
+      "required": {
+        "trace:D21:title.primary": true,
+        "trace:D21:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "CLOSING",
+      "slide_id": "D22",
+      "surface": "detail",
+      "template": "detail/D22_closing.pptx",
+      "required_slots": [
+        "trace:D22:title.primary",
+        "trace:D22:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:D22:header.brand",
+        "trace:D22:header.tagline",
+        "trace:D22:header.message",
+        "trace:D22:footer.tagline.jp",
+        "trace:D22:footer.tagline.en",
+        "trace:D22:footer.date",
+        "trace:D22:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.client_name",
+        "context.concept"
+      ],
+      "static_slots": [
+        "trace:D22:content.*",
+        "trace:D22:shape.*"
+      ],
+      "image_slots": [
+        "trace:D22:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:D22:content.rows",
+        "trace:D22:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [
+        "trace:D22:content.auto.*",
+        "trace:D22:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:D22:content.auto.*": true,
+        "trace:D22:image.*": false
+      },
+      "required": {
+        "trace:D22:title.primary": true,
+        "trace:D22:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": false,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "COMPETITION",
+      "slide_id": "COMPETITION",
+      "surface": "conditional",
+      "template": "conditional/COMPETITION.pptx",
+      "required_slots": [
+        "trace:COMPETITION:title.primary",
+        "trace:COMPETITION:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:COMPETITION:header.brand",
+        "trace:COMPETITION:header.tagline",
+        "trace:COMPETITION:header.message",
+        "trace:COMPETITION:footer.tagline.jp",
+        "trace:COMPETITION:footer.tagline.en",
+        "trace:COMPETITION:footer.date",
+        "trace:COMPETITION:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.competitor_rows",
+        "context.competitor_company_name",
+        "context.competitor_site_url"
+      ],
+      "static_slots": [
+        "trace:COMPETITION:content.*",
+        "trace:COMPETITION:shape.*"
+      ],
+      "image_slots": [
+        "trace:COMPETITION:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:COMPETITION:content.rows",
+        "trace:COMPETITION:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": true,
+      "condition_source": "context.competitor_rows",
+      "unbound_slots": [
+        "trace:COMPETITION:content.auto.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:COMPETITION:content.auto.*": true,
+        "trace:COMPETITION:image.*": false
+      },
+      "required": {
+        "trace:COMPETITION:title.primary": true,
+        "trace:COMPETITION:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "WIN_PROBABILITY",
+      "slide_id": "WIN_PROBABILITY",
+      "surface": "conditional",
+      "template": "conditional/WIN_PROBABILITY.pptx",
+      "required_slots": [
+        "trace:WIN_PROBABILITY:title.primary",
+        "trace:WIN_PROBABILITY:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:WIN_PROBABILITY:header.brand",
+        "trace:WIN_PROBABILITY:header.tagline",
+        "trace:WIN_PROBABILITY:header.message",
+        "trace:WIN_PROBABILITY:footer.tagline.jp",
+        "trace:WIN_PROBABILITY:footer.tagline.en",
+        "trace:WIN_PROBABILITY:footer.date",
+        "trace:WIN_PROBABILITY:image.*"
+      ],
+      "dynamic_slots": [
+        "slide.title",
+        "slide.bullets",
+        "context.win_probability"
+      ],
+      "static_slots": [
+        "trace:WIN_PROBABILITY:content.*",
+        "trace:WIN_PROBABILITY:shape.*"
+      ],
+      "image_slots": [
+        "trace:WIN_PROBABILITY:image.*"
+      ],
+      "repeatable_slots": [
+        "trace:WIN_PROBABILITY:content.rows",
+        "trace:WIN_PROBABILITY:content.cards"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": true,
+      "condition_source": "context.win_probability",
+      "unbound_slots": [
+        "trace:WIN_PROBABILITY:content.auto.*",
+        "trace:WIN_PROBABILITY:image.*"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "lead": 14,
+        "content.body": 10
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "lead": 10,
+        "content.body": 8
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "lead": 3,
+        "content.body": 4,
+        "content.row": 3
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "lead": 110,
+        "content.body": 120,
+        "content.row": 48
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "lead": true,
+        "content.body": true,
+        "content.row": true
+      },
+      "allow_clear": {
+        "trace:WIN_PROBABILITY:content.auto.*": true,
+        "trace:WIN_PROBABILITY:image.*": false
+      },
+      "required": {
+        "trace:WIN_PROBABILITY:title.primary": true,
+        "trace:WIN_PROBABILITY:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        },
+        "lead": {
+          "max_characters": 110,
+          "max_lines": 3,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "content.body": {
+          "max_characters": 120,
+          "max_lines": 4,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "content.row": {
+          "max_characters": 48,
+          "max_lines": 3,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "ROADMAP",
+      "slide_id": "ROADMAP",
+      "surface": "conditional",
+      "template": "conditional/ROADMAP.pptx",
+      "required_slots": [
+        "trace:ROADMAP:title.primary",
+        "trace:ROADMAP:footer.brand"
+      ],
+      "optional_slots": [
+        "trace:ROADMAP:header.date",
+        "trace:ROADMAP:subtitle.primary",
+        "trace:ROADMAP:phase.*",
+        "trace:ROADMAP:milestone.*",
+        "trace:ROADMAP:success.*",
+        "trace:ROADMAP:objective.message"
+      ],
+      "dynamic_slots": [
+        "trace:ROADMAP:phase.{1..5}.title",
+        "trace:ROADMAP:phase.{1..5}.duration",
+        "trace:ROADMAP:phase.{1..5}.description",
+        "trace:ROADMAP:phase.{1..5}.action.{1..4}",
+        "trace:ROADMAP:milestone.{1..5}.title",
+        "trace:ROADMAP:milestone.{1..5}.timing",
+        "trace:ROADMAP:success.{1..4}.title",
+        "trace:ROADMAP:success.{1..4}.body",
+        "trace:ROADMAP:objective.message"
+      ],
+      "static_slots": [
+        "trace:ROADMAP:shape.*",
+        "trace:ROADMAP:header.*",
+        "trace:ROADMAP:footer.*"
+      ],
+      "repeatable_slots": [
+        "trace:ROADMAP:phase.*",
+        "trace:ROADMAP:milestone.*",
+        "trace:ROADMAP:success.*"
+      ],
+      "max_character_guidance": {
+        "title.primary": 32,
+        "subtitle.primary": 60,
+        "phase.title": 16,
+        "phase.duration": 12,
+        "phase.description": 42,
+        "phase.action": 24,
+        "milestone.title": 16,
+        "milestone.timing": 12,
+        "success.title": 24,
+        "success.body": 42,
+        "objective.message": 58
+      },
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": true,
+      "condition_source": "context.roadmap or context.verified_roadmap",
+      "unbound_slots": [
+        "trace:ROADMAP:phase.*",
+        "trace:ROADMAP:milestone.*",
+        "trace:ROADMAP:success.*",
+        "trace:ROADMAP:objective.message"
+      ],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {
+        "title.primary": 32,
+        "phase.title": 12,
+        "phase.duration": 9,
+        "phase.description": 9,
+        "phase.action": 8,
+        "milestone.title": 9,
+        "milestone.timing": 8,
+        "success.title": 10,
+        "success.body": 8,
+        "objective.message": 13
+      },
+      "minimum_font_size": {
+        "title.primary": 10,
+        "phase.title": 9,
+        "phase.duration": 8,
+        "phase.description": 8,
+        "phase.action": 7,
+        "milestone.title": 8,
+        "milestone.timing": 7,
+        "success.title": 8,
+        "success.body": 7,
+        "objective.message": 10
+      },
+      "max_lines": {
+        "title.primary": 2,
+        "subtitle.primary": 2,
+        "phase.title": 2,
+        "phase.duration": 1,
+        "phase.description": 3,
+        "phase.action": 2,
+        "milestone.title": 1,
+        "milestone.timing": 1,
+        "success.title": 2,
+        "success.body": 3,
+        "objective.message": 2
+      },
+      "max_characters": {
+        "title.primary": 32,
+        "subtitle.primary": 60,
+        "phase.title": 16,
+        "phase.duration": 12,
+        "phase.description": 42,
+        "phase.action": 24,
+        "milestone.title": 16,
+        "milestone.timing": 12,
+        "success.title": 24,
+        "success.body": 42,
+        "objective.message": 58
+      },
+      "allow_font_shrink": {
+        "title.primary": false,
+        "subtitle.primary": true,
+        "phase.title": false,
+        "phase.duration": false,
+        "phase.description": true,
+        "phase.action": true,
+        "milestone.title": false,
+        "milestone.timing": false,
+        "success.title": true,
+        "success.body": true,
+        "objective.message": true
+      },
+      "allow_clear": {
+        "trace:ROADMAP:header.date": true,
+        "trace:ROADMAP:phase.*": true,
+        "trace:ROADMAP:milestone.*": true,
+        "trace:ROADMAP:success.*": true,
+        "trace:ROADMAP:objective.message": true
+      },
+      "required": {
+        "trace:ROADMAP:title.primary": true,
+        "trace:ROADMAP:footer.brand": true
+      },
+      "slot_constraints": {
+        "title.primary": {
+          "max_characters": 32,
+          "max_lines": 2,
+          "preferred_font_size": 32,
+          "minimum_font_size": 10,
+          "allow_font_shrink": false
+        }
+      },
+      "slot_prefix_constraints": {
+        "subtitle.primary": {
+          "max_characters": 60,
+          "max_lines": 2,
+          "preferred_font_size": 14,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        },
+        "phase.title": {
+          "max_characters": 16,
+          "max_lines": 2,
+          "preferred_font_size": 12,
+          "minimum_font_size": 9,
+          "allow_font_shrink": false
+        },
+        "phase.duration": {
+          "max_characters": 12,
+          "max_lines": 1,
+          "preferred_font_size": 9,
+          "minimum_font_size": 8,
+          "allow_font_shrink": false
+        },
+        "phase.description": {
+          "max_characters": 42,
+          "max_lines": 3,
+          "preferred_font_size": 9,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "phase.action": {
+          "max_characters": 24,
+          "max_lines": 2,
+          "preferred_font_size": 8,
+          "minimum_font_size": 7,
+          "allow_font_shrink": true
+        },
+        "milestone.title": {
+          "max_characters": 16,
+          "max_lines": 1,
+          "preferred_font_size": 9,
+          "minimum_font_size": 8,
+          "allow_font_shrink": false
+        },
+        "milestone.timing": {
+          "max_characters": 12,
+          "max_lines": 1,
+          "preferred_font_size": 8,
+          "minimum_font_size": 7,
+          "allow_font_shrink": false
+        },
+        "success.title": {
+          "max_characters": 24,
+          "max_lines": 2,
+          "preferred_font_size": 10,
+          "minimum_font_size": 8,
+          "allow_font_shrink": true
+        },
+        "success.body": {
+          "max_characters": 42,
+          "max_lines": 3,
+          "preferred_font_size": 8,
+          "minimum_font_size": 7,
+          "allow_font_shrink": true
+        },
+        "objective.message": {
+          "max_characters": 58,
+          "max_lines": 2,
+          "preferred_font_size": 13,
+          "minimum_font_size": 10,
+          "allow_font_shrink": true
+        }
+      },
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED",
+      "continuation_policy": {
+        "three_phases": "clear_unused_phase_and_milestone_columns",
+        "four_phases": "clear_unused_phase_and_milestone_columns",
+        "five_phases": "canonical_single_slide_layout",
+        "six_or_more_phases": "Detail-only continuation; never squeeze into five columns"
+      },
+      "provenance_policy": {
+        "allowed": ["VERIFIED", "USER_PROVIDED", "DERIVED_FROM_VERIFIED"],
+        "disallowed": ["GENERATED", "CANONICAL_SAMPLE", "UNKNOWN"],
+        "missing_behavior": "clear dynamic slot or fail closed to existing renderer"
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "COMPETITION": {
+    "native_renderable": false,
+    "failure_reason": "EVIDENCE_REQUIRED",
+    "unresolved_required_slots": []
+  },
+  "WIN_PROBABILITY": {
+    "native_renderable": false,
+    "failure_reason": "EVIDENCE_REQUIRED",
+    "unresolved_required_slots": []
+  },
+  "dispatcher_traces": {
+    "COMPETITIVE_COMPARISON": {
+      "ROLE": "COMPETITION",
+      "REQUESTED_ROLE": "COMPETITIVE_COMPARISON",
+      "RUNTIME_ROLE": "COMPETITION",
+      "TEMPLATE_ID": "COMPETITION",
+      "NATIVE_REQUESTED": true,
+      "NATIVE_ELIGIBLE": false,
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "HUMAN_APPROVAL_STATUS": "PASS",
+      "PROVENANCE_STATUS": "FAIL",
+      "TEXT_FIT_STATUS": "NOT_RUN",
+      "SAMPLE_LEAK_STATUS": "NOT_RUN"
+    },
+    "WIN_PROBABILITY": {
+      "ROLE": "WIN_PROBABILITY",
+      "REQUESTED_ROLE": "WIN_PROBABILITY",
+      "RUNTIME_ROLE": "WIN_PROBABILITY",
+      "TEMPLATE_ID": "WIN_PROBABILITY",
+      "NATIVE_REQUESTED": true,
+      "NATIVE_ELIGIBLE": false,
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "HUMAN_APPROVAL_STATUS": "PASS",
+      "PROVENANCE_STATUS": "FAIL",
+      "TEXT_FIT_STATUS": "NOT_RUN",
+      "SAMPLE_LEAK_STATUS": "NOT_RUN"
+    }
+  }
+}
