@@ -1,0 +1,22 @@
+{
+  "status": "CASE_STUDY_EVIDENCE_IMAGE_REQUIRED",
+  "fields": {
+    "case_title": "USER_PROVIDED_TEXT_ONLY",
+    "company": "USER_PROVIDED_TEXT_ONLY",
+    "project": "USER_PROVIDED_TEXT_ONLY",
+    "verified_outcomes": "UNKNOWN",
+    "before_after_values": "UNKNOWN",
+    "evidence_text": "USER_PROVIDED/DERIVED",
+    "image_asset": "MISSING",
+    "image_provenance": "MISSING",
+    "permission_safe_to_use": "MISSING"
+  },
+  "canonical_images_are_customer_evidence": false,
+  "unlock_requires": [
+    "verified case record",
+    "verified outcomes/source",
+    "image source reference",
+    "permission/safe_to_use approval"
+  ],
+  "no_image_behavior": "EVIDENCE_IMAGE_REQUIRED; never bind Canonical photo"
+}

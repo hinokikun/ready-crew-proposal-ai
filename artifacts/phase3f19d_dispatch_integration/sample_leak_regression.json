@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "missing_dynamic_content": "KPI evidence absent",
+  "native_package_created": false,
+  "fallback_used": true,
+  "canonical_sample_values_survived": false,
+  "failure_reason": "EVIDENCE_REQUIRED",
+  "sample_content_policy": "STATIC_SAMPLE_PROHIBITED"
+}

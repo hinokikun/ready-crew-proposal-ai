@@ -1,0 +1,62 @@
+{
+  "phase": "Phase3F-22B-A",
+  "assets": [
+    {
+      "ROLE": "COMPETITION",
+      "BEFORE_RESYNC": {
+        "CLASSIFICATION": "STALE_RUNTIME_COPY",
+        "VISIBLE_DIFFERENCE": "UNKNOWN_FROM_RAW_HASH; PRIOR_AUDIT_FOUND_NORMALIZED_MISMATCH",
+        "GEOMETRY_EQUIVALENT": true,
+        "TEXT_FORMAT_EQUIVALENT": true
+      },
+      "AFTER_RESYNC": {
+        "CLASSIFICATION": "SEMANTIC_METADATA_ONLY",
+        "VISIBLE_DIFFERENCE": false,
+        "GEOMETRY_EQUIVALENT": true,
+        "TEXT_FORMAT_EQUIVALENT": true,
+        "NORMALIZED_VISIBLE_SLIDE_EQUIVALENT": true,
+        "PACKAGE_METADATA_DIFFERENCE": [
+          "ppt/slides/slide1.xml"
+        ]
+      }
+    },
+    {
+      "ROLE": "WIN_PROBABILITY",
+      "BEFORE_RESYNC": {
+        "CLASSIFICATION": "STALE_RUNTIME_COPY",
+        "VISIBLE_DIFFERENCE": "UNKNOWN_FROM_RAW_HASH; PRIOR_AUDIT_FOUND_NORMALIZED_MISMATCH",
+        "GEOMETRY_EQUIVALENT": true,
+        "TEXT_FORMAT_EQUIVALENT": false
+      },
+      "AFTER_RESYNC": {
+        "CLASSIFICATION": "SEMANTIC_METADATA_ONLY",
+        "VISIBLE_DIFFERENCE": false,
+        "GEOMETRY_EQUIVALENT": true,
+        "TEXT_FORMAT_EQUIVALENT": true,
+        "NORMALIZED_VISIBLE_SLIDE_EQUIVALENT": true,
+        "PACKAGE_METADATA_DIFFERENCE": [
+          "ppt/slides/slide1.xml"
+        ]
+      }
+    },
+    {
+      "ROLE": "SCHEDULE",
+      "BEFORE_RESYNC": {
+        "CLASSIFICATION": "STALE_RUNTIME_COPY",
+        "VISIBLE_DIFFERENCE": "UNKNOWN_FROM_RAW_HASH; PRIOR_AUDIT_FOUND_NORMALIZED_MISMATCH",
+        "GEOMETRY_EQUIVALENT": true,
+        "TEXT_FORMAT_EQUIVALENT": true
+      },
+      "AFTER_RESYNC": {
+        "CLASSIFICATION": "SEMANTIC_METADATA_ONLY",
+        "VISIBLE_DIFFERENCE": false,
+        "GEOMETRY_EQUIVALENT": true,
+        "TEXT_FORMAT_EQUIVALENT": true,
+        "NORMALIZED_VISIBLE_SLIDE_EQUIVALENT": true,
+        "PACKAGE_METADATA_DIFFERENCE": [
+          "ppt/slides/slide1.xml"
+        ]
+      }
+    }
+  ]
+}

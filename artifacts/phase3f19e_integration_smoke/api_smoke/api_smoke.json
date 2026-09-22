@@ -1,0 +1,10 @@
+{
+  "status": "SKIPPED_LOCAL_BACKEND_UNAVAILABLE",
+  "backend_url": "http://localhost:8001",
+  "endpoints": [
+    "/api/download-pptx",
+    "/api/download-summary-pptx"
+  ],
+  "tested": false,
+  "reason": "No local listener on port 8001; no deployed endpoint was called."
+}

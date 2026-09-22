@@ -1,0 +1,43 @@
+{
+  "status": "READY_FOR_LOCAL_CHECKPOINT",
+  "branch": "phase3f-native-integration",
+  "base_head": "8f7dc922d8cdc8c1475d4bd3c88ea1e238826406",
+  "pre_repair_head": "2ccb77fc896bd9b5935987fe7f5dfd4cd944ab2c",
+  "expected_changes": {
+    "production_code_files": [
+      "backend/app/services/proposal_quality_upgrade.py"
+    ],
+    "test_files": [
+      "backend/tests/test_phase3f19a_native_foundation.py",
+      "backend/tests/test_phase3f19b_native_content_adapter.py",
+      "backend/tests/test_phase3f19c_evidence_binding.py"
+    ],
+    "runtime_pptx_dependency_count": 24,
+    "registry_source_pptx_count": 29,
+    "audit_artifact_count": 11
+  },
+  "repair_scope": [
+    "Summary hard cap 10 -> 11",
+    "Registry-referenced runtime PPTX dependencies",
+    "Registry-referenced source PPTX trace assets",
+    "Stale 29-role and connected-dispatcher assertions",
+    "Competition and Win Probability v2 evidence fixtures"
+  ],
+  "excluded": [
+    "frontend/UI changes",
+    "design-refresh worktree changes",
+    "temporary .codex-* directories",
+    "unrelated artifacts",
+    "font_inventory.json",
+    "registry.json edits",
+    "adapter/provenance guard changes",
+    "environment files",
+    "Render/Vercel configuration",
+    "deployment and network operations"
+  ],
+  "unrelated_changes_included": 0,
+  "feature_flag_default": "OFF",
+  "frozen_template_mutated": false,
+  "source_hashes_verified": true,
+  "runtime_hashes_verified": true
+}

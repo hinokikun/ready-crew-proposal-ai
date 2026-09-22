@@ -1,0 +1,29 @@
+{
+  "phase": "Phase3F-22B-A",
+  "source_of_result": "Phase3F-22B focused fail-closed regression after runtime resynchronization",
+  "cases": [
+    {
+      "ROLE": "COMPETITION",
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "SAMPLE_VALUES_USED": false
+    },
+    {
+      "ROLE": "WIN_PROBABILITY",
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "SAMPLE_VALUES_USED": false
+    },
+    {
+      "ROLE": "SCHEDULE",
+      "NATIVE_RENDERED": false,
+      "FALLBACK_USED": true,
+      "FAILURE_REASON": "EVIDENCE_REQUIRED",
+      "SAMPLE_VALUES_USED": false
+    }
+  ],
+  "current_data_fallback_count": 3,
+  "status": "PASS"
+}

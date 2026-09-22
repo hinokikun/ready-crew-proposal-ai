@@ -1,0 +1,21 @@
+{
+  "market": {
+    "status": "MARKET_EVIDENCE_REQUIRED",
+    "researched_evidence": "UNAVAILABLE_IN_PPTX_CONTEXT",
+    "user_input": "AVAILABLE_AS_RAW_TEXT",
+    "generated_narrative": "AVAILABLE",
+    "generic_sample": "PROHIBITED",
+    "unlock_requires": [
+      "source URL/document/date or confirmed customer-specific market fact"
+    ]
+  },
+  "target": {
+    "status": "TARGET_EVIDENCE_REQUIRED",
+    "customer_segment_information": "UNAVAILABLE_AS_VERIFIED_FIELD",
+    "hypothesis": "DERIVED/GENERATED",
+    "generic_persona": "GENERATED",
+    "unlock_requires": [
+      "explicit customer/user segment input or verified research with provenance"
+    ]
+  }
+}

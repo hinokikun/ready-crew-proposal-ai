@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "flag": "PPTX_APPROVED_NATIVE_RENDERER_ENABLED",
+  "value": false,
+  "native_request_count": 0,
+  "summary_slide_count": 11,
+  "detail_path": "existing renderer retained",
+  "role_sequence_changed": false,
+  "slides_added": false,
+  "slides_removed": false
+}

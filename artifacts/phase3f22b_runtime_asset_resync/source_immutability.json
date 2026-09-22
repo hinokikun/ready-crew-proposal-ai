@@ -1,0 +1,31 @@
+{
+  "phase": "Phase3F-22B-A",
+  "sources": [
+    {
+      "ROLE": "COMPETITION",
+      "SOURCE_PATH": "artifacts/phase3f08_native_trace_gap/03_competitive_comparison/native_trace.pptx",
+      "PRE_HASH": "a87ced5377e0d5b9baaa2f4d146b4e2798b57b727442c91fff3e9ab25e805609",
+      "POST_HASH": "a87ced5377e0d5b9baaa2f4d146b4e2798b57b727442c91fff3e9ab25e805609",
+      "SOURCE_CHANGED": false
+    },
+    {
+      "ROLE": "WIN_PROBABILITY",
+      "SOURCE_PATH": "artifacts/phase3f08_native_trace_gap/04_win_probability/native_trace.pptx",
+      "PRE_HASH": "9c392a058faed57797acbc03d6811ff11e65d94b72b629666865e3203869fb09",
+      "POST_HASH": "9c392a058faed57797acbc03d6811ff11e65d94b72b629666865e3203869fb09",
+      "SOURCE_CHANGED": false
+    },
+    {
+      "ROLE": "SCHEDULE",
+      "SOURCE_PATH": "artifacts/phase3f08_native_trace_gap/05_schedule_governance/native_trace.pptx",
+      "PRE_HASH": "e13ddb73e4b386629bd134587d60fd5088aae1d91c3cd6c24bb0d150a3e7193d",
+      "POST_HASH": "e13ddb73e4b386629bd134587d60fd5088aae1d91c3cd6c24bb0d150a3e7193d",
+      "SOURCE_CHANGED": false
+    }
+  ],
+  "ROADMAP_RUNTIME_CHANGED": false,
+  "ROADMAP_RUNTIME_SHA256": "5d08591ad461ec9184e5ddf4fa4860ec2c0562186b1a9a23fdf4721824f079cb",
+  "PRODUCTION_DISPATCHER_CHANGED": false,
+  "FEATURE_FLAG_DEFAULT_CHANGED": false,
+  "status": "PASS"
+}

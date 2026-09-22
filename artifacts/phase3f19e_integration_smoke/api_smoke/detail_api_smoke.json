@@ -1,0 +1,33 @@
+{
+  "phase": "Phase3F-19E-A",
+  "status": "PASS",
+  "endpoint": "/api/download-pptx",
+  "backend_started": true,
+  "backend_port": 8001,
+  "execution_context": "isolated local backend with temporary SQLite database",
+  "feature_flag": {
+    "name": "PPTX_APPROVED_NATIVE_RENDERER_ENABLED",
+    "effective_state": "OFF",
+    "process_local_override": "false",
+    "persisted": false
+  },
+  "authentication": {
+    "login_http_status": 200,
+    "role": "admin",
+    "auth_behavior_changed": false,
+    "permission_behavior_changed": false
+  },
+  "request_schema_changed": false,
+  "response_schema_changed": false,
+  "http_status": 200,
+  "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "bytes": 54390,
+  "content_disposition": "attachment; filename*=UTF-8''%E3%83%86%E3%82%B9%E3%83%88%E6%A0%AA%E5%BC%8F%E4%BC%9A%E7%A4%BE_Phase3F-19E%20API%20Smoke.pptx",
+  "output_file": "api_smoke/detail_api_response.pptx",
+  "pptx_valid": true,
+  "zip_valid": true,
+  "slide_count": 13,
+  "blank_slide_count": 0,
+  "media_count": 0,
+  "server_exception": false
+}

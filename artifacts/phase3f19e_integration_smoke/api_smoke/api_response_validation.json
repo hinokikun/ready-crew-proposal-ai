@@ -1,0 +1,48 @@
+{
+  "phase": "Phase3F-19E-A",
+  "status": "PASS",
+  "backend": {
+    "started": true,
+    "port": 8001,
+    "stopped_after_validation": true,
+    "port_closed_after_validation": true,
+    "temporary_database_used": true,
+    "temporary_database_removed": true
+  },
+  "feature_flag": {
+    "name": "PPTX_APPROVED_NATIVE_RENDERER_ENABLED",
+    "final_effective_state": "OFF",
+    "env_file_changed": false,
+    "config_persisted": false
+  },
+  "summary": {
+    "http_status": 200,
+    "content_type_unchanged": true,
+    "non_zero_bytes": true,
+    "valid_zip_package": true,
+    "presentation_xml_present": true,
+    "slide_count": 11,
+    "expected_slide_count": 11,
+    "blank_slides": 0,
+    "content_disposition_present": true,
+    "valid": true
+  },
+  "detail": {
+    "http_status": 200,
+    "content_type_unchanged": true,
+    "non_zero_bytes": true,
+    "valid_zip_package": true,
+    "presentation_xml_present": true,
+    "slide_count": 13,
+    "blank_slides": 0,
+    "content_disposition_present": true,
+    "valid": true
+  },
+  "auth_behavior_changed": false,
+  "permission_behavior_changed": false,
+  "request_schema_changed": false,
+  "response_schema_changed": false,
+  "production_deployed": false,
+  "stage_commit_push": "NOT EXECUTED",
+  "human_visual_pass_self_declared": false
+}

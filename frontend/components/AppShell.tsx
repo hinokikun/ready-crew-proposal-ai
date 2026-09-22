@@ -2268,7 +2268,6 @@ export default function Home() {
           semanticRelationships: summary ? undefined : semanticRelationshipsForTransport,
           diagnosticCorrelationId: !summary && candidateBoundaryDiagnosticRef.current.active ? candidateBoundaryDiagnosticRef.current.correlationId : undefined,
           onDiagnosticCaptureStatus: (status) => {
-            const correlationId = candidateBoundaryDiagnosticRef.current.correlationId;
             if (status === "TRANSPORT_CAPTURE_FAILED") {
               candidateBoundaryDiagnosticRef.current.active = false;
               setCandidateBoundaryDiagnostic((current) => ({ ...current, status: "failed", transportStatus: "failed", resultStatus: "invalid" }));

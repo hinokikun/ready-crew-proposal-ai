@@ -1,0 +1,37 @@
+{
+  "status": "PASS",
+  "deck": {
+    "path": "C:\\Users\\h_umitsu\\Documents\\Codex\\2026-06-22\\web-ai-ready-crew-1-2\\ready-crew-proposal-ai-design\\artifacts\\phase3f19e_integration_smoke\\long_text\\long_text_detail.pptx",
+    "valid_zip": true,
+    "slide_count": 25,
+    "media_count": 0,
+    "editable_text_objects": 270,
+    "editable_shape_objects": 578,
+    "editable_table_objects": 0,
+    "full_slide_raster_detected": false,
+    "off_canvas_objects": 0,
+    "blank_slides": 0,
+    "text_sample": [
+      "これは長文ストレステスト用の合成テキストです",
+      "業務改善による業務改善",
+      "テスト株式会社",
+      "ISSUED 2026.09.21",
+      "ProposalPilot / AI営業秘書",
+      "EXECUTIVE",
+      "経営判断の要点",
+      "02",
+      "ProposalPilot / AI営業秘書",
+      "背景: 導入範囲の明確化",
+      "課題適合と運用定着で勝つ",
+      "1"
+    ],
+    "slide_xml_count": 25,
+    "page_size": {
+      "width_emu": 12191695,
+      "height_emu": 6858000,
+      "aspect": 1.7777
+    }
+  },
+  "silent_truncation": false,
+  "policy": "existing text-fit/fallback path; Human review still required"
+}

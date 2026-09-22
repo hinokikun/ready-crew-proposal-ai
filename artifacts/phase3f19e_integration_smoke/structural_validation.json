@@ -1,0 +1,124 @@
+{
+  "status": "PASS",
+  "decks": {
+    "flag_off_summary": {
+      "valid_zip": true,
+      "slide_count": 11,
+      "media_count": 0,
+      "editable_text_objects": 106,
+      "editable_shape_objects": 240,
+      "editable_table_objects": 0,
+      "full_slide_raster_detected": false,
+      "off_canvas_objects": 0,
+      "blank_slides": 0,
+      "slide_xml_count": 11,
+      "page_size": {
+        "width_emu": 12191695,
+        "height_emu": 6858000,
+        "aspect": 1.7777
+      }
+    },
+    "flag_off_detail": {
+      "valid_zip": true,
+      "slide_count": 25,
+      "media_count": 0,
+      "editable_text_objects": 270,
+      "editable_shape_objects": 578,
+      "editable_table_objects": 0,
+      "full_slide_raster_detected": false,
+      "off_canvas_objects": 0,
+      "blank_slides": 0,
+      "slide_xml_count": 25,
+      "page_size": {
+        "width_emu": 12191695,
+        "height_emu": 6858000,
+        "aspect": 1.7777
+      }
+    },
+    "flag_on_summary": {
+      "valid_zip": true,
+      "slide_count": 11,
+      "media_count": 0,
+      "editable_text_objects": 319,
+      "editable_shape_objects": 894,
+      "editable_table_objects": 0,
+      "full_slide_raster_detected": false,
+      "off_canvas_objects": 0,
+      "blank_slides": 0,
+      "slide_xml_count": 11,
+      "page_size": {
+        "width_emu": 12191695,
+        "height_emu": 6858000,
+        "aspect": 1.7777
+      }
+    },
+    "flag_on_eligible": {
+      "valid_zip": true,
+      "slide_count": 1,
+      "media_count": 0,
+      "editable_text_objects": 47,
+      "editable_shape_objects": 169,
+      "editable_table_objects": 0,
+      "full_slide_raster_detected": false,
+      "off_canvas_objects": 0,
+      "blank_slides": 0,
+      "slide_xml_count": 1,
+      "page_size": {
+        "width_emu": 12191695,
+        "height_emu": 6858000,
+        "aspect": 1.7777
+      }
+    },
+    "blocked_kpi_fallback": {
+      "valid_zip": true,
+      "slide_count": 1,
+      "media_count": 0,
+      "editable_text_objects": 9,
+      "editable_shape_objects": 19,
+      "editable_table_objects": 0,
+      "full_slide_raster_detected": false,
+      "off_canvas_objects": 0,
+      "blank_slides": 0,
+      "slide_xml_count": 1,
+      "page_size": {
+        "width_emu": 12191695,
+        "height_emu": 6858000,
+        "aspect": 1.7777
+      }
+    },
+    "long_text": {
+      "valid_zip": true,
+      "slide_count": 25,
+      "media_count": 0,
+      "editable_text_objects": 270,
+      "editable_shape_objects": 578,
+      "editable_table_objects": 0,
+      "full_slide_raster_detected": false,
+      "off_canvas_objects": 0,
+      "blank_slides": 0,
+      "slide_xml_count": 25,
+      "page_size": {
+        "width_emu": 12191695,
+        "height_emu": 6858000,
+        "aspect": 1.7777
+      }
+    },
+    "renderer_exception": {
+      "valid_zip": true,
+      "slide_count": 1,
+      "media_count": 0,
+      "editable_text_objects": 15,
+      "editable_shape_objects": 28,
+      "editable_table_objects": 0,
+      "full_slide_raster_detected": false,
+      "off_canvas_objects": 0,
+      "blank_slides": 0,
+      "slide_xml_count": 1,
+      "page_size": {
+        "width_emu": 12191695,
+        "height_emu": 6858000,
+        "aspect": 1.7777
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "status": "ESTIMATE_EVIDENCE_REQUIRED",
+  "availability": {
+    "item_name": "AVAILABLE but heuristic/default in current EstimateSummary",
+    "description": "MISSING",
+    "quantity": "MISSING",
+    "unit": "MISSING",
+    "unit_price": "MISSING",
+    "amount": "DERIVABLE_FROM_HEURISTIC_MIN_MAX_ONLY",
+    "subtotal": "DERIVED_HEURISTIC",
+    "total": "DERIVED_HEURISTIC",
+    "assumptions": "GENERATED_DEFAULTS",
+    "scope": "DERIVED",
+    "exclusions": "GENERATED_DEFAULTS",
+    "payment_timing": "MISSING"
+  },
+  "budget_range": {
+    "status": "AVAILABLE",
+    "classification": "USER_PROVIDED",
+    "safe_display": "予算未入力 or budget range only",
+    "unsafe_conversion": "detailed line-item evidence"
+  },
+  "categories": {
+    "REAL_STRUCTURED_ESTIMATE": "NOT_AVAILABLE",
+    "GENERATED_ESTIMATE_TEXT": "AVAILABLE",
+    "BUDGET_RANGE_ONLY": "AVAILABLE",
+    "MISSING": [
+      "quantity",
+      "unit",
+      "unit_price",
+      "payment_timing"
+    ]
+  },
+  "unlock_requires": [
+    "verified line item descriptions",
+    "quantity",
+    "unit",
+    "unit price",
+    "amount basis",
+    "subtotal/total arithmetic",
+    "assumptions/scope/exclusions/payment timing provenance"
+  ]
+}

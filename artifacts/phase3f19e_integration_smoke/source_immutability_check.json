@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "native_templates_unchanged": true,
+  "canonical_sources_unchanged": true,
+  "production_sources_unchanged_during_smoke": true,
+  "fixture_files_untouched": true,
+  "env_persisted": null
+}

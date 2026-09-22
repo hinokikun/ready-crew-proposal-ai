@@ -1,0 +1,25 @@
+{
+  "decision": "C_AND_D",
+  "changes": [
+    {
+      "type": "C",
+      "name": "provenance_check_update",
+      "status": "IMPLEMENTED",
+      "file": "backend/app/services/pptx_parts/native_trace_content_adapter.py",
+      "details": "existing semantic_candidates are classified using authority/review/source metadata; generated-only candidates cannot unlock sensitive roles"
+    },
+    {
+      "type": "D",
+      "name": "role_specific_fallback_update",
+      "status": "IMPLEMENTED",
+      "file": "backend/app/services/pptx_parts/native_trace_content_adapter.py",
+      "details": "KPI/estimate/schedule/competition/win/case branches emit explicit evidence diagnostics and remain blocked without acceptable evidence; case image requires permission"
+    }
+  ],
+  "mapping_only_update": false,
+  "new_production_field_required": true,
+  "new_production_field_implemented": false,
+  "new_field_note": "Current PptxContext does not carry verified item-level evidence/image permission; future dispatcher integration must consume existing semantic candidate transport or an already-approved source, not fabricate one.",
+  "dispatcher_connected": false,
+  "feature_flag_enabled": false
+}

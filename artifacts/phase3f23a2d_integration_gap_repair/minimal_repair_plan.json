@@ -1,0 +1,46 @@
+{
+  "repair_scope": "minimal",
+  "categories": [
+    {
+      "category": "CODE_FIX",
+      "path": "backend/app/services/proposal_quality_upgrade.py",
+      "reason": "Change MAX_SUMMARY_SLIDES from 10 to the approved 11-slide contract.",
+      "source_of_truth": "Phase3F Summary 11-role contract and build_summary_slides implementation.",
+      "human_approval_status": "approved contract",
+      "why_required_for_production": "The 11-role Summary is truncated after construction by the existing hard cap."
+    },
+    {
+      "category": "RUNTIME_ASSET_TO_ADD",
+      "path": "backend/app/presentation_assets/native_trace/{summary missing assets, detail missing assets}",
+      "reason": "Add exactly the 24 registry-referenced runtime PPTX files absent from the clean branch.",
+      "source_of_truth": "Committed registry.json/source_runtime_manifest.json and Human-approved assets in design-refresh.",
+      "human_approval_status": "PASS for all registry entries",
+      "why_required_for_production": "Native gate and template validation require the runtime package at these exact paths."
+    },
+    {
+      "category": "RUNTIME_ASSET_TO_ADD",
+      "path": "artifacts/phase3f08_native_trace_gap/*/native_trace.pptx and artifacts/phase3f16_replacement_native_trace/*/native_trace.pptx",
+      "reason": "Add exactly the 29 registry-referenced source PPTX files used for source checksum and immutability validation; do not copy other artifacts.",
+      "source_of_truth": "registry.json source_asset fields and recorded source checksums.",
+      "human_approval_status": "PASS for all registry entries",
+      "why_required_for_production": "The committed registry validation requires each frozen source asset to exist and match its checksum."
+    },
+    {
+      "category": "TEST_TO_UPDATE",
+      "path": "backend/tests/test_phase3f19a_native_foundation.py; backend/tests/test_phase3f19b_native_content_adapter.py; backend/tests/test_phase3f19c_evidence_binding.py",
+      "reason": "Update stale 28-role assertions, replace the pre-dispatcher assertion with the flag-OFF safety assertion, and align competition/win fixtures to the approved v2 completeness contract.",
+      "source_of_truth": "Current 29-entry registry, Phase3F-19D dispatcher architecture, and Phase3F-22C v2 fixtures.",
+      "human_approval_status": "approved architecture and contracts",
+      "why_required_for_production": "Tests must validate the current approved architecture without weakening safety gates."
+    },
+    {
+      "category": "REGISTRY_FIX",
+      "path": null,
+      "reason": "No registry edit required; 29 is correct and ROADMAP is intentional.",
+      "source_of_truth": "registry role/surface/slide_id audit",
+      "human_approval_status": "PASS",
+      "why_required_for_production": "Changing the registry count would hide a real approved role or alias."
+    }
+  ],
+  "explicitly_excluded": ["frontend/*", "uncommitted proposal_quality_upgrade.py from design-refresh", ".codex-*", "unreferenced artifacts/*", "docs/design/*", "font_inventory.json", "PNG/contact-sheet outputs"]
+}

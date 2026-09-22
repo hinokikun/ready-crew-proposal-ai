@@ -1,0 +1,23 @@
+{
+  "role": "ROADMAP",
+  "status": "RUNTIME_FOUNDATION_READY",
+  "human_approval": "PASS (user-provided)",
+  "runtime_template_registered": true,
+  "role_contract_present": true,
+  "dedicated_adapter_present": true,
+  "provenance_guard_present": true,
+  "sample_leak_guard_present": true,
+  "text_fit_guard_present": true,
+  "fallback_renderer": "existing_pptx_renderer",
+  "six_plus_phase_behavior": "continuation/detail or fallback; not native on the five-column single slide",
+  "production_approval_registry_changed": false,
+  "dispatcher_connected": false,
+  "feature_flag_enabled": false,
+  "api_frontend_pdf_db_changed": false,
+  "production_activation": "NOT_READY_TO_ACTIVATE; separate integration phase required",
+  "blockers": [
+    "Dispatcher connection intentionally deferred",
+    "Production approval registry intentionally unchanged",
+    "Human Visual PASS is recorded as user-provided and is not self-declared here"
+  ]
+}

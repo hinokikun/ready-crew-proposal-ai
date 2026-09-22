@@ -9,7 +9,7 @@ from app.services.pptx_parts.models import PptxContext
 
 
 MAX_DETAILED_SLIDES = 25
-MAX_SUMMARY_SLIDES = 10
+MAX_SUMMARY_SLIDES = 11
 
 
 @dataclass(frozen=True)

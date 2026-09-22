@@ -1,0 +1,36 @@
+{
+  "role": "PROPOSAL_SUMMARY",
+  "template_id": "S02",
+  "deck_path": "artifacts/phase3f19e_integration_smoke/flag_on_native/eligible_proposal_summary.pptx",
+  "slide_index": 1,
+  "source_template_path": "backend/app/presentation_assets/native_trace/summary/S02_proposal_summary.pptx",
+  "human_approval_source": "Phase3F-17 Global Human Visual Review",
+  "fallback_used": false,
+  "adapter_status": "PASS",
+  "comparison_basis": "Exact semantic-shape text diff between the frozen runtime template and the Phase3F-19E native output package.",
+  "runtime_modified_slots": [
+    {
+      "SLOT_ID": "trace:S02:title.primary",
+      "CANONICAL_VALUE": "提案サマリー",
+      "TEMPLATE_VALUE": "ご提案サマリー",
+      "RUNTIME_VALUE": "提案サマリー",
+      "ACTION": "REPLACED_DYNAMIC",
+      "TEXT_LENGTH": 6,
+      "LINE_COUNT": 1,
+      "FONT_SIZE_BEFORE": 15.75,
+      "FONT_SIZE_AFTER": 15.75,
+      "WRAP_CHANGED": false,
+      "BOUNDING_BOX_CHANGED": true,
+      "TEMPLATE_BOUNDING_BOX_EMU": { "x": 1028700, "y": 209550, "cx": 2286000, "cy": 304800 },
+      "RUNTIME_BOUNDING_BOX_EMU": { "x": 787502, "y": 160336, "cx": 1750004, "cy": 233216 }
+    }
+  ],
+  "dynamic_slots_with_no_package_text_change": [
+    {
+      "SLOT_ID": "trace:S02:content.auto.*",
+      "ACTION": "UNCHANGED",
+      "NOTE": "No content.auto semantic-shape text difference was present in the saved eligible runtime package; no additional runtime modification is claimed."
+    }
+  ],
+  "sample_leak_status": "PASS"
+}

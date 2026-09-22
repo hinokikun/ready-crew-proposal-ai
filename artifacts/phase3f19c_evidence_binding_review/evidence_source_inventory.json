@@ -1,0 +1,297 @@
+{
+  "phase": "Phase3F-19C",
+  "read_only_production_flow": true,
+  "roles": [
+    {
+      "role": "KPI",
+      "source_model": "PptxContext",
+      "source_fields": [
+        {
+          "field": "kpi_rows",
+          "source_function": "build_pptx_context -> derive_kpi_rows",
+          "file": "backend/app/services/pptx_service.py; backend/app/services/pptx_parts/content.py",
+          "runtime_path": "PptxContext.kpi_rows",
+          "type": "list[tuple[str, str]]",
+          "nullable": false,
+          "provenance_available": false,
+          "verification_status": "GENERATED_OR_DERIVED_NOT_VERIFIED"
+        },
+        {
+          "field": "kpi_targets",
+          "source_function": "build_pptx_context -> derive_kpi_targets",
+          "file": "backend/app/services/pptx_service.py; backend/app/services/pptx_parts/content.py",
+          "runtime_path": "PptxContext.kpi_targets",
+          "type": "dict[str, float]",
+          "nullable": false,
+          "provenance_available": false,
+          "verification_status": "GENERATED_HARDCODED_HEURISTIC"
+        },
+        {
+          "field": "semantic_candidates",
+          "source_function": "generate_proposal -> candidate_set_to_dict",
+          "file": "backend/app/services/openai_service.py; backend/app/models.py",
+          "runtime_path": "PptxDownloadRequest.semantic_candidates",
+          "type": "dict | None",
+          "nullable": true,
+          "provenance_available": true,
+          "verification_status": "OPTIONAL_NOT_CARRIED_INTO_PPTX_CONTEXT"
+        }
+      ],
+      "runtime_verdict": "KPI_EVIDENCE_REQUIRED"
+    },
+    {
+      "role": "ESTIMATE",
+      "source_model": "EstimateSummary + PptxDownloadRequest",
+      "source_fields": [
+        {
+          "field": "estimate",
+          "source_function": "build_pptx_context -> derive_estimate_summary",
+          "file": "backend/app/services/pptx_service.py; backend/app/services/pptx_parts/content.py; backend/app/services/pptx_parts/models.py",
+          "runtime_path": "PptxContext.estimate",
+          "type": "EstimateSummary",
+          "nullable": false,
+          "provenance_available": false,
+          "verification_status": "HEURISTIC_LINES_AND_TOTALS"
+        },
+        {
+          "field": "budget_range",
+          "source_function": "PptxDownloadRequest.budget_range -> extract_budget_amount",
+          "file": "backend/app/models.py; backend/app/services/pptx_parts/content.py",
+          "runtime_path": "payload.budget_range",
+          "type": "str",
+          "nullable": false,
+          "provenance_available": "USER_PROVIDED_ONLY",
+          "verification_status": "BUDGET_RANGE_ONLY"
+        },
+        {
+          "field": "verified_estimate",
+          "source_function": "adapter-only marker",
+          "file": "backend/app/services/pptx_parts/native_trace_content_adapter.py",
+          "runtime_path": "adapter context/data only",
+          "type": "bool",
+          "nullable": true,
+          "provenance_available": false,
+          "verification_status": "NOT_AN_EXISTING_PRODUCTION_FIELD"
+        }
+      ],
+      "runtime_verdict": "ESTIMATE_EVIDENCE_REQUIRED"
+    },
+    {
+      "role": "MARKET_ANALYSIS",
+      "source_model": "PptxDownloadRequest / PptxContext",
+      "source_fields": [
+        {
+          "field": "project_brief, client_company_info, hearing_result",
+          "source_function": "build_pptx_context all_input aggregation",
+          "file": "backend/app/services/pptx_service.py; backend/app/models.py",
+          "runtime_path": "payload.* -> all_input",
+          "type": "str",
+          "nullable": false,
+          "provenance_available": "PARTIAL_USER_INPUT",
+          "verification_status": "NO_RESEARCH_EVIDENCE_BINDING"
+        },
+        {
+          "field": "market fields",
+          "source_function": "none",
+          "file": "PptxContext has no market evidence field",
+          "runtime_path": "unavailable",
+          "type": "missing",
+          "nullable": true,
+          "provenance_available": false,
+          "verification_status": "MISSING"
+        }
+      ],
+      "runtime_verdict": "MARKET_EVIDENCE_REQUIRED"
+    },
+    {
+      "role": "TARGET_ANALYSIS",
+      "source_model": "PptxContext",
+      "source_fields": [
+        {
+          "field": "target_user_rows",
+          "source_function": "build_pptx_context -> derive_target_user_rows",
+          "file": "backend/app/services/pptx_service.py; backend/app/services/pptx_parts/content.py",
+          "runtime_path": "PptxContext.target_user_rows",
+          "type": "list[tuple[str, str]]",
+          "nullable": false,
+          "provenance_available": false,
+          "verification_status": "GENERATED_PROFILE_HEURISTIC"
+        }
+      ],
+      "runtime_verdict": "TARGET_EVIDENCE_REQUIRED"
+    },
+    {
+      "role": "ROI_OR_EFFECT",
+      "source_model": "PptxContext / V11SlideSpec",
+      "source_fields": [
+        {
+          "field": "estimate",
+          "source_function": "proposal_quality_upgrade._estimate_and_roi",
+          "file": "backend/app/services/proposal_quality_upgrade.py",
+          "runtime_path": "context.estimate",
+          "type": "EstimateSummary",
+          "nullable": false,
+          "provenance_available": false,
+          "verification_status": "GENERATED_MEASUREMENT_NARRATIVE_ONLY"
+        },
+        {
+          "field": "ROI calculation basis",
+          "source_function": "none",
+          "file": "no production field",
+          "runtime_path": "unavailable",
+          "type": "missing",
+          "nullable": true,
+          "provenance_available": false,
+          "verification_status": "MISSING"
+        }
+      ],
+      "runtime_verdict": "ROI_EVIDENCE_REQUIRED"
+    },
+    {
+      "role": "RISK",
+      "source_model": "V11SlideSpec",
+      "source_fields": [
+        {
+          "field": "risk bullets",
+          "source_function": "proposal_quality_upgrade._risk_and_operation",
+          "file": "backend/app/services/proposal_quality_upgrade.py",
+          "runtime_path": "generated V11SlideSpec.bullets",
+          "type": "list[str]",
+          "nullable": false,
+          "provenance_available": false,
+          "verification_status": "STATIC_GENERATED_NARRATIVE"
+        },
+        {
+          "field": "risk item/likelihood/impact/owner/mitigation/status",
+          "source_function": "none",
+          "file": "no structured PptxContext field",
+          "runtime_path": "unavailable",
+          "type": "missing",
+          "nullable": true,
+          "provenance_available": false,
+          "verification_status": "MISSING"
+        }
+      ],
+      "runtime_verdict": "RISK_EVIDENCE_REQUIRED"
+    },
+    {
+      "role": "CASE_STUDY",
+      "source_model": "PptxDownloadRequest + PptxContext",
+      "source_fields": [
+        {
+          "field": "case_studies",
+          "source_function": "build_pptx_context -> extract_case_study_items",
+          "file": "backend/app/models.py; backend/app/services/pptx_service.py; backend/app/services/pptx_parts/content.py",
+          "runtime_path": "payload.case_studies -> PptxContext.case_studies",
+          "type": "str -> list[str]",
+          "nullable": false,
+          "provenance_available": "USER_PROVIDED_TEXT_ONLY",
+          "verification_status": "NARRATIVE_NOT_VERIFIED"
+        },
+        {
+          "field": "case_triplets",
+          "source_function": "build_pptx_context -> extract_case_triplets",
+          "file": "backend/app/services/pptx_service.py; backend/app/services/pptx_parts/content.py",
+          "runtime_path": "PptxContext.case_triplets",
+          "type": "list[dict[str, str]]",
+          "nullable": false,
+          "provenance_available": false,
+          "verification_status": "DERIVED_HINTS"
+        },
+        {
+          "field": "image/provenance/permission",
+          "source_function": "none",
+          "file": "PptxContext has no case image field",
+          "runtime_path": "unavailable",
+          "type": "missing",
+          "nullable": true,
+          "provenance_available": false,
+          "verification_status": "MISSING"
+        }
+      ],
+      "runtime_verdict": "CASE_STUDY_EVIDENCE_IMAGE_REQUIRED"
+    },
+    {
+      "role": "COMPETITION",
+      "aliases": [
+        "COMPETITIVE_COMPARISON"
+      ],
+      "source_model": "PptxContext + PptxDownloadRequest",
+      "source_fields": [
+        {
+          "field": "competitor_site_url, competitor_company_name",
+          "source_function": "build_pptx_context direct copy",
+          "file": "backend/app/models.py; backend/app/services/pptx_service.py",
+          "runtime_path": "payload.competitor_site_url / competitor_company_name",
+          "type": "str",
+          "nullable": false,
+          "provenance_available": "USER_PROVIDED_ONLY",
+          "verification_status": "IDENTITY_ONLY_NOT_FEATURE_EVIDENCE"
+        },
+        {
+          "field": "competitor_rows",
+          "source_function": "build_pptx_context -> derive_competitor_rows",
+          "file": "backend/app/services/pptx_service.py; backend/app/services/pptx_parts/content.py",
+          "runtime_path": "PptxContext.competitor_rows",
+          "type": "list[list[str]]",
+          "nullable": false,
+          "provenance_available": false,
+          "verification_status": "GENERATED_SCORE_HEURISTIC"
+        },
+        {
+          "field": "research source",
+          "source_function": "none in PPTX context",
+          "file": "CompanyResearchResponse is not bound to PptxContext",
+          "runtime_path": "unavailable",
+          "type": "missing",
+          "nullable": true,
+          "provenance_available": false,
+          "verification_status": "MISSING"
+        }
+      ],
+      "runtime_verdict": "COMPETITION_EVIDENCE_REQUIRED"
+    },
+    {
+      "role": "WIN_PROBABILITY",
+      "source_model": "PptxDownloadRequest.WinProbability / ProposalAnalysis.WinProbability",
+      "source_fields": [
+        {
+          "field": "win_probability",
+          "source_function": "openai_service.generate_proposal -> _mock_win_probability or _generate_with_openai; request passthrough to build_pptx_context",
+          "file": "backend/app/services/openai_service.py; backend/app/models.py; backend/app/services/pptx_service.py",
+          "runtime_path": "analysis.win_probability -> payload.win_probability -> PptxContext.win_probability",
+          "type": "WinProbability | None",
+          "nullable": true,
+          "provenance_available": false,
+          "verification_status": "GENERATED_OR_UNPROVEN_NUMERIC_FIELD"
+        },
+        {
+          "field": "rank/label/reason/risk/next_action",
+          "source_function": "WinProbability model",
+          "file": "backend/app/models.py",
+          "runtime_path": "payload.win_probability.*",
+          "type": "mixed scalar/list",
+          "nullable": false,
+          "provenance_available": false,
+          "verification_status": "NO_FIELD-LEVEL_PROVENANCE"
+        },
+        {
+          "field": "semantic_candidates",
+          "source_function": "generate_proposal -> candidate_set_to_dict",
+          "file": "backend/app/services/openai_service.py; backend/app/models.py",
+          "runtime_path": "payload.semantic_candidates",
+          "type": "dict | None",
+          "nullable": true,
+          "provenance_available": true,
+          "verification_status": "OPTIONAL_NOT_CARRIED_INTO_PPTX_CONTEXT"
+        }
+      ],
+      "runtime_verdict": "WIN_PROBABILITY_EVIDENCE_REQUIRED"
+    }
+  ],
+  "adjacent_evidence_role": {
+    "role": "SCHEDULE",
+    "source": "PptxContext.schedule_points via extract_schedule_points",
+    "verdict": "EVIDENCE_REQUIRED for dates/owners/milestones"
+  }
+}

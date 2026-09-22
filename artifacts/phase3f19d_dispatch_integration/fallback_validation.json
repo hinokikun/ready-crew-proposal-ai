@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "fallback_renderer": "existing_pptx_renderer",
+  "cases": [
+    {
+      "case": "evidence_sensitive_role",
+      "roles": [
+        "CASE_STUDY",
+        "COMPETITION",
+        "ESTIMATE",
+        "KPI",
+        "MARKET_ANALYSIS",
+        "RISK",
+        "ROI_OR_EFFECT",
+        "SCHEDULE",
+        "TARGET_ANALYSIS",
+        "WIN_PROBABILITY"
+      ],
+      "expected": "native false; existing renderer true"
+    },
+    {
+      "case": "human_unapproved_or_unknown_role",
+      "expected": "native false; existing renderer true"
+    },
+    {
+      "case": "text_fit_failure",
+      "expected": "native false; existing renderer true"
+    },
+    {
+      "case": "missing_template",
+      "expected": "native false; existing renderer true"
+    },
+    {
+      "case": "unsupported_relationship",
+      "expected": "native false; existing renderer true"
+    }
+  ],
+  "slide_not_cleared": true,
+  "deck_generation_continues": true
+}

@@ -1,0 +1,17 @@
+{
+  "ROLE": "IMPLEMENTATION_SCHEDULE",
+  "RUNTIME_ROLE": "ROADMAP",
+  "SOURCE_TEMPLATE": "artifacts/phase3f08_native_trace_gap/06_implementation_schedule/native_trace.pptx",
+  "RUNTIME_TEMPLATE": "backend/app/presentation_assets/native_trace/conditional/ROADMAP.pptx",
+  "SOURCE_SHA256": "5cfd7f596df0d14bca1355b24b282f71cbfd948ede59f02c28a4910133483246",
+  "RUNTIME_SHA256": "5d08591ad461ec9184e5ddf4fa4860ec2c0562186b1a9a23fdf4721824f079cb",
+  "DIFFERENT_PACKAGE_MEMBERS": ["ppt/slides/slide1.xml"],
+  "DIFFERENCE_CAUSE": "Only non-visible cNvPr shape names were changed to add runtime semantic slots; the ZIP member bytes therefore differ in slide1.xml.",
+  "NORMALIZED_SLIDE_XML_EQUAL": true,
+  "VISIBLE_CONTENT_EQUIVALENT": "YES",
+  "GEOMETRY_EQUIVALENT": "YES",
+  "TEXT_FORMAT_EQUIVALENT": "YES",
+  "RELATIONSHIPS_MEDIA_MASTER_LAYOUT_EQUIVALENT": "YES",
+  "ALLOWED_DIFFERENCE_ONLY": "SEMANTIC_METADATA_SHAPE_NAMES",
+  "CONTINUE_INTEGRATION": true
+}

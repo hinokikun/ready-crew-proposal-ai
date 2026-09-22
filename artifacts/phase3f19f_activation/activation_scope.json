@@ -1,0 +1,11 @@
+{
+  "feature_flag": "PPTX_APPROVED_NATIVE_RENDERER_ENABLED",
+  "default_source_value": false,
+  "effective_value_this_process": true,
+  "scope": [
+    "PROPOSAL_SUMMARY/S02"
+  ],
+  "other_roles_approval_changed": false,
+  "production_environment_changed": false,
+  "deployment_performed": false
+}

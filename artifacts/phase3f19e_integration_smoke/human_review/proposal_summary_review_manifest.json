@@ -1,0 +1,26 @@
+{
+  "status": "READY_FOR_HUMAN_REVIEW",
+  "role": "PROPOSAL_SUMMARY",
+  "template_id": "S02",
+  "deck_path": "artifacts/phase3f19e_integration_smoke/flag_on_native/eligible_proposal_summary.pptx",
+  "slide_index": 1,
+  "canonical_source": "artifacts/phase3f16_replacement_native_trace/S02_proposal_summary/canonical_source.png",
+  "native_template_source": "backend/app/presentation_assets/native_trace/summary/S02_proposal_summary.pptx",
+  "native_template_render": "artifacts/phase3f16_replacement_native_trace/S02_proposal_summary/native_render.png",
+  "runtime_output_render": "artifacts/phase3f19e_integration_smoke/human_review/proposal_summary_runtime_output.png",
+  "three_way_comparison": "artifacts/phase3f19e_integration_smoke/human_review/proposal_summary_3way_comparison.png",
+  "slot_diff": "artifacts/phase3f19e_integration_smoke/human_review/proposal_summary_slot_diff.json",
+  "sample_leak_check": "artifacts/phase3f19e_integration_smoke/human_review/proposal_summary_sample_leak_check.json",
+  "dispatcher_trace": "artifacts/phase3f19e_integration_smoke/role_trace.json",
+  "validation": {
+    "native_rendered": true,
+    "fallback_used": false,
+    "adapter_status": "PASS",
+    "provenance_status": "PASS",
+    "text_fit_status": "PASS",
+    "sample_leak_status": "PASS",
+    "rasterization_ratio": "0%",
+    "human_visual_pass_self_declared": false
+  },
+  "labels_in_comparison": ["CANONICAL", "NATIVE TEMPLATE", "RUNTIME OUTPUT"]
+}

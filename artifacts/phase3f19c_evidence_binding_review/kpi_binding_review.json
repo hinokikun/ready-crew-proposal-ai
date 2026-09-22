@@ -1,0 +1,61 @@
+{
+  "status": "KPI_EVIDENCE_REQUIRED",
+  "fields": [
+    {
+      "field": "name",
+      "source": "PptxContext.kpi_rows[*][0]",
+      "current_availability": "CONDITIONAL",
+      "classification": "DERIVED_OR_GENERATED",
+      "usable": false,
+      "reason": "no item-level provenance"
+    },
+    {
+      "field": "current_value_actual",
+      "source": "none; kpi_rows values are derived/default",
+      "current_availability": "UNAVAILABLE",
+      "classification": "UNKNOWN",
+      "usable": false,
+      "fallback": "未取得"
+    },
+    {
+      "field": "target_value",
+      "source": "PptxContext.kpi_targets",
+      "current_availability": "AVAILABLE_AS_HEURISTIC_ONLY",
+      "classification": "GENERATED",
+      "usable": false,
+      "fallback": "要確認"
+    },
+    {
+      "field": "measurement_method",
+      "source": "none in PptxContext",
+      "current_availability": "UNAVAILABLE",
+      "classification": "UNKNOWN",
+      "usable": false,
+      "fallback": "次回確認"
+    },
+    {
+      "field": "priority",
+      "source": "none",
+      "current_availability": "UNAVAILABLE",
+      "classification": "UNKNOWN",
+      "usable": false,
+      "fallback": "要確認"
+    },
+    {
+      "field": "evidence/provenance",
+      "source": "optional payload.semantic_candidates only",
+      "current_availability": "CONDITIONAL",
+      "classification": "VERIFIED_ONLY_IF_CONFIRMED_CANDIDATE",
+      "usable": false,
+      "reason": "not carried into build_pptx_context"
+    }
+  ],
+  "unlock_requires": [
+    "item-level KPI name",
+    "actual/current value or explicit unknown",
+    "target marked target/estimate",
+    "measurement method",
+    "provenance/evidence source"
+  ],
+  "generated_only_rejected": true
+}

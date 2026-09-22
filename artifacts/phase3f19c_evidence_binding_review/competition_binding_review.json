@@ -1,0 +1,24 @@
+{
+  "status": "COMPETITION_EVIDENCE_REQUIRED",
+  "fields": {
+    "competitor_name": "USER_PROVIDED_OR_EMPTY",
+    "url": "USER_PROVIDED_OR_EMPTY",
+    "source": "MISSING",
+    "comparison_criteria": "DERIVED",
+    "competitor_value": "GENERATED/UNKNOWN",
+    "own_value": "GENERATED/UNKNOWN",
+    "differentiation": "GENERATED/UNSUPPORTED",
+    "evidence_date": "MISSING",
+    "provenance": "MISSING"
+  },
+  "current_rows": "derive_competitor_rows generates scores from keywords; not evidence",
+  "minimum_evidence": [
+    "competitor identity",
+    "source URL/document",
+    "retrieval/evidence date",
+    "criterion-level competitor value",
+    "criterion-level own value",
+    "provenance for each claim"
+  ],
+  "unsupported_superiority_claims": "reject"
+}

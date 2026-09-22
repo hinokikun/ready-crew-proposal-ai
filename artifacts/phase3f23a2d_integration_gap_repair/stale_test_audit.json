@@ -1,0 +1,10 @@
+{
+  "stale_test_count": 4,
+  "tests": [
+    {"path": "backend/tests/test_phase3f19a_native_foundation.py", "assertion": "registry length == 28", "classification": "STALE_BY_DESIGN", "replacement_intent": "assert 29 and verify ROADMAP is present"},
+    {"path": "backend/tests/test_phase3f19b_native_content_adapter.py", "assertion": "contracts/registry length == 28", "classification": "STALE_BY_DESIGN", "replacement_intent": "assert 29 and retain role coverage checks"},
+    {"path": "backend/tests/test_phase3f19b_native_content_adapter.py", "assertion": "production_dispatch_connected is False", "classification": "STALE_BY_DESIGN", "replacement_intent": "retain flag-OFF existing-renderer behavior and assert dispatcher integration is present"},
+    {"path": "backend/tests/test_phase3f19c_evidence_binding.py", "assertion": "single-row/simple win fixture is accepted", "classification": "FIXTURE_DRIFT", "replacement_intent": "use the approved five-row Phase3F-22C v2 fixture contract"}
+  ],
+  "safety_intent_preserved": ["Feature Flag OFF keeps existing renderer", "evidence-sensitive roles fail closed", "sample leak guard remains active", "completeness gate remains active"]
+}

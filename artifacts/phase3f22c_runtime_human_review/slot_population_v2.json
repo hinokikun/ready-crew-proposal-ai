@@ -1,0 +1,690 @@
+{
+  "COMPETITION": [
+    {
+      "SLOT_ID": "trace:COMPETITION:content.auto.36",
+      "FIXTURE_FIELD": "context.competitor_rows[0].criterion",
+      "NORMALIZED_FIELD": "competition.rows[0].criterion",
+      "ADAPTER_VALUE": "導入スピード",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "導入スピード",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:content.auto.37",
+      "FIXTURE_FIELD": "context.competitor_rows[1].criterion",
+      "NORMALIZED_FIELD": "competition.rows[1].criterion",
+      "ADAPTER_VALUE": "提案の具体性",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "提案の具体性",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:content.auto.38",
+      "FIXTURE_FIELD": "context.competitor_rows[2].criterion",
+      "NORMALIZED_FIELD": "competition.rows[2].criterion",
+      "ADAPTER_VALUE": "AI活用実績",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "AI活用実績",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:content.auto.39",
+      "FIXTURE_FIELD": "context.competitor_rows[3].criterion",
+      "NORMALIZED_FIELD": "competition.rows[3].criterion",
+      "ADAPTER_VALUE": "運用伴走",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "運用伴走",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:content.auto.40",
+      "FIXTURE_FIELD": "context.competitor_rows[4].criterion",
+      "NORMALIZED_FIELD": "competition.rows[4].criterion",
+      "ADAPTER_VALUE": "コスト透明性",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "コスト透明性",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r0c2]",
+      "FIXTURE_FIELD": "context.competitor_a_name",
+      "NORMALIZED_FIELD": "competition.competitor_labels",
+      "ADAPTER_VALUE": "比較対象A（検証済み）",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "比較対象A（検証済み）",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r0c3]",
+      "FIXTURE_FIELD": "context.competitor_b_name",
+      "NORMALIZED_FIELD": "competition.competitor_labels",
+      "ADAPTER_VALUE": "比較対象B（検証済み）",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "比較対象B（検証済み）",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r1c1]",
+      "FIXTURE_FIELD": "context.competitor_rows[0].own_value",
+      "NORMALIZED_FIELD": "competition.rows[0].own_value",
+      "ADAPTER_VALUE": "検証済み3か月",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み3か月",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r1c2]",
+      "FIXTURE_FIELD": "context.competitor_rows[0].competitor_a_value",
+      "NORMALIZED_FIELD": "competition.rows[0].competitor_a_value",
+      "ADAPTER_VALUE": "検証済み4〜5か月",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み4〜5か月",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r1c3]",
+      "FIXTURE_FIELD": "context.competitor_rows[0].competitor_b_value",
+      "NORMALIZED_FIELD": "competition.rows[0].competitor_b_value",
+      "ADAPTER_VALUE": "検証済み3〜4か月",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み3〜4か月",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r1c4]",
+      "FIXTURE_FIELD": "context.competitor_rows[0].evaluation",
+      "NORMALIZED_FIELD": "competition.rows[0].evaluation",
+      "ADAPTER_VALUE": "条件確認済み",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "条件確認済み",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r2c1]",
+      "FIXTURE_FIELD": "context.competitor_rows[1].own_value",
+      "NORMALIZED_FIELD": "competition.rows[1].own_value",
+      "ADAPTER_VALUE": "検証済みKPI・運用設計",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済みKPI・運用設計",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r2c2]",
+      "FIXTURE_FIELD": "context.competitor_rows[1].competitor_a_value",
+      "NORMALIZED_FIELD": "competition.rows[1].competitor_a_value",
+      "ADAPTER_VALUE": "検証済み概略中心",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み概略中心",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r2c3]",
+      "FIXTURE_FIELD": "context.competitor_rows[1].competitor_b_value",
+      "NORMALIZED_FIELD": "competition.rows[1].competitor_b_value",
+      "ADAPTER_VALUE": "検証済み一部詳細",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み一部詳細",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r2c4]",
+      "FIXTURE_FIELD": "context.competitor_rows[1].evaluation",
+      "NORMALIZED_FIELD": "competition.rows[1].evaluation",
+      "ADAPTER_VALUE": "条件確認済み",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "条件確認済み",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r3c1]",
+      "FIXTURE_FIELD": "context.competitor_rows[2].own_value",
+      "NORMALIZED_FIELD": "competition.rows[2].own_value",
+      "ADAPTER_VALUE": "検証済み実績あり",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み実績あり",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r3c2]",
+      "FIXTURE_FIELD": "context.competitor_rows[2].competitor_a_value",
+      "NORMALIZED_FIELD": "competition.rows[2].competitor_a_value",
+      "ADAPTER_VALUE": "検証済み実績限定",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み実績限定",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r3c3]",
+      "FIXTURE_FIELD": "context.competitor_rows[2].competitor_b_value",
+      "NORMALIZED_FIELD": "competition.rows[2].competitor_b_value",
+      "ADAPTER_VALUE": "検証済みPoC中心",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済みPoC中心",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r3c4]",
+      "FIXTURE_FIELD": "context.competitor_rows[2].evaluation",
+      "NORMALIZED_FIELD": "competition.rows[2].evaluation",
+      "ADAPTER_VALUE": "条件確認済み",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "条件確認済み",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r4c1]",
+      "FIXTURE_FIELD": "context.competitor_rows[3].own_value",
+      "NORMALIZED_FIELD": "competition.rows[3].own_value",
+      "ADAPTER_VALUE": "検証済み定例支援",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み定例支援",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r4c2]",
+      "FIXTURE_FIELD": "context.competitor_rows[3].competitor_a_value",
+      "NORMALIZED_FIELD": "competition.rows[3].competitor_a_value",
+      "ADAPTER_VALUE": "検証済み限定対応",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み限定対応",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r4c3]",
+      "FIXTURE_FIELD": "context.competitor_rows[3].competitor_b_value",
+      "NORMALIZED_FIELD": "competition.rows[3].competitor_b_value",
+      "ADAPTER_VALUE": "検証済み別契約",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み別契約",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r4c4]",
+      "FIXTURE_FIELD": "context.competitor_rows[3].evaluation",
+      "NORMALIZED_FIELD": "competition.rows[3].evaluation",
+      "ADAPTER_VALUE": "条件確認済み",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "条件確認済み",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r5c1]",
+      "FIXTURE_FIELD": "context.competitor_rows[4].own_value",
+      "NORMALIZED_FIELD": "competition.rows[4].own_value",
+      "ADAPTER_VALUE": "検証済み前提明示",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み前提明示",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r5c2]",
+      "FIXTURE_FIELD": "context.competitor_rows[4].competitor_a_value",
+      "NORMALIZED_FIELD": "competition.rows[4].competitor_a_value",
+      "ADAPTER_VALUE": "検証済み粒度粗い",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み粒度粗い",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r5c3]",
+      "FIXTURE_FIELD": "context.competitor_rows[4].competitor_b_value",
+      "NORMALIZED_FIELD": "competition.rows[4].competitor_b_value",
+      "ADAPTER_VALUE": "検証済み追加条件",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み追加条件",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.4[r5c4]",
+      "FIXTURE_FIELD": "context.competitor_rows[4].evaluation",
+      "NORMALIZED_FIELD": "competition.rows[4].evaluation",
+      "ADAPTER_VALUE": "条件確認済み",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "条件確認済み",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.6",
+      "FIXTURE_FIELD": "context.differentiation_bullets[0]",
+      "NORMALIZED_FIELD": "competition.differentiation_bullets[0]",
+      "ADAPTER_VALUE": "検証済みの業務理解と導入設計",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "検証済みの業務理解と導入設計",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.7",
+      "FIXTURE_FIELD": "context.differentiation_bullets[1]",
+      "NORMALIZED_FIELD": "competition.differentiation_bullets[1]",
+      "ADAPTER_VALUE": "検証済みのAI活用・運用設計",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "検証済みのAI活用・運用設計",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.8",
+      "FIXTURE_FIELD": "context.differentiation_bullets[2]",
+      "NORMALIZED_FIELD": "competition.differentiation_bullets[2]",
+      "ADAPTER_VALUE": "検証済みの見積・体制・工程条件",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "検証済みの見積・体制・工程条件",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:title.primary.9",
+      "FIXTURE_FIELD": "context.differentiation_bullets[3]",
+      "NORMALIZED_FIELD": "competition.differentiation_bullets[3]",
+      "ADAPTER_VALUE": "検証済みの公開後改善支援",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "検証済みの公開後改善支援",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:lead",
+      "FIXTURE_FIELD": "context.caution_items[0]",
+      "NORMALIZED_FIELD": "competition.caution_items[0]",
+      "ADAPTER_VALUE": "比較条件と根拠の最終確認",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "比較条件と根拠の最終確認",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:lead.2",
+      "FIXTURE_FIELD": "context.caution_items[1]",
+      "NORMALIZED_FIELD": "competition.caution_items[1]",
+      "ADAPTER_VALUE": "未確認事項は次回の確認項目として整理",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "未確認事項は次回の確認項目として整理",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:content.auto.70",
+      "FIXTURE_FIELD": "context.next_confirmation_items[0]",
+      "NORMALIZED_FIELD": "competition.next_confirmation_items[0]",
+      "ADAPTER_VALUE": "決裁条件を確認",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "決裁条件を確認",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:content.auto.72",
+      "FIXTURE_FIELD": "context.next_confirmation_items[1]",
+      "NORMALIZED_FIELD": "competition.next_confirmation_items[1]",
+      "ADAPTER_VALUE": "契約条件を確認",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "契約条件を確認",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:content.auto.74",
+      "FIXTURE_FIELD": "context.next_confirmation_items[2]",
+      "NORMALIZED_FIELD": "competition.next_confirmation_items[2]",
+      "ADAPTER_VALUE": "実施時期を確認",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "実施時期を確認",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:COMPETITION:content.auto.79",
+      "FIXTURE_FIELD": "context.recommendation",
+      "NORMALIZED_FIELD": "competition.recommendation",
+      "ADAPTER_VALUE": "検証済み比較根拠に基づき、条件を確認して最終判断へ進みます。",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "検証済み比較根拠に基づき、条件を確認して最終判断へ進みます。",
+      "STATUS": "POPULATED"
+    }
+  ],
+  "WIN_PROBABILITY": [
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.7",
+      "FIXTURE_FIELD": "context.win_probability.probability",
+      "NORMALIZED_FIELD": "win_probability.probability",
+      "ADAPTER_VALUE": "68%",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "68%",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.19",
+      "FIXTURE_FIELD": "context.win_probability.probability",
+      "NORMALIZED_FIELD": "win_probability.probability",
+      "ADAPTER_VALUE": "68%",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "68%",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:title.primary.4",
+      "FIXTURE_FIELD": "context.win_probability.confidence_summary",
+      "NORMALIZED_FIELD": "win_probability.confidence_summary",
+      "ADAPTER_VALUE": "検証済みの中程度の確度で判断します。",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "検証済みの中程度の確度で判断します。",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:title.primary.5",
+      "FIXTURE_FIELD": "context.win_probability.reason",
+      "NORMALIZED_FIELD": "win_probability.reason",
+      "ADAPTER_VALUE": "検証済みの課題適合性と決裁者接点を確認しています。",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "検証済みの課題適合性と決裁者接点を確認しています。",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:title.primary.6",
+      "FIXTURE_FIELD": "context.win_probability.positive_factors[0]",
+      "NORMALIZED_FIELD": "win_probability.positive_factors[0]",
+      "ADAPTER_VALUE": "課題と解決方向の合意",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "課題と解決方向の合意",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:title.primary.7",
+      "FIXTURE_FIELD": "context.win_probability.positive_factors[1]",
+      "NORMALIZED_FIELD": "win_probability.positive_factors[1]",
+      "ADAPTER_VALUE": "決裁者接点の確認",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "決裁者接点の確認",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:title.primary.8",
+      "FIXTURE_FIELD": "context.win_probability.positive_factors[2]",
+      "NORMALIZED_FIELD": "win_probability.positive_factors[2]",
+      "ADAPTER_VALUE": "予算レンジの確認",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "予算レンジの確認",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:title.primary.9",
+      "FIXTURE_FIELD": "context.win_probability.positive_factors[3]",
+      "NORMALIZED_FIELD": "win_probability.positive_factors[3]",
+      "ADAPTER_VALUE": "導入時期候補の確認",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "導入時期候補の確認",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.54",
+      "FIXTURE_FIELD": "context.win_probability.risk_factors[0]",
+      "NORMALIZED_FIELD": "win_probability.risk_factors[0]",
+      "ADAPTER_VALUE": "正式予算承認",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "正式予算承認",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:lead",
+      "FIXTURE_FIELD": "context.win_probability.risk_factors[1]",
+      "NORMALIZED_FIELD": "win_probability.risk_factors[1]",
+      "ADAPTER_VALUE": "競合条件の最終確認",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "競合条件の最終確認",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.57",
+      "FIXTURE_FIELD": "context.win_probability.risk_factors[2]",
+      "NORMALIZED_FIELD": "win_probability.risk_factors[2]",
+      "ADAPTER_VALUE": "実施体制の確認",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "実施体制の確認",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.59",
+      "FIXTURE_FIELD": "context.win_probability.risk_factors[3]",
+      "NORMALIZED_FIELD": "win_probability.risk_factors[3]",
+      "ADAPTER_VALUE": "開始時期の確定",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "開始時期の確定",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.70",
+      "FIXTURE_FIELD": "context.win_probability.next_action_cards[0].title",
+      "NORMALIZED_FIELD": "win_probability.next_action_cards[0].title",
+      "ADAPTER_VALUE": "決裁条件の確認",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "決裁条件の確認",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.77",
+      "FIXTURE_FIELD": "context.win_probability.next_action_cards[0].body",
+      "NORMALIZED_FIELD": "win_probability.next_action_cards[0].body",
+      "ADAPTER_VALUE": "検証済みの決裁条件を確認します。",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "検証済みの決裁条件を確認します。",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.73",
+      "FIXTURE_FIELD": "context.win_probability.next_action_cards[1].title",
+      "NORMALIZED_FIELD": "win_probability.next_action_cards[1].title",
+      "ADAPTER_VALUE": "予算条件の合意",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "予算条件の合意",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.78",
+      "FIXTURE_FIELD": "context.win_probability.next_action_cards[1].body",
+      "NORMALIZED_FIELD": "win_probability.next_action_cards[1].body",
+      "ADAPTER_VALUE": "検証済みの費用・契約条件を合意します。",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "検証済みの費用・契約条件を合意します。",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.76",
+      "FIXTURE_FIELD": "context.win_probability.next_action_cards[2].title",
+      "NORMALIZED_FIELD": "win_probability.next_action_cards[2].title",
+      "ADAPTER_VALUE": "導入時期の確定",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "導入時期の確定",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.79",
+      "FIXTURE_FIELD": "context.win_probability.next_action_cards[2].body",
+      "NORMALIZED_FIELD": "win_probability.next_action_cards[2].body",
+      "ADAPTER_VALUE": "検証済みの導入時期と体制を確定します。",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "検証済みの導入時期と体制を確定します。",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.84",
+      "FIXTURE_FIELD": "context.win_probability.decision_direction",
+      "NORMALIZED_FIELD": "win_probability.decision_direction",
+      "ADAPTER_VALUE": "次回確認で導入条件を確定します。",
+      "SLOT_WRITER_ACTION": "shape_text_node",
+      "FINAL_TEXT": "次回確認で導入条件を確定します。",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r1c0]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[0].item",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[0].item",
+      "ADAPTER_VALUE": "課題の明確性",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "課題の明確性",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r1c1]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[0].content",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[0].content",
+      "ADAPTER_VALUE": "業務効率化の課題を検証済み",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "業務効率化の課題を検証済み",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r1c2]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[0].weight",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[0].weight",
+      "ADAPTER_VALUE": "高",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "高",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r1c3]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[0].evaluation",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[0].evaluation",
+      "ADAPTER_VALUE": "強い",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "強い",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r2c0]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[1].item",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[1].item",
+      "ADAPTER_VALUE": "決裁者接点",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "決裁者接点",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r2c1]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[1].content",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[1].content",
+      "ADAPTER_VALUE": "決裁者との接点を検証済み",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "決裁者との接点を検証済み",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r2c2]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[1].weight",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[1].weight",
+      "ADAPTER_VALUE": "高",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "高",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r2c3]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[1].evaluation",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[1].evaluation",
+      "ADAPTER_VALUE": "強い",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "強い",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r3c0]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[2].item",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[2].item",
+      "ADAPTER_VALUE": "予算感",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "予算感",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r3c1]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[2].content",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[2].content",
+      "ADAPTER_VALUE": "検証済み予算レンジを確認",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み予算レンジを確認",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r3c2]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[2].weight",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[2].weight",
+      "ADAPTER_VALUE": "中",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "中",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r3c3]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[2].evaluation",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[2].evaluation",
+      "ADAPTER_VALUE": "普通",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "普通",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r4c0]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[3].item",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[3].item",
+      "ADAPTER_VALUE": "導入時期",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "導入時期",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r4c1]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[3].content",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[3].content",
+      "ADAPTER_VALUE": "検証済み時期候補を確認",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み時期候補を確認",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r4c2]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[3].weight",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[3].weight",
+      "ADAPTER_VALUE": "中",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "中",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r4c3]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[3].evaluation",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[3].evaluation",
+      "ADAPTER_VALUE": "普通",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "普通",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r5c0]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[4].item",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[4].item",
+      "ADAPTER_VALUE": "競合優位性",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "競合優位性",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r5c1]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[4].content",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[4].content",
+      "ADAPTER_VALUE": "検証済み比較根拠を確認中",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "検証済み比較根拠を確認中",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r5c2]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[4].weight",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[4].weight",
+      "ADAPTER_VALUE": "中",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "中",
+      "STATUS": "POPULATED"
+    },
+    {
+      "SLOT_ID": "trace:WIN_PROBABILITY:content.auto.30[r5c3]",
+      "FIXTURE_FIELD": "context.win_probability.evidence_rows[4].evaluation",
+      "NORMALIZED_FIELD": "win_probability.evidence_rows[4].evaluation",
+      "ADAPTER_VALUE": "確認中",
+      "SLOT_WRITER_ACTION": "table_cell_text_node",
+      "FINAL_TEXT": "確認中",
+      "STATUS": "POPULATED"
+    }
+  ]
+}

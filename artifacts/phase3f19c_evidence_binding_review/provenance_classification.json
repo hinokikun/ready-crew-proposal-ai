@@ -1,0 +1,60 @@
+{
+  "classification_rules": {
+    "VERIFIED": "confirmed/corrected trusted candidate with explicit source reference or admissible_as_evidence; not inferred",
+    "USER_PROVIDED": "explicit user/customer input without sufficient source-backed verification",
+    "DERIVED": "computed from verified/user-provided inputs without direct evidence for the displayed claim",
+    "GENERATED": "AI/rule/heuristic output, including current mock win probability, KPI defaults, estimate totals and competitor scores",
+    "UNKNOWN": "no field-level provenance or source reference available"
+  },
+  "role_classification": {
+    "KPI": {
+      "kpi_rows": "DERIVED_OR_GENERATED",
+      "kpi_targets": "GENERATED",
+      "actual_value": "UNKNOWN",
+      "evidence": "UNKNOWN"
+    },
+    "ESTIMATE": {
+      "line_items": "GENERATED_OR_DERIVED",
+      "budget_range": "USER_PROVIDED",
+      "quantity_unit_unit_price": "UNKNOWN",
+      "total": "DERIVED_FROM_HEURISTICS"
+    },
+    "MARKET_ANALYSIS": {
+      "market_facts": "UNKNOWN",
+      "project_text": "USER_PROVIDED",
+      "narrative": "GENERATED"
+    },
+    "TARGET_ANALYSIS": {
+      "target_user_rows": "GENERATED_OR_DERIVED",
+      "customer_segment_evidence": "UNKNOWN"
+    },
+    "ROI_OR_EFFECT": {
+      "investment": "UNKNOWN",
+      "effect": "GENERATED",
+      "calculation_basis": "UNKNOWN",
+      "roi_percent": "UNKNOWN"
+    },
+    "RISK": {
+      "risk_narrative": "GENERATED",
+      "owner_likelihood_impact_status": "UNKNOWN"
+    },
+    "CASE_STUDY": {
+      "case_text": "USER_PROVIDED",
+      "triplets": "DERIVED",
+      "outcomes": "UNKNOWN",
+      "image": "UNKNOWN",
+      "permission": "UNKNOWN"
+    },
+    "COMPETITION": {
+      "competitor_identity": "USER_PROVIDED",
+      "rows_scores": "GENERATED",
+      "evidence": "UNKNOWN"
+    },
+    "WIN_PROBABILITY": {
+      "rank_probability_label_reason": "GENERATED_OR_UNKNOWN",
+      "explicit_verified_probability": "UNKNOWN",
+      "rank_derived_probability": "DISALLOWED"
+    }
+  },
+  "generated_values_must_not_be_upgraded": true
+}

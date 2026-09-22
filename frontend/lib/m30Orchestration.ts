@@ -9,7 +9,6 @@ import type {
   M30CanonicalProposalResponse,
   M30CausalityRelationshipProposalDto,
   M30CausalityProposalResponse,
-  M30ReviewedCausalityRelationshipDto,
   M30CanonicalReviewResponse,
   M30CausalityReviewResponse,
 } from "@/types/m30Api";
