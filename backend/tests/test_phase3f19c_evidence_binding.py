@@ -239,4 +239,3 @@ def test_risk_without_owner_likelihood_and_impact_stays_blocked() -> None:
         slide=_slide(),
     )
     assert payload.failure_reason == FailureReason.EVIDENCE_REQUIRED.value
-

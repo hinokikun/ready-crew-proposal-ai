@@ -165,4 +165,3 @@ def test_runtime_source_template_checksum_is_unchanged() -> None:
     result = render_native_role_dry_run("PROPOSAL_SUMMARY", data=SimpleNamespace(), context=SimpleNamespace(), slide=_slide("提案サマリー"), surface="summary")
     assert result.success is True
     assert sha256_file(source) == before
-
