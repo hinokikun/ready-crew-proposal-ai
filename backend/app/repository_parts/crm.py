@@ -71,7 +71,7 @@ def get_or_create_project(
     else:
         context_org_id, context_workspace_id = 1, 1
     existing = db.execute(
-        "SELECT id FROM projects WHERE name = ? AND (customer_id IS ? OR customer_id = ?) AND organization_id = ? AND workspace_id = ?",
+        "SELECT id FROM projects WHERE name = ? AND ((customer_id IS NULL AND ? IS NULL) OR customer_id = ?) AND organization_id = ? AND workspace_id = ?",
         (project_name, customer_id, customer_id, context_org_id, context_workspace_id),
     ).fetchone()
     if existing:
