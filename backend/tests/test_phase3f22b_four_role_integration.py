@@ -5,7 +5,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from dataclasses import replace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from pptx import Presentation
 
@@ -268,9 +268,10 @@ class FourRoleIntegrationTests(unittest.TestCase):
             self.assertEqual(result.failure_reason, FailureReason.TEXT_OVERFLOW_RISK.value, role)
 
     def test_native_exception_isolated_to_role(self) -> None:
-        from app.services.pptx_parts import native_trace_renderers
-
-        with patch.object(native_trace_renderers, "render_native_role_dry_run", side_effect=RuntimeError("synthetic")):
+        with patch.dict(
+            dispatch_approved_native_slide.__globals__,
+            {"render_native_role_dry_run": Mock(side_effect=RuntimeError("synthetic"))},
+        ):
             trace = dispatch_approved_native_slide(
                 Presentation(),
                 _slide("導入ステップとスケジュール"),
