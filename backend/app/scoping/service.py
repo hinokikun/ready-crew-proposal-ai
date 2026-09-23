@@ -52,13 +52,24 @@ def ensure_table_scope(
 
 
 def get_project_scope(db: Connection, project_id: int | str) -> dict[str, Any] | None:
+    if isinstance(project_id, bool):
+        return None
+    if isinstance(project_id, int):
+        lookup_id = project_id
+    elif isinstance(project_id, str):
+        try:
+            lookup_id = int(project_id)
+        except ValueError:
+            return None
+    else:
+        return None
     row = db.execute(
         """
         SELECT id, organization_id, workspace_id
         FROM projects
         WHERE id = ?
         """,
-        (project_id,),
+        (lookup_id,),
     ).fetchone()
     return dict(row) if row else None
 
