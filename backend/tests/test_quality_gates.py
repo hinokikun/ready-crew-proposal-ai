@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 
+from app.scoping.service import get_project_scope
+
 
 CHECKLIST_ITEMS = [
     "Company name checked",
@@ -11,6 +13,24 @@ CHECKLIST_ITEMS = [
     "Supervisor review checked",
     "Human final review checked",
 ]
+
+
+class _ScopeCursor:
+    def __init__(self, row: dict[str, int] | None = None) -> None:
+        self.row = row
+
+    def fetchone(self) -> dict[str, int] | None:
+        return self.row
+
+
+class _ScopeDb:
+    def __init__(self, row: dict[str, int] | None = None) -> None:
+        self.row = row
+        self.calls: list[tuple[str, tuple[object, ...]]] = []
+
+    def execute(self, sql: str, params: tuple[object, ...]) -> _ScopeCursor:
+        self.calls.append((sql, params))
+        return _ScopeCursor(self.row)
 
 
 def _create_user_and_login(client: TestClient, admin_headers: dict[str, str], email: str, role: str) -> dict[str, str]:
@@ -30,6 +50,36 @@ def test_quality_gate_can_be_fetched_before_creation(client: TestClient, admin_h
 
     assert response.status_code == 200
     assert response.json()["gate"] is None
+
+
+def test_non_numeric_external_project_id_skips_integer_scope_lookup() -> None:
+    db = _ScopeDb()
+
+    assert get_project_scope(db, "54dah") is None
+    assert db.calls == []
+
+
+def test_numeric_project_id_keeps_integer_scope_lookup() -> None:
+    db = _ScopeDb({"id": 54, "organization_id": 2, "workspace_id": 3})
+
+    assert get_project_scope(db, "54") == {"id": 54, "organization_id": 2, "workspace_id": 3}
+    assert db.calls[0][1] == (54,)
+
+
+def test_non_numeric_external_project_id_supports_get_and_complete(client: TestClient, admin_headers: dict[str, str]) -> None:
+    member_headers = _create_user_and_login(client, admin_headers, "quality-external-id@example.com", "member")
+
+    fetched = client.get("/api/quality-gates/54dah", headers=member_headers)
+    assert fetched.status_code == 200
+    assert fetched.json()["gate"] is None
+
+    completed = client.patch(
+        "/api/quality-gates/54dah/complete",
+        headers=member_headers,
+        json={"checklist_items": CHECKLIST_ITEMS},
+    )
+    assert completed.status_code == 200
+    assert completed.json()["gate"]["completed"] is True
 
 
 def test_member_can_complete_quality_gate(client: TestClient, admin_headers: dict[str, str]) -> None:
