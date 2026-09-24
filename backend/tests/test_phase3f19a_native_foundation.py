@@ -30,7 +30,7 @@ def _registry() -> dict:
 
 def test_all_approved_runtime_assets_exist() -> None:
     registry = _registry()
-    assert len(registry["roles"]) == 28
+    assert len(registry["roles"]) == 32
     for role in registry["roles"]:
         asset = ROOT / role["runtime_asset"]
         assert asset.is_file(), role

@@ -296,6 +296,12 @@ def resolve_approved_native_role(slide_data: object, index: int = 0) -> str | No
     # second KPI role.
     if title in {"kpi設計", "kpi設計と効果測定"}:
         return "KPI"
+    if title == "経営判断の要点":
+        return "EXECUTIVE_SUMMARY"
+    if title == "本提案の結論と期待効果":
+        return "DECISION_AND_EXPECTED_EFFECTS"
+    if title == "導入構成":
+        return "IMPLEMENTATION_CONFIGURATION"
     if "競合比較" in title or "差別化ポイント" in title:
         return "COMPETITIVE_COMPARISON"
     if "受注確度" in title or "受注確率" in title:
