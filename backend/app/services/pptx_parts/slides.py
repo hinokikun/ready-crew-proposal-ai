@@ -2011,14 +2011,17 @@ def add_designed_slide(
                     index,
                     role=native_role,
                     surface=surface,
+                    visual_fallback=True,
                 )
                 if isinstance(trace, bool):
                     native_rendered = trace
                     trace = {"NATIVE_RENDERED": trace, "FALLBACK_USED": not trace}
+                    fallback_rendered = False
                 else:
                     native_rendered = bool(trace.get("NATIVE_RENDERED"))
+                    fallback_rendered = bool(trace.get("FALLBACK_RENDERED"))
                 logger.info("approved_native_dispatch", extra={"native_trace": trace})
-                if native_rendered:
+                if native_rendered or fallback_rendered:
                     return
                 if len(prs.slides) > slide_count_before:
                     _remove_last_slide(prs)
