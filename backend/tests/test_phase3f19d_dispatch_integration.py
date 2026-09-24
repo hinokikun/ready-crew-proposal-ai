@@ -134,7 +134,7 @@ def test_renderer_exception_isolated(monkeypatch) -> None:
     assert trace["FAILURE_REASON"] == FailureReason.TEMPLATE_CLONE_FAILED.value
 
 
-def test_fallback_continues_deck_generation(monkeypatch) -> None:
+def test_evidence_safe_visual_fallback_continues_deck_generation(monkeypatch) -> None:
     calls = {"legacy": 0}
 
     def legacy(*args, **kwargs):
@@ -145,7 +145,7 @@ def test_fallback_continues_deck_generation(monkeypatch) -> None:
     monkeypatch.setattr(slides, "render_v5_masterpiece_slide", legacy)
     prs = Presentation()
     slides.add_designed_slide(prs, _slide("KPI設計と効果測定"), SimpleNamespace(), 7, SimpleNamespace(), surface="summary")
-    assert calls["legacy"] == 1
+    assert calls["legacy"] == 0
     assert len(prs.slides) == 1
 
 

@@ -279,6 +279,7 @@ EVIDENCE_SENSITIVE_ROLES = frozenset(
         "RISK",
         "SCHEDULE",
         "ROADMAP",
+        "IMPLEMENTATION_CONFIGURATION",
     }
 )
 
@@ -303,7 +304,7 @@ SAMPLE_STRINGS: dict[str, tuple[str, ...]] = {
     ),
     "WIN_PROBABILITY": ("72%", "2025年下期", "高い確度で受注"),
     "SCHEDULE": ("2026.06.22", "Week 1", "Week 6", "Week 12", "Week 20", "1 ～ 2 週", "2 ～ 3 週", "4 ～ 6 週", "2 週"),
-    "ROADMAP": (
+        "ROADMAP": (
         "2026.06.22",
         "1ヶ月",
         "1〜2ヶ月",
@@ -324,6 +325,17 @@ SAMPLE_STRINGS: dict[str, tuple[str, ...]] = {
     "MARKET_ANALYSIS": ("市場規模", "成長率", "TAM", "SAM", "SOM"),
     "TARGET_ANALYSIS": ("中堅～大企業", "営業部門", "市場セグメント"),
     "RISK": ("営業責任者", "システム管理者", "運用責任者", "事業責任者"),
+    "IMPLEMENTATION_CONFIGURATION": (
+        "2025年6月22日",
+        "販売管理", "見積・受注・売上・請求", "在庫管理", "在庫・入出庫・棚卸",
+        "購買管理", "発注・仕入・支払", "生産管理", "生産計画・工程・原価",
+        "会計管理", "財務・管理会計・レポート", "基幹システム（既存）",
+        "顧客・取引先・商品マスタ連携", "外部サービス", "EDI・電子請求・決済サービス",
+        "グループシステム", "人事・勤怠・ワークフロー", "BIツール", "データ分析・経営ダッシュボード",
+        "1,200 万円〜", "年間 300 万円〜", "400 万円〜", "1,900 万円〜",
+        "約 5,000 時間", "約 800 万円", "約 2.4 年", "約 2,400 万円",
+        "準備・要件定義", "2か月", "設計・開発", "4か月", "テスト・教育", "本番稼働", "1か月",
+    ),
 }
 
 
@@ -424,6 +436,108 @@ def _evidence_adapter(role: str, surface: str, data: Any, context: Any, slide: A
     if payload.unresolved_required_slots:
         return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "required title is unbound", unresolved=payload.unresolved_required_slots)
     return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, f"{role} requires verified current data")
+
+
+def _static_trace_adapter(
+    role: str,
+    surface: str,
+    data: Any,
+    context: Any,
+    slide: Any,
+    slide_id: str | None = None,
+) -> NativeSlotPayload:
+    """Keep an approved static trace intact; only its exact title is bindable."""
+
+    payload = _base_payload(role, surface, data, context, slide, slide_id)
+    if payload.failure_reason:
+        return payload
+    expected_titles = {
+        "EXECUTIVE_SUMMARY": "経営判断の要点",
+        "DECISION_AND_EXPECTED_EFFECTS": "本提案の結論と期待効果",
+    }
+    title = payload.slots.get(f"trace:{payload.slide_id}:title.primary")
+    if title != expected_titles.get(role):
+        return _blocked(
+            payload,
+            FailureReason.UNBOUND_REQUIRED_CONTENT,
+            "approved static trace title does not match the current role contract",
+            unresolved=[f"trace:{payload.slide_id}:title.primary"],
+        )
+    if payload.unresolved_required_slots:
+        return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "required title is unbound", unresolved=payload.unresolved_required_slots)
+    return payload
+
+
+def _direct_verified_values(records: Iterable[Mapping[str, Any]]) -> list[str]:
+    values: list[str] = []
+    for record in records:
+        value = record.get("value")
+        if isinstance(value, (list, tuple)):
+            values.extend(str(item).strip() for item in value if str(item).strip())
+        elif value is not None and str(value).strip():
+            values.append(str(value).strip())
+    return values
+
+
+def _bind_trace_evidence_values(
+    payload: NativeSlotPayload,
+    samples: Iterable[str],
+    records: list[dict[str, Any]],
+    field: str,
+) -> bool:
+    sample_values = [str(value) for value in samples]
+    values = _direct_verified_values(records)
+    if not values:
+        return False
+    if any(value in sample_values for value in values):
+        return False
+    for sample, value in zip(sample_values, values):
+        payload.text_replacements[sample] = value
+    payload.clear_matching_text.extend(sample for sample in sample_values[len(values):] if sample not in payload.clear_matching_text)
+    for record in records:
+        payload.diagnostics.append(
+            {
+                "field": field,
+                "classification": record.get("classification", "UNKNOWN"),
+                "source_reference": record.get("source_reference", ""),
+            }
+        )
+    return True
+
+
+def _implementation_configuration_adapter(
+    role: str,
+    surface: str,
+    data: Any,
+    context: Any,
+    slide: Any,
+    slide_id: str | None = None,
+) -> NativeSlotPayload:
+    """Fail closed unless every trace-only evidence group is explicitly verified."""
+
+    payload = _base_payload(role, surface, data, context, slide, slide_id)
+    if payload.failure_reason:
+        return payload
+    if payload.unresolved_required_slots:
+        return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "required title is unbound", unresolved=payload.unresolved_required_slots)
+
+    evidence_groups = (
+        ("implementation_scope", ("implementation_scope", "scope", "target_scope", "coverage"), ("販売管理", "見積・受注・売上・請求", "在庫管理", "在庫・入出庫・棚卸", "購買管理", "発注・仕入・支払", "生産管理", "生産計画・工程・原価", "会計管理", "財務・管理会計・レポート")),
+        ("integration_targets", ("integration", "integration_target", "system", "connection"), ("基幹システム（既存）", "顧客・取引先・商品マスタ連携", "外部サービス", "EDI・電子請求・決済サービス", "グループシステム", "人事・勤怠・ワークフロー", "BIツール", "データ分析・経営ダッシュボード")),
+        ("estimate", ("estimate", "cost", "price", "amount", "budget"), ("1,200 万円〜", "年間 300 万円〜", "400 万円〜", "1,900 万円〜")),
+        ("roi", ("roi", "effect", "impact", "payback", "productivity", "return"), ("約 5,000 時間", "約 800 万円", "約 2.4 年", "約 2,400 万円")),
+        ("schedule", ("schedule", "timeline", "milestone", "phase", "date"), ("2025年6月22日", "準備・要件定義", "2か月", "設計・開発", "4か月", "テスト・教育", "本番稼働", "1か月")),
+    )
+    missing: list[str] = []
+    for field, keywords, samples in evidence_groups:
+        records = _allowed_evidence_records(data, context, *keywords, allowed=("VERIFIED",))
+        _record_diagnostics(payload, field, records)
+        if not records or not _bind_trace_evidence_values(payload, samples, records, field):
+            missing.append(field)
+    if missing:
+        return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, f"verified evidence is missing for: {', '.join(missing)}")
+    payload.prohibited_sample_strings = list(SAMPLE_STRINGS["IMPLEMENTATION_CONFIGURATION"])
+    return payload
 
 
 def _estimate_adapter(role: str, surface: str, data: Any, context: Any, slide: Any, slide_id: str | None = None) -> NativeSlotPayload:
@@ -954,6 +1068,10 @@ def _build_role_adapters() -> dict[tuple[str, str], Callable[..., NativeSlotPayl
         surface, role = key
         if role in {"ESTIMATE"}:
             adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _estimate_adapter(role, surface, data, context, slide, slide_id)
+        elif role in {"EXECUTIVE_SUMMARY", "DECISION_AND_EXPECTED_EFFECTS"}:
+            adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _static_trace_adapter(role, surface, data, context, slide, slide_id)
+        elif role == "IMPLEMENTATION_CONFIGURATION":
+            adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _implementation_configuration_adapter(role, surface, data, context, slide, slide_id)
         elif role == "KPI":
             adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _kpi_adapter(role, surface, data, context, slide, slide_id)
         elif role in {"COMPETITIVE_COMPARISON", "COMPETITION"}:
