@@ -90,12 +90,13 @@ def test_runtime_templates_open_as_single_slide_with_unique_required_slots() -> 
         assert report["full_slide_raster_count"] == 0
         assert report["duplicate_semantic_slots"] == []
         assert report["missing_required_slots"] == []
+        assert report["source_frozen_unchanged"] is None
         assert report["runtime_sha256"] == role["runtime_checksum"]
 
 
 def test_photo_template_clone_preserves_image_relationships_and_crop_values() -> None:
     role = next(item for item in _registry()["roles"] if item["role"] == "CASE_STUDY")
-    source = ROOT / role["source_asset"]
+    source = ROOT / role["runtime_asset"]
     source_report = inspect_template_package(source)
     with tempfile.TemporaryDirectory() as tmp:
         destination = Path(tmp) / "case-study.pptx"
@@ -113,7 +114,7 @@ def test_photo_template_clone_preserves_image_relationships_and_crop_values() ->
 
 def test_unsupported_relationship_fails_cleanly() -> None:
     role = next(item for item in _registry()["roles"] if item["role"] == "COVER" and item["slide_id"] == "S01")
-    source = ROOT / role["source_asset"]
+    source = ROOT / role["runtime_asset"]
     with tempfile.TemporaryDirectory() as tmp:
         broken = Path(tmp) / "unsupported.pptx"
         with ZipFile(source) as input_zip, ZipFile(broken, "w", compression=ZIP_DEFLATED) as output_zip:

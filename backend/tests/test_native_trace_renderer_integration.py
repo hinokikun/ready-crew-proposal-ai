@@ -23,6 +23,55 @@ def _slide(title: str, layout: str = "") -> SimpleNamespace:
     return SimpleNamespace(title=title, layout=layout, bullets=[], slide_no=1)
 
 
+def _verified_proposal_summary_context() -> SimpleNamespace:
+    groups = {
+        "summary": ("proposal_summary.summary", ["FAJで確認済みの提案論点"]),
+        "current_state": (
+            "proposal_summary.current_state",
+            ["確認済み現状1", "確認済み現状2", "確認済み現状3", "確認済み現状4"],
+        ),
+        "key_measures": (
+            "proposal_summary.key_measure",
+            ["確認済み施策1", "確認済み施策2", "確認済み施策3", "確認済み施策4", "確認済み施策5", "確認済み施策6"],
+        ),
+        "expected_effects": (
+            "proposal_summary.expected_effect",
+            ["確認済み効果1", "確認済み効果2", "確認済み効果3", "確認済み効果4", "確認済み効果5", "確認済み効果6"],
+        ),
+        "decision_items": (
+            "proposal_summary.decision",
+            [
+                "確認済み判断事項1",
+                "確認済み判断事項2",
+                "確認済み判断事項3",
+                "確認済み判断事項4",
+                "確認済み判断事項5",
+                "確認済み判断事項6",
+                "確認済み判断事項7",
+                "確認済み判断事項8",
+                "確認済み判断事項9",
+            ],
+        ),
+        "insight": ("proposal_summary.insight", ["確認済み示唆1", "確認済み示唆2", "確認済み示唆3", "確認済み示唆4"]),
+    }
+    return SimpleNamespace(
+        semantic_candidates=[
+            {
+                "semantic_type": semantic_type,
+                "value": values,
+                "source_type": "customer_input",
+                "source_field": f"faj.proposal_summary.{group}",
+                "source_reference": f"faj://verified/proposal_summary/{group}",
+                "authority": "USER_EXPLICIT",
+                "review_state": "CONFIRMED",
+                "admissible_as_evidence": True,
+                "inferred": False,
+            }
+            for group, (semantic_type, values) in groups.items()
+        ]
+    )
+
+
 def test_registry_contains_only_human_approved_native_roles() -> None:
     assert APPROVED_NATIVE_REGISTRY
     assert {"CASE_STUDY", "ROI_OR_EFFECT", "MARKET_ANALYSIS", "TARGET_ANALYSIS"}.isdisjoint(
@@ -91,7 +140,7 @@ def test_approved_trace_templates_respect_adapter_and_render_generic_role() -> N
         prs,
         _slide("提案サマリー"),
         SimpleNamespace(),
-        SimpleNamespace(),
+        _verified_proposal_summary_context(),
         1,
         role="PROPOSAL_SUMMARY",
         surface="summary",

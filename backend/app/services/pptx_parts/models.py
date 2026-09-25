@@ -53,3 +53,6 @@ class PptxContext:
     win_probability: WinProbability | None
     design_template: str = "corporate_clean"
     brand_settings: dict[str, str] | None = None
+    # Internal transport for the already-authoritative semantic candidate
+    # envelope. The public download request/response contract is unchanged.
+    semantic_candidates: dict | None = None

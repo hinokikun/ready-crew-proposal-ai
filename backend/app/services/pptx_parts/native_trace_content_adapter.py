@@ -283,7 +283,137 @@ EVIDENCE_SENSITIVE_ROLES = frozenset(
     }
 )
 
+_GENERIC_PROPOSAL_SAMPLE_STRINGS = (
+    "提案資料作成",
+    "過去提案",
+    "ナレッジ共有",
+    "提案エンジン",
+    "Proposal Engine",
+    "提案書自動生成AI",
+    "ナレッジ活用",
+    "レビュー運用",
+    "提案業務の効率化",
+    "提案業務の効率化と提案品質の向上",
+    "約70%削減",
+    "約1.5倍",
+    "約20%向上",
+    "約60%増",
+    "約1.8倍",
+    "約20%",
+    "1.5倍",
+    "提案資料の叩き台",
+    "過去提案・事例・テンプレート",
+    "提案書を作成",
+    "提案品質・速度・再現性",
+    "現行の提案業務フロー",
+    "情報整理の自動化",
+    "構成提案の最適化",
+    "継続改善の仕組み化",
+    "業務の自動化",
+    "提案品質の向上",
+    "提案回数の増加",
+    "受注確度の向上",
+    "提案の質と量",
+    "過去の提案事例",
+    "組織で再利用",
+    "2 週間",
+    "2 ～ 3週間",
+    "4 ～ 8週間",
+    "約70%削減",
+    "約1.5倍",
+    "約20%向上",
+    "過去の提案資料・競合情報・顧客情報",
+    "Proposal Engine",
+    "2週間",
+    "2～3週間",
+    "4～8週間",
+)
+
+
 SAMPLE_STRINGS: dict[str, tuple[str, ...]] = {
+    "CURRENT_STATE": _GENERIC_PROPOSAL_SAMPLE_STRINGS,
+    "PROBLEM_ANALYSIS": _GENERIC_PROPOSAL_SAMPLE_STRINGS,
+    "SOLUTION_CONCEPT": _GENERIC_PROPOSAL_SAMPLE_STRINGS,
+    "SOLUTION_APPROACH": _GENERIC_PROPOSAL_SAMPLE_STRINGS,
+    "EXECUTIVE_SUMMARY": (
+        "導入判断に必要な論点を整理し、課題適合と運用定着の両面から、優先して確認すべき事項を明確化します。",
+        "導入範囲を明確化し、対象業務・連携先・期待成果を共通認識化する必要があります。",
+        "目的と課題、判断基準、必要データが分散し、導入判断に時間がかかっています。",
+        "ERPを基盤に業務情報を整理し、標準化・可視化・再利用性を高める進め方が有効です。",
+        "業務時間削減",
+        "判断スピード向上",
+        "運用定着",
+        "情報整理と資料準備の工数を削減",
+        "判断材料の可視化で意思決定を迅速化",
+        "範囲・役割・KPIを明確にし定着を支援",
+        "対象業務・対象部門・連携先の確定",
+        "現状値・目標値・測定方法の整理",
+        "必須・推奨・任意の費用レンジ確認",
+        "決裁者・担当者・導入スケジュールの確認",
+        "範囲・KPI・予算の合意を起点に、段階導入で早期成果と運用定着を両立します。",
+    ),
+    "DECISION_AND_EXPECTED_EFFECTS": (
+        "2025年6月22日",
+        "ERP導入により、業務の標準化とデータの一元化を実現し",
+        "経営の意思決定スピードと事業成長を加速します",
+        "本提案は、業務・データ・組織を統合したERP基盤の導入により、全社最適な業務運営と経営の可視化を実現し、持続的な成長に向けた経営基盤を構築するものです。",
+        "業務の個別最適化により全社での非効率が発生",
+        "データが分散し経営の可視化が困難",
+        "事業拡大に向けた業務基盤の強化が急務",
+        "業務の標準化とプロセスの最適化",
+        "データの一元化とリアルタイムな可視化",
+        "現場に適合した段階的な導入・定着",
+        "ERPライセンス・インフラ投資",
+        "業務設計・開発・移行教育・チェンジマネジメント",
+        "運用保守・継続的改善",
+        "業務効率化によるコスト削減",
+        "データに基づく迅速な意思決定",
+        "業務品質の向上と内部統制の強化",
+        "事業成長を支えるスケーラブルな基盤",
+        "ERP導入の実行承認初期投資の予算確保",
+        "全社的な推進体制の構築導入スケジュールの確定",
+        "ERP導入は、業務効率化にとどまらず、経営の可視化と事業成長を支える戦略的投資です。",
+    ),
+    "PROPOSAL_SUMMARY": (
+        "提案業務の効率化",
+        "提案業務の効率化と提案品質の向上を両立するため、3つの施策を一体で実行します。",
+        "提案業務において、以下のような",
+        "課題が発生しています。",
+        "提案資料作成に時間がかかる",
+        "担当者ごとに品質差が生じる",
+        "過去提案の再利用が進んでいない",
+        "3つの施策で解決",
+        "効率化・品質向上・継続改善を一体で推進",
+        "提案書自動生成AI",
+        "AIで提案資料の叩き台を自動生成し、作成時間を大幅に短縮。",
+        "ナレッジ活用",
+        "過去の提案・成功事例を組織の資産として活用し、提案精度を高める。",
+        "レビュー運用",
+        "提出前のレビューで品質を担保し、継続的な改善につなげる。",
+        "案件情報から叩き台を自動作成",
+        "過去提案・勝ちパターンを再利用",
+        "提出前チェックで品質を担保",
+        "業界・目的に応じた構成を提案",
+        "実績・根拠・表現を資産化",
+        "改善ポイントを可視化",
+        "短時間で高品質な初稿を生成",
+        "提案精度を継続的に向上",
+        "継続的な改善サイクルを回す",
+        "期待される成果",
+        "作成時間の短縮",
+        "約70%削減",
+        "提案回数の増加",
+        "約1.5倍",
+        "受注確度の向上",
+        "約20%向上",
+        "ProposalPilot",
+        "AI営業秘書",
+        "ご提案の要点",
+        "提案業務を効率化し、",
+        "提案の質と量を高め、",
+        "継続的に成果を生み出す仕組み",
+        "を構築します。",
+    ),
     "ESTIMATE": ("￥1,500,000", "￥1,200,000", "￥2,000,000", "￥10,500,000", "2026年6月", "1,500,000"),
     "KPI": ("20時間/件", "70%削減", "6時間/件", "月10件", "1.5倍", "5回/件", "30%削減", "20%", "20%向上"),
     "COMPETITIVE_COMPARISON": (
@@ -327,14 +457,18 @@ SAMPLE_STRINGS: dict[str, tuple[str, ...]] = {
     "RISK": ("営業責任者", "システム管理者", "運用責任者", "事業責任者"),
     "IMPLEMENTATION_CONFIGURATION": (
         "2025年6月22日",
+        "業務の標準化・データの一元管理により、部門間の連携を強化し、効率的で拡張性の高いERP基盤を構築します。",
         "販売管理", "見積・受注・売上・請求", "在庫管理", "在庫・入出庫・棚卸",
         "購買管理", "発注・仕入・支払", "生産管理", "生産計画・工程・原価",
         "会計管理", "財務・管理会計・レポート", "基幹システム（既存）",
         "顧客・取引先・商品マスタ連携", "外部サービス", "EDI・電子請求・決済サービス",
         "グループシステム", "人事・勤怠・ワークフロー", "BIツール", "データ分析・経営ダッシュボード",
+        "業務データ", "業務プロセス標準化", "ERP基盤", "統合DB", "業務プロセス", "マスタ管理", "権限・セキュリティ", "ERP",
+        "データ連携", "外部データ取り込み",
         "1,200 万円〜", "年間 300 万円〜", "400 万円〜", "1,900 万円〜",
         "約 5,000 時間", "約 800 万円", "約 2.4 年", "約 2,400 万円",
         "準備・要件定義", "2か月", "設計・開発", "4か月", "テスト・教育", "本番稼働", "1か月",
+        "業務の標準化とデータの一元管理により、コストを最適化し、持続的な成長を支えるERP基盤を構築します。",
     ),
 }
 
@@ -438,7 +572,103 @@ def _evidence_adapter(role: str, surface: str, data: Any, context: Any, slide: A
     return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, f"{role} requires verified current data")
 
 
-def _static_trace_adapter(
+def _candidate_records_for_binding(data: Any, context: Any, *aliases: str) -> list[dict[str, Any]]:
+    """Return only explicitly labelled, admissible runtime candidates.
+
+    Values are intentionally excluded from the matching haystack.  A business
+    sentence containing a keyword must not decide which semantic slot it
+    belongs to; the candidate's explicit type/field metadata must do that.
+    """
+
+    normalized_aliases = tuple(alias.lower() for alias in aliases)
+    matched: list[dict[str, Any]] = []
+    for record in _semantic_candidate_records(data, context):
+        haystack = " ".join(
+            str(record.get(key) or "")
+            for key in ("semantic_type", "id", "source_field", "source_reference", "slot", "field", "role")
+        ).lower()
+        if normalized_aliases and not any(alias in haystack for alias in normalized_aliases):
+            continue
+        item = dict(record)
+        item["classification"] = classify_provenance(record)
+        if item["classification"] in {"VERIFIED", "USER_PROVIDED"}:
+            matched.append(item)
+    return matched
+
+
+def _bind_semantic_slots(
+    payload: NativeSlotPayload,
+    field: str,
+    aliases: Iterable[str],
+    slots: list[str],
+    data: Any,
+    context: Any,
+) -> bool:
+    records = _candidate_records_for_binding(data, context, *aliases)
+    _record_diagnostics(payload, field, records)
+    values = _direct_verified_values(records)
+    if len(values) < len(slots):
+        return False
+    prohibited = tuple(payload.prohibited_sample_strings)
+    if any(sample and sample in value for value in values for sample in prohibited):
+        return False
+    for index, slot in enumerate(slots):
+        record = records[min(index, len(records) - 1)]
+        payload.slots[slot] = values[index]
+        payload.source_fields[slot] = str(record.get("source_field") or "semantic_candidates")
+        payload.evidence_status[slot] = str(record.get("classification") or "UNKNOWN")
+    return True
+
+
+def _semantic_page_candidate_records(data: Any, context: Any, aliases: Iterable[str]) -> list[dict[str, Any]]:
+    """Match page candidates on explicit metadata fields, not value text."""
+
+    expected = {str(alias).lower() for alias in aliases}
+    matched: list[dict[str, Any]] = []
+    for record in _semantic_candidate_records(data, context):
+        metadata = (
+            str(record.get("semantic_type") or "").strip().lower(),
+            str(record.get("source_field") or "").strip().lower(),
+            str(record.get("slot") or "").strip().lower(),
+            str(record.get("field") or "").strip().lower(),
+        )
+        if not any(
+            value in expected
+            or any(value.endswith(f".{alias}") for alias in expected if alias)
+            for value in metadata
+            if value
+        ):
+            continue
+        item = dict(record)
+        item["classification"] = classify_provenance(record)
+        if item["classification"] in {"VERIFIED", "USER_PROVIDED"}:
+            matched.append(item)
+    return matched
+
+
+def _bind_semantic_page_slot(
+    payload: NativeSlotPayload,
+    field: str,
+    aliases: Iterable[str],
+    slot: str,
+    data: Any,
+    context: Any,
+) -> bool:
+    records = _semantic_page_candidate_records(data, context, aliases)
+    _record_diagnostics(payload, field, records)
+    values = _direct_verified_values(records)
+    if not values:
+        return False
+    if any(sample and sample in values[0] for sample in payload.prohibited_sample_strings):
+        return False
+    record = records[0]
+    payload.slots[slot] = values[0]
+    payload.source_fields[slot] = str(record.get("source_field") or "semantic_candidates")
+    payload.evidence_status[slot] = str(record.get("classification") or "UNKNOWN")
+    return True
+
+
+def _semantic_trace_adapter(
     role: str,
     surface: str,
     data: Any,
@@ -446,7 +676,13 @@ def _static_trace_adapter(
     slide: Any,
     slide_id: str | None = None,
 ) -> NativeSlotPayload:
-    """Keep an approved static trace intact; only its exact title is bindable."""
+    """Bind every business-content region or fail closed before cloning.
+
+    The approved PPTX remains the visual authority, but its body copy is not a
+    data source.  Native rendering is allowed only when each dynamic group has
+    explicit user/verified provenance.  Otherwise the existing renderer owns
+    the slide and the trace-only sample never reaches the output.
+    """
 
     payload = _base_payload(role, surface, data, context, slide, slide_id)
     if payload.failure_reason:
@@ -465,6 +701,333 @@ def _static_trace_adapter(
         )
     if payload.unresolved_required_slots:
         return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "required title is unbound", unresolved=payload.unresolved_required_slots)
+
+    prefix = f"trace:{payload.slide_id}:"
+    if role == "EXECUTIVE_SUMMARY":
+        groups = (
+            ("summary_context", ("executive_summary.summary_context", "executive_summary.context", "summary_context"), [f"{prefix}title.primary.2"]),
+            ("background", ("executive_summary.background", "background", "current_background", "why_now"), [f"{prefix}lead"]),
+            ("current_state", ("executive_summary.current_state", "current_state", "current_issue", "problem"), [f"{prefix}lead.2"]),
+            ("conclusion", ("executive_summary.conclusion", "conclusion", "decision"), [f"{prefix}lead.3"]),
+            ("expected_effects", ("executive_summary.expected_effect", "expected_effect", "expected_effects", "benefit"), [f"{prefix}title.primary.3", f"{prefix}lead.4", f"{prefix}content.auto.64"]),
+            ("decision_items", ("executive_summary.decision", "decision_item", "decision_items", "judgment"), [f"{prefix}content.auto.75", f"{prefix}content.auto.90", f"{prefix}content.auto.101", f"{prefix}content.auto.112"]),
+            ("insight", ("executive_summary.insight", "insight", "implication"), [f"{prefix}content.auto.118"]),
+        )
+    else:
+        groups = (
+            ("summary", ("decision_effects.summary", "decision_and_expected_effects.summary", "decision_summary"), [f"{prefix}title.primary.5"]),
+            ("headline", ("decision_effects.headline", "decision_and_expected_effects.headline", "decision_headline"), [f"{prefix}title.primary.3", f"{prefix}title.primary.4"]),
+            ("why_now", ("decision_effects.why_now", "why_now", "background"), [f"{prefix}content.auto.34", f"{prefix}content.auto.36", f"{prefix}content.auto.38"]),
+            ("policy", ("decision_effects.policy", "basic_policy", "policy", "approach"), [f"{prefix}content.auto.45", f"{prefix}content.auto.47", f"{prefix}content.auto.49"]),
+            ("investment", ("decision_effects.investment", "investment", "required_investment"), [f"{prefix}content.auto.60", f"{prefix}content.auto.62", f"{prefix}content.auto.64"]),
+            ("effects", ("decision_effects.effects", "expected_effect", "expected_effects", "effect"), [f"{prefix}content.auto.73", f"{prefix}content.auto.75", f"{prefix}content.auto.77", f"{prefix}content.auto.79"]),
+            ("decisions", ("decision_effects.decisions", "decisions", "decision_items", "management_decision"), [f"{prefix}content.auto.88", f"{prefix}content.auto.90"]),
+            ("insight", ("decision_effects.insight", "insight", "strategic_effect"), [f"{prefix}content.auto.98"]),
+        )
+
+    missing: list[str] = []
+    for field, aliases, slots in groups:
+        if not _bind_semantic_slots(payload, field, aliases, slots, data, context):
+            missing.append(field)
+
+    # The date is optional, but a template date is never a current project
+    # fact.  Clear it unless it has its own admissible source.
+    if role == "DECISION_AND_EXPECTED_EFFECTS":
+        date_slot = f"{prefix}title.primary.2"
+        date_records = _candidate_records_for_binding(data, context, "decision_effects.date", "decision_date", "verified_date")
+        date_values = _direct_verified_values(date_records)
+        if date_values and not any(sample in date_values[0] for sample in payload.prohibited_sample_strings):
+            payload.slots[date_slot] = date_values[0]
+            payload.source_fields[date_slot] = str(date_records[0].get("source_field") or "semantic_candidates")
+            payload.evidence_status[date_slot] = str(date_records[0].get("classification") or "UNKNOWN")
+        else:
+            payload.clear_slots.append(date_slot)
+            payload.cleared_optional_slots.append(date_slot)
+
+    if missing:
+        # Keep the approved Proposal Master visual when evidence is missing,
+        # but clear every unbound body slot before the visual fallback clones
+        # the runtime package.  The frozen template copy is never a runtime
+        # data source.
+        _clear_unbound_semantic_page_slots(payload)
+        _clear_unbound_semantic_trace_slots(payload)
+        payload.clear_matching_text.extend(payload.prohibited_sample_strings)
+        return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, f"explicit runtime evidence is missing for: {', '.join(missing)}")
+    payload.clear_matching_text.extend(payload.prohibited_sample_strings)
+    return payload
+
+
+_SEMANTIC_PAGE_BINDINGS: dict[str, dict[str, Any]] = {
+    "CURRENT_STATE": {
+        "expected_title": "現状理解",
+        "groups": (
+            ("current_state", ("current_state", "current_understanding", "business_flow"), "lead"),
+            ("workflow", ("workflow", "process", "business_process"), "lead.2"),
+            ("issue", ("current_issue", "issue", "problem", "pain_point"), "content.auto.30"),
+            ("priority", ("priority_theme", "improvement_priority", "priority"), "content.auto.41"),
+        ),
+    },
+    "PROBLEM_ANALYSIS": {
+        "expected_title": "主要課題",
+        "groups": (
+            ("problem_summary", ("problem_summary", "current_issue", "issue", "pain_point"), "lead"),
+            ("priority", ("priority_theme", "improvement_priority", "priority"), "content.auto.22"),
+            ("evidence", ("evidence", "decision_basis", "verified_issue"), "content.auto.42"),
+            ("next_step", ("next_step", "next_action", "improvement_condition", "condition"), "content.auto.78"),
+        ),
+    },
+    "SOLUTION_CONCEPT": {
+        "expected_title": "提案コンセプト",
+        "groups": (
+            ("concept", ("solution_concept", "concept", "proposal_policy", "policy"), "title.primary.2"),
+            ("measure", ("measure", "initiative", "solution", "action"), "content.auto.23"),
+            ("operation", ("operating_condition", "operation", "adoption_condition"), "content.auto.47"),
+            ("outcome", ("expected_outcome", "outcome", "expected_effect"), "content.auto.100"),
+        ),
+    },
+    "SOLUTION_APPROACH": {
+        "expected_title": "導入戦略",
+        "groups": (
+            ("approach", ("solution_approach", "approach", "implementation_policy"), "title.primary.2"),
+            ("step", ("implementation_step", "step", "phase", "rollout"), "title.primary.3"),
+            ("condition", ("implementation_condition", "condition", "requirement"), "title.primary.4"),
+            ("outcome", ("expected_outcome", "outcome", "expected_effect"), "content.auto.94"),
+        ),
+    },
+}
+
+
+def _clear_unbound_semantic_page_slots(payload: NativeSlotPayload) -> None:
+    """Remove frozen body copy unless an explicit runtime slot replaced it."""
+
+    spec = get_runtime_native_role_spec(payload.role, surface=payload.surface, slide_id=payload.slide_id) or {}
+    prefix = f"trace:{payload.slide_id}:"
+    protected = {
+        f"{prefix}content.auto",
+        f"{prefix}content.auto.2",
+        f"{prefix}content.auto.3",
+        f"{prefix}title.primary",
+        f"{prefix}footer.brand",
+        f"{prefix}footer.brand.2",
+    }
+    bound = set(payload.slots)
+    for slot in spec.get("slot_coverage", ()):
+        slot = str(slot)
+        if not slot.startswith(prefix) or slot in protected or slot in bound:
+            continue
+        if slot.startswith(f"{prefix}footer."):
+            if slot == f"{prefix}footer.date":
+                payload.clear_slots.append(slot)
+                payload.cleared_optional_slots.append(slot)
+            continue
+        if slot.startswith(f"{prefix}header."):
+            continue
+        if ":content.auto" in slot or ":lead" in slot or ":title.primary." in slot:
+            payload.clear_slots.append(slot)
+            payload.cleared_optional_slots.append(slot)
+
+
+_SEMANTIC_TRACE_FALLBACK_SLOTS: dict[str, tuple[str, ...]] = {
+    "EXECUTIVE_SUMMARY": (
+        "title.primary.2",
+        "lead",
+        "lead.2",
+        "lead.3",
+        "content.auto.45",
+        "title.primary.3",
+        "content.auto.53",
+        "lead.4",
+        "content.auto.63",
+        "content.auto.64",
+        "content.auto.75",
+        "content.auto.90",
+        "content.auto.101",
+        "content.auto.112",
+        "content.auto.118",
+    ),
+    "DECISION_AND_EXPECTED_EFFECTS": (
+        "title.primary.2",
+        "title.primary.3",
+        "title.primary.4",
+        "title.primary.5",
+        "content.auto.34",
+        "content.auto.36",
+        "content.auto.38",
+        "content.auto.45",
+        "content.auto.47",
+        "content.auto.49",
+        "content.auto.60",
+        "content.auto.62",
+        "content.auto.64",
+        "content.auto.73",
+        "content.auto.75",
+        "content.auto.77",
+        "content.auto.79",
+        "content.auto.88",
+        "content.auto.90",
+        "content.auto.98",
+    ),
+}
+
+
+_SEMANTIC_TRACE_FALLBACK_COPY: dict[str, dict[str, str]] = {
+    "EXECUTIVE_SUMMARY": {
+        "title.primary.2": "確認済み情報を整理し、未確認項目は確認後に確定します。",
+        "lead": "確認済み情報を整理",
+        "lead.2": "対象範囲を確認",
+        "lead.3": "判断材料を整理",
+        "content.auto.45": "確認済み情報を整理",
+        "title.primary.3": "対象範囲を確認",
+        "content.auto.53": "判断材料を整理",
+        "lead.4": "確認済み情報を整理",
+        "content.auto.63": "確認後に確定",
+        "content.auto.64": "未確認項目は確認後に確定",
+        "content.auto.75": "対象範囲を確認",
+        "content.auto.90": "判断材料を整理",
+        "content.auto.101": "費用は確認後に確定",
+        "content.auto.112": "体制は確認後に確定",
+        "content.auto.118": "確認済み情報を整理し、未確認項目は確認後に確定します。",
+    },
+    "DECISION_AND_EXPECTED_EFFECTS": {
+        "title.primary.2": "2026.08.26",
+        "title.primary.3": "確認済み課題を整理",
+        "title.primary.4": "方針は確認後に確定",
+        "title.primary.5": "必要条件を確認し、効果は確認後に確定します。",
+        "content.auto.34": "確認済み課題を整理",
+        "content.auto.36": "対象範囲を確認",
+        "content.auto.38": "判断材料を整理",
+        "content.auto.45": "方針は確認後に確定",
+        "content.auto.47": "必要条件を確認",
+        "content.auto.49": "実施内容を確認",
+        "content.auto.60": "必要な情報を確認",
+        "content.auto.62": "未確認項目は確認後に確定",
+        "content.auto.64": "費用は確認後に確定",
+        "content.auto.73": "確認済み情報を整理",
+        "content.auto.75": "効果は確認後に確定",
+        "content.auto.77": "判断材料を整理",
+        "content.auto.79": "次に確認する項目を整理",
+        "content.auto.88": "判断事項を整理",
+        "content.auto.90": "必要条件を確認",
+        "content.auto.98": "確認済み情報を整理し、未確認項目は確認後に確定します。",
+    },
+}
+
+
+def _clear_unbound_semantic_trace_slots(payload: NativeSlotPayload) -> None:
+    """Replace unbound trace copy with role-safe wording or clear it."""
+
+    prefix = f"trace:{payload.slide_id}:"
+    for relative_slot in _SEMANTIC_TRACE_FALLBACK_SLOTS.get(payload.role, ()):
+        slot = f"{prefix}{relative_slot}"
+        if slot in payload.slots:
+            continue
+        fallback_text = _SEMANTIC_TRACE_FALLBACK_COPY.get(payload.role, {}).get(relative_slot)
+        if fallback_text is not None:
+            payload.slots[slot] = fallback_text
+            payload.source_fields[slot] = "evidence_safe_fallback"
+            payload.evidence_status[slot] = "EVIDENCE_SAFE_FALLBACK"
+            continue
+        payload.clear_slots.append(slot)
+        payload.cleared_optional_slots.append(slot)
+
+
+def _semantic_page_adapter(
+    role: str,
+    surface: str,
+    data: Any,
+    context: Any,
+    slide: Any,
+    slide_id: str | None = None,
+) -> NativeSlotPayload:
+    """Bind Slides 05–08 from explicit FAJ evidence, otherwise fail closed."""
+
+    payload = _base_payload(role, surface, data, context, slide, slide_id)
+    if payload.failure_reason:
+        return payload
+    contract = _SEMANTIC_PAGE_BINDINGS.get(role)
+    title = payload.slots.get(f"trace:{payload.slide_id}:title.primary")
+    if not contract or title != contract["expected_title"]:
+        return _blocked(
+            payload,
+            FailureReason.UNBOUND_REQUIRED_CONTENT,
+            "approved static trace title does not match the current role contract",
+            unresolved=[f"trace:{payload.slide_id}:title.primary"],
+        )
+    if payload.unresolved_required_slots:
+        return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "required title is unbound", unresolved=payload.unresolved_required_slots)
+
+    missing: list[str] = []
+    prefix = f"trace:{payload.slide_id}:"
+    for field, aliases, relative_slot in contract["groups"]:
+        slot = f"{prefix}{relative_slot}"
+        scoped_aliases = tuple(f"{role.lower()}.{alias}" for alias in aliases) + tuple(aliases)
+        if not _bind_semantic_page_slot(payload, field, scoped_aliases, slot, data, context):
+            missing.append(field)
+    if missing:
+        return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, f"explicit FAJ evidence is missing for: {', '.join(missing)}")
+
+    # Every unbound body slot is cleared before package validation.  This is
+    # what prevents frozen generic proposal copy from surviving a successful
+    # native clone when the current payload only covers a subset of regions.
+    _clear_unbound_semantic_page_slots(payload)
+    _clear_unbound_semantic_trace_slots(payload)
+    payload.clear_matching_text.extend(payload.prohibited_sample_strings)
+    return payload
+
+
+def _proposal_summary_adapter(
+    role: str,
+    surface: str,
+    data: Any,
+    context: Any,
+    slide: Any,
+    slide_id: str | None = None,
+) -> NativeSlotPayload:
+    """Bind Slide 04 business content or fail closed before cloning."""
+
+    payload = _base_payload(role, surface, data, context, slide, slide_id)
+    if payload.failure_reason:
+        return payload
+    if payload.slots.get(f"trace:{payload.slide_id}:title.primary") != "提案サマリー":
+        return _blocked(
+            payload,
+            FailureReason.UNBOUND_REQUIRED_CONTENT,
+            "approved static trace title does not match the current role contract",
+            unresolved=[f"trace:{payload.slide_id}:title.primary"],
+        )
+    if payload.unresolved_required_slots:
+        return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "required title is unbound", unresolved=payload.unresolved_required_slots)
+
+    prefix = f"trace:{payload.slide_id}:"
+    groups = (
+        ("summary", ("proposal_summary.summary", "proposal_summary.context", "summary_context", "proposal_context"), [f"{prefix}title.primary.2"]),
+        ("current_state", ("proposal_summary.current_state", "proposal_summary.background", "current_state", "background", "current_issue", "problem"), [f"{prefix}title.primary.3", f"{prefix}title.primary.4", f"{prefix}content.auto.28", f"{prefix}content.auto.36"]),
+        ("key_measures", ("proposal_summary.key_measure", "proposal_summary.measures", "key_measure", "major_measure", "measures", "solution"), [f"{prefix}title.primary.7", f"{prefix}content.auto.51", f"{prefix}title.primary.55", f"{prefix}content.auto.57", f"{prefix}title.primary.61", f"{prefix}content.auto.73"]),
+        ("expected_effects", ("proposal_summary.expected_effect", "proposal_summary.effects", "expected_effect", "expected_effects", "benefit", "outcome"), [f"{prefix}title.primary.9", f"{prefix}content.auto.103", f"{prefix}title.primary.111", f"{prefix}content.auto.113", f"{prefix}title.primary.122", f"{prefix}content.auto.124"]),
+        ("decision_items", ("proposal_summary.decision", "proposal_summary.actions", "decision_item", "decision_items", "judgment", "action"), [f"{prefix}content.auto.75", f"{prefix}content.auto.77", f"{prefix}content.auto.79", f"{prefix}content.auto.81", f"{prefix}content.auto.83", f"{prefix}content.auto.85", f"{prefix}content.auto.87", f"{prefix}content.auto.89", f"{prefix}content.auto.91"]),
+        ("insight", ("proposal_summary.insight", "insight", "implication", "proposal_point"), [f"{prefix}content.auto.130", f"{prefix}content.auto.131", f"{prefix}content.auto.132", f"{prefix}content.auto.133"]),
+    )
+    missing: list[str] = []
+    for field, aliases, slots in groups:
+        if not _bind_semantic_slots(payload, field, aliases, slots, data, context):
+            missing.append(field)
+
+    # The template date is not a current project fact.  Clear it unless the
+    # caller supplies a separately verified proposal-summary date.
+    date_slot = f"{prefix}footer.date"
+    date_records = _candidate_records_for_binding(data, context, "proposal_summary.date", "proposal_date", "verified_date")
+    date_values = _direct_verified_values(date_records)
+    if date_values and not any(sample in date_values[0] for sample in payload.prohibited_sample_strings):
+        payload.slots[date_slot] = date_values[0]
+        payload.source_fields[date_slot] = str(date_records[0].get("source_field") or "semantic_candidates")
+        payload.evidence_status[date_slot] = str(date_records[0].get("classification") or "UNKNOWN")
+    else:
+        payload.clear_slots.append(date_slot)
+        payload.cleared_optional_slots.append(date_slot)
+
+    if missing:
+        return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, f"explicit runtime evidence is missing for: {', '.join(missing)}")
+    payload.clear_matching_text.extend(payload.prohibited_sample_strings)
     return payload
 
 
@@ -479,29 +1042,26 @@ def _direct_verified_values(records: Iterable[Mapping[str, Any]]) -> list[str]:
     return values
 
 
-def _bind_trace_evidence_values(
+def _bind_trace_evidence_slots(
     payload: NativeSlotPayload,
-    samples: Iterable[str],
+    slots: list[str | None],
     records: list[dict[str, Any]],
     field: str,
 ) -> bool:
-    sample_values = [str(value) for value in samples]
     values = _direct_verified_values(records)
-    if not values:
+    if len(values) < len(slots):
         return False
-    if any(value in sample_values for value in values):
+    prohibited = tuple(payload.prohibited_sample_strings)
+    if any(sample and sample in value for value in values for sample in prohibited):
         return False
-    for sample, value in zip(sample_values, values):
-        payload.text_replacements[sample] = value
-    payload.clear_matching_text.extend(sample for sample in sample_values[len(values):] if sample not in payload.clear_matching_text)
-    for record in records:
-        payload.diagnostics.append(
-            {
-                "field": field,
-                "classification": record.get("classification", "UNKNOWN"),
-                "source_reference": record.get("source_reference", ""),
-            }
-        )
+    for index, slot in enumerate(slots):
+        if slot is None:
+            continue
+        record = records[min(index, len(records) - 1)]
+        value = values[index]
+        payload.slots[slot] = value
+        payload.source_fields[slot] = str(record.get("source_field") or "semantic_candidates")
+        payload.evidence_status[slot] = str(record.get("classification") or "UNKNOWN")
     return True
 
 
@@ -522,21 +1082,27 @@ def _implementation_configuration_adapter(
         return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "required title is unbound", unresolved=payload.unresolved_required_slots)
 
     evidence_groups = (
-        ("implementation_scope", ("implementation_scope", "scope", "target_scope", "coverage"), ("販売管理", "見積・受注・売上・請求", "在庫管理", "在庫・入出庫・棚卸", "購買管理", "発注・仕入・支払", "生産管理", "生産計画・工程・原価", "会計管理", "財務・管理会計・レポート")),
-        ("integration_targets", ("integration", "integration_target", "system", "connection"), ("基幹システム（既存）", "顧客・取引先・商品マスタ連携", "外部サービス", "EDI・電子請求・決済サービス", "グループシステム", "人事・勤怠・ワークフロー", "BIツール", "データ分析・経営ダッシュボード")),
-        ("estimate", ("estimate", "cost", "price", "amount", "budget"), ("1,200 万円〜", "年間 300 万円〜", "400 万円〜", "1,900 万円〜")),
-        ("roi", ("roi", "effect", "impact", "payback", "productivity", "return"), ("約 5,000 時間", "約 800 万円", "約 2.4 年", "約 2,400 万円")),
-        ("schedule", ("schedule", "timeline", "milestone", "phase", "date"), ("2025年6月22日", "準備・要件定義", "2か月", "設計・開発", "4か月", "テスト・教育", "本番稼働", "1か月")),
+        ("implementation_scope", ("implementation_scope", "scope", "target_scope", "coverage"), ["trace:S09:content.auto.13", "trace:S09:title.primary.5", "trace:S09:content.auto.16", "trace:S09:title.primary.6", "trace:S09:content.auto.28", "trace:S09:content.auto.29", "trace:S09:content.auto.37", "trace:S09:content.auto.38", "trace:S09:content.auto.44", "trace:S09:content.auto.45"]),
+        ("integration_targets", ("integration", "integration_target", "system", "connection"), ["trace:S09:title.primary.8", "trace:S09:title.primary.9", "trace:S09:content.auto.99", "trace:S09:title.primary.10", "trace:S09:content.auto.105", "trace:S09:content.auto.106", "trace:S09:content.auto.112", "trace:S09:content.auto.113"]),
+        ("architecture", ("implementation_architecture", "architecture", "erp_core", "database", "master", "security"), ["trace:S09:content.auto.47", "trace:S09:content.auto.49", "trace:S09:content.auto.52", "trace:S09:content.auto.60", "trace:S09:content.auto.72", "trace:S09:content.auto.75", "trace:S09:content.auto.78", "trace:S09:content.auto.85", "trace:S09:content.auto.115", "trace:S09:content.auto.117"]),
+        ("configuration_summary", ("implementation_summary", "configuration_summary", "overall_view", "description"), ["trace:S09:title.primary.3", "trace:S09:content.auto.177"]),
+        ("estimate", ("estimate", "cost", "price", "amount", "budget"), ["trace:S09:content.auto.128", "trace:S09:content.auto.130", "trace:S09:content.auto.132", "trace:S09:content.auto.135"]),
+        ("roi", ("roi", "effect", "impact", "payback", "productivity", "return"), ["trace:S09:content.auto.144", "trace:S09:content.auto.146", "trace:S09:content.auto.148", "trace:S09:content.auto.151"]),
+        ("schedule", ("schedule", "timeline", "milestone", "phase", "date"), [None, "trace:S09:content.auto.160", "trace:S09:content.auto.161", "trace:S09:content.auto.163", "trace:S09:content.auto.164", "trace:S09:content.auto.166", "trace:S09:content.auto.167", "trace:S09:content.auto.169"]),
     )
     missing: list[str] = []
-    for field, keywords, samples in evidence_groups:
+    for field, keywords, slots in evidence_groups:
         records = _allowed_evidence_records(data, context, *keywords, allowed=("VERIFIED",))
         _record_diagnostics(payload, field, records)
-        if not records or not _bind_trace_evidence_values(payload, samples, records, field):
+        if not records or not _bind_trace_evidence_slots(payload, slots, records, field):
             missing.append(field)
     if missing:
         return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, f"verified evidence is missing for: {', '.join(missing)}")
     payload.prohibited_sample_strings = list(SAMPLE_STRINGS["IMPLEMENTATION_CONFIGURATION"])
+    # Every remaining trace-only business string is cleared after the explicit
+    # replacements above. If a verified value itself contains one of these
+    # samples, validation fails closed instead of allowing a disguised leak.
+    payload.clear_matching_text.extend(payload.prohibited_sample_strings)
     return payload
 
 
@@ -1069,7 +1635,11 @@ def _build_role_adapters() -> dict[tuple[str, str], Callable[..., NativeSlotPayl
         if role in {"ESTIMATE"}:
             adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _estimate_adapter(role, surface, data, context, slide, slide_id)
         elif role in {"EXECUTIVE_SUMMARY", "DECISION_AND_EXPECTED_EFFECTS"}:
-            adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _static_trace_adapter(role, surface, data, context, slide, slide_id)
+            adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _semantic_trace_adapter(role, surface, data, context, slide, slide_id)
+        elif role in _SEMANTIC_PAGE_BINDINGS:
+            adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _semantic_page_adapter(role, surface, data, context, slide, slide_id)
+        elif role == "PROPOSAL_SUMMARY":
+            adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _proposal_summary_adapter(role, surface, data, context, slide, slide_id)
         elif role == "IMPLEMENTATION_CONFIGURATION":
             adapters[key] = lambda role, surface, data, context, slide, slide_id=None: _implementation_configuration_adapter(role, surface, data, context, slide, slide_id)
         elif role == "KPI":
