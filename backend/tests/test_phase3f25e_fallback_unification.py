@@ -200,12 +200,97 @@ def test_flag_on_and_off_generate_eleven_slide_local_summary_smoke() -> None:
     assert off_trace["slide_count"] == 11
     on_deck = Presentation(str(flag_on))
     assert len(on_deck.slides) == 11
+    assert any(shape.name == "trace:S02:content.auto" for shape in on_deck.slides[1].shapes)
+    assert any(shape.name == "trace:S03:content.auto" for shape in on_deck.slides[2].shapes)
+    assert any(shape.name == "trace:S02:footer.date" and shape.text == "2026.08.26" for shape in on_deck.slides[1].shapes)
+    assert any(shape.text == "2026.08.26" for shape in on_deck.slides[2].shapes if getattr(shape, "has_text_frame", False))
+    slide02_text = "\n".join(shape.text for shape in on_deck.slides[1].shapes if getattr(shape, "has_text_frame", False))
+    slide03_text = "\n".join(shape.text for shape in on_deck.slides[2].shapes if getattr(shape, "has_text_frame", False))
+    slide02_by_name = {shape.name: shape.text.strip() for shape in on_deck.slides[1].shapes if getattr(shape, "has_text_frame", False)}
+    slide03_by_name = {shape.name: shape.text.strip() for shape in on_deck.slides[2].shapes if getattr(shape, "has_text_frame", False)}
+    assert all(
+        slide02_by_name.get(f"trace:S02:{slot}")
+        for slot in (
+            "title.primary.2",
+            "lead",
+            "lead.2",
+            "lead.3",
+            "content.auto.45",
+            "title.primary.3",
+            "content.auto.53",
+            "lead.4",
+            "content.auto.63",
+            "content.auto.64",
+            "content.auto.75",
+            "content.auto.90",
+            "content.auto.101",
+            "content.auto.112",
+            "content.auto.118",
+        )
+    )
+    assert all(
+        slide03_by_name.get(f"trace:S03:{slot}")
+        for slot in (
+            "title.primary.3",
+            "title.primary.4",
+            "title.primary.5",
+            "content.auto.34",
+            "content.auto.36",
+            "content.auto.38",
+            "content.auto.45",
+            "content.auto.47",
+            "content.auto.49",
+            "content.auto.60",
+            "content.auto.62",
+            "content.auto.64",
+            "content.auto.73",
+            "content.auto.75",
+            "content.auto.77",
+            "content.auto.79",
+            "content.auto.88",
+            "content.auto.90",
+            "content.auto.98",
+        )
+    )
+    assert any(
+        shape.text.strip() == "2026.08.26"
+        for shape in on_deck.slides[2].shapes
+        if getattr(shape, "has_text_frame", False)
+    )
+    assert "確認済み情報を整理" in slide02_text
+    assert "確認済み課題を整理" in slide03_text
+    assert "ProposalPilot" not in slide02_text + slide03_text
+    assert "AI営業秘書" not in slide02_text + slide03_text
+    slide04_text = "\n".join(
+        shape.text for shape in on_deck.slides[3].shapes if getattr(shape, "has_text_frame", False)
+    )
     slide10_text = "\n".join(
         shape.text for shape in on_deck.slides[9].shapes if getattr(shape, "has_text_frame", False)
+    )
+    slide09_text = "\n".join(
+        shape.text for shape in on_deck.slides[8].shapes if getattr(shape, "has_text_frame", False)
     )
     slide11_text = "\n".join(
         shape.text for shape in on_deck.slides[10].shapes if getattr(shape, "has_text_frame", False)
     )
+    assert "確認済み情報を整理し、未確認項目は確認後に確定します。" in slide04_text
+    assert "提案品質の向上" not in slide04_text
+    assert "最適な一手" not in slide09_text
+    for forbidden_kpi in (
+        "資料作成時間",
+        "提案数",
+        "修正回数",
+        "受注確度",
+        "提案資料の作成にかかる",
+        "提案実施件数",
+        "資料確認項目を削減",
+        "工数記録",
+        "案件数",
+        "履歴カウント",
+        "受注率",
+    ):
+        assert forbidden_kpi not in slide10_text
+    assert "確認項目" in slide10_text
     assert "現状値未取得" not in slide10_text
     assert "目標値は要確認" not in slide10_text
     assert "現状値未取得向上" not in slide10_text
@@ -226,3 +311,13 @@ def test_flag_on_and_off_generate_eleven_slide_local_summary_smoke() -> None:
     xml, _ = _package_xml(flag_on)
     assert "ProposalPilot" not in xml
     assert "AI営業秘書" not in xml
+    off_deck = Presentation(str(flag_off))
+    off_target_text = "\n".join(
+        shape.text
+        for slide_index in (1, 2)
+        for shape in off_deck.slides[slide_index].shapes
+        if getattr(shape, "has_text_frame", False)
+    )
+    assert "ProposalPilot" not in off_target_text
+    assert "AI営業秘書" not in off_target_text
+    assert "提案クエスト" in off_target_text
