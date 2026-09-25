@@ -3,6 +3,94 @@
   "activation_status": "ADAPTER_ONLY_NOT_ACTIVATED",
   "roles": [
     {
+      "role": "EXECUTIVE_SUMMARY",
+      "slide_id": "S02",
+      "surface": "summary",
+      "template": "summary/S02_executive_summary.pptx",
+      "required_slots": ["trace:S02:title.primary", "trace:S02:footer.brand", "trace:S02:title.primary.2", "trace:S02:lead", "trace:S02:lead.2", "trace:S02:lead.3", "trace:S02:title.primary.3", "trace:S02:lead.4", "trace:S02:content.auto.64", "trace:S02:content.auto.75", "trace:S02:content.auto.90", "trace:S02:content.auto.101", "trace:S02:content.auto.112", "trace:S02:content.auto.118"],
+      "optional_slots": ["trace:S02:header.*", "trace:S02:footer.*"],
+      "dynamic_slots": ["slide.title", "semantic.summary_context", "semantic.background", "semantic.current_state", "semantic.conclusion", "semantic.expected_effects", "semantic.decision_items", "semantic.insight"],
+      "static_slots": ["trace:S02:content.labels.*", "trace:S02:shape.*"],
+      "image_slots": [],
+      "repeatable_slots": [],
+      "max_character_guidance": {"title.primary": 32},
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {"title.primary": 32},
+      "minimum_font_size": {"title.primary": 10},
+      "max_lines": {"title.primary": 2},
+      "max_characters": {"title.primary": 32},
+      "allow_font_shrink": {"title.primary": false},
+      "allow_clear": {"trace:S02:title.primary.2": true, "trace:S02:lead": true, "trace:S02:lead.2": true, "trace:S02:lead.3": true, "trace:S02:title.primary.3": true, "trace:S02:lead.4": true, "trace:S02:content.auto.64": true, "trace:S02:content.auto.75": true, "trace:S02:content.auto.90": true, "trace:S02:content.auto.101": true, "trace:S02:content.auto.112": true, "trace:S02:content.auto.118": true},
+      "required": {"trace:S02:title.primary": true, "trace:S02:footer.brand": true},
+      "slot_constraints": {"title.primary": {"max_characters": 32, "max_lines": 2, "preferred_font_size": 32, "minimum_font_size": 10, "allow_font_shrink": false}},
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "DECISION_AND_EXPECTED_EFFECTS",
+      "slide_id": "S03",
+      "surface": "summary",
+      "template": "summary/S03_decision_outcomes.pptx",
+      "required_slots": ["trace:S03:title.primary", "trace:S03:footer.brand", "trace:S03:title.primary.3", "trace:S03:title.primary.4", "trace:S03:title.primary.5", "trace:S03:content.auto.34", "trace:S03:content.auto.36", "trace:S03:content.auto.38", "trace:S03:content.auto.45", "trace:S03:content.auto.47", "trace:S03:content.auto.49", "trace:S03:content.auto.60", "trace:S03:content.auto.62", "trace:S03:content.auto.64", "trace:S03:content.auto.73", "trace:S03:content.auto.75", "trace:S03:content.auto.77", "trace:S03:content.auto.79", "trace:S03:content.auto.88", "trace:S03:content.auto.90", "trace:S03:content.auto.98"],
+      "optional_slots": ["trace:S03:header.*", "trace:S03:footer.*"],
+      "dynamic_slots": ["slide.title", "semantic.summary", "semantic.headline", "semantic.why_now", "semantic.policy", "semantic.investment", "semantic.effects", "semantic.decisions", "semantic.insight", "semantic.date"],
+      "static_slots": ["trace:S03:content.labels.*", "trace:S03:shape.*"],
+      "image_slots": [],
+      "repeatable_slots": [],
+      "max_character_guidance": {"title.primary": 32},
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": null,
+      "unbound_slots": [],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {"title.primary": 32},
+      "minimum_font_size": {"title.primary": 10},
+      "max_lines": {"title.primary": 2},
+      "max_characters": {"title.primary": 32},
+      "allow_font_shrink": {"title.primary": false},
+      "allow_clear": {"trace:S03:title.primary.2": true, "trace:S03:title.primary.3": true, "trace:S03:title.primary.4": true, "trace:S03:title.primary.5": true, "trace:S03:content.auto.34": true, "trace:S03:content.auto.36": true, "trace:S03:content.auto.38": true, "trace:S03:content.auto.45": true, "trace:S03:content.auto.47": true, "trace:S03:content.auto.49": true, "trace:S03:content.auto.60": true, "trace:S03:content.auto.62": true, "trace:S03:content.auto.64": true, "trace:S03:content.auto.73": true, "trace:S03:content.auto.75": true, "trace:S03:content.auto.77": true, "trace:S03:content.auto.79": true, "trace:S03:content.auto.88": true, "trace:S03:content.auto.90": true, "trace:S03:content.auto.98": true},
+      "required": {"trace:S03:title.primary": true, "trace:S03:footer.brand": true},
+      "slot_constraints": {"title.primary": {"max_characters": 32, "max_lines": 2, "preferred_font_size": 32, "minimum_font_size": 10, "allow_font_shrink": false}},
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED"
+    },
+    {
+      "role": "IMPLEMENTATION_CONFIGURATION",
+      "slide_id": "S09",
+      "surface": "summary",
+      "template": "summary/S09_implementation_configuration.pptx",
+      "required_slots": ["trace:S09:title.primary", "trace:S09:footer.brand"],
+      "optional_slots": ["trace:S09:header.*", "trace:S09:footer.*"],
+      "dynamic_slots": ["slide.title", "context.implementation_scope", "context.integration_targets", "context.implementation_architecture", "context.implementation_summary", "context.verified_estimate", "context.verified_roi", "context.verified_schedule"],
+      "static_slots": ["trace:S09:content.*", "trace:S09:shape.*"],
+      "image_slots": [],
+      "repeatable_slots": [],
+      "max_character_guidance": {"title.primary": 32, "content.body": 120},
+      "fallback_role": "existing_pptx_renderer",
+      "conditional": false,
+      "condition_source": "verified implementation, estimate, ROI, and schedule evidence",
+      "unbound_slots": [],
+      "sample_content_policy": "STATIC_SAMPLE_PROHIBITED",
+      "preferred_font_size": {"title.primary": 32, "content.body": 10},
+      "minimum_font_size": {"title.primary": 9.75, "content.body": 8},
+      "max_lines": {"title.primary": 2, "content.body": 4},
+      "max_characters": {"title.primary": 32, "content.body": 120},
+      "allow_font_shrink": {"title.primary": false, "content.body": true},
+      "allow_clear": {"trace:S09:content.auto.*": true},
+      "required": {"trace:S09:title.primary": true, "trace:S09:footer.brand": true},
+      "slot_constraints": {"title.primary": {"max_characters": 32, "max_lines": 2, "preferred_font_size": 32, "minimum_font_size": 9.75, "allow_font_shrink": false}, "content.body": {"max_characters": 120, "max_lines": 4, "preferred_font_size": 10, "minimum_font_size": 8, "allow_font_shrink": true}},
+      "evidence_sensitive": true,
+      "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
+      "sample_leak_policy": "FAIL_CLOSED",
+      "provenance_policy": {"allowed": ["VERIFIED"], "disallowed": ["GENERATED", "CANONICAL_SAMPLE", "UNKNOWN"], "missing_behavior": "fallback_existing_renderer"}
+    },
+    {
       "role": "COVER",
       "slide_id": "S01",
       "surface": "summary",
@@ -139,14 +227,17 @@
         "trace:S02:image.*"
       ],
       "dynamic_slots": [
-        "slide.title",
-        "slide.bullets",
-        "context.client_name",
-        "context.concept"
+        "semantic.summary",
+        "semantic.current_state",
+        "semantic.key_measures",
+        "semantic.expected_effects",
+        "semantic.decision_items",
+        "semantic.insight",
+        "context.proposal_summary_date"
       ],
       "static_slots": [
-        "trace:S02:content.*",
-        "trace:S02:shape.*"
+        "trace:S02:shape.*",
+        "trace:S02:footer.brand"
       ],
       "image_slots": [
         "trace:S02:image.*"
@@ -199,6 +290,8 @@
       },
       "allow_clear": {
         "trace:S02:content.auto.*": true,
+        "trace:S02:title.primary.*": true,
+        "trace:S02:footer.date": true,
         "trace:S02:image.*": false
       },
       "required": {
@@ -235,7 +328,7 @@
           "allow_font_shrink": true
         }
       },
-      "evidence_sensitive": false,
+      "evidence_sensitive": true,
       "binding_status": "ADAPTER_DEFINED_NOT_ACTIVATED",
       "sample_leak_policy": "FAIL_CLOSED"
     },

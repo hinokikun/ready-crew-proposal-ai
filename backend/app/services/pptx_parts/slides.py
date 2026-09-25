@@ -1300,13 +1300,22 @@ def _v5_bg(slide, *, dark: bool, accent: str) -> tuple[str, str]:
     return COLORS["navy"], COLORS["muted"]
 
 
-def _v5_header(slide, slide_data: PowerPointSlide, label: str, accent: str, *, dark: bool = False, y: float = 0.48) -> None:
+def _v5_header(
+    slide,
+    slide_data: PowerPointSlide,
+    label: str,
+    accent: str,
+    *,
+    dark: bool = False,
+    y: float = 0.48,
+    brand_text: str = "ProposalPilot / AI営業秘書",
+) -> None:
     title_color, muted = _v5_bg(slide, dark=dark, accent=accent)
     add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, 0.78, y, 1.38, 0.3, fill=accent, line=accent)
     add_text(slide, _trim(label, 10), 0.92, y + 0.08, 1.1, 0.1, size=8, color=COLORS["white"], bold=True, align=PP_ALIGN.CENTER)
     add_text(slide, _v5_title(slide_data), 0.78, y + 0.52, 8.8, 0.52, size=35, color=title_color, bold=True)
     add_text(slide, f"{slide_data.slide_no:02}", 11.8, 6.88, 0.5, 0.16, size=10, color=muted, align=PP_ALIGN.RIGHT)
-    add_text(slide, "ProposalPilot / AI営業秘書", 0.78, 6.88, 2.4, 0.16, size=8, color=muted)
+    add_text(slide, brand_text, 0.78, 6.88, 2.4, 0.16, size=8, color=muted)
 
 
 def _v5_caption(slide, text: str, x: float, y: float, w: float, *, color: str = COLORS["muted"], align: PP_ALIGN | None = PP_ALIGN.CENTER) -> None:
@@ -1534,7 +1543,7 @@ def _v5_render_closing(prs: Presentation, slide_data: PowerPointSlide, data: Pow
 
 def _v5_render_executive_canvas(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext, *, accent: str) -> None:
     slide = blank_slide(prs)
-    _v5_header(slide, slide_data, "EXECUTIVE", accent, dark=True)
+    _v5_header(slide, slide_data, "EXECUTIVE", accent, dark=True, brand_text="提案クエスト")
     items = _v5_items(slide_data, 6, ["Background", "Issue", "Answer", "Impact", "ROI", "Next"], limit=16)
     add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, 0.95, 2.0, 4.3, 2.45, fill="101F33", line="223856")
     add_text(slide, _trim(items[0], 26), 1.25, 2.28, 3.7, 0.55, size=24, color=COLORS["white"], bold=True)
@@ -1552,7 +1561,7 @@ def _v5_render_executive_canvas(prs: Presentation, slide_data: PowerPointSlide, 
 
 def _v5_render_decision_lens(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext, *, accent: str) -> None:
     slide = blank_slide(prs)
-    _v5_header(slide, slide_data, "DECISION", accent)
+    _v5_header(slide, slide_data, "DECISION", accent, brand_text="提案クエスト")
     items = _v5_items(slide_data, 5, ["Now", "Why", "How", "Value", "Proof"], limit=14)
     add_shape(slide, MSO_SHAPE.OVAL, 4.85, 1.92, 3.45, 3.45, fill="EAF2FF", line=COLORS["blue"])
     add_shape(slide, MSO_SHAPE.OVAL, 5.55, 2.62, 2.05, 2.05, fill=COLORS["white"], line=accent)
@@ -2011,14 +2020,17 @@ def add_designed_slide(
                     index,
                     role=native_role,
                     surface=surface,
+                    visual_fallback=True,
                 )
                 if isinstance(trace, bool):
                     native_rendered = trace
                     trace = {"NATIVE_RENDERED": trace, "FALLBACK_USED": not trace}
+                    fallback_rendered = False
                 else:
                     native_rendered = bool(trace.get("NATIVE_RENDERED"))
+                    fallback_rendered = bool(trace.get("FALLBACK_RENDERED"))
                 logger.info("approved_native_dispatch", extra={"native_trace": trace})
-                if native_rendered:
+                if native_rendered or fallback_rendered:
                     return
                 if len(prs.slides) > slide_count_before:
                     _remove_last_slide(prs)
