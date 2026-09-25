@@ -85,7 +85,14 @@ def extract_pptx_structure(content: bytes) -> dict[str, Any]:
     }
 
 
-def _assert_premium_pptx(content: bytes, *, min_slides: int, max_slides: int) -> dict[str, Any]:
+def _assert_premium_pptx(
+    content: bytes,
+    *,
+    min_slides: int,
+    max_slides: int,
+    identity: str = "ProposalPilot",
+    identities_by_slide: dict[int, str] | None = None,
+) -> dict[str, Any]:
     assert content[:2] == b"PK"
     assert len(content) > 10_000
     actual = extract_pptx_structure(content)
@@ -96,7 +103,11 @@ def _assert_premium_pptx(content: bytes, *, min_slides: int, max_slides: int) ->
     assert actual["total_auto_shapes"] >= actual["slide_count"] * 4
     assert "Noto Sans JP" in actual["font_names"]
     assert all(slide["text_shape_count"] > 0 for slide in actual["slides"])
-    assert all("ProposalPilot" in slide["text"] for slide in actual["slides"])
+    expected_identities = identities_by_slide or {}
+    assert all(
+        expected_identities.get(slide["index"], identity) in slide["text"]
+        for slide in actual["slides"]
+    )
     return actual
 
 
@@ -126,7 +137,12 @@ def test_summary_pptx_stays_concise_and_visual(
 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith(PPTX_MEDIA_TYPE)
-    _assert_premium_pptx(response.content, min_slides=8, max_slides=12)
+    _assert_premium_pptx(
+        response.content,
+        min_slides=8,
+        max_slides=12,
+        identities_by_slide={2: "提案クエスト", 3: "提案クエスト"},
+    )
 
 
 def test_generated_image_recognition_detailed_deck_is_20_to_25_pages(
