@@ -23,6 +23,61 @@ def _slide(title: str, layout: str = "") -> SimpleNamespace:
     return SimpleNamespace(title=title, layout=layout, bullets=["案件固有の確認事項"], slide_no=1)
 
 
+def _verified_proposal_summary_context(*, long_summary: bool = False) -> SimpleNamespace:
+    groups = {
+        "summary": (
+            "proposal_summary.summary",
+            ["確認済み提案論点" * 20 if long_summary else "FAJで確認済みの提案論点"],
+        ),
+        "current_state": (
+            "proposal_summary.current_state",
+            ["確認済み現状1", "確認済み現状2", "確認済み現状3", "確認済み現状4"],
+        ),
+        "key_measures": (
+            "proposal_summary.key_measure",
+            ["確認済み施策1", "確認済み施策2", "確認済み施策3", "確認済み施策4", "確認済み施策5", "確認済み施策6"],
+        ),
+        "expected_effects": (
+            "proposal_summary.expected_effect",
+            ["確認済み効果1", "確認済み効果2", "確認済み効果3", "確認済み効果4", "確認済み効果5", "確認済み効果6"],
+        ),
+        "decision_items": (
+            "proposal_summary.decision",
+            [
+                "確認済み判断事項1",
+                "確認済み判断事項2",
+                "確認済み判断事項3",
+                "確認済み判断事項4",
+                "確認済み判断事項5",
+                "確認済み判断事項6",
+                "確認済み判断事項7",
+                "確認済み判断事項8",
+                "確認済み判断事項9",
+            ],
+        ),
+        "insight": (
+            "proposal_summary.insight",
+            ["確認済み示唆1", "確認済み示唆2", "確認済み示唆3", "確認済み示唆4"],
+        ),
+    }
+    return SimpleNamespace(
+        semantic_candidates=[
+            {
+                "semantic_type": semantic_type,
+                "value": values,
+                "source_type": "customer_input",
+                "source_field": f"faj.proposal_summary.{group}",
+                "source_reference": f"faj://verified/proposal_summary/{group}",
+                "authority": "USER_EXPLICIT",
+                "review_state": "CONFIRMED",
+                "admissible_as_evidence": True,
+                "inferred": False,
+            }
+            for group, (semantic_type, values) in groups.items()
+        ]
+    )
+
+
 def _payload(summary: bool = True) -> PptxDownloadRequest:
     return PptxDownloadRequest(
         powerpoint_generation_data=PowerPointData(
@@ -63,7 +118,7 @@ def test_flag_on_eligible_role_uses_native_renderer() -> None:
         prs,
         _slide("提案サマリー"),
         SimpleNamespace(),
-        SimpleNamespace(),
+        _verified_proposal_summary_context(),
         1,
         role="PROPOSAL_SUMMARY",
         surface="summary",
@@ -102,8 +157,13 @@ def test_sample_leak_regression_blocks_kpi_before_package_creation() -> None:
 
 
 def test_text_fit_failure_is_reported_before_native_render() -> None:
-    long_title = "長いタイトル" * 20
-    result = render_native_role_dry_run("PROPOSAL_SUMMARY", data=SimpleNamespace(), context=SimpleNamespace(), slide=_slide(long_title), surface="summary")
+    result = render_native_role_dry_run(
+        "PROPOSAL_SUMMARY",
+        data=SimpleNamespace(),
+        context=_verified_proposal_summary_context(long_summary=True),
+        slide=_slide("提案サマリー"),
+        surface="summary",
+    )
     assert result.success is False
     assert result.failure_reason == FailureReason.TEXT_OVERFLOW_RISK.value
 
@@ -162,6 +222,12 @@ def test_runtime_source_template_checksum_is_unchanged() -> None:
     role = next(item for item in registry["roles"] if item["role"] == "PROPOSAL_SUMMARY" and item["surface"] == "summary")
     source = ROOT / role["runtime_asset"]
     before = sha256_file(source)
-    result = render_native_role_dry_run("PROPOSAL_SUMMARY", data=SimpleNamespace(), context=SimpleNamespace(), slide=_slide("提案サマリー"), surface="summary")
+    result = render_native_role_dry_run(
+        "PROPOSAL_SUMMARY",
+        data=SimpleNamespace(),
+        context=_verified_proposal_summary_context(),
+        slide=_slide("提案サマリー"),
+        surface="summary",
+    )
     assert result.success is True
     assert sha256_file(source) == before

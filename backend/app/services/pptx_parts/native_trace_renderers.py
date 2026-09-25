@@ -12,13 +12,17 @@ from copy import deepcopy
 from io import BytesIO
 import logging
 from pathlib import Path
+import re
+from copy import deepcopy
 import tempfile
 from typing import Iterable
 from zipfile import ZIP_DEFLATED, ZipFile
 import xml.etree.ElementTree as ET
 
 from pptx import Presentation
+from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE_TYPE
+from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE
 from pptx.oxml.ns import qn
 from pptx.util import Inches
 
@@ -281,7 +285,20 @@ def _replace_title(slide, role: str, title: str) -> None:
             return
 
 
-_VISUAL_FALLBACK_ROLES = frozenset({"IMPLEMENTATION_CONFIGURATION", "KPI", "SCHEDULE"})
+_VISUAL_FALLBACK_ROLES = frozenset(
+    {
+        "EXECUTIVE_SUMMARY",
+        "DECISION_AND_EXPECTED_EFFECTS",
+        "PROPOSAL_SUMMARY",
+        "IMPLEMENTATION_CONFIGURATION",
+        "KPI",
+        "SCHEDULE",
+        "CURRENT_STATE",
+        "PROBLEM_ANALYSIS",
+        "SOLUTION_CONCEPT",
+        "SOLUTION_APPROACH",
+    }
+)
 
 _SCHEDULE_UNVERIFIED_TEXT = (
     "要件整理",
@@ -335,7 +352,16 @@ _SCHEDULE_UNVERIFIED_TEXT = (
 
 def _visual_fallback_replacements(role: str) -> dict[str, str]:
     replacements: dict[str, str] = {}
-    if role == "IMPLEMENTATION_CONFIGURATION":
+    if role in {"CURRENT_STATE", "PROBLEM_ANALYSIS", "SOLUTION_CONCEPT", "SOLUTION_APPROACH"}:
+        replacements.update({sample: "要確認" for sample in SAMPLE_STRINGS.get(role, ())})
+        replacements["2025年6月22日"] = "2026.08.26"
+        replacements["2026.06.22"] = "2026.08.26"
+    elif role == "PROPOSAL_SUMMARY":
+        replacements.update({sample: "要確認" for sample in SAMPLE_STRINGS.get(role, ())})
+        safe_sentence = "確認済み情報を整理し、未確認項目は確認後に確定します。"
+        replacements["提案業務の効率化と提案品質の向上を両立するため、3つの施策を一体で実行します。"] = safe_sentence
+        replacements["要確認と提案品質の向上を両立するため、3つの施策を一体で実行します。"] = safe_sentence
+    elif role == "IMPLEMENTATION_CONFIGURATION":
         replacements.update({sample: "確認中" for sample in SAMPLE_STRINGS.get(role, ())})
         replacements["2025年6月22日"] = "2026.08.26"
         replacements["業務の標準化・データの一元管理により、部門間の連携を強化し、効率的で拡張性の高いERP基盤を構築します。"] = (
@@ -346,6 +372,12 @@ def _visual_fallback_replacements(role: str) -> dict[str, str]:
             {
                 "2026.06.22": "2026.08.26",
                 "現状値（例）": "現状値",
+                "資料作成時間": "確認項目",
+                "提案数": "確認項目",
+                "修正回数": "確認項目",
+                "受注確度": "確認項目",
+                "1案件あたりの\n資料修正回数を削減": "確認後に確定",
+                "提案からの\n受注確度を向上": "確認後に確定",
                 "20時間/件": "未取得",
                 "70%削減": "要確認",
                 "6時間/件": "要確認",
@@ -431,6 +463,638 @@ def _replace_fragmented_fallback_text(package_path: Path, replacements: dict[str
     temp.replace(package_path)
 
 
+_S09_UNSUPPORTED_FALLBACK_TEXT = (
+    "業務の標準化",
+    "標準化",
+    "データの一元管理",
+    "一元管理",
+    "部門間の連携",
+    "コストを最適化",
+    "持続的な成長",
+    "ERP",
+    "構築します",
+    "確認中を構築",
+)
+
+
+def _sanitize_implementation_configuration_fallback_slide(slide) -> None:
+    """Remove unsupported S09 narrative without changing the approved layout."""
+
+    safe_sentence = "確認済み情報のみ表示し、未確認の項目は確認後に確定します。"
+    sentence_shapes = {
+        "trace:S09:title.primary.3",
+        "trace:S09:content.auto.177",
+    }
+    for shape in _iter_all_shapes(slide.shapes):
+        if not getattr(shape, "has_text_frame", False):
+            continue
+        text = str(getattr(shape, "text", "") or "")
+        if not any(fragment in text for fragment in _S09_UNSUPPORTED_FALLBACK_TEXT):
+            continue
+        _set_shape_text_preserving_style(shape, safe_sentence if shape.name in sentence_shapes else "要確認")
+
+
+_SEMANTIC_PAGE_FALLBACK_SLIDE_IDS = {
+    "CURRENT_STATE": "S03",
+    "PROBLEM_ANALYSIS": "S04",
+    "SOLUTION_CONCEPT": "S05",
+    "SOLUTION_APPROACH": "S06",
+}
+
+
+_SEMANTIC_PAGE_SAFE_FALLBACK_CONTENT = {
+    "CURRENT_STATE": {
+        "content.auto.11": "確認済み情報",
+        "lead": "確認済み情報",
+        "content.auto.18": "未確認項目",
+        "lead.2": "未確認項目",
+        "content.auto.24": "次に確認する項目",
+        "lead.3": "確認後に確定",
+        "title.primary.2": "確認後に確定",
+        "lead.4": "次に確認する項目",
+        "content.auto.30": "確認済み情報",
+        "content.auto.41": "確認済み",
+        "content.auto.42": "確認後に確定",
+        "content.auto.50": "未確認",
+        "content.auto.51": "確認後に確定",
+        "content.auto.58": "次に確認",
+        "content.auto.59": "確認後に確定",
+        "title.primary.3": "未確認項目",
+        "title.primary.4": "確認後に確定",
+        "title.primary.5": "次に確認する項目",
+        "title.primary.6": "未確認項目",
+        "title.primary.7": "確認後に確定",
+        "title.primary.8": "次に確認する項目",
+        "title.primary.9": "確認後に確定",
+        "content.auto.76": "確認済み情報",
+        "content.auto.81": "未確認項目",
+        "content.auto.82": "確認後に確定",
+        "content.auto.92": "未確認項目",
+        "content.auto.93": "確認後に確定",
+        "content.auto.102": "次に確認する項目",
+        "content.auto.103": "確認後に確定",
+        "content.auto.111": "確認済み情報",
+        "content.auto.114": "未確認項目",
+        "content.auto.115": "確認後に確定",
+    },
+    "PROBLEM_ANALYSIS": {
+        "title.primary.3": "確認済み情報",
+        "title.primary.4": "未確認項目",
+        "content.auto.5": "確認後に確定",
+        "title.primary.6": "確認済み情報",
+        "lead": "未確認項目",
+        "content.auto.22": "次に確認する項目",
+        "content.auto.32": "確認済み情報",
+        "content.auto.33": "確認後に確定",
+        "content.auto.42": "未確認項目",
+        "content.auto.43": "確認後に確定",
+        "title.primary.8": "確認済み情報",
+        "title.primary.9": "確認後に確定",
+        "content.auto.53": "未確認項目",
+        "lead.2": "確認後に確定",
+        "content.auto.60": "次に確認する項目",
+        "content.auto.61": "確認後に確定",
+        "content.auto.66": "確認済み情報",
+        "content.auto.71": "未確認項目",
+        "content.auto.72": "確認後に確定",
+        "content.auto.77": "次に確認する項目",
+        "content.auto.78": "確認済み情報",
+        "content.auto.79": "確認後に確定",
+    },
+    "SOLUTION_CONCEPT": {
+        "title.primary.2": "確認済み情報",
+        "title.primary.3": "未確認項目",
+        "title.primary.4": "次に確認する項目",
+        "title.primary.6": "確認済み情報",
+        "title.primary.7": "確認後に確定",
+        "content.auto.23": "未確認項目",
+        "lead": "確認後に確定",
+        "content.auto.30": "次に確認する項目",
+        "content.auto.31": "確認後に確定",
+        "content.auto.47": "確認",
+        "title.primary.9": "確認後に確定",
+        "content.auto.55": "確認",
+        "content.auto.56": "確認後に確定",
+        "content.auto.66": "確認",
+        "content.auto.67": "確認後に確定",
+        "content.auto.80": "確認済み情報",
+        "content.auto.81": "確認後に確定",
+        "content.auto.88": "未確認項目",
+        "content.auto.89": "確認後に確定",
+        "content.auto.94": "次に確認する項目",
+        "content.auto.95": "確認後に確定",
+        "content.auto.100": "確認済み情報",
+        "content.auto.101": "未確認項目",
+        "content.auto.102": "確認後に確定",
+        "content.auto.103": "",
+    },
+    "SOLUTION_APPROACH": {
+        "title.primary.2": "確認済み情報",
+        "title.primary.3": "未確認項目",
+        "content.auto.15": "確認後に確定",
+        "title.primary.4": "確認済み情報",
+        "content.auto.29": "確認後に確定",
+        "title.primary.5": "未確認項目",
+        "content.auto.55": "確認後に確定",
+        "title.primary.6": "確認済み情報",
+        "content.auto.69": "確認後に確定",
+        "title.primary.7": "次に確認する項目",
+        "content.auto.83": "確認後に確定",
+        "title.primary.8": "確認済み情報",
+        "content.auto.94": "未確認項目",
+        "title.primary.9": "確認後に確定",
+        "content.auto.104": "未確認項目",
+        "title.primary.10": "確認後に確定",
+        "content.auto.112": "未確認項目",
+        "content.auto.114": "確認後に確定",
+        "content.auto.121": "確認済み情報",
+        "content.auto.129": "未確認項目",
+        "content.auto.131": "確認後に確定",
+        "content.auto.133": "確認後に確定",
+        "content.auto.135": "確認後に確定",
+        "content.auto.142": "未確認項目",
+        "content.auto.144": "確認後に確定",
+        "content.auto.146": "確認後に確定",
+        "content.auto.148": "確認後に確定",
+        "content.auto.158": "次に確認する項目",
+        "content.auto.160": "確認後に確定",
+        "content.auto.162": "確認後に確定",
+        "content.auto.164": "確認後に確定",
+        "content.auto.172": "次に確認する項目",
+        "content.auto.175": "確認済み情報",
+        "content.auto.176": "確認後に確定",
+        "content.auto.179": "未確認項目",
+        "content.auto.180": "確認後に確定",
+        "content.auto.183": "次に確認する項目",
+        "content.auto.184": "確認後に確定",
+        "content.auto.189": "確認済み情報",
+        "content.auto.190": "未確認項目",
+        "content.auto.191": "確認後に確定",
+        "content.auto.192": "",
+    },
+}
+
+
+_SEMANTIC_PAGE_FALLBACK_DEFAULTS = {
+    "CURRENT_STATE": {
+        "lead": "現状は確認後に確定",
+        "lead.2": "業務フローは確認後に確定",
+        "content.auto.30": "課題は確認後に確定",
+        "content.auto.41": "優先テーマは確認後に確定",
+    },
+    "PROBLEM_ANALYSIS": {
+        "lead": "課題は確認後に確定",
+        "content.auto.22": "優先課題は確認後に確定",
+        "content.auto.42": "根拠は確認後に確定",
+        "content.auto.78": "次の確認事項は確認後に確定",
+    },
+    "SOLUTION_CONCEPT": {
+        "title.primary.2": "方針は確認後に確定",
+        "content.auto.23": "施策は確認後に確定",
+        "content.auto.47": "実行条件は確認後に確定",
+        "content.auto.100": "成果条件は確認後に確定",
+    },
+    "SOLUTION_APPROACH": {
+        "title.primary.2": "導入方針は確認後に確定",
+        "title.primary.3": "導入ステップは確認後に確定",
+        "title.primary.4": "実施条件は確認後に確定",
+        "content.auto.94": "成果条件は確認後に確定",
+    },
+}
+
+
+def _semantic_page_fallback_content(role: str, payload: NativeSlotPayload | None) -> dict[str, str]:
+    """Build fallback copy from accepted runtime slots, never template text."""
+
+    safe_content = dict(_SEMANTIC_PAGE_FALLBACK_DEFAULTS.get(role, {}))
+    if payload is None:
+        return safe_content
+    prefix = f"trace:{payload.slide_id}:"
+    allowed_slots = set(safe_content)
+    for slot, value in payload.slots.items():
+        if not slot.startswith(prefix):
+            continue
+        relative_slot = slot[len(prefix):]
+        if relative_slot not in allowed_slots:
+            continue
+        if isinstance(value, (list, tuple)):
+            text = " / ".join(str(item).strip() for item in value if str(item).strip())
+        else:
+            text = str(value).strip()
+        if text:
+            safe_content[relative_slot] = text
+    return safe_content
+
+
+def _semantic_shape_bounds(shape) -> tuple[float, float, float, float]:
+    return (
+        float(shape.left),
+        float(shape.top),
+        float(shape.left + shape.width),
+        float(shape.top + shape.height),
+    )
+
+
+def _semantic_shape_center(shape) -> tuple[float, float]:
+    return (
+        float(shape.left + shape.width / 2),
+        float(shape.top + shape.height / 2),
+    )
+
+
+def _semantic_point_in_bounds(point: tuple[float, float], bounds: tuple[float, float, float, float]) -> bool:
+    x, y = point
+    left, top, right, bottom = bounds
+    return left <= x <= right and top <= y <= bottom
+
+
+def _semantic_expanded_bounds(
+    shape,
+    *,
+    horizontal: float = 0.12,
+    vertical: float | None = None,
+) -> tuple[float, float, float, float]:
+    left, top, right, bottom = _semantic_shape_bounds(shape)
+    if vertical is None:
+        vertical = 0.35 if top < Inches(3.8) else 0.15
+    return (
+        left - Inches(horizontal),
+        top - Inches(vertical),
+        right + Inches(horizontal),
+        bottom + Inches(vertical),
+    )
+
+
+def _remove_semantic_shape(shape) -> None:
+    element = getattr(shape, "_element", None)
+    parent = element.getparent() if element is not None else None
+    if parent is not None:
+        parent.remove(element)
+
+
+def _apply_semantic_visual_finish(slide, role: str) -> None:
+    """Tighten sparse evidence-safe pages without adding semantic content."""
+
+    slide_id = _SEMANTIC_PAGE_FALLBACK_SLIDE_IDS.get(role)
+    if not slide_id:
+        return
+    prefix = f"trace:{slide_id}:"
+
+    def shape(suffix: str):
+        return _shape_by_name(slide, f"{prefix}{suffix}")
+
+    if role == "CURRENT_STATE":
+        # Three compact blocks: two current-state blocks and one lower issue
+        # block.  Existing runtime text is moved into existing approved
+        # containers; no copy is added or rewritten.
+        for suffix, geometry in {
+            "content.auto.6": (0.42, 2.18, 3.35, 1.16),
+            "content.auto.12": (4.02, 2.18, 3.35, 1.16),
+            "lead": (0.68, 2.47, 2.82, 0.56),
+            "lead.2": (4.10, 2.43, 3.16, 0.72),
+            "content.auto.29": (0.42, 3.72, 6.95, 1.18),
+            "content.auto.30": (0.72, 3.98, 6.28, 0.30),
+            "content.auto.41": (0.72, 4.38, 6.28, 0.30),
+        }.items():
+            current = shape(suffix)
+            if current is not None:
+                _set_shape_geometry(current, left=geometry[0], top=geometry[1], width=geometry[2], height=geometry[3])
+        lower_unused = shape("content.auto.31")
+        if lower_unused is not None:
+            _remove_semantic_shape(lower_unused)
+        # This nested empty overlay sits above the second live block in the
+        # source trace and masks the beginning of its runtime sentence.
+        nested_overlay = shape("content.auto.19")
+        if nested_overlay is not None:
+            _remove_semantic_shape(nested_overlay)
+
+    elif role == "PROBLEM_ANALYSIS":
+        # Preserve the two-card-plus-summary composition while using the
+        # unused upper body area.  Only geometry changes.
+        for suffix in (
+            "content.auto.14",
+            "content.auto.22",
+            "lead",
+            "content.auto.34",
+            "content.auto.42",
+            "content.auto.73",
+            "content.auto.78",
+        ):
+            current = shape(suffix)
+            if current is not None and current.top >= Inches(3.0):
+                current.top = max(Inches(1.95), current.top - Inches(0.78))
+
+    elif role == "SOLUTION_CONCEPT":
+        # Keep the insight bar comfortably above the fixed footer.  Place the
+        # existing sentence wholly in the light region and use a dark Master
+        # color so no white run spills onto the pale background.
+        bar = shape("content.auto.96")
+        red_accent = shape("content.auto.97")
+        sentence = shape("content.auto.100")
+        if bar is not None:
+            _set_shape_geometry(bar, left=0.42, top=5.38, width=12.48, height=0.48)
+        if red_accent is not None:
+            _set_shape_geometry(red_accent, left=0.42, top=5.38, width=0.42, height=0.48)
+        if sentence is not None:
+            _set_shape_geometry(sentence, left=1.02, top=5.52, width=11.25, height=0.27)
+            _set_shape_text_color(sentence, (18, 38, 58))
+        for suffix in ("content.auto.113", "content.auto.114", "content.auto.115"):
+            decorative = shape(suffix)
+            if decorative is not None:
+                _remove_semantic_shape(decorative)
+
+    elif role == "SOLUTION_APPROACH":
+        # Turn the two existing step regions into intentional compact cards
+        # and reduce the verified-outcome panel to the size of its live copy.
+        for suffix, geometry in {
+            "content.auto.6": (0.52, 1.82, 3.10, 1.28),
+            "title.primary.3": (0.78, 2.25, 2.58, 0.46),
+            "content.auto.16": (3.92, 1.82, 3.10, 1.28),
+            "title.primary.4": (4.18, 2.25, 2.58, 0.46),
+            "content.auto.84": (9.12, 1.88, 3.18, 1.28),
+            "content.auto.94": (9.40, 2.30, 2.62, 0.40),
+        }.items():
+            current = shape(suffix)
+            if current is not None:
+                _set_shape_geometry(current, left=geometry[0], top=geometry[1], width=geometry[2], height=geometry[3])
+
+
+def _hide_empty_semantic_body_visuals(slide, prefix: str) -> None:
+    """Remove body-only placeholders when their region has no live copy.
+
+    The approved trace remains the source of geometry and styling.  This only
+    removes body shapes that are not backed by any non-empty runtime text.  A
+    populated card keeps its editable background and icon geometry; an empty
+    card does not remain as an icon-only placeholder.
+    """
+
+    shapes = list(_iter_all_shapes(slide.shapes))
+    body_shapes = [
+        shape
+        for shape in shapes
+        if str(getattr(shape, "name", "") or "").startswith(prefix)
+        and not any(
+            marker in str(getattr(shape, "name", "") or "")
+            for marker in (":footer.", ":header.", ":footer", ":header")
+        )
+        # Body-only cleanup starts below the shared header Chrome.  Several
+        # approved traces place an optional panel rule immediately below the
+        # header (around 0.7in); keeping that rule after its text is cleared
+        # leaves an icon-only/empty panel impression.
+        and float(shape.top) >= Inches(0.65)
+        and float(shape.top) < Inches(6.85)
+    ]
+    active_text = [
+        shape
+        for shape in body_shapes
+        if getattr(shape, "has_text_frame", False)
+        and str(getattr(shape, "text", "") or "").strip()
+    ]
+
+    # Large textless shapes are the card/section containers in the approved
+    # traces.  A container is live when it contains at least one active text
+    # shape.  Small icon/line shapes inherit that live state from their
+    # containing card.
+    containers = [
+        shape
+        for shape in body_shapes
+        if float(shape.width) * float(shape.height) >= Inches(0.65) ** 2
+    ]
+    live_containers = [
+        container
+        for container in containers
+        if any(
+                _semantic_point_in_bounds(
+                    _semantic_shape_center(text_shape), _semantic_shape_bounds(container)
+                )
+            for text_shape in active_text
+        )
+    ]
+
+    remove: list[object] = []
+    for shape in body_shapes:
+        name = str(getattr(shape, "name", "") or "")
+        has_text = bool(getattr(shape, "has_text_frame", False))
+        text = str(getattr(shape, "text", "") or "").strip() if has_text else ""
+        if has_text:
+            # Empty text boxes are placeholders even when their card remains
+            # live because another slot in that card is populated.  Large
+            # empty auto-shapes can also be card backgrounds in python-pptx,
+            # so retain those when they contain live copy.
+            if not text:
+                if not any(
+                    _semantic_point_in_bounds(
+                        _semantic_shape_center(text_shape), _semantic_shape_bounds(shape)
+                    )
+                    for text_shape in active_text
+                ) or float(shape.width) * float(shape.height) < Inches(0.65) ** 2:
+                    remove.append(shape)
+            continue
+
+        # Some trace templates contain a second empty panel layered inside a
+        # live card.  It is not a semantic container and can cover the text
+        # that was moved into the approved card during visual finishing.
+        if float(shape.width) * float(shape.height) >= Inches(0.65) ** 2 and any(
+            container is not shape
+            and _semantic_shape_bounds(container)[0] <= _semantic_shape_bounds(shape)[0]
+            and _semantic_shape_bounds(container)[1] <= _semantic_shape_bounds(shape)[1]
+            and _semantic_shape_bounds(container)[2] >= _semantic_shape_bounds(shape)[2]
+            and _semantic_shape_bounds(container)[3] >= _semantic_shape_bounds(shape)[3]
+            for container in live_containers
+        ):
+            remove.append(shape)
+            continue
+
+        if any(
+            _semantic_point_in_bounds(_semantic_shape_center(shape), _semantic_shape_bounds(container))
+            for container in live_containers
+        ):
+            continue
+
+        if float(shape.width) * float(shape.height) >= Inches(0.65) ** 2:
+            # A large body container with no live text is an empty card/row.
+            remove.append(shape)
+            continue
+
+        # Keep a small decorative/icon shape only when it is close to live
+        # copy.  Otherwise it is an icon-only placeholder belonging to an
+        # empty region.
+        sx, sy = _semantic_shape_center(shape)
+        near_live_text = any(
+            abs(sx - tx) <= Inches(1.0) and abs(sy - ty) <= Inches(0.9)
+            for tx, ty in (_semantic_shape_center(text_shape) for text_shape in active_text)
+        )
+        if not near_live_text:
+            remove.append(shape)
+
+    for shape in remove:
+        _remove_semantic_shape(shape)
+
+
+def _lift_semantic_insight_bar(slide, prefix: str) -> None:
+    """Move only the Slide 07 insight band clear of the fixed footer Chrome."""
+
+    shift = Inches(0.22)
+    for shape in list(_iter_all_shapes(slide.shapes)):
+        name = str(getattr(shape, "name", "") or "")
+        if not name.startswith(f"{prefix}content.auto"):
+            continue
+        top = float(shape.top)
+        bottom = float(shape.top + shape.height)
+        if top >= Inches(6.1) and bottom <= Inches(6.9):
+            shape.top = max(Inches(5.8), shape.top - shift)
+
+
+def _sanitize_semantic_page_fallback_slide(
+    slide,
+    role: str,
+    payload: NativeSlotPayload | None = None,
+) -> None:
+    """Keep approved geometry while showing only accepted runtime content."""
+
+    slide_id = _SEMANTIC_PAGE_FALLBACK_SLIDE_IDS.get(role)
+    if not slide_id:
+        return
+    prefix = f"trace:{slide_id}:"
+    protected = {
+        f"{prefix}content.auto",
+        f"{prefix}content.auto.2",
+        f"{prefix}content.auto.3",
+        f"{prefix}title.primary",
+        f"{prefix}footer.brand",
+        f"{prefix}footer.brand.2",
+    }
+    safe_content = _semantic_page_fallback_content(role, payload)
+    all_shapes = list(_iter_all_shapes(slide.shapes))
+    for shape in _iter_all_shapes(slide.shapes):
+        name = str(getattr(shape, "name", "") or "")
+        if not getattr(shape, "has_text_frame", False) or not name.startswith(prefix):
+            continue
+        if name in protected or ":footer." in name or ":header." in name:
+            continue
+        if not (":content.auto" in name or ":lead" in name or ":title.primary." in name):
+            continue
+        _set_shape_text_preserving_style(shape, "")
+
+    shapes_by_name = {
+        str(getattr(shape, "name", "") or ""): shape
+        for shape in all_shapes
+        if getattr(shape, "has_text_frame", False)
+    }
+    for slot_name, value in safe_content.items():
+        shape = shapes_by_name.get(f"{prefix}{slot_name}")
+        if shape is not None:
+            _set_shape_text_preserving_style(shape, value)
+
+    _apply_semantic_visual_finish(slide, role)
+    _hide_empty_semantic_body_visuals(slide, prefix)
+    if role == "SOLUTION_CONCEPT":
+        _lift_semantic_insight_bar(slide, prefix)
+
+    if role == "SOLUTION_APPROACH":
+        for slot_name in ("content.auto", "content.auto.194"):
+            shape = shapes_by_name.get(f"{prefix}{slot_name}")
+            if shape is None:
+                continue
+            shape.text_frame.word_wrap = False
+            shape.text_frame.margin_left = Inches(0.02)
+            shape.text_frame.margin_right = Inches(0.02)
+            _set_shape_text_preserving_style(shape, "08")
+
+
+def _compact_proposal_summary_insight_bar(slide) -> None:
+    """Keep Slide 04's existing four insight values readable in two rows."""
+
+    insight_names = [
+        "trace:S02:content.auto.130",
+        "trace:S02:content.auto.131",
+        "trace:S02:content.auto.132",
+        "trace:S02:content.auto.133",
+    ]
+    shapes = {shape.name: shape for shape in _iter_all_shapes(slide.shapes)}
+    summary_shape = shapes.get("trace:S02:title.primary.2")
+    if summary_shape is not None and any(
+        sample in str(summary_shape.text or "")
+        for sample in ("提案業務の効率化", "提案品質の向上", "提案資料作成")
+    ):
+        _set_shape_text_preserving_style(
+            summary_shape,
+            "確認済み情報を整理し、未確認項目は確認後に確定します。",
+        )
+    insight_shapes = [shapes.get(name) for name in insight_names]
+    if not all(insight_shapes):
+        return
+
+    values = [str(shape.text or "").strip() for shape in insight_shapes if str(shape.text or "").strip()]
+    if not values:
+        return
+    split = max(1, (len(values) + 1) // 2)
+    first_line = "".join(values[:split])
+    second_line = "".join(values[split:])
+
+    primary = insight_shapes[0]
+    secondary = insight_shapes[1]
+    bar = shapes.get("trace:S02:content.auto.129")
+    if bar is not None:
+        left = primary.left
+        right = bar.left + bar.width - 100000
+        width = max(primary.width, right - left)
+        inner_top = bar.top + 20000
+        row_gap = 20000
+        row_height = max(1, int((bar.height - 2 * 20000 - row_gap) / 2))
+        primary.left = left
+        primary.top = inner_top
+        primary.width = width
+        primary.height = row_height
+        secondary.left = left
+        secondary.top = inner_top + row_height + row_gap
+        secondary.width = width
+        secondary.height = row_height
+
+    _set_shape_text_preserving_style(primary, first_line)
+    _set_shape_text_preserving_style(secondary, second_line)
+    for shape in insight_shapes[2:]:
+        _set_shape_text_preserving_style(shape, "")
+
+    # S02 is the source template for this role, but Slide 04 is the fourth
+    # summary page in the runtime deck.
+    for page_number_name in ("trace:S02:content.auto", "trace:S02:content.auto.135"):
+        page_number = shapes.get(page_number_name)
+        if page_number is not None:
+            _set_shape_text_preserving_style(page_number, "04")
+
+
+def _sanitize_proposal_summary_fallback_slide(slide) -> None:
+    """Clear Slide 04 sample body copy while retaining Proposal Master geometry."""
+
+    safe_sentence = "確認済み情報を整理し、未確認項目は確認後に確定します。"
+    sentence_shapes = {
+        "trace:S02:title.primary.2",
+        "trace:S02:content.auto.130",
+    }
+    insight_shapes = {
+        "trace:S02:content.auto.130",
+        "trace:S02:content.auto.131",
+        "trace:S02:content.auto.132",
+        "trace:S02:content.auto.133",
+    }
+    samples = tuple(sample for sample in SAMPLE_STRINGS.get("PROPOSAL_SUMMARY", ()) if sample)
+    for shape in _iter_all_shapes(slide.shapes):
+        if not getattr(shape, "has_text_frame", False):
+            continue
+        text = str(getattr(shape, "text", "") or "")
+        if shape.name in sentence_shapes:
+            _set_shape_text_preserving_style(shape, safe_sentence)
+            continue
+        if shape.name in insight_shapes:
+            _set_shape_text_preserving_style(shape, "")
+            continue
+        if not any(sample in text for sample in samples):
+            continue
+        _set_shape_text_preserving_style(shape, "要確認")
+    _compact_proposal_summary_insight_bar(slide)
+
+
 def _iter_all_shapes(shapes) -> Iterable[object]:
     for shape in shapes:
         yield shape
@@ -461,6 +1125,39 @@ def _set_shape_text_preserving_style(shape, value: str) -> None:
         _set_text_preserving_style(shape.text_frame, value)
 
 
+def _set_shape_text_color(shape, color: tuple[int, int, int]) -> None:
+    """Apply a visual-only text color without changing the semantic copy."""
+
+    if not getattr(shape, "has_text_frame", False):
+        return
+    rgb = RGBColor(*color)
+    for paragraph in shape.text_frame.paragraphs:
+        for run in paragraph.runs:
+            run.font.color.rgb = rgb
+
+
+def _copy_first_run_style(reference, target) -> None:
+    """Copy the approved Chrome text style without changing target geometry."""
+
+    if not (
+        getattr(reference, "has_text_frame", False)
+        and getattr(target, "has_text_frame", False)
+        and reference.text_frame.paragraphs
+        and target.text_frame.paragraphs
+    ):
+        return
+    reference_paragraph = reference.text_frame.paragraphs[0]
+    target_paragraph = target.text_frame.paragraphs[0]
+    target_paragraph.alignment = reference_paragraph.alignment
+    if not reference_paragraph.runs or not target_paragraph.runs:
+        return
+    reference_run = reference_paragraph.runs[0]
+    target_run = target_paragraph.runs[0]
+    reference_rpr = reference_run._r.get_or_add_rPr()
+    target_rpr = target_run._r.get_or_add_rPr()
+    target_run._r.replace(target_rpr, deepcopy(reference_rpr))
+
+
 def _shape_by_name(slide, name: str):
     return next((shape for shape in _iter_all_shapes(slide.shapes) if shape.name == name), None)
 
@@ -474,6 +1171,353 @@ def _set_shape_geometry(shape, *, left: float | None = None, top: float | None =
         shape.width = Inches(width)
     if height is not None:
         shape.height = Inches(height)
+
+
+_PROPOSAL_MASTER_CHROME = {
+    "header_page": (0.37, 0.213, 0.333, 0.222),
+    "header_label": (0.963, 0.185, 2.13, 0.25),
+    "header_date": (11.666, 0.204, 1.296, 0.213),
+    "top_rule": (1.89, 0.30, 10.09, 0.01),
+    "footer_rule": (0.37, 6.96, 12.59, 0.01),
+    "footer_page": (0.37, 7.093, 0.259, 0.194),
+    "footer_brand": (1.103, 7.009, 1.069, 0.253),
+    "footer_tagline_jp": (2.241, 6.981, 2.5, 0.157),
+    "footer_tagline_en": (2.241, 7.148, 2.593, 0.148),
+    "footer_copyright": (9.444, 7.093, 3.518, 0.185),
+}
+_PROPOSAL_MASTER_TAGLINE_JP = "人とテクノロジーで、より良い社会をつくる"
+_PROPOSAL_MASTER_TAGLINE_EN = "Think Together, Create the Next."
+_PROPOSAL_MASTER_COPYRIGHT = "© 2026 提案クエスト All Rights Reserved."
+_PROPOSAL_MASTER_DATE = "2026.08.26"
+
+
+def _shape_bounds_in_inches(shape) -> tuple[float, float, float, float]:
+    return (
+        shape.left / Inches(1),
+        shape.top / Inches(1),
+        shape.width / Inches(1),
+        shape.height / Inches(1),
+    )
+
+
+def _first_matching_shape(shapes: Iterable[object], predicate) -> object | None:
+    return next((shape for shape in shapes if predicate(shape)), None)
+
+
+def _clone_chrome_text_shape(slide, reference_shape, name: str):
+    """Clone a reference footer text shape with a fresh PowerPoint shape id."""
+
+    element = deepcopy(reference_shape.element)
+    existing_ids = [int(shape.shape_id) for shape in slide.shapes if str(shape.shape_id).isdigit()]
+    c_nv_pr = next(element.iter(qn("p:cNvPr")), None)
+    if c_nv_pr is None:
+        return None
+    c_nv_pr.set("id", str(max(existing_ids, default=0) + 1))
+    c_nv_pr.set("name", name)
+    slide.shapes._spTree.insert_element_before(element, "p:extLst")
+    return _first_matching_shape(_iter_all_shapes(slide.shapes), lambda shape: shape.name == name)
+
+
+def _find_footer_reference(prs, suffix: str):
+    for candidate_slide in prs.slides:
+        candidate = _first_matching_shape(
+            _iter_all_shapes(candidate_slide.shapes),
+            lambda shape: shape.name.endswith(suffix) and getattr(shape, "has_text_frame", False),
+        )
+        if candidate is not None:
+            return candidate
+    return None
+
+
+def _find_header_date_reference(prs):
+    return _first_matching_shape(
+        (
+            shape
+            for candidate_slide in prs.slides
+            for shape in _iter_all_shapes(candidate_slide.shapes)
+        ),
+        lambda shape: getattr(shape, "has_text_frame", False)
+        and bool(text_of := " ".join(str(getattr(shape, "text", "") or "").split()))
+        and re.fullmatch(r"\d{4}[./-]\d{1,2}[./-]\d{1,2}", text_of)
+        and shape.top / Inches(1) < 0.6
+        and shape.left / Inches(1) > 10.5,
+    )
+
+
+def _normalize_footer_text_frame(shape, reference=None) -> None:
+    """Keep approved footer copy on one line without changing its content."""
+
+    if not getattr(shape, "has_text_frame", False):
+        return
+    if reference is not None and reference is not shape:
+        _copy_first_run_style(reference, shape)
+    text_frame = shape.text_frame
+    text_frame.word_wrap = False
+    text_frame.auto_size = MSO_AUTO_SIZE.NONE
+    text_frame.margin_left = 0
+    text_frame.margin_right = 0
+    text_frame.margin_top = 0
+    text_frame.margin_bottom = 0
+    text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+    for paragraph in text_frame.paragraphs:
+        paragraph.space_before = 0
+        paragraph.space_after = 0
+    paragraphs = list(text_frame.paragraphs)
+    for paragraph in paragraphs[1:]:
+        parent = paragraph._p.getparent()
+        if parent is not None:
+            parent.remove(paragraph._p)
+
+
+def _finish_semantic_footer_chrome(prs: Presentation, slide, slide_number: int) -> None:
+    """Finish only Slides 05-08 footer chrome after shared alignment.
+
+    The semantic body is intentionally untouched.  These trace assets retain
+    a few source-only separator lines and, on one slide, a narrow brand text
+    frame that wraps the approved brand name.  Remove only those footer-region
+    artifacts and normalize the already-approved text frames.
+    """
+
+    shapes = list(_iter_all_shapes(slide.shapes))
+    footer_top = Inches(6.90)
+    footer_bottom = Inches(7.38)
+
+    # These are source-template separator remnants, not the approved footer
+    # rule or any footer text.  Their only visual role is an orphan line.
+    for shape in list(shapes):
+        if not (footer_top <= shape.top <= footer_bottom):
+            continue
+        if shape.name.endswith((":footer.brand", ":footer.brand.2", ":footer.tagline.jp", ":footer.tagline.en")):
+            continue
+        if getattr(shape, "has_text_frame", False) and shape.width <= Inches(0.02) and shape.height >= Inches(0.10):
+            _remove_semantic_shape(shape)
+
+    refreshed = list(_iter_all_shapes(slide.shapes))
+    page_reference = _find_footer_reference(prs, ":footer.page")
+    page_shape = next(
+        (
+            shape
+            for shape in refreshed
+            if getattr(shape, "has_text_frame", False)
+            and shape.top >= footer_top
+            and shape.left < Inches(0.95)
+            and shape.width <= Inches(0.5)
+        ),
+        None,
+    )
+    if page_shape is None and page_reference is not None:
+        page_shape = _clone_chrome_text_shape(slide, page_reference, "trace:CHROME:footer.page")
+        refreshed = list(_iter_all_shapes(slide.shapes))
+    if page_shape is not None:
+        _set_shape_text_preserving_style(page_shape, f"{slide_number:02d}")
+        if page_reference is not None and page_shape is not page_reference:
+            _copy_first_run_style(page_reference, page_shape)
+        _set_shape_geometry(page_shape, *(), **dict(zip(("left", "top", "width", "height"), _PROPOSAL_MASTER_CHROME["footer_page"])))
+        _normalize_footer_text_frame(page_shape, page_reference)
+
+    # Keep only the approved footer rule/page/text slots in the semantic
+    # fallback slides.  Any remaining source-only footer shape is an orphan
+    # and cannot contribute to the Proposal Master Chrome.
+    protected_page_name = page_shape.name if page_shape is not None else None
+    for shape in list(_iter_all_shapes(slide.shapes)):
+        if not (footer_top <= shape.top <= footer_bottom):
+            continue
+        if protected_page_name is not None and shape.name == protected_page_name:
+            continue
+        if shape.name.endswith((":footer.brand", ":footer.brand.2", ":footer.tagline.jp", ":footer.tagline.en")):
+            continue
+        if shape.width > Inches(8.0) and shape.height <= Inches(0.02):
+            continue
+        _remove_semantic_shape(shape)
+
+    refreshed = list(_iter_all_shapes(slide.shapes))
+    brand_reference = _find_footer_reference(prs, ":footer.brand")
+    copyright_reference = _find_footer_reference(prs, ":footer.brand.2")
+    tagline_jp_reference = _find_footer_reference(prs, ":footer.tagline.jp")
+    tagline_en_reference = _find_footer_reference(prs, ":footer.tagline.en")
+
+    for suffix, value, reference in (
+        (":footer.brand", "提案クエスト", brand_reference),
+        (":footer.brand.2", _PROPOSAL_MASTER_COPYRIGHT, copyright_reference),
+        (":footer.tagline.jp", _PROPOSAL_MASTER_TAGLINE_JP, tagline_jp_reference),
+        (":footer.tagline.en", _PROPOSAL_MASTER_TAGLINE_EN, tagline_en_reference),
+    ):
+        targets = [
+            shape
+            for shape in refreshed
+            if getattr(shape, "has_text_frame", False) and shape.name.endswith(suffix)
+        ]
+        for target in targets:
+            _set_shape_text_preserving_style(target, value)
+            _normalize_footer_text_frame(target, reference)
+
+
+def _unify_proposal_master_chrome(prs: Presentation, slide, slide_number: int) -> None:
+    """Align only the shared Proposal Master chrome on a summary slide.
+
+    Body shapes and semantic text are deliberately excluded.  The helper runs
+    on the runtime slide copy after Native/fallback rendering, so frozen source
+    templates remain unchanged.
+    """
+
+    if slide_number < 2:
+        return
+
+    shapes = list(_iter_all_shapes(slide.shapes))
+
+    def text_of(shape) -> str:
+        return " ".join(str(getattr(shape, "text", "") or "").split())
+
+    header_page = _first_matching_shape(
+        shapes,
+        lambda shape: getattr(shape, "has_text_frame", False)
+        and re.fullmatch(r"\d{1,2}", text_of(shape))
+        and shape.top / Inches(1) < 0.65
+        and shape.left / Inches(1) < 0.9,
+    )
+    if header_page is not None:
+        _set_shape_text_preserving_style(header_page, f"{slide_number:02d}")
+        _set_shape_geometry(header_page, *(), **dict(zip(("left", "top", "width", "height"), _PROPOSAL_MASTER_CHROME["header_page"])))
+
+    footer_page = _first_matching_shape(
+        shapes,
+        lambda shape: getattr(shape, "has_text_frame", False)
+        and re.fullmatch(r"\d{1,2}", text_of(shape))
+        and shape.top / Inches(1) > 6.7
+        and shape.left / Inches(1) < 0.95,
+    )
+    if footer_page is not None:
+        _set_shape_text_preserving_style(footer_page, f"{slide_number:02d}")
+        _set_shape_geometry(footer_page, *(), **dict(zip(("left", "top", "width", "height"), _PROPOSAL_MASTER_CHROME["footer_page"])))
+
+    header_label = _first_matching_shape(
+        shapes,
+        lambda shape: getattr(shape, "has_text_frame", False)
+        and bool(text_of(shape))
+        and text_of(shape) not in {"│", "|", "｜"}
+        and shape.top / Inches(1) < 0.55
+        and 0.75 < shape.left / Inches(1) < 4.5
+        and not re.fullmatch(r"\d{1,2}", text_of(shape)),
+    )
+    if header_label is not None:
+        _set_shape_geometry(header_label, *(), **dict(zip(("left", "top", "width", "height"), _PROPOSAL_MASTER_CHROME["header_label"])))
+
+    # Some trace assets use a visible text bar as a chapter separator while the
+    # approved Master keeps that slot empty.  Clear only that Chrome slot.
+    for shape in shapes:
+        if not getattr(shape, "has_text_frame", False):
+            continue
+        if shape.top / Inches(1) < 0.55 and shape.left / Inches(1) < 0.9 and text_of(shape) in {"│", "|", "｜"}:
+            _set_shape_text_preserving_style(shape, "")
+
+    top_rules = [
+        shape
+        for shape in shapes
+        if getattr(shape, "has_text_frame", False)
+        and not text_of(shape)
+        and shape.top / Inches(1) < 0.55
+        and shape.left / Inches(1) > 1.0
+        and shape.width / Inches(1) > 4.0
+    ]
+    for index, shape in enumerate(top_rules):
+        if index == 0:
+            _set_shape_geometry(shape, *(), **dict(zip(("left", "top", "width", "height"), _PROPOSAL_MASTER_CHROME["top_rule"])))
+        else:
+            _set_shape_geometry(shape, left=1.89, top=0.30, width=0.01, height=0.01)
+
+    footer_rules = [
+        shape
+        for shape in shapes
+        if getattr(shape, "has_text_frame", False)
+        and not text_of(shape)
+        and 6.80 < shape.top / Inches(1) < 7.15
+        and shape.width / Inches(1) > 8.0
+    ]
+    for index, shape in enumerate(footer_rules):
+        if index == 0:
+            _set_shape_geometry(shape, *(), **dict(zip(("left", "top", "width", "height"), _PROPOSAL_MASTER_CHROME["footer_rule"])))
+        else:
+            _set_shape_geometry(shape, left=0.37, top=6.96, width=0.01, height=0.01)
+
+    brand = _first_matching_shape(
+        shapes,
+        lambda shape: getattr(shape, "has_text_frame", False) and shape.name.endswith(":footer.brand"),
+    )
+    if brand is not None:
+        _set_shape_text_preserving_style(brand, "提案クエスト")
+        _set_shape_geometry(brand, *(), **dict(zip(("left", "top", "width", "height"), _PROPOSAL_MASTER_CHROME["footer_brand"])))
+
+    copyright_shape = _first_matching_shape(
+        shapes,
+        lambda shape: getattr(shape, "has_text_frame", False) and shape.name.endswith(":footer.brand.2"),
+    )
+    if copyright_shape is None:
+        reference = _find_footer_reference(prs, ":footer.brand.2")
+        if reference is not None:
+            copyright_shape = _clone_chrome_text_shape(slide, reference, "trace:CHROME:footer.brand.2")
+    if copyright_shape is not None:
+        _set_shape_text_preserving_style(copyright_shape, _PROPOSAL_MASTER_COPYRIGHT)
+        _set_shape_geometry(copyright_shape, *(), **dict(zip(("left", "top", "width", "height"), _PROPOSAL_MASTER_CHROME["footer_copyright"])))
+
+    # Remove non-Master footer slogans, then ensure the canonical two-line
+    # tagline exists as editable text on every summary slide.
+    for shape in list(_iter_all_shapes(slide.shapes)):
+        top = shape.top / Inches(1)
+        left = shape.left / Inches(1)
+        if not getattr(shape, "has_text_frame", False) or top < 6.90 or left < 2.0 or left > 6.8:
+            continue
+        if any(shape.name.endswith(suffix) for suffix in (":footer.tagline.jp", ":footer.tagline.en")):
+            continue
+        if shape.name.endswith(":footer.brand") or shape.name.endswith(":footer.brand.2"):
+            continue
+        if text_of(shape):
+            _set_shape_text_preserving_style(shape, "")
+
+    tagline_jp = _first_matching_shape(
+        _iter_all_shapes(slide.shapes),
+        lambda shape: getattr(shape, "has_text_frame", False) and shape.name.endswith(":footer.tagline.jp"),
+    )
+    if tagline_jp is None:
+        reference = _find_footer_reference(prs, ":footer.tagline.jp")
+        if reference is not None:
+            tagline_jp = _clone_chrome_text_shape(slide, reference, "trace:CHROME:footer.tagline.jp")
+    if tagline_jp is not None:
+        _set_shape_text_preserving_style(tagline_jp, _PROPOSAL_MASTER_TAGLINE_JP)
+        _set_shape_geometry(tagline_jp, *(), **dict(zip(("left", "top", "width", "height"), _PROPOSAL_MASTER_CHROME["footer_tagline_jp"])))
+
+    tagline_en = _first_matching_shape(
+        _iter_all_shapes(slide.shapes),
+        lambda shape: getattr(shape, "has_text_frame", False) and shape.name.endswith(":footer.tagline.en"),
+    )
+    if tagline_en is None:
+        reference = _find_footer_reference(prs, ":footer.tagline.en")
+        if reference is not None:
+            tagline_en = _clone_chrome_text_shape(slide, reference, "trace:CHROME:footer.tagline.en")
+    if tagline_en is not None:
+        _set_shape_text_preserving_style(tagline_en, _PROPOSAL_MASTER_TAGLINE_EN)
+        _set_shape_geometry(tagline_en, *(), **dict(zip(("left", "top", "width", "height"), _PROPOSAL_MASTER_CHROME["footer_tagline_en"])))
+
+    date_shape = _first_matching_shape(
+        shapes,
+        lambda shape: getattr(shape, "has_text_frame", False)
+        and (":footer.date" in shape.name or (shape.top / Inches(1) < 0.55 and shape.left / Inches(1) > 10.5 and shape.width / Inches(1) < 2.0)),
+    )
+    date_reference = _find_header_date_reference(prs)
+    if date_shape is None and date_reference is not None:
+        date_shape = _clone_chrome_text_shape(slide, date_reference, "trace:CHROME:header.date")
+    if date_shape is not None:
+        _set_shape_text_preserving_style(date_shape, _PROPOSAL_MASTER_DATE)
+        if date_reference is not None and date_shape is not date_reference:
+            _copy_first_run_style(date_reference, date_shape)
+        _set_shape_geometry(date_shape, *(), **dict(zip(("left", "top", "width", "height"), _PROPOSAL_MASTER_CHROME["header_date"])))
+
+    if slide_number == 9:
+        for shape in shapes:
+            if getattr(shape, "has_text_frame", False) and "最適な一手" in text_of(shape):
+                _set_shape_text_preserving_style(shape, "")
+
+    if 5 <= slide_number <= 8:
+        _finish_semantic_footer_chrome(prs, slide, slide_number)
 
 
 def _tighten_kpi_fallback_layout(slide) -> None:
@@ -508,6 +1552,36 @@ def _tighten_kpi_fallback_layout(slide) -> None:
         if updated != shape.text:
             _set_shape_text_preserving_style(shape, updated)
 
+    for name in (
+        "trace:KPI:title.primary.4",
+        "trace:KPI:content.auto.51",
+        "trace:KPI:content.auto.64",
+        "trace:KPI:content.auto.74",
+    ):
+        shape = _shape_by_name(slide, name)
+        if shape is not None:
+            _set_shape_text_preserving_style(shape, "確認後に確定")
+
+    for name in (
+        "trace:KPI:title.primary.6",
+        "trace:KPI:content.auto.56",
+        "trace:KPI:content.auto.69",
+        "trace:KPI:content.auto.79",
+    ):
+        shape = _shape_by_name(slide, name)
+        if shape is not None:
+            _set_shape_text_preserving_style(shape, "方法を確認")
+
+    for name in (
+        "trace:KPI:content.auto.43",
+        "trace:KPI:content.auto.58",
+        "trace:KPI:content.auto.71",
+        "trace:KPI:content.auto.81",
+    ):
+        shape = _shape_by_name(slide, name)
+        if shape is not None:
+            _set_shape_text_preserving_style(shape, "要確認")
+
     table_shape = _shape_by_name(slide, "trace:KPI:title.primary.3")
     if table_shape is not None and getattr(table_shape, "has_table", False):
         table = table_shape.table
@@ -518,10 +1592,10 @@ def _tighten_kpi_fallback_layout(slide) -> None:
             row.height = Inches(height)
         cells = [
             ["KPI", "現状値", "目標値", "測定方法", "優先度"],
-            ["資料作成時間", "未取得", "要確認", "工数記録", "高"],
-            ["提案数", "未取得", "要確認", "案件数", "高"],
-            ["修正回数", "未取得", "要確認", "履歴カウント", "中"],
-            ["受注確度", "未取得", "要確認", "受注率", "高"],
+            ["確認項目", "未確認", "確認後に確定", "測定方法を確認", "要確認"],
+            ["確認項目", "未確認", "確認後に確定", "根拠を確認", "要確認"],
+            ["確認項目", "未確認", "確認後に確定", "条件を確認", "要確認"],
+            ["確認項目", "未確認", "確認後に確定", "実績を確認", "要確認"],
         ]
         for row, values in zip(table.rows, cells):
             for cell, value in zip(row.cells, values):
@@ -775,6 +1849,7 @@ def _render_visual_master_fallback(
     *,
     surface: str,
     media: bool = False,
+    semantic_payload: NativeSlotPayload | None = None,
 ) -> dict[str, object]:
     """Render a safe fallback using an approved Proposal Master template.
 
@@ -797,7 +1872,7 @@ def _render_visual_master_fallback(
             required_slots=required_slots,
         )
         title_slot = f"trace:{slide_id}:title.primary"
-        payload = NativeSlotPayload(
+        payload = semantic_payload or NativeSlotPayload(
             role=role,
             slide_id=slide_id,
             surface=surface,
@@ -805,6 +1880,9 @@ def _render_visual_master_fallback(
             text_replacements=_visual_fallback_replacements(role),
             prohibited_sample_strings=list(SAMPLE_STRINGS.get(role, ())),
         )
+        if semantic_payload is not None:
+            payload.text_replacements.update(_visual_fallback_replacements(role))
+            payload.prohibited_sample_strings = list(SAMPLE_STRINGS.get(role, ()))
         write_report = write_slot_payload(target, payload, required_slots=required_slots)
         _replace_fragmented_fallback_text(
             target,
@@ -839,6 +1917,12 @@ def _render_visual_master_fallback(
             _clone_template_slide_with_media(prs, target)
         else:
             _clone_template_slide(prs, target)
+        if role == "PROPOSAL_SUMMARY":
+            _sanitize_proposal_summary_fallback_slide(prs.slides[-1])
+        elif role == "IMPLEMENTATION_CONFIGURATION":
+            _sanitize_implementation_configuration_fallback_slide(prs.slides[-1])
+        elif role in _SEMANTIC_PAGE_FALLBACK_SLIDE_IDS:
+            _sanitize_semantic_page_fallback_slide(prs.slides[-1], role, semantic_payload)
         _apply_visual_fallback_layout(prs.slides[-1], role)
         return {
             "validation": validation,
@@ -1072,7 +2156,10 @@ def dispatch_approved_native_slide(
                     slide_data,
                     spec,
                     surface=effective_surface,
+                    semantic_payload=payload,
                 )
+                if effective_surface == "summary":
+                    _unify_proposal_master_chrome(prs, prs.slides[-1], int(getattr(slide_data, "slide_no", index + 1)))
                 return _trace(
                     resolved_role,
                     native_rendered=False,
@@ -1103,6 +2190,10 @@ def dispatch_approved_native_slide(
         # relationships are deliberately rejected by the editable slide
         # importer; the established renderer then handles that role safely.
         _clone_template_slide(prs, Path(result.package_path))
+        if resolved_role == "PROPOSAL_SUMMARY":
+            _compact_proposal_summary_insight_bar(prs.slides[-1])
+        if effective_surface == "summary":
+            _unify_proposal_master_chrome(prs, prs.slides[-1], int(getattr(slide_data, "slide_no", index + 1)))
         return _trace(
             resolved_role,
             native_rendered=True,
@@ -1125,6 +2216,8 @@ def dispatch_approved_native_slide(
                     surface=effective_surface,
                     media=True,
                 )
+                if effective_surface == "summary":
+                    _unify_proposal_master_chrome(prs, prs.slides[-1], int(getattr(slide_data, "slide_no", index + 1)))
                 return _trace(
                     resolved_role,
                     native_rendered=False,

@@ -9,7 +9,9 @@ from app.services.pptx_parts.models import PptxContext
 
 
 MAX_DETAILED_SLIDES = 25
-MAX_SUMMARY_SLIDES = 10
+# The Summary contract is a fixed 11-role sequence.  This is only the
+# existing hard cap; selection and quality-gate behavior remain unchanged.
+MAX_SUMMARY_SLIDES = 11
 
 
 @dataclass(frozen=True)

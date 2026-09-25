@@ -296,6 +296,7 @@ def build_pptx_context(
         win_probability=payload.win_probability,
         design_template=payload.design_template or "corporate_clean",
         brand_settings=payload.brand_settings or None,
+        semantic_candidates=payload.semantic_candidates,
     )
 
 
