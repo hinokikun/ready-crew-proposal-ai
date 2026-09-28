@@ -255,7 +255,7 @@ def test_solution_concept_insight_bar_stays_above_footer() -> None:
     insight = next(
         shape
         for shape in slide.shapes
-        if shape.name == "trace:S05:content.auto.100"
+        if shape.name == "trace:S05:content.auto.54"
     )
     footer = next(shape for shape in slide.shapes if shape.name == "trace:S05:footer.brand")
     assert insight.top + insight.height < footer.top

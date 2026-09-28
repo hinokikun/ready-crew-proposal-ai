@@ -336,9 +336,9 @@
       "role": "CURRENT_STATE",
       "slide_id": "S03",
       "surface": "summary",
-      "template": "summary/S03_current_state.pptx",
+      "template": "summary/S03_current_state_16x9_retrace.pptx",
       "required_slots": [
-        "trace:S03:title.primary",
+        "trace:S03:content.auto.4",
         "trace:S03:footer.brand"
       ],
       "optional_slots": [
@@ -354,8 +354,21 @@
         "slide.title",
         "slide.bullets",
         "context.client_name",
-        "context.concept"
+        "context.concept",
+        "semantic.current_process",
+        "semantic.current_process_notes",
+        "semantic.current_data_state",
+        "semantic.current_data_notes",
+        "semantic.current_issue_1",
+        "semantic.current_issue_2",
+        "semantic.current_issue_3"
       ],
+      "semantic_slot_map": {
+        "semantic.current_process": "trace:S03:title.primary.2",
+        "semantic.current_data_state": "trace:S03:title.primary.3",
+        "semantic.current_issue_1": "trace:S03:content.auto.81",
+        "semantic.current_issue_2": "trace:S03:content.auto.88"
+      },
       "static_slots": [
         "trace:S03:content.*",
         "trace:S03:shape.*"
@@ -388,7 +401,7 @@
       },
       "minimum_font_size": {
         "title.primary": 10,
-        "lead": 10,
+        "lead": 8,
         "content.body": 8
       },
       "max_lines": {
@@ -429,7 +442,7 @@
           "max_characters": 110,
           "max_lines": 3,
           "preferred_font_size": 14,
-          "minimum_font_size": 10,
+          "minimum_font_size": 8,
           "allow_font_shrink": true
         },
         "content.body": {
@@ -455,9 +468,9 @@
       "role": "PROBLEM_ANALYSIS",
       "slide_id": "S04",
       "surface": "summary",
-      "template": "summary/S04_problem_analysis.pptx",
+      "template": "summary/S04_problem_analysis_16x9_retrace.pptx",
       "required_slots": [
-        "trace:S04:title.primary",
+        "trace:S04:content.auto.4",
         "trace:S04:footer.brand"
       ],
       "optional_slots": [
@@ -473,8 +486,22 @@
         "slide.title",
         "slide.bullets",
         "context.client_name",
-        "context.concept"
+        "context.concept",
+        "semantic.priority_issue_1_title",
+        "semantic.priority_issue_1_detail",
+        "semantic.priority_issue_2_title",
+        "semantic.priority_issue_2_detail",
+        "semantic.priority_issue_3_title",
+        "semantic.priority_issue_3_detail",
+        "semantic.issue_summary"
       ],
+      "semantic_slot_map": {
+        "semantic.priority_issue_1_title": "trace:S04:title.primary.2",
+        "semantic.priority_issue_1_detail": "trace:S04:lead",
+        "semantic.priority_issue_2_title": "trace:S04:title.primary.3",
+        "semantic.priority_issue_3_title": "trace:S04:content.auto.33",
+        "semantic.issue_summary": "trace:S04:content.auto.47"
+      },
       "static_slots": [
         "trace:S04:content.*",
         "trace:S04:shape.*"
@@ -507,7 +534,7 @@
       },
       "minimum_font_size": {
         "title.primary": 10,
-        "lead": 10,
+        "lead": 8,
         "content.body": 8
       },
       "max_lines": {
@@ -548,7 +575,7 @@
           "max_characters": 110,
           "max_lines": 3,
           "preferred_font_size": 14,
-          "minimum_font_size": 10,
+          "minimum_font_size": 8,
           "allow_font_shrink": true
         },
         "content.body": {
@@ -574,7 +601,7 @@
       "role": "SOLUTION_CONCEPT",
       "slide_id": "S05",
       "surface": "summary",
-      "template": "summary/S05_solution_concept.pptx",
+      "template": "summary/S05_solution_concept_16x9_retrace.pptx",
       "required_slots": [
         "trace:S05:title.primary",
         "trace:S05:footer.brand"
@@ -592,8 +619,23 @@
         "slide.title",
         "slide.bullets",
         "context.client_name",
-        "context.concept"
+        "context.concept",
+        "semantic.solution_concept",
+        "semantic.ai_role_title",
+        "semantic.ai_role_detail",
+        "semantic.human_role_title",
+        "semantic.human_role_detail",
+        "semantic.operation_design_title",
+        "semantic.operation_principle_1",
+        "semantic.operation_principle_2",
+        "semantic.operation_principle_3"
       ],
+      "semantic_slot_map": {
+        "semantic.solution_concept": "trace:S05:title.primary.2",
+        "semantic.ai_role_detail": "trace:S05:lead",
+        "semantic.human_role_detail": "trace:S05:lead.2",
+        "semantic.operation_design_title": "trace:S05:content.auto.54"
+      },
       "static_slots": [
         "trace:S05:content.*",
         "trace:S05:shape.*"
@@ -626,7 +668,7 @@
       },
       "minimum_font_size": {
         "title.primary": 10,
-        "lead": 10,
+        "lead": 8,
         "content.body": 8
       },
       "max_lines": {
@@ -667,7 +709,7 @@
           "max_characters": 110,
           "max_lines": 3,
           "preferred_font_size": 14,
-          "minimum_font_size": 10,
+          "minimum_font_size": 8,
           "allow_font_shrink": true
         },
         "content.body": {
@@ -693,9 +735,9 @@
       "role": "SOLUTION_APPROACH",
       "slide_id": "S06",
       "surface": "summary",
-      "template": "summary/S06_solution_approach.pptx",
+      "template": "summary/S06_solution_approach_16x9_retrace.pptx",
       "required_slots": [
-        "trace:S06:title.primary",
+        "trace:S06:content.auto.4",
         "trace:S06:footer.brand"
       ],
       "optional_slots": [
@@ -711,8 +753,24 @@
         "slide.title",
         "slide.bullets",
         "context.client_name",
-        "context.concept"
+        "context.concept",
+        "semantic.step_1_title",
+        "semantic.step_1_detail_1",
+        "semantic.step_1_detail_2",
+        "semantic.step_2_title",
+        "semantic.step_2_detail_1",
+        "semantic.step_2_detail_2",
+        "semantic.step_3_title",
+        "semantic.step_3_detail_1",
+        "semantic.step_3_detail_2",
+        "semantic.implementation_message"
       ],
+      "semantic_slot_map": {
+        "semantic.step_1_title": "trace:S06:title.primary.2",
+        "semantic.step_2_title": "trace:S06:title.primary.3",
+        "semantic.step_3_title": "trace:S06:content.auto.76",
+        "semantic.implementation_message": "trace:S06:content.auto.130"
+      },
       "static_slots": [
         "trace:S06:content.*",
         "trace:S06:shape.*"
@@ -745,7 +803,7 @@
       },
       "minimum_font_size": {
         "title.primary": 10,
-        "lead": 10,
+        "lead": 8,
         "content.body": 8
       },
       "max_lines": {
@@ -786,7 +844,7 @@
           "max_characters": 110,
           "max_lines": 3,
           "preferred_font_size": 14,
-          "minimum_font_size": 10,
+          "minimum_font_size": 8,
           "allow_font_shrink": true
         },
         "content.body": {
