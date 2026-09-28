@@ -128,7 +128,8 @@ def test_cardinality_is_not_changed_and_no_anonymous_objects_are_created():
 
 
 def test_generic_five_page_renderer_assumption_is_adapter_required_not_semantic_invention():
-    renderer_source = Path("backend/app/services/presentation_master/renderer_mvp.py").read_text(encoding="utf-8")
+    repo_root = Path(__file__).resolve().parents[2]
+    renderer_source = (repo_root / "backend/app/services/presentation_master/renderer_mvp.py").read_text(encoding="utf-8")
     assert '"p01"' in renderer_source and '"p05"' in renderer_source
     assert "ProposalToRendererMvpAdapter" in renderer_source
     assert len(APPROVED_SEMANTIC_FIXTURES) == 30

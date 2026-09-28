@@ -145,7 +145,8 @@ def test_adapter_error_is_bounded_without_raw_content(client, admin_headers, mon
 def test_no_direct_openai_or_persistence_boundary_in_api_module():
     from pathlib import Path
 
-    text = Path("backend/app/services/presentation_master/integration/m30_causality_relationship_proposal_api.py").read_text(encoding="utf-8")
+    repo_root = Path(__file__).resolve().parents[2]
+    text = (repo_root / "backend/app/services/presentation_master/integration/m30_causality_relationship_proposal_api.py").read_text(encoding="utf-8")
     assert "OpenAI" not in text
     assert "get_db" not in text
     assert "m30_causality_relationship_review_decisions" not in text

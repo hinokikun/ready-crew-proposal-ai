@@ -156,7 +156,8 @@ def test_correct_and_reject_forbid_corrected_endpoints(client, admin_headers):
 def test_no_ai_or_persistence_boundary_in_api_module():
     from pathlib import Path
 
-    text = Path("backend/app/services/presentation_master/integration/m30_causality_relationship_review_api.py").read_text(encoding="utf-8")
+    repo_root = Path(__file__).resolve().parents[2]
+    text = (repo_root / "backend/app/services/presentation_master/integration/m30_causality_relationship_review_api.py").read_text(encoding="utf-8")
     assert "OpenAI" not in text
     assert "m30_causality_relationship_ai_live_adapter" not in text
     assert "m30_causality_relationship_proposal_api" not in text
