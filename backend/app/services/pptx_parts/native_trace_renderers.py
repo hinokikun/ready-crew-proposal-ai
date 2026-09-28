@@ -637,28 +637,28 @@ _SEMANTIC_PAGE_SAFE_FALLBACK_CONTENT = {
 
 _SEMANTIC_PAGE_FALLBACK_DEFAULTS = {
     "CURRENT_STATE": {
-        "lead": "現状は確認後に確定",
-        "lead.2": "業務フローは確認後に確定",
-        "content.auto.30": "課題は確認後に確定",
-        "content.auto.41": "優先テーマは確認後に確定",
+        "title.primary.2": "現状は確認後に確定",
+        "title.primary.3": "業務フローは確認後に確定",
+        "content.auto.81": "課題は確認後に確定",
+        "content.auto.88": "優先テーマは確認後に確定",
     },
     "PROBLEM_ANALYSIS": {
-        "lead": "課題は確認後に確定",
-        "content.auto.22": "優先課題は確認後に確定",
-        "content.auto.42": "根拠は確認後に確定",
-        "content.auto.78": "次の確認事項は確認後に確定",
+        "content.auto.47": "課題は確認後に確定",
+        "title.primary.2": "優先課題は確認後に確定",
+        "lead": "根拠は確認後に確定",
+        "content.auto.35": "次の確認事項は確認後に確定",
     },
     "SOLUTION_CONCEPT": {
-        "title.primary.2": "方針は確認後に確定",
-        "content.auto.23": "施策は確認後に確定",
-        "content.auto.47": "実行条件は確認後に確定",
-        "content.auto.100": "成果条件は確認後に確定",
+        "lead": "方針は確認後に確定",
+        "lead.2": "施策は確認後に確定",
+        "content.auto.54": "実行条件は確認後に確定",
+        "content.auto.63": "成果条件は確認後に確定",
     },
     "SOLUTION_APPROACH": {
-        "title.primary.2": "導入方針は確認後に確定",
-        "title.primary.3": "導入ステップは確認後に確定",
-        "title.primary.4": "実施条件は確認後に確定",
-        "content.auto.94": "成果条件は確認後に確定",
+        "lead": "導入方針は確認後に確定",
+        "content.auto.45": "導入ステップは確認後に確定",
+        "lead.3": "実施条件は確認後に確定",
+        "content.auto.130": "成果条件は確認後に確定",
     },
 }
 
@@ -744,17 +744,18 @@ def _apply_semantic_visual_finish(slide, role: str) -> None:
         return _shape_by_name(slide, f"{prefix}{suffix}")
 
     if role == "CURRENT_STATE":
-        # Three compact blocks: two current-state blocks and one lower issue
-        # block.  Existing runtime text is moved into existing approved
-        # containers; no copy is added or rewritten.
+        # Use the full 16:9 body as a deliberate three-block composition.
+        # Existing runtime text is moved into existing approved containers;
+        # no copy is added or rewritten.
         for suffix, geometry in {
-            "content.auto.6": (0.42, 2.18, 3.35, 1.16),
-            "content.auto.12": (4.02, 2.18, 3.35, 1.16),
-            "lead": (0.68, 2.47, 2.82, 0.56),
-            "lead.2": (4.10, 2.43, 3.16, 0.72),
-            "content.auto.29": (0.42, 3.72, 6.95, 1.18),
-            "content.auto.30": (0.72, 3.98, 6.28, 0.30),
-            "content.auto.41": (0.72, 4.38, 6.28, 0.30),
+            "title.primary": (0.42, 1.02, 4.20, 0.38),
+            "content.auto.6": (0.42, 1.72, 3.78, 2.45),
+            "content.auto.12": (4.47, 1.72, 3.78, 2.45),
+            "lead": (0.76, 2.46, 3.10, 0.58),
+            "lead.2": (4.81, 2.34, 3.10, 0.76),
+            "content.auto.29": (8.52, 1.72, 3.78, 2.45),
+            "content.auto.30": (8.86, 2.25, 3.10, 0.34),
+            "content.auto.41": (8.86, 3.00, 3.10, 0.34),
         }.items():
             current = shape(suffix)
             if current is not None:
@@ -767,24 +768,48 @@ def _apply_semantic_visual_finish(slide, role: str) -> None:
         nested_overlay = shape("content.auto.19")
         if nested_overlay is not None:
             _remove_semantic_shape(nested_overlay)
+        for suffix in ("content.auto.65", "title.primary.7", "content.auto.68", "content.auto.126"):
+            obsolete = shape(suffix)
+            if obsolete is not None:
+                _remove_semantic_shape(obsolete)
 
     elif role == "PROBLEM_ANALYSIS":
-        # Preserve the two-card-plus-summary composition while using the
-        # unused upper body area.  Only geometry changes.
-        for suffix in (
-            "content.auto.14",
-            "content.auto.22",
-            "lead",
-            "content.auto.34",
-            "content.auto.42",
-            "content.auto.73",
-            "content.auto.78",
-        ):
+        # Arrange the two verified issue cards and the next-confirmation card
+        # as one horizontal reading path across the 16:9 body.
+        for suffix, geometry in {
+            "content.auto.10": (0.42, 1.82, 3.86, 2.36),
+            "content.auto.14": (0.42, 1.82, 3.86, 2.36),
+            "content.auto.22": (0.78, 2.55, 3.16, 0.34),
+            "lead": (0.78, 3.05, 3.16, 0.44),
+            "content.auto.23": (4.47, 1.82, 3.86, 2.36),
+            "content.auto.34": (4.47, 1.82, 3.86, 2.36),
+            "content.auto.42": (4.83, 2.55, 3.16, 0.34),
+            "content.auto.73": (8.52, 1.82, 3.86, 2.36),
+            "content.auto.78": (8.88, 2.78, 3.14, 0.38),
+        }.items():
             current = shape(suffix)
-            if current is not None and current.top >= Inches(3.0):
-                current.top = max(Inches(1.95), current.top - Inches(0.78))
+            if current is not None:
+                _set_shape_geometry(current, left=geometry[0], top=geometry[1], width=geometry[2], height=geometry[3])
+        for suffix in ("content.auto.44", "title.primary.9"):
+            obsolete = shape(suffix)
+            if obsolete is not None:
+                _remove_semantic_shape(obsolete)
 
     elif role == "SOLUTION_CONCEPT":
+        # Build a balanced two-card -> convergence -> conclusion flow on the
+        # 16:9 canvas.  The existing sentence remains unchanged.
+        for suffix, geometry in {
+            "content.auto.17": (0.62, 2.05, 5.48, 1.42),
+            "content.auto.23": (0.98, 2.57, 4.76, 0.36),
+            "content.auto.41": (7.18, 2.05, 5.48, 1.42),
+            "content.auto.47": (7.54, 2.57, 4.76, 0.36),
+            "content.auto.71": (4.30, 3.92, 4.73, 0.78),
+            "content.auto.89": (5.44, 4.12, 2.45, 0.34),
+        }.items():
+            current = shape(suffix)
+            if current is not None:
+                _set_shape_geometry(current, left=geometry[0], top=geometry[1], width=geometry[2], height=geometry[3])
+
         # Keep the insight bar comfortably above the fixed footer.  Place the
         # existing sentence wholly in the light region and use a dark Master
         # color so no white run spills onto the pale background.
@@ -804,15 +829,16 @@ def _apply_semantic_visual_finish(slide, role: str) -> None:
                 _remove_semantic_shape(decorative)
 
     elif role == "SOLUTION_APPROACH":
-        # Turn the two existing step regions into intentional compact cards
-        # and reduce the verified-outcome panel to the size of its live copy.
+        # Use the available 16:9 width for a three-column process composition
+        # while keeping the existing verified text and approved shapes.
         for suffix, geometry in {
-            "content.auto.6": (0.52, 1.82, 3.10, 1.28),
-            "title.primary.3": (0.78, 2.25, 2.58, 0.46),
-            "content.auto.16": (3.92, 1.82, 3.10, 1.28),
-            "title.primary.4": (4.18, 2.25, 2.58, 0.46),
-            "content.auto.84": (9.12, 1.88, 3.18, 1.28),
-            "content.auto.94": (9.40, 2.30, 2.62, 0.40),
+            "content.auto.6": (0.62, 1.92, 3.54, 2.18),
+            "title.primary.3": (0.94, 2.70, 2.90, 0.48),
+            "content.auto.16": (4.46, 1.92, 3.54, 2.18),
+            "title.primary.4": (4.78, 2.70, 2.90, 0.48),
+            "content.auto.84": (8.30, 1.92, 4.40, 2.18),
+            "content.auto.94": (8.70, 2.70, 3.60, 0.42),
+            "content.auto.56": (7.70, 2.65, 0.40, 0.72),
         }.items():
             current = shape(suffix)
             if current is not None:
@@ -850,7 +876,6 @@ def _hide_empty_semantic_body_visuals(slide, prefix: str) -> None:
         if getattr(shape, "has_text_frame", False)
         and str(getattr(shape, "text", "") or "").strip()
     ]
-
     # Large textless shapes are the card/section containers in the approved
     # traces.  A container is live when it contains at least one active text
     # shape.  Small icon/line shapes inherit that live state from their
@@ -1870,6 +1895,7 @@ def _render_visual_master_fallback(
             target,
             approved_slide_id=slide_id,
             required_slots=required_slots,
+            preserve_existing_slots=slide_id in {"S03", "S04", "S05", "S06", "ROADMAP"},
         )
         title_slot = f"trace:{slide_id}:title.primary"
         payload = semantic_payload or NativeSlotPayload(

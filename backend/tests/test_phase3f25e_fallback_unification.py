@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from zipfile import ZipFile
 
 from pptx import Presentation
+from pptx.util import Inches
 
 from app.config import settings
 from app.models import PowerPointData, PowerPointSlide, PptxDownloadRequest
@@ -14,6 +15,7 @@ from app.services.pptx_parts import slides
 from app.services.pptx_parts.native_trace_content_adapter import FailureReason, SAMPLE_STRINGS
 from app.services.pptx_parts.native_trace_renderers import dispatch_approved_native_slide
 from app.services.pptx_service import build_pptx_context
+from app.services.pptx_theme import SLIDE_HEIGHT, SLIDE_WIDTH
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -142,8 +144,69 @@ def _summary_slides() -> list[PowerPointSlide]:
     ]
 
 
+def _verified_summary_context(context):
+    """Provide explicit fixture evidence so Slides 05–08 exercise Native Trace."""
+
+    values = {
+        "CURRENT_STATE": {
+            "current_state": "FAJで確認された現状情報を整理します。",
+            "workflow": "FAJで確認された業務フローを整理します。",
+            "issue": "FAJで確認された課題を整理します。",
+            "priority": "確認済みの改善優先テーマを整理します。",
+            "current_data_detail": "画像・品目情報・等級判断・取引履歴の管理状態を整理します。",
+            "current_data_notes": "過去実績の参照範囲と再利用条件を確認します。",
+            "current_issue_3_detail": "品目情報・判断情報・履歴の照合単位を整理します。",
+        },
+        "PROBLEM_ANALYSIS": {
+            "problem_summary": "FAJで確認された主要課題を整理します。",
+            "priority": "優先テーマを整理します。",
+            "evidence": "確認済み情報を判断材料に整理します。",
+            "next_step": "不足情報は確認後に確定します。",
+            "priority_issue_1_detail": "判断基準と例外対応を確認します。",
+            "priority_issue_2_detail": "入力・確認・照合作業を整理します。",
+            "priority_issue_3_detail": "分析・再利用条件を確認後に確定します。",
+        },
+        "SOLUTION_CONCEPT": {
+            "concept": "FAJの確認済み方針を整理します。",
+            "measure": "確認済みの施策候補を整理します。",
+            "operation": "実行条件を確認します。",
+            "outcome": "確認済みの成果条件を整理します。",
+            "concept_summary": "人の判断を支援し、確認済みの方針を運用へつなげます。",
+            "operation_summary": "人とAIの役割を整理し、確認済みの条件に沿って定着方法を整理します。",
+        },
+        "SOLUTION_APPROACH": {
+            "approach": "導入方針を整理します。",
+            "step_1_detail_1": "対象範囲を整理します。",
+            "step": "導入ステップを整理します。",
+            "condition": "実施条件を確認後に確定します。",
+            "outcome": "成果条件を確認後に確定します。",
+            "step_2_detail_2": "実施条件を確認後に確定します。",
+            "step_3_detail_2": "横展開条件を確認後に確定します。",
+        },
+    }
+    candidates = [
+        {
+            "semantic_type": f"{role.lower()}.{group}",
+            "value": value,
+            "source_type": "customer_input",
+            "source_field": f"faj.{group}",
+            "source_reference": f"faj://verified/{group}",
+            "authority": "USER_EXPLICIT",
+            "review_state": "CONFIRMED",
+            "admissible_as_evidence": True,
+        }
+        for role, role_values in values.items()
+        for group, value in role_values.items()
+    ]
+    return replace(context, semantic_candidates={"candidates": candidates})
+
+
 def _render_direct_summary(flag_enabled: bool, path: Path) -> dict[str, object]:
     prs = Presentation()
+    # Match the Production 16:9 canvas so native-trace geometry is scaled
+    # identically during local review generation.
+    prs.slide_width = Inches(SLIDE_WIDTH)
+    prs.slide_height = Inches(SLIDE_HEIGHT)
     traces: list[dict[str, object]] = []
     data = PowerPointData(deck_title="提案クエスト確認用", client_name="検証社", slides=_summary_slides())
     payload = PptxDownloadRequest(
@@ -152,7 +215,7 @@ def _render_direct_summary(flag_enabled: bool, path: Path) -> dict[str, object]:
         client_company_info="検証社",
         summary=True,
     )
-    context = build_pptx_context(payload)
+    context = _verified_summary_context(build_pptx_context(payload))
     with_flag = replace(settings, pptx_approved_native_renderer_enabled=flag_enabled)
     original = slides.settings
     slides.settings = with_flag
@@ -206,6 +269,9 @@ def test_flag_on_and_off_generate_eleven_slide_local_summary_smoke() -> None:
     assert any(shape.text == "2026.08.26" for shape in on_deck.slides[2].shapes if getattr(shape, "has_text_frame", False))
     slide02_text = "\n".join(shape.text for shape in on_deck.slides[1].shapes if getattr(shape, "has_text_frame", False))
     slide03_text = "\n".join(shape.text for shape in on_deck.slides[2].shapes if getattr(shape, "has_text_frame", False))
+    slide06_by_name = {shape.name: shape.text.strip() for shape in on_deck.slides[5].shapes if getattr(shape, "has_text_frame", False)}
+    slide07_text = "\n".join(shape.text for shape in on_deck.slides[6].shapes if getattr(shape, "has_text_frame", False))
+    slide08_by_name = {shape.name: shape.text.strip() for shape in on_deck.slides[7].shapes if getattr(shape, "has_text_frame", False)}
     slide02_by_name = {shape.name: shape.text.strip() for shape in on_deck.slides[1].shapes if getattr(shape, "has_text_frame", False)}
     slide03_by_name = {shape.name: shape.text.strip() for shape in on_deck.slides[2].shapes if getattr(shape, "has_text_frame", False)}
     assert all(
@@ -259,6 +325,14 @@ def test_flag_on_and_off_generate_eleven_slide_local_summary_smoke() -> None:
     )
     assert "確認済み情報を整理" in slide02_text
     assert "確認済み課題を整理" in slide03_text
+    assert slide06_by_name["trace:S04:title.primary"].endswith("判断基準と例外対応を確認します。")
+    assert slide06_by_name["trace:S04:title.primary.2"] == "優先テーマを整理します。"
+    assert "確認できる根拠に基づき" not in "\n".join(slide06_by_name.values())
+    assert slide07_text.count("人の判断を支援") >= 1
+    assert slide08_by_name["trace:S06:content.auto.9"] == "対象範囲を整理します。"
+    assert slide08_by_name["trace:S06:lead"] == "導入方針を整理します。"
+    assert slide08_by_name["trace:S06:lead.2"] == "実施条件を確認後に確定します。"
+    assert slide08_by_name["trace:S06:lead.4"] == "横展開条件を確認後に確定します。"
     assert "ProposalPilot" not in slide02_text + slide03_text
     assert "AI営業秘書" not in slide02_text + slide03_text
     slide04_text = "\n".join(

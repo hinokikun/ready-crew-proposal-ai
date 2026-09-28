@@ -761,39 +761,77 @@ _SEMANTIC_PAGE_BINDINGS: dict[str, dict[str, Any]] = {
     "CURRENT_STATE": {
         "expected_title": "現状理解",
         "groups": (
-            ("current_state", ("current_state", "current_understanding", "business_flow"), "lead"),
-            ("workflow", ("workflow", "process", "business_process"), "lead.2"),
-            ("issue", ("current_issue", "issue", "problem", "pain_point"), "content.auto.30"),
-            ("priority", ("priority_theme", "improvement_priority", "priority"), "content.auto.41"),
+            ("current_state", ("current_state", "current_understanding", "business_flow", "current_process", "current_process_notes", "current_data_state", "current_data_notes"), "title.primary.2"),
+            ("workflow", ("workflow", "process", "business_process", "current_process_notes", "current_data_notes"), "title.primary.3"),
+            ("issue", ("current_issue", "issue", "problem", "pain_point", "current_issue_1", "current_issue_2", "current_issue_3", "current_issues"), "content.auto.81"),
+            ("priority", ("priority_theme", "improvement_priority", "priority", "current_issue_3", "next_confirmation"), "content.auto.88"),
         ),
     },
     "PROBLEM_ANALYSIS": {
         "expected_title": "主要課題",
         "groups": (
-            ("problem_summary", ("problem_summary", "current_issue", "issue", "pain_point"), "lead"),
-            ("priority", ("priority_theme", "improvement_priority", "priority"), "content.auto.22"),
-            ("evidence", ("evidence", "decision_basis", "verified_issue"), "content.auto.42"),
-            ("next_step", ("next_step", "next_action", "improvement_condition", "condition"), "content.auto.78"),
+            ("problem_summary", ("problem_summary", "current_issue", "issue", "pain_point", "priority_issue_1_title", "priority_issue_1_detail", "issue_summary"), "content.auto.47"),
+            ("priority", ("priority_theme", "improvement_priority", "priority", "priority_issue_1_title", "priority_issue_2_title"), "title.primary.2"),
+            ("evidence", ("evidence", "decision_basis", "verified_issue", "priority_issue_2_title", "priority_issue_2_detail"), "lead"),
+            ("next_step", ("next_step", "next_action", "improvement_condition", "condition", "priority_issue_3_title", "priority_issue_3_detail", "issue_summary"), "content.auto.35"),
         ),
     },
     "SOLUTION_CONCEPT": {
         "expected_title": "提案コンセプト",
         "groups": (
-            ("concept", ("solution_concept", "concept", "proposal_policy", "policy"), "title.primary.2"),
-            ("measure", ("measure", "initiative", "solution", "action"), "content.auto.23"),
-            ("operation", ("operating_condition", "operation", "adoption_condition"), "content.auto.47"),
-            ("outcome", ("expected_outcome", "outcome", "expected_effect"), "content.auto.100"),
+            ("concept", ("solution_concept", "concept", "proposal_policy", "policy", "ai_role_title", "human_role_title"), "lead"),
+            ("measure", ("measure", "initiative", "solution", "action", "ai_role_detail", "operation_principle_1", "operation_principle_2"), "lead.2"),
+            ("operation", ("operating_condition", "operation", "adoption_condition", "human_role_detail", "operation_design_title", "operation_principle_3"), "content.auto.54"),
+            ("outcome", ("expected_outcome", "outcome", "expected_effect", "operation_design_title"), "content.auto.63"),
         ),
     },
     "SOLUTION_APPROACH": {
         "expected_title": "導入戦略",
         "groups": (
-            ("approach", ("solution_approach", "approach", "implementation_policy"), "title.primary.2"),
-            ("step", ("implementation_step", "step", "phase", "rollout"), "title.primary.3"),
-            ("condition", ("implementation_condition", "condition", "requirement"), "title.primary.4"),
-            ("outcome", ("expected_outcome", "outcome", "expected_effect"), "content.auto.94"),
+            ("approach", ("solution_approach", "approach", "implementation_policy", "step_1_title"), "lead"),
+            ("step", ("implementation_step", "step", "phase", "rollout", "step_1_title", "step_2_title", "step_2_detail_1", "step_3_title", "step_3_detail_1"), "content.auto.45"),
+            ("condition", ("implementation_condition", "condition", "requirement", "step_2_detail_2", "step_3_detail_2"), "lead.3"),
+            ("outcome", ("expected_outcome", "outcome", "expected_effect", "implementation_message", "step_3_title"), "content.auto.130"),
         ),
     },
+}
+
+
+# The approved 16:9 trace assets use different named shapes for the large
+# page heading.  ``title.primary`` remains the legacy adapter input slot, but
+# it must not overwrite a section heading or subtitle in the frozen asset.
+_SEMANTIC_PAGE_TITLE_SLOTS = {
+    "CURRENT_STATE": "content.auto.4",
+    "PROBLEM_ANALYSIS": "content.auto.4",
+    "SOLUTION_CONCEPT": "title.primary",
+    "SOLUTION_APPROACH": "content.auto.4",
+}
+
+
+# Optional detail slots complete the approved visual hierarchy when the
+# payload carries explicitly labelled evidence.  They are intentionally
+# best-effort: missing evidence leaves the slot cleared rather than reusing
+# frozen template copy.
+_SEMANTIC_PAGE_OPTIONAL_BINDINGS: dict[str, tuple[tuple[str, tuple[str, ...], str], ...]] = {
+    "CURRENT_STATE": (
+        ("current_data_detail", ("current_data_detail", "current_data_description", "data_state_detail"), "title.primary.5"),
+        ("current_data_notes", ("current_data_notes", "data_state_notes", "data_reuse_condition"), "title.primary.6"),
+        ("current_issue_3_detail", ("current_issue_3_detail", "issue_detail_3"), "content.auto.96"),
+    ),
+    "PROBLEM_ANALYSIS": (
+        ("priority_issue_1_detail", ("priority_issue_1_detail", "problem_detail_1"), "title.primary"),
+        ("priority_issue_2_detail", ("priority_issue_2_detail", "problem_detail_2"), "lead.2"),
+        ("priority_issue_3_detail", ("priority_issue_3_detail", "problem_detail_3"), "content.auto.37"),
+    ),
+    "SOLUTION_CONCEPT": (
+        ("concept_summary", ("concept_summary", "solution_concept_summary"), "title.primary.2"),
+        ("operation_summary", ("operation_summary", "operation_design_summary"), "content.auto.54"),
+    ),
+    "SOLUTION_APPROACH": (
+        ("step_1_detail_1", ("step_1_detail_1", "step_1_detail_1_text", "implementation_scope_detail"), "content.auto.9"),
+        ("step_2_detail_2", ("step_2_detail_2", "step_2_detail_2_text", "implementation_condition_detail"), "lead.2"),
+        ("step_3_detail_2", ("step_3_detail_2", "step_3_detail_2_text", "rollout_condition_detail"), "lead.4"),
+    ),
 }
 
 
@@ -810,6 +848,7 @@ def _clear_unbound_semantic_page_slots(payload: NativeSlotPayload) -> None:
         f"{prefix}footer.brand",
         f"{prefix}footer.brand.2",
     }
+    protected.update(str(slot) for slot in spec.get("static_preserve_slots", ()))
     bound = set(payload.slots)
     for slot in spec.get("slot_coverage", ()):
         slot = str(slot)
@@ -956,15 +995,35 @@ def _semantic_page_adapter(
     if payload.unresolved_required_slots:
         return _blocked(payload, FailureReason.UNBOUND_REQUIRED_CONTENT, "required title is unbound", unresolved=payload.unresolved_required_slots)
 
+    # Bind the caller-provided page title to the approved asset's actual
+    # heading shape.  For S03/S04/S06, ``title.primary`` is a body/lead shape
+    # (or the approved subtitle), so writing the page title there causes a
+    # duplicate or misplaced heading in the integrated deck.
+    title_slot = f"trace:{payload.slide_id}:title.primary"
+    main_title_slot = f"trace:{payload.slide_id}:{_SEMANTIC_PAGE_TITLE_SLOTS[role]}"
+    if main_title_slot != title_slot:
+        title_value = payload.slots.pop(title_slot, None)
+        title_source = payload.source_fields.pop(title_slot, None)
+        title_status = payload.evidence_status.pop(title_slot, None)
+        if title_value is not None:
+            payload.slots[main_title_slot] = title_value
+            payload.source_fields[main_title_slot] = title_source or "slide.title"
+            payload.evidence_status[main_title_slot] = title_status or "USER_PROVIDED"
+
     missing: list[str] = []
     prefix = f"trace:{payload.slide_id}:"
     for field, aliases, relative_slot in contract["groups"]:
         slot = f"{prefix}{relative_slot}"
-        scoped_aliases = tuple(f"{role.lower()}.{alias}" for alias in aliases) + tuple(aliases)
+        scoped_aliases = tuple(f"{role.lower()}.{alias}" for alias in aliases)
         if not _bind_semantic_page_slot(payload, field, scoped_aliases, slot, data, context):
             missing.append(field)
     if missing:
         return _blocked(payload, FailureReason.EVIDENCE_REQUIRED, f"explicit FAJ evidence is missing for: {', '.join(missing)}")
+
+    for field, aliases, relative_slot in _SEMANTIC_PAGE_OPTIONAL_BINDINGS.get(role, ()):
+        slot = f"{prefix}{relative_slot}"
+        scoped_aliases = tuple(f"{role.lower()}.{alias}" for alias in aliases)
+        _bind_semantic_page_slot(payload, field, scoped_aliases, slot, data, context)
 
     # Every unbound body slot is cleared before package validation.  This is
     # what prevents frozen generic proposal copy from surviving a successful
@@ -2056,7 +2115,7 @@ def render_native_role_dry_run(
             target,
             approved_slide_id=resolved_slide_id,
             required_slots=required_slots,
-            preserve_existing_slots=resolved_slide_id == "ROADMAP",
+            preserve_existing_slots=resolved_slide_id in {"ROADMAP", "S03", "S04", "S05", "S06"},
         )
         write_report = write_slot_payload(target, payload, required_slots=required_slots)
         validation = validate_injected_template_package(
