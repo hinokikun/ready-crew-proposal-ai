@@ -1097,7 +1097,7 @@ def render_v4_hero_cover(prs: Presentation, slide_data: PowerPointSlide, data: P
     add_text(slide, f"{context.client_name} 御中", 0.86, 3.18, 6.6, 0.34, size=18, color=COLORS["teal_light"], bold=True)
     add_text(slide, _v31_text(f"{context.concept}の意思決定資料", 32), 0.86, 3.74, 6.7, 0.38, size=20, color=COLORS["white"], bold=True)
     add_text(slide, f"提案日 {date.today().strftime('%Y.%m.%d')}", 0.86, 5.86, 3.0, 0.2, size=11, color=COLORS["teal_light"])
-    add_text(slide, "ProposalPilot / AI営業秘書", 0.86, 6.48, 4.0, 0.22, size=11, color=COLORS["teal_light"])
+    add_text(slide, "提案クエスト", 0.86, 6.48, 4.0, 0.22, size=11, color=COLORS["teal_light"])
 
 
 def render_v4_executive_brief(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext) -> None:
@@ -1308,7 +1308,7 @@ def _v5_header(
     *,
     dark: bool = False,
     y: float = 0.48,
-    brand_text: str = "ProposalPilot / AI営業秘書",
+    brand_text: str = "提案クエスト",
 ) -> None:
     title_color, muted = _v5_bg(slide, dark=dark, accent=accent)
     add_shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, 0.78, y, 1.38, 0.3, fill=accent, line=accent)
@@ -1339,7 +1339,7 @@ def _v5_render_cover(prs: Presentation, slide_data: PowerPointSlide, data: Power
     add_text(slide, _trim(context.concept or "成果につながる提案", 28), 0.9, 2.58, 5.8, 0.34, size=17, color="D0E2FF", bold=True)
     add_text(slide, _trim(data.client_name or context.customer_name, 30), 0.9, 3.08, 5.6, 0.3, size=14, color="AEBFD6")
     add_text(slide, f"ISSUED {date.today():%Y.%m.%d}", 0.9, 5.68, 2.0, 0.16, size=8, color="AEBFD6")
-    add_text(slide, "ProposalPilot / AI営業秘書", 0.9, 6.25, 2.5, 0.16, size=8, color="AEBFD6")
+    add_text(slide, "提案クエスト", 0.9, 6.25, 2.5, 0.16, size=8, color="AEBFD6")
 
 
 def _v5_render_orbit(prs: Presentation, slide_data: PowerPointSlide, data: PowerPointData, context: PptxContext, *, accent: str, dark: bool = False) -> None:
@@ -2236,7 +2236,7 @@ def add_cover_slide(prs: Presentation, slide_data: PowerPointSlide, data: PowerP
         bold=True,
     )
     add_text(slide, f"提案日 {date.today().strftime('%Y.%m.%d')}", 0.92, 5.95, 3.5, 0.26, size=12, color=COLORS["teal_light"])
-    add_text(slide, "ProposalPilot / AI営業秘書", 0.92, 6.58, 4.0, 0.24, size=11, color=COLORS["teal_light"])
+    add_text(slide, "提案クエスト", 0.92, 6.58, 4.0, 0.24, size=11, color=COLORS["teal_light"])
     add_text(slide, f"{slide_data.slide_no:02}", 11.58, 6.86, 0.76, 0.22, size=10, color=COLORS["muted"], align=PP_ALIGN.RIGHT)
 
     add_text(slide, "戦略", 9.45, 1.0, 2.6, 0.32, size=16, color=theme["text_on_light"], bold=True, align=PP_ALIGN.CENTER)

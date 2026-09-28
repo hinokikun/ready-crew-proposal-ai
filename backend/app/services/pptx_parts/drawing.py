@@ -109,7 +109,7 @@ def add_header(slide, title: str, section: str, accent: str = COLORS["teal"]) ->
 
 def add_footer(slide, slide_no: int) -> None:
     add_shape(slide, MSO_SHAPE.RECTANGLE, MARGIN_X, 6.76, 11.88, 0.02, fill=COLORS["line"], line=COLORS["line"])
-    add_text(slide, "ProposalPilot / AI営業秘書", MARGIN_X, FOOTER_Y, 3.4, 0.18, size=9, color=COLORS["muted"])
+    add_text(slide, "提案クエスト", MARGIN_X, FOOTER_Y, 3.4, 0.18, size=9, color=COLORS["muted"])
     add_text(slide, f"{slide_no:02}", 11.58, 6.86, 0.76, 0.22, size=10, color=COLORS["muted"], align=PP_ALIGN.RIGHT)
 
 

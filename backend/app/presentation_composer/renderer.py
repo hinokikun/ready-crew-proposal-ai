@@ -536,7 +536,7 @@ def _render_v91_cover(slide, case: CaseContext, proposal_date: str, proposer_nam
     _add_v91_text(slide, "提案の焦点", 1.0, 4.48, 1.35, 0.22, size=12, color=V91_CYAN, bold=True)
     _add_v91_text(slide, "目視判定の属人化を抑え、品質・速度・教育負荷を同時に改善する", 2.28, 4.42, 4.4, 0.38, size=17, color="#FFFFFF", bold=True)
     _add_v91_text(slide, proposer_name, 0.76, 6.66, 3.2, 0.26, size=13, color="#E6F0FF", bold=True)
-    _add_v91_text(slide, "ProposalPilot / Ready Crew", 0.76, 6.96, 3.2, 0.18, size=10, color="#91A8C2")
+    _add_v91_text(slide, "提案クエスト", 0.76, 6.96, 3.2, 0.18, size=10, color="#91A8C2")
 
     stages = [("目視判定", 9.28, 1.36), ("画像認識AI", 10.02, 3.04), ("業務判断", 10.78, 4.72)]
     for idx, (label, x, y) in enumerate(stages):
@@ -763,7 +763,7 @@ def _render_v92_cover(slide, case: CaseContext, proposal_date: str, proposer_nam
     _add_v91_text(slide, "価値メッセージ", 0.98, 4.34, 1.6, 0.13, size=14, color=V92_CYAN, bold=True)
     _add_v91_text(slide, _short_copy(_case_value_message(case), 18), 2.56, 4.28, 3.6, 0.18, size=18, color="#FFFFFF", bold=True, align=PP_ALIGN.CENTER)
     _add_v91_text(slide, proposer_name, 0.76, 6.55, 2.6, 0.2, size=16, color="#FFFFFF", bold=True)
-    _add_v91_text(slide, "ProposalPilot", 0.76, 6.86, 2.2, 0.18, size=14, color="#BFD3EA")
+    _add_v91_text(slide, "提案クエスト", 0.76, 6.86, 2.2, 0.18, size=14, color="#BFD3EA")
 
     _add_v91_text(slide, "提案の進め方", 9.04, 0.82, 2.6, 0.18, size=16, color="#BFD3EA", bold=True, align=PP_ALIGN.CENTER)
     flow = [("1", "現状整理", 9.02, 1.28), ("2", "解決策", 9.46, 2.62), ("3", "効果確認", 9.02, 3.96), ("4", "次回合意", 9.46, 5.30)]
