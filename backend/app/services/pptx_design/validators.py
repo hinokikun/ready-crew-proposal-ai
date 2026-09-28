@@ -8,6 +8,10 @@ from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 
 
+CANONICAL_IDENTITY = "提案クエスト"
+LEGACY_IDENTITIES = ("ProposalPilot", "AI営業秘書")
+
+
 @dataclass(frozen=True)
 class PptxDesignIssue:
     code: str
@@ -23,8 +27,16 @@ def validate_premium_deck(prs: Presentation) -> list[PptxDesignIssue]:
         texts = [shape.text.strip() for shape in slide.shapes if getattr(shape, "has_text_frame", False) and shape.text.strip()]
         if not texts:
             issues.append(PptxDesignIssue("blank_slide", f"Slide {slide_index} has no readable text."))
-        if not any("ProposalPilot" in text for text in texts):
-            issues.append(PptxDesignIssue("missing_brand", f"Slide {slide_index} does not show ProposalPilot."))
+        if not any(CANONICAL_IDENTITY in text for text in texts):
+            issues.append(PptxDesignIssue("missing_brand", f"Slide {slide_index} does not show {CANONICAL_IDENTITY}."))
+        leaked_identities = [identity for identity in LEGACY_IDENTITIES if any(identity in text for text in texts)]
+        if leaked_identities:
+            issues.append(
+                PptxDesignIssue(
+                    "legacy_identity",
+                    f"Slide {slide_index} contains legacy identity: {', '.join(leaked_identities)}.",
+                )
+            )
         if len(slide.shapes) < 6:
             issues.append(PptxDesignIssue("low_visual_density", f"Slide {slide_index} has too few editable shapes."))
         if _is_text_only(slide):

@@ -10,6 +10,8 @@ from pptx.enum.shapes import MSO_SHAPE_TYPE
 
 
 PPTX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+CANONICAL_IDENTITY = "提案クエスト"
+LEGACY_IDENTITIES = ("ProposalPilot", "AI営業秘書")
 
 
 def _shape_text(shape: Any) -> str:
@@ -90,7 +92,7 @@ def _assert_premium_pptx(
     *,
     min_slides: int,
     max_slides: int,
-    identity: str = "ProposalPilot",
+    identity: str = CANONICAL_IDENTITY,
     identities_by_slide: dict[int, str] | None = None,
 ) -> dict[str, Any]:
     assert content[:2] == b"PK"
@@ -108,6 +110,10 @@ def _assert_premium_pptx(
         expected_identities.get(slide["index"], identity) in slide["text"]
         for slide in actual["slides"]
     )
+    all_text = "\n".join(slide["text"] for slide in actual["slides"])
+    assert CANONICAL_IDENTITY in all_text
+    for legacy_identity in LEGACY_IDENTITIES:
+        assert legacy_identity not in all_text
     return actual
 
 
